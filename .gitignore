@@ -1,0 +1,7 @@
+node_modules
+*.log
+worker-javascript.js
+ignore
+test/expect.js
+docs/src
+.idea

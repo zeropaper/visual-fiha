@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mocha</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="mocha.css" />
+  <link rel="shortcut icon" href="../assets/favicon">
+    <link rel="stylesheet" href="../styles.css" />
+    <style>
+body {
+  font: 20px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /*overflow: hidden;*/
+}
+body > h1 {
+  height: 10vh;
+  padding: 20px;
+  margin: 0;
+  font-weight: 100;
+}
+body > h1 a {
+  text-decoration: none;
+}
+
+#mocha,
+#holder {
+  max-height: 45vh;
+  overflow: auto;
+  padding: 20px;
+  margin: 0;
+}
+
+#mocha {
+  min-height: 20vh;
+}
+    </style>
+    <script>R=function(e,n,v1){function t(e,o,u,a){if(e.g)return o(e.e,e);var c=e.g=e.l,f=new XMLHttpRequest;f.onload=function(i,l){function s(){l--||o(n,e)}200==f.status||e.t?(i=[],(e.t=e.t||f.response).replace(/(?:^|[^\w\$_.])require\s*\(\s*["']([^"']*)["']\s*\)/g,function(e,n){i.push(n)}),l=i.length,i.map(function(o){t(r(e.l,o),s,"."!=o[0]?c+"/../":n,o)}),s()):u?t(e.n=r(u+="../",a),o,u,a):(e.e=f,o(f,e))},e.t?f.onload():(f.open("GET",c,!0),f.send())}function r(e,n,t){if(e.e)throw e.e;return n?(f.href=e,i.href="."!=n[0]?"./node_modules/"+n:n,t=i.href+".js",f.href="",u[t]=u[t]||{l:t}):e.n?r(e.n):(e[c]||(e.f||a("(function(require,"+c+",module){"+e.t+"\n})//# sourceURL="+e.l))(function(n){return r(r(e.l,n))},e[c]={},e),e[c])}function o(e,n){t(e.call?{l:"",t:""+e,f:e}:r("",e),function(t,o){try{e=r(o)}catch(u){t=u}n&&n(t,e)})}var u={},a=eval,c="createElement",f=e[c]("base"),i=e[c]("a");return e.head.appendChild(f),c=e.querySelector("script[data-main]"),c&&o(c.dataset.main),c="exports",o}(document);</script>
+  </head>
+  <body class="rows">
+    <h1 class="row"><a href="./">Visual Fiha</a></h1>
+    <div class="row no-grow" id="mocha"></div>
+    <div class="row" id="holder"></div>
+    <script src="./mocha.js"></script>
+    <script src="./expect.js"></script>
+    <script>mocha.setup('bdd');</script>
+    <script src="./test-utils.js"></script>
+    <script src="./../deps-build.js"></script>
+    <!--
+    <script src="./../controller/view-build.js"></script>
+    <script src="./../screen/view-build.js"></script>
+    <script src="./../screen/state-build.js"></script>
+    <script src="./../layer/view-build.js"></script>
+    <script src="./../layer/state-build.js"></script>
+    -->
+    <!-- <script src="layer/control-view-spec.js"></script>
+    <script src="mappable/state-spec.js"></script>
+    <script src="mappable/control-view-spec.js"></script> -->
+    <script src="controller/view-spec.js"></script>
+    <script src="screen/view-spec.js"></script>
+    <script src="screen/state-spec.js"></script>
+    <script src="layer/state-spec.js"></script>
+    <script src="layer/view-spec.js"></script>
+    <!-- <script src="signal/view-spec.js"></script>
+    <script src="transformation/view-spec.js"></script> -->
+    <script>
+      mocha.run();
+    </script>
+  </body>
+</html>
