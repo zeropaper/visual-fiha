@@ -101,23 +101,6 @@ var LayerState = MappableState.extend({
     type: ['string', true, 'default']
   },
 
-  derived: {
-    width: {
-      deps: ['collection', 'collection.parent', 'collection.parent.width'],
-      fn: function() {
-        if (!this.screenView) { return 400; }
-        return this.screenView.width || this.screenView.el.clientWidth;
-      }
-    },
-    height: {
-      deps: ['collection', 'collection.parent', 'collection.parent.height'],
-      fn: function() {
-        if (!this.screenView) { return 300; }
-        return this.screenView.height || this.screenView.el.clientHeight;
-      }
-    }
-  },
-
   collections: MappableState.prototype.collections
 });
 module.exports = LayerState;

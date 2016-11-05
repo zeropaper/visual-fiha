@@ -31,9 +31,7 @@ var ScreenState = State.extend({
   },
 
   session: {
-    latency: ['number', true, 0],
-    width: ['number', true, 400],
-    height: ['number', true, 300],
+    latency: ['number', true, 0]
   },
 
   toJSON: function() {

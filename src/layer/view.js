@@ -57,9 +57,25 @@ var LayerView = View.extend({
     }
   },
 
+  session: {
+    width: ['number', true, 400],
+    height: ['number', true, 300]
+  },
+
   bindings: {
+    'model.active': {
+      type: 'toggle'
+    },
     'model.type': '[data-hook=type]',
     'model.name': '[data-hook=name]',
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
     style: {
       type: function() {
         var computed = this.style;
@@ -71,9 +87,7 @@ var LayerView = View.extend({
     }
   },
 
-  update: function() {
-
-  }
+  update: function() {}
 });
 
 module.exports = LayerView;

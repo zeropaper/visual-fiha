@@ -132,27 +132,12 @@ module.exports = ScreenLayerState.canvas = ScreenLayerState.extend({
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
-  template: [
-    '<canvas></canvas>'
-  ].join(''),
+  template: '<canvas></canvas>',
 
   session: {
     duration: ['number', true, 1000],
     fps: ['number', true, 16],
-    frametime: ['number', true, 0],
-    width: ['number', true, 400],
-    height: ['number', true, 300]
-  },
-
-  bindings: {
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
-    }
+    frametime: ['number', true, 0]
   },
 
   derived: {
@@ -182,8 +167,8 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       deps: ['width', 'height'],
       fn: function() {
         var canvas = document.createElement('canvas');
-        canvas.width = this.width;
-        canvas.height = this.height;
+        canvas.width = this.el.width;
+        canvas.height = this.el.height;
         return canvas;
       }
     },
@@ -196,7 +181,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
   },
 
   remove: function() {
-    return VFDeps.View.prototype.remove.apply(this, arguments);
+    return ScreenLayerView.prototype.remove.apply(this, arguments);
   },
 
   update: function(options) {
@@ -204,11 +189,10 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     this.frametime = options.frametime || 0;
 
     var ctx = this.ctx;
-    var cw = this.width;
-    var ch = this.height;
+    var cw = ctx.canvas.width;
+    var ch = ctx.canvas.height;
     ctx.clearRect(0, 0, cw, ch);
-    // ctx.fillStyle = '#a66';
-    // ctx.fillRect(0, 0, cw, ch);
+    if (!this.model.active) { return this; }
 
     this.model.canvasLayers.filter(function (layer) {
       return layer.active;
@@ -229,14 +213,14 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
-  },
+  // },
 
-  render: function() {
-    if (!this.el) {
-      this.renderWithTemplate();
-    }
+  // render: function() {
+  //   if (!this.el) {
+  //     this.renderWithTemplate();
+  //   }
 
-    return this.update();
+  //   return this.update();
   }
 });
 },{"./../view":10}],3:[function(require,module,exports){
@@ -364,23 +348,6 @@ var LayerState = MappableState.extend({
     type: ['string', true, 'default']
   },
 
-  derived: {
-    width: {
-      deps: ['collection', 'collection.parent', 'collection.parent.width'],
-      fn: function() {
-        if (!this.screenView) { return 400; }
-        return this.screenView.width || this.screenView.el.clientWidth;
-      }
-    },
-    height: {
-      deps: ['collection', 'collection.parent', 'collection.parent.height'],
-      fn: function() {
-        if (!this.screenView) { return 300; }
-        return this.screenView.height || this.screenView.el.clientHeight;
-      }
-    }
-  },
-
   collections: MappableState.prototype.collections
 });
 module.exports = LayerState;
@@ -405,12 +372,12 @@ var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
   template: '<img />',
 
-  bindings: {
+  bindings: VFDeps.assign({
     'model.src': {
       type: 'attribute',
       name: 'src'
     }
-  }
+  }, ScreenLayerView.prototype.bindings)
 });
 },{"./../view":10}],8:[function(require,module,exports){
 'use strict';
@@ -433,20 +400,12 @@ var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.video = ScreenLayerView.extend({
   template: '<video autoplay loop muted></video>',
 
-  bindings: {
-    'model.width': {
-      name: 'width',
-      type: 'attribute'
-    },
-    'model.height': {
-      name: 'height',
-      type: 'attribute'
-    },
+  bindings: VFDeps.assign({
     'model.src': {
       type: 'attribute',
       name: 'src'
     }
-  }
+  }, ScreenLayerView.prototype.bindings)
 });
 },{"./../view":10}],10:[function(require,module,exports){
 'use strict';
@@ -508,9 +467,25 @@ var LayerView = View.extend({
     }
   },
 
+  session: {
+    width: ['number', true, 400],
+    height: ['number', true, 300]
+  },
+
   bindings: {
+    'model.active': {
+      type: 'toggle'
+    },
     'model.type': '[data-hook=type]',
     'model.name': '[data-hook=name]',
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
     style: {
       type: function() {
         var computed = this.style;
@@ -522,9 +497,7 @@ var LayerView = View.extend({
     }
   },
 
-  update: function() {
-
-  }
+  update: function() {}
 });
 
 module.exports = LayerView;
@@ -687,9 +660,7 @@ var ScreenState = State.extend({
   },
 
   session: {
-    latency: ['number', true, 0],
-    width: ['number', true, 400],
-    height: ['number', true, 300],
+    latency: ['number', true, 0]
   },
 
   toJSON: function() {
@@ -740,6 +711,8 @@ var ScreenView = View.extend({
   },
 
   session: {
+    width: ['number', true, 400],
+    height: ['number', true, 300],
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();
@@ -758,19 +731,6 @@ var ScreenView = View.extend({
       required: true,
       default: 'screen',
       values: ['screen', 'control']
-    }
-  },
-
-  bindings: {
-    'model.width': {
-      type: function () {
-        this.el.style.width = this.model.width + 'px';
-      }
-    },
-    'model.height': {
-      type: function () {
-        this.el.style.height = this.model.height + 'px';
-      }
     }
   },
 
@@ -806,19 +766,28 @@ var ScreenView = View.extend({
       this.el.left = 0;
       this.el.style.width = '100%';
       this.el.style.height = '100%';
-      this.model.width = this.el.clientWidth;
-      this.model.height = this.el.clientHeight;
-      return this;
+      this.width = this.el.clientWidth;
+      this.height = this.el.clientHeight;
+      return this.resizeLayers();
     }
 
     p = p || this.el.parentNode;
     if (p && p.clientWidth) {
-      this.model.width = p.clientWidth;
+      this.width = p.clientWidth;
       var r = this.ratio || 4/3;
-      this.model.height = Math.floor(this.model.width / r);
-      this.el.style.width = this.model.width + 'px';
-      this.el.style.height = this.model.height + 'px';
+      this.height = Math.floor(this.width / r);
+      this.el.style.width = this.width + 'px';
+      this.el.style.height = this.height + 'px';
     }
+    return this.resizeLayers();
+  },
+
+  resizeLayers: function() {
+    if (!this.layersView || !this.layersView.views) { return this; }
+    this.layersView.views.forEach(function(view) {
+      view.width = this.width;
+      view.height = this.height;
+    }, this);
     return this;
   },
 

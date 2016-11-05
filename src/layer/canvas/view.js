@@ -2,27 +2,12 @@
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
-  template: [
-    '<canvas></canvas>'
-  ].join(''),
+  template: '<canvas></canvas>',
 
   session: {
     duration: ['number', true, 1000],
     fps: ['number', true, 16],
-    frametime: ['number', true, 0],
-    width: ['number', true, 400],
-    height: ['number', true, 300]
-  },
-
-  bindings: {
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
-    }
+    frametime: ['number', true, 0]
   },
 
   derived: {
@@ -52,8 +37,8 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       deps: ['width', 'height'],
       fn: function() {
         var canvas = document.createElement('canvas');
-        canvas.width = this.width;
-        canvas.height = this.height;
+        canvas.width = this.el.width;
+        canvas.height = this.el.height;
         return canvas;
       }
     },
@@ -66,7 +51,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
   },
 
   remove: function() {
-    return VFDeps.View.prototype.remove.apply(this, arguments);
+    return ScreenLayerView.prototype.remove.apply(this, arguments);
   },
 
   update: function(options) {
@@ -74,11 +59,10 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     this.frametime = options.frametime || 0;
 
     var ctx = this.ctx;
-    var cw = this.width;
-    var ch = this.height;
+    var cw = ctx.canvas.width;
+    var ch = ctx.canvas.height;
     ctx.clearRect(0, 0, cw, ch);
-    // ctx.fillStyle = '#a66';
-    // ctx.fillRect(0, 0, cw, ch);
+    if (!this.model.active) { return this; }
 
     this.model.canvasLayers.filter(function (layer) {
       return layer.active;
@@ -99,13 +83,13 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
-  },
+  // },
 
-  render: function() {
-    if (!this.el) {
-      this.renderWithTemplate();
-    }
+  // render: function() {
+  //   if (!this.el) {
+  //     this.renderWithTemplate();
+  //   }
 
-    return this.update();
+  //   return this.update();
   }
 });

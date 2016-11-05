@@ -37,6 +37,8 @@ var ScreenView = View.extend({
   },
 
   session: {
+    width: ['number', true, 400],
+    height: ['number', true, 300],
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();
@@ -55,19 +57,6 @@ var ScreenView = View.extend({
       required: true,
       default: 'screen',
       values: ['screen', 'control']
-    }
-  },
-
-  bindings: {
-    'model.width': {
-      type: function () {
-        this.el.style.width = this.model.width + 'px';
-      }
-    },
-    'model.height': {
-      type: function () {
-        this.el.style.height = this.model.height + 'px';
-      }
     }
   },
 
@@ -103,19 +92,28 @@ var ScreenView = View.extend({
       this.el.left = 0;
       this.el.style.width = '100%';
       this.el.style.height = '100%';
-      this.model.width = this.el.clientWidth;
-      this.model.height = this.el.clientHeight;
-      return this;
+      this.width = this.el.clientWidth;
+      this.height = this.el.clientHeight;
+      return this.resizeLayers();
     }
 
     p = p || this.el.parentNode;
     if (p && p.clientWidth) {
-      this.model.width = p.clientWidth;
+      this.width = p.clientWidth;
       var r = this.ratio || 4/3;
-      this.model.height = Math.floor(this.model.width / r);
-      this.el.style.width = this.model.width + 'px';
-      this.el.style.height = this.model.height + 'px';
+      this.height = Math.floor(this.width / r);
+      this.el.style.width = this.width + 'px';
+      this.el.style.height = this.height + 'px';
     }
+    return this.resizeLayers();
+  },
+
+  resizeLayers: function() {
+    if (!this.layersView || !this.layersView.views) { return this; }
+    this.layersView.views.forEach(function(view) {
+      view.width = this.width;
+      view.height = this.height;
+    }, this);
     return this;
   },
 

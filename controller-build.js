@@ -62,6 +62,7 @@ var DetailsView = View.extend({
     mappingsView: {
       selector: '.mappings',
       prepareView: function (el) {
+        console.info('details view mappingsView');
         return this.renderCollection(this.model.mappings, function (opts) {
           var Constructor = MappingControlView[opts.model.targetProperty] || MappingControlView;
           return new Constructor(opts);
@@ -686,23 +687,18 @@ module.exports = ControllerView;
 },{"./../layer/canvas/control-view":5,"./../layer/control-view":8,"./../midi/state":19,"./../screen/state":20,"./../screen/view":21,"./../signal/beat/control-view":22,"./../signal/control-view":24,"./../signal/hsla/control-view":26,"./../signal/rgba/control-view":28,"./../suggestion-view":31,"./sparkline-view":3}],5:[function(require,module,exports){
 'use strict';
 var LayerControlView = require('./../control-view');
-var DetailsView = require('./../../controller/details-view');
 
 var ControlCanvasLayerView = VFDeps.View.extend({
   template: [
     '<section class="canvas-layer">',
     '<header class="columns">',
-    '<div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>',
+    '<div class="column no-grow gutter-right"><button name="active"></button></div>',
     '<div class="column no-grow gutter-horizontal"><button class="edit-draw-function vfi-cog-alt"></button></div>',
-    '<h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>',
-    '<div class="column no-grow text-right gutter-left"><button class="vfi-trash-empty remove-layer"></button></div>',
+    '<h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>',
+    '<div class="column no-grow text-right gutter-left"><button class="vfi-trash-empty remove-canvas-layer"></button></div>',
     '</header>',
     '</section>'
   ].join(''),
-
-  session: {
-    showMappings: ['boolean', true, false]
-  },
 
   derived: {
     rootView: {
@@ -722,15 +718,15 @@ var ControlCanvasLayerView = VFDeps.View.extend({
   },
 
   events: {
-    'click .remove-layer': '_removeLayer',
+    'click .remove-canvas-layer': '_removeLayer',
     'click .edit-draw-function': '_editDrawFunction',
-    'click .active.prop-toggle': '_toggleActive',
-    'click header [data-hook=name]': '_showMappings'
+    'click [name="active"]': '_toggleActive',
+    'click .canvas-layer-name': '_showMappings'
   },
 
-  _removeLayer: function() {
-    this.model.collection.remove(this.model);
-  },
+  _showMappings: LayerControlView.prototype._showMappings,
+  _toggleActive: LayerControlView.prototype._toggleActive,
+
   _editDrawFunction: function () {
     var editor = this.codeEditor;
     if (!editor.changed) {
@@ -739,16 +735,6 @@ var ControlCanvasLayerView = VFDeps.View.extend({
     else {
       console.warn('A function is already being edited');
     }
-  },
-  _toggleActive: function () {
-    this.model.toggle('active');
-  },
-
-  _showMappings: function () {
-    this.rootView.showDetails(new DetailsView({
-      parent: this,
-      model: this.model,
-    }));
   },
 
   bindings: {
@@ -761,7 +747,7 @@ var ControlCanvasLayerView = VFDeps.View.extend({
 
       {
         type: 'booleanClass',
-        selector: '.active.prop-toggle',
+        selector: '[name="active"]',
         yes: 'vfi-toggle-on',
         no: 'vfi-toggle-off'
       }
@@ -778,15 +764,18 @@ var ControlCanvasLayerView = VFDeps.View.extend({
 module.exports = LayerControlView.canvas = LayerControlView.extend({
   template: [
     '<section class="row canvas-control">',
-    '<header>',
-    '<h3>Canvas</h3>',
-    '<div class="columns">',
-    '<div class="column gutter-right" contenteditable="true" data-placeholder="new-layer-name" data-hook="new-layer-name"></div>',
-    '<div class="column gutter-horizontal" contenteditable="true" data-placeholder="propA, propB" data-hook="new-layer-props"></div>',
-    '<div class="column no-grow gutter-left">',
-    '<button name="add-layer" class="vfi-plus"></button>',
-    '</div>',
-    '</div>',
+    '<header class="rows">',
+    '  <div class="row columns">',
+    '    <div class="column no-grow"><button class="active prop-toggle"></button></div>',
+    '    <h3 class="column layer-name" data-hook="name"></h3>',
+    '  </div>',
+    '  <div class="row columns">',
+    '    <div class="column gutter-right" contenteditable="true" data-placeholder="new-layer-name" data-hook="new-layer-name"></div>',
+    '    <div class="column gutter-horizontal" contenteditable="true" data-placeholder="propA, propB" data-hook="new-layer-props"></div>',
+    '    <div class="column no-grow gutter-left">',
+    '      <button name="add-layer" class="vfi-plus"></button>',
+    '    </div>',
+    '  </div>',
     '</header>',
 
     '<div class="layers">',
@@ -795,10 +784,10 @@ module.exports = LayerControlView.canvas = LayerControlView.extend({
     '</section>'
   ].join(''),
 
-  events: {
+  events: VFDeps.assign({
     'input [data-hook=new-layer-name]': '_inputLayerName',
     'click [name=add-layer]': '_addLayer'
-  },
+  }, LayerControlView.prototype.events),
 
   _inputLayerName: function() {
     this.query('[name=add-layer]').disabled = !this.queryByHook('new-layer-name').textContent.trim();
@@ -849,7 +838,7 @@ module.exports = LayerControlView.canvas = LayerControlView.extend({
     }
   }
 });
-},{"./../../controller/details-view":2,"./../control-view":8}],6:[function(require,module,exports){
+},{"./../control-view":8}],6:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 // var CanvasLayer = ScreenLayerState.extend({
@@ -983,27 +972,12 @@ module.exports = ScreenLayerState.canvas = ScreenLayerState.extend({
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
-  template: [
-    '<canvas></canvas>'
-  ].join(''),
+  template: '<canvas></canvas>',
 
   session: {
     duration: ['number', true, 1000],
     fps: ['number', true, 16],
-    frametime: ['number', true, 0],
-    width: ['number', true, 400],
-    height: ['number', true, 300]
-  },
-
-  bindings: {
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
-    }
+    frametime: ['number', true, 0]
   },
 
   derived: {
@@ -1033,8 +1007,8 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       deps: ['width', 'height'],
       fn: function() {
         var canvas = document.createElement('canvas');
-        canvas.width = this.width;
-        canvas.height = this.height;
+        canvas.width = this.el.width;
+        canvas.height = this.el.height;
         return canvas;
       }
     },
@@ -1047,7 +1021,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
   },
 
   remove: function() {
-    return VFDeps.View.prototype.remove.apply(this, arguments);
+    return ScreenLayerView.prototype.remove.apply(this, arguments);
   },
 
   update: function(options) {
@@ -1055,11 +1029,10 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     this.frametime = options.frametime || 0;
 
     var ctx = this.ctx;
-    var cw = this.width;
-    var ch = this.height;
+    var cw = ctx.canvas.width;
+    var ch = ctx.canvas.height;
     ctx.clearRect(0, 0, cw, ch);
-    // ctx.fillStyle = '#a66';
-    // ctx.fillRect(0, 0, cw, ch);
+    if (!this.model.active) { return this; }
 
     this.model.canvasLayers.filter(function (layer) {
       return layer.active;
@@ -1080,14 +1053,14 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
-  },
+  // },
 
-  render: function() {
-    if (!this.el) {
-      this.renderWithTemplate();
-    }
+  // render: function() {
+  //   if (!this.el) {
+  //     this.renderWithTemplate();
+  //   }
 
-    return this.update();
+  //   return this.update();
   }
 });
 },{"./../view":16}],8:[function(require,module,exports){
@@ -1101,8 +1074,6 @@ var LayerControlView = View.extend({
     '<div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>',
     '<h3 class="column layer-name gutter-left" data-hook="name"></h3>',
     '</header>',
-
-      // '<div class="gutter" data-hook="type"></div>',
 
     '<div class="preview gutter-horizontal"></div>',
 
@@ -1123,19 +1094,29 @@ var LayerControlView = View.extend({
   },
 
   events: {
+    'click .remove-layer': '_removeLayer',
     'click .active.prop-toggle': '_toggleActive',
-    'click header [data-hook=name]': '_showMappings'
+    'click .layer-name': '_showMappings'
+  },
+
+  _removeLayer: function() {
+    this.model.collection.remove(this.model);
   },
 
   _toggleActive: function () {
     this.model.toggle('active');
   },
 
-  _showMappings: function () {
-    this.rootView.showDetails(new DetailsView({
+  _showMappings: function (evt) {
+    if (evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+    }
+    this._detailsView = this._detailsView || new DetailsView({
       parent: this,
       model: this.model,
-    }));
+    });
+    this.rootView.showDetails(this._detailsView);
   },
 
   bindings: {
@@ -1294,23 +1275,6 @@ var LayerState = MappableState.extend({
     type: ['string', true, 'default']
   },
 
-  derived: {
-    width: {
-      deps: ['collection', 'collection.parent', 'collection.parent.width'],
-      fn: function() {
-        if (!this.screenView) { return 400; }
-        return this.screenView.width || this.screenView.el.clientWidth;
-      }
-    },
-    height: {
-      deps: ['collection', 'collection.parent', 'collection.parent.height'],
-      fn: function() {
-        if (!this.screenView) { return 300; }
-        return this.screenView.height || this.screenView.el.clientHeight;
-      }
-    }
-  },
-
   collections: MappableState.prototype.collections
 });
 module.exports = LayerState;
@@ -1335,12 +1299,12 @@ var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
   template: '<img />',
 
-  bindings: {
+  bindings: VFDeps.assign({
     'model.src': {
       type: 'attribute',
       name: 'src'
     }
-  }
+  }, ScreenLayerView.prototype.bindings)
 });
 },{"./../view":16}],14:[function(require,module,exports){
 'use strict';
@@ -1363,20 +1327,12 @@ var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.video = ScreenLayerView.extend({
   template: '<video autoplay loop muted></video>',
 
-  bindings: {
-    'model.width': {
-      name: 'width',
-      type: 'attribute'
-    },
-    'model.height': {
-      name: 'height',
-      type: 'attribute'
-    },
+  bindings: VFDeps.assign({
     'model.src': {
       type: 'attribute',
       name: 'src'
     }
-  }
+  }, ScreenLayerView.prototype.bindings)
 });
 },{"./../view":16}],16:[function(require,module,exports){
 'use strict';
@@ -1438,9 +1394,25 @@ var LayerView = View.extend({
     }
   },
 
+  session: {
+    width: ['number', true, 400],
+    height: ['number', true, 300]
+  },
+
   bindings: {
+    'model.active': {
+      type: 'toggle'
+    },
     'model.type': '[data-hook=type]',
     'model.name': '[data-hook=name]',
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
     style: {
       type: function() {
         var computed = this.style;
@@ -1452,9 +1424,7 @@ var LayerView = View.extend({
     }
   },
 
-  update: function() {
-
-  }
+  update: function() {}
 });
 
 module.exports = LayerView;
@@ -2231,9 +2201,7 @@ var ScreenState = State.extend({
   },
 
   session: {
-    latency: ['number', true, 0],
-    width: ['number', true, 400],
-    height: ['number', true, 300],
+    latency: ['number', true, 0]
   },
 
   toJSON: function() {
@@ -2284,6 +2252,8 @@ var ScreenView = View.extend({
   },
 
   session: {
+    width: ['number', true, 400],
+    height: ['number', true, 300],
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();
@@ -2302,19 +2272,6 @@ var ScreenView = View.extend({
       required: true,
       default: 'screen',
       values: ['screen', 'control']
-    }
-  },
-
-  bindings: {
-    'model.width': {
-      type: function () {
-        this.el.style.width = this.model.width + 'px';
-      }
-    },
-    'model.height': {
-      type: function () {
-        this.el.style.height = this.model.height + 'px';
-      }
     }
   },
 
@@ -2350,19 +2307,28 @@ var ScreenView = View.extend({
       this.el.left = 0;
       this.el.style.width = '100%';
       this.el.style.height = '100%';
-      this.model.width = this.el.clientWidth;
-      this.model.height = this.el.clientHeight;
-      return this;
+      this.width = this.el.clientWidth;
+      this.height = this.el.clientHeight;
+      return this.resizeLayers();
     }
 
     p = p || this.el.parentNode;
     if (p && p.clientWidth) {
-      this.model.width = p.clientWidth;
+      this.width = p.clientWidth;
       var r = this.ratio || 4/3;
-      this.model.height = Math.floor(this.model.width / r);
-      this.el.style.width = this.model.width + 'px';
-      this.el.style.height = this.model.height + 'px';
+      this.height = Math.floor(this.width / r);
+      this.el.style.width = this.width + 'px';
+      this.el.style.height = this.height + 'px';
     }
+    return this.resizeLayers();
+  },
+
+  resizeLayers: function() {
+    if (!this.layersView || !this.layersView.views) { return this; }
+    this.layersView.views.forEach(function(view) {
+      view.width = this.width;
+      view.height = this.height;
+    }, this);
     return this;
   },
 

@@ -9,8 +9,6 @@ var LayerControlView = View.extend({
     '<h3 class="column layer-name gutter-left" data-hook="name"></h3>',
     '</header>',
 
-      // '<div class="gutter" data-hook="type"></div>',
-
     '<div class="preview gutter-horizontal"></div>',
 
     '<div class="mappings props">',
@@ -30,19 +28,29 @@ var LayerControlView = View.extend({
   },
 
   events: {
+    'click .remove-layer': '_removeLayer',
     'click .active.prop-toggle': '_toggleActive',
-    'click header [data-hook=name]': '_showMappings'
+    'click .layer-name': '_showMappings'
+  },
+
+  _removeLayer: function() {
+    this.model.collection.remove(this.model);
   },
 
   _toggleActive: function () {
     this.model.toggle('active');
   },
 
-  _showMappings: function () {
-    this.rootView.showDetails(new DetailsView({
+  _showMappings: function (evt) {
+    if (evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+    }
+    this._detailsView = this._detailsView || new DetailsView({
       parent: this,
       model: this.model,
-    }));
+    });
+    this.rootView.showDetails(this._detailsView);
   },
 
   bindings: {
