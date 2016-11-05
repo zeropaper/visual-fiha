@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-visualfiha
-==========
-
-A HTML5 vjing tool
-=======
 ```
 __________________________________
 \================================/  ··
@@ -90,4 +84,3 @@ Valentin `zeropaper` Vago
 # License
 
 MIT
->>>>>>> bc73cd2... Initial commit
