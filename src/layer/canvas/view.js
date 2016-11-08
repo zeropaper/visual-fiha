@@ -83,13 +83,17 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
-  // },
+  },
 
-  // render: function() {
-  //   if (!this.el) {
-  //     this.renderWithTemplate();
-  //   }
 
-  //   return this.update();
-  }
+  bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
+  }, ScreenLayerView.prototype.bindings)
 });

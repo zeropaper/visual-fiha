@@ -16,7 +16,6 @@ var DetailsView = View.extend({
     mappingsView: {
       selector: '.mappings',
       prepareView: function (el) {
-        console.info('details view mappingsView');
         return this.renderCollection(this.model.mappings, function (opts) {
           var Constructor = MappingControlView[opts.model.targetProperty] || MappingControlView;
           return new Constructor(opts);

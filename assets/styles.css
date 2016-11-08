@@ -370,7 +370,8 @@ Layout
 }
 
 .controller > .body > div:first-child {
-  max-width: 50%;
+  width: 50%;
+  max-height: 100%;
   border-right: 1px solid var(--border-color);
 }
 .controller > .body > div:last-child {
@@ -555,7 +556,9 @@ header h3 {
 
 .prop strong {
   margin-bottom: 3px;
-  /* display: block; */
+}
+.mappings {
+  overflow-y: auto;
 }
 .prop .mapping {
   text-align: right;

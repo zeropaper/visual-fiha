@@ -4,7 +4,16 @@ var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
   template: '<img />',
 
+
   bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
     'model.src': {
       type: 'attribute',
       name: 'src'

@@ -77,16 +77,15 @@ var MappingControlView = View.extend({
     var model = this.model;
     var layer = model.targetModel;
     helper.attach(inputEl, function (selected) {
-      console.info('selected', selected);
       model.eventNames = selected;
       layer.trigger('change:mappings', layer.mappings);
       helper.detach();
     }).fill(this.signalNames);
   },
 
-  _mappingBlur: function(evt) {
-    this.rootView.suggestionHelper.detach();
-    this._mappingChange(evt);
+  _mappingBlur: function() {
+    this._mappingChange();
+    // this.rootView.suggestionHelper.detach();
   },
 
   _mappingChange: function () {

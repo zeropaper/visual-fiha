@@ -18,6 +18,8 @@ var LayerView = View.extend({
   derived: {
     style: {
       deps: [
+        'width',
+        'height',
         'model.opacity',
         'model.skewX',
         'model.skewY',
@@ -35,9 +37,10 @@ var LayerView = View.extend({
         'model.backfaceVisibility'
       ],
       fn: function() {
-        // console.info('compute %s %s layer styles', this.model.name, this.model.type);
         return {
           opacity: this.model.opacity,
+          width: this.width + 'px',
+          height: this.height + 'px',
           transform:
                     'rotateX(' + this.model.rotateX + 'deg) ' +
                     'rotateY(' + this.model.rotateY + 'deg) ' +
@@ -45,8 +48,8 @@ var LayerView = View.extend({
                     'translateX(' + this.model.translateX + '%) ' +
                     'translateY(' + this.model.translateY + '%) ' +
                     // 'translateZ(' + this.model.translateZ + '%) ' +
-                    'scaleX(' + this.model.scaleX + '%) ' +
-                    'scaleY(' + this.model.scaleY + '%) ' +
+                    'scaleX(' + this.model.scaleX + ') ' +
+                    'scaleY(' + this.model.scaleY + ') ' +
                     // 'scaleZ(' + this.model.scaleZ + '%) ' +
                     'skewX(' + this.model.skewX + 'deg) ' +
                     'skewY(' + this.model.skewY + 'deg) ' +
@@ -68,14 +71,6 @@ var LayerView = View.extend({
     },
     'model.type': '[data-hook=type]',
     'model.name': '[data-hook=name]',
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
-    },
     style: {
       type: function() {
         var computed = this.style;

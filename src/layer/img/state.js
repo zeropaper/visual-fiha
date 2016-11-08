@@ -6,6 +6,7 @@ module.exports = ScreenLayerState.img = ScreenLayerState.extend({
   },
 
   initialize: function() {
+    ScreenLayerState.prototype.initialize.apply(this, arguments);
     if (!this.src) {
       throw new Error('Missing src attribute for img layer');
     }

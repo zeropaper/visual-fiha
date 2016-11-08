@@ -43,7 +43,7 @@ var MappingState = State.extend({
     }
   },
 
-  applyValue: function(originalVal/*, midiInputState, triggeredEvtName*/) {
+  applyValue: function(originalVal) {
     var val = originalVal;
     if (typeof this.value !== 'undefined' && this.value !== null) {
       val = this.value;
@@ -99,14 +99,28 @@ var MappingsCollection = Collection.extend({
 });
 
 var MappableState = State.extend({
+  initialize: function() {
+    this.fillCollection();
+  },
+
+  fillCollection: function() {
+    var mappings = this.mappings;
+    var propNames = Object.keys(this.constructor.prototype._definition).filter(function (propName) {
+      return ['type', 'name'].indexOf(propName) < 0;
+    });
+
+    propNames.forEach(function (propName) {
+      if (!mappings.get(propName)) {
+        mappings.add({
+          targetProperty: propName
+        });
+      }
+    });
+    return this;
+  },
+
   collections: {
     mappings: MappingsCollection
-  // },
-
-  // toJSON: function() {
-  //   var obj = State.prototype.toJSON.apply(this, arguments);
-  //   obj.mappings = obj.mappings || this.mappings.toJSON.apply(this.mappings, arguments);
-  //   return obj;
   }
 });
 module.exports = MappableState;

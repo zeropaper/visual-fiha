@@ -24,11 +24,7 @@ var SignalDetailsView = DetailsView.extend({
     transformationsView: {
       selector: '.transformations',
       prepareView: function (el) {
-        return this.renderCollection(this.model.transformations, /*function (opts) {
-          var TransformationControlView = VF.TransformationControlView;
-          var Constructor = TransformationControlView[opts.model.targetProperty] || TransformationControlView['type' + opts.model.targetProperty] || TransformationControlView;
-          return new Constructor(opts);
-        }*/TransformationControlView, el);
+        return this.renderCollection(this.model.transformations, TransformationControlView, el);
       }
     }
   }),
@@ -60,8 +56,8 @@ var SignalDetailsView = DetailsView.extend({
     });
   },
 
-  bindings: {
+  bindings: assign({
     'model.name': '[data-hook=name]'
-  }
+  }, DetailsView.prototype.bindings)
 });
 module.exports = SignalDetailsView;

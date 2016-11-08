@@ -40,6 +40,7 @@ var SuggestionView = VFDeps.View.extend({
   },
 
   detach: function () {
+    this.off('selected');
     this.unset('inputEl');
     this.collection.reset([]);
     return this;
@@ -59,9 +60,7 @@ var SuggestionView = VFDeps.View.extend({
       else {
         update = this.collection.filter(function (suggestion) {
           return suggestion.text.indexOf(inputElVal) === 0;
-        })/*.map(function(suggestion) {
-          return suggestion;
-        })*/;
+        });
       }
     }
 

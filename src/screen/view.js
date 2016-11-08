@@ -33,12 +33,10 @@ var ScreenView = View.extend({
     }
   },
 
-  props: {
-  },
-
   session: {
     width: ['number', true, 400],
     height: ['number', true, 300],
+    broadcastId: ['string', true, 'vfBus'],
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();
@@ -67,7 +65,7 @@ var ScreenView = View.extend({
     }
 
     if (window.BroadcastChannel) {
-      var channel = screenView.channel = new window.BroadcastChannel('vf_bus');
+      var channel = screenView.channel = new window.BroadcastChannel(this.broadcastId);
       channel.onmessage = function(e) {
         e.data.latency = performance.now() - e.timeStamp;
         // console.info('update for %s, %s', screenView.cid, e.data.latency);

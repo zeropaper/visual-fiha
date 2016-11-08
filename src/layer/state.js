@@ -58,21 +58,21 @@ var LayerState = MappableState.extend({
     // },
     scaleX: {
       type: 'number',
-      default: 100,
-      min: -1000,
-      max: 1000
+      default: 1,
+      min: -10,
+      max: 10
     },
     scaleY: {
       type: 'number',
-      default: 100,
-      min: -1000,
-      max: 1000
+      default: 1,
+      min: -10,
+      max: 10
     },
     // scaleZ: {
     //   type: 'number',
-    //   default: 100,
-    //   min: -1000,
-    //   max: 1000
+    //   default: 1,
+    //   min: -10,
+    //   max: 10
     // },
     originX: {
       type: 'number',

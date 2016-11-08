@@ -5,7 +5,7 @@ var MappableState = require('./../../mappable/state');
 var CanvasLayer = MappableState.extend({
   idAttribute: 'name',
 
-  initialize: function() {
+  fillCollection: function() {
     var mappings = this.mappings;
     var propNames = Object.keys(this.constructor.prototype._definition).filter(function (propName) {
       return ['drawFunction', 'name'].indexOf(propName) < 0;

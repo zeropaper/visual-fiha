@@ -16,7 +16,7 @@ require('./../signal/beat/control-view');
 require('./../signal/hsla/control-view');
 require('./../signal/rgba/control-view');
 
-var SuggestionView = require('./../suggestion-view');
+var SuggestionView = require('./suggestion-view');
 var SparklineView = require('./sparkline-view');
 // var AceEditor = require('./ace-view');
 // var TimelineView = require('./timeline-view');
@@ -45,7 +45,7 @@ var ControllerView = View.extend({
     }
 
     if (window.BroadcastChannel) {
-      controllerView.channel = new window.BroadcastChannel('vf_bus');
+      controllerView.channel = new window.BroadcastChannel(this.broadcastId);
     }
 
     // navigator.getUserMedia({
@@ -71,17 +71,21 @@ var ControllerView = View.extend({
 
   _animate: function(timestamp) {
     if (this.controllerSparkline) {
-      this.controllerSparkline.update((timestamp - this.frametime) - this.firstframetime);
+      this.controllerSparkline.update((timestamp - this.model.frametime) - this.model.firstframetime);
     }
-    this.frametime = timestamp - this.firstframetime;
+    if (this.screenSparkline) {
+      this.screenSparkline.update(this.screenView.model.latency);
+    }
+
+    this.model.frametime = timestamp - this.model.firstframetime;
     this.update({
-      frametime: this.frametime
+      frametime: this.model.frametime
     });
-    this._animationRequest = window.requestAnimationFrame(this._animate.bind(this));
+    this._arId = window.requestAnimationFrame(this._animate.bind(this));
   },
 
   update: function(options) {
-    var newState = this.model.toJSON();
+    var newState = this.model.serialize();
 
     var analyser = this.audioAnalyser;
     var bufferLength = analyser.frequencyBinCount;
@@ -143,30 +147,31 @@ var ControllerView = View.extend({
   },
 
   session: {
-    _animationRequest: 'number',
+    broadcastId: ['string', true, 'vfBus'],
+    _arId: 'number',
     currentDetails: 'state'
   },
 
   play: function() {
-    console.info('play', this._animationRequest, this.firstframetime);
-    if (this._animationRequest) {
+    console.info('play', this._arId, this.model.firstframetime);
+    if (this._arId) {
       throw new Error('Animation already played');
     }
-    this.firstframetime = this.firstframetime || performance.now();
-    return this._animate(this.firstframetime);
+    this.model.firstframetime = this.model.firstframetime || performance.now();
+    return this._animate(this.model.firstframetime);
   },
   pause: function() {
-    console.info('pause', this._animationRequest, this.firstframetime);
-    if (this._animationRequest) {
-      window.cancelAnimationFrame(this._animationRequest);
+    console.info('pause', this._arId, this.model.firstframetime);
+    if (this._arId) {
+      window.cancelAnimationFrame(this._arId);
     }
-    this._animationRequest = null;
+    this._arId = null;
     return this;
   },
   stop: function() {
-    console.info('stop', this._animationRequest, this.firstframetime);
+    console.info('stop', this._arId, this.model.firstframetime);
     this.pause();
-    this.firstframetime = 0;
+    this.model.firstframetime = 0;
     return this;
   },
 
@@ -252,9 +257,6 @@ var ControllerView = View.extend({
           model: screenModel,
           mode: 'control'
         });
-        this.listenTo(screenModel, 'change:latency', function() {
-          this.screenSparkline.update(screenModel.latency);
-        });
 
         var p = this.query('.screen-cell').parentNode;
         this.screenCellSensor = new ResizeSensor(p, debounce(function resize() {
@@ -308,7 +310,7 @@ var ControllerView = View.extend({
   },
 
   bindings: {
-    _animationRequest: [
+    _arId: [
       {
         type: 'toggle',
         selector: '[name="play"]',
@@ -339,7 +341,7 @@ var ControllerView = View.extend({
   },
 
   _openScreen: function() {
-    window.open('./screen.html', 'screen');
+    window.open('./screen.html#' + this.broadcastId, 'screen');
   },
 
   _changeRatio: function (evt) {
@@ -419,11 +421,11 @@ var ControllerView = View.extend({
       '</div>'+
     '</div>'+
     '<div class="row columns body">'+
-      '<div class="column grow-l rows">'+
+      '<div class="column no-grow rows">'+
         '<div class="row no-grow screen-cell">'+
           '<div class="screen"></div>'+
         '</div>'+
-        '<div class="row details"></div>'+
+        '<div class="row  grow-l details"></div>'+
         '<div class="row debug no-grow"></div>'+
       '</div>'+
       '<div class="column rows settings">'+

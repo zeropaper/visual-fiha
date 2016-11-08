@@ -1,99 +1,99 @@
 // (function() {
   'use strict';
 
-  var _ctxs = {};
-  function mkImgCtx(w, h, img) {
-    var cacheName = w + '-' + h + '-' + Math.round((img.currentTime || 0) * 100) + '-' + img.src;
+  // var _ctxs = {};
+  // function mkImgCtx(w, h, img) {
+  //   var cacheName = w + '-' + h + '-' + Math.round((img.currentTime || 0) * 100) + '-' + img.src;
 
-    if (!_ctxs[cacheName]) {
-      var canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      var ctx = _ctxs[cacheName] = canvas.getContext('2d');
+  //   if (!_ctxs[cacheName]) {
+  //     var canvas = document.createElement('canvas');
+  //     canvas.width = w;
+  //     canvas.height = h;
+  //     var ctx = _ctxs[cacheName] = canvas.getContext('2d');
 
-      var iw = img.width || img.videoWidth;
-      var ih = img.height || img.videoHeight;
+  //     var iw = img.width || img.videoWidth;
+  //     var ih = img.height || img.videoHeight;
 
-      var rw = w / iw;
-      var rh = h / ih;
-      var r = Math.max(rh, rw);
-      var sw = (w - iw * r) / 2;
-      var sh = (h - ih * r) / 2;
+  //     var rw = w / iw;
+  //     var rh = h / ih;
+  //     var r = Math.max(rh, rw);
+  //     var sw = (w - iw * r) / 2;
+  //     var sh = (h - ih * r) / 2;
 
-      ctx.drawImage(
-      img,
-      0, 0, iw, ih,
-      sw, sh, iw * r, ih * r
-    );
-    }
-    var k = Object.keys(_ctxs);
-    var c = k.length;
-    if (c > 100) {
-      delete _ctxs[k[0]];
-    }
-    return _ctxs[cacheName].canvas;
-  }
+  //     ctx.drawImage(
+  //     img,
+  //     0, 0, iw, ih,
+  //     sw, sh, iw * r, ih * r
+  //   );
+  //   }
+  //   var k = Object.keys(_ctxs);
+  //   var c = k.length;
+  //   if (c > 100) {
+  //     delete _ctxs[k[0]];
+  //   }
+  //   return _ctxs[cacheName].canvas;
+  // }
 
-  var _cache = {};
-  function loadImg(cw, ch, src, done) {
-    if (_cache[src] === false) { return done(); }
-    if (_cache[src]) { return done(null, _cache[src]); }
+  // var _cache = {};
+  // function loadImg(cw, ch, src, done) {
+  //   if (_cache[src] === false) { return done(); }
+  //   if (_cache[src]) { return done(null, _cache[src]); }
 
-    var img = document.createElement('img');
+  //   var img = document.createElement('img');
 
-    img.addEventListener('load', function() {
-      _cache[src] = mkImgCtx(cw, ch, img);
-      done(null, _cache[src]);
-    });
+  //   img.addEventListener('load', function() {
+  //     _cache[src] = mkImgCtx(cw, ch, img);
+  //     done(null, _cache[src]);
+  //   });
 
-    img.addEventListener('error', function() {
-      var err = new Error('Cannot load image ' + src);
-      _cache[src] = err;
-      done(err);
-    });
+  //   img.addEventListener('error', function() {
+  //     var err = new Error('Cannot load image ' + src);
+  //     _cache[src] = err;
+  //     done(err);
+  //   });
 
-    _cache[src] = false;
-    img.src = src;
-  }
+  //   _cache[src] = false;
+  //   img.src = src;
+  // }
 
-  var skies = [
-    {
-      back: './assets/sky1/sky1-back.png',
-      middle: './assets/sky1/sky1-middle.png',
-      front: './assets/sky1/sky1-front.png',
-      frontCache: './assets/sky1/sky1-front-cache.png'
-    },
-    {
-      back: './assets/sky1/sky1-back-grey.png',
-      middle: './assets/sky1/sky1-middle-grey.png',
-      front: './assets/sky1/sky1-front-grey.png',
-      frontCache: './assets/sky1/sky1-front-cache-grey.png'
-    },
-    {
-      back: './assets/sky2/sky2-back.png',
-      middle: null,
-      front: './assets/sky2/sky2-front.png',
-      frontCache: null
-    }
-  ];
+  // var skies = [
+  //   {
+  //     back: './assets/sky1/sky1-back.png',
+  //     middle: './assets/sky1/sky1-middle.png',
+  //     front: './assets/sky1/sky1-front.png',
+  //     frontCache: './assets/sky1/sky1-front-cache.png'
+  //   },
+  //   {
+  //     back: './assets/sky1/sky1-back-grey.png',
+  //     middle: './assets/sky1/sky1-middle-grey.png',
+  //     front: './assets/sky1/sky1-front-grey.png',
+  //     frontCache: './assets/sky1/sky1-front-cache-grey.png'
+  //   },
+  //   {
+  //     back: './assets/sky2/sky2-back.png',
+  //     middle: null,
+  //     front: './assets/sky2/sky2-front.png',
+  //     frontCache: null
+  //   }
+  // ];
 
   var canvasLayers = [
-    {
-      name: 'back',
-      active: false,
-      weight: 0,
-      drawFunction: function(ctx) {
-        var cw = ctx.canvas.width;
-        var ch = ctx.canvas.height;
-        loadImg(cw, ch, skies[this.serie || 0].back, function(err, img) {
-          if (!img) { return; }
-          ctx.drawImage(img, 0, 0, cw, ch);
-        });
-      },
-      props: {
-        serie: ['number', true, 0]
-      }
-    },
+    // {
+    //   name: 'back',
+    //   active: false,
+    //   weight: 0,
+    //   drawFunction: function(ctx) {
+    //     var cw = ctx.canvas.width;
+    //     var ch = ctx.canvas.height;
+    //     loadImg(cw, ch, skies[this.serie || 0].back, function(err, img) {
+    //       if (!img) { return; }
+    //       ctx.drawImage(img, 0, 0, cw, ch);
+    //     });
+    //   },
+    //   props: {
+    //     serie: ['number', true, 0]
+    //   }
+    // },
     {
       name: 'circles',
       active: false,
@@ -220,23 +220,22 @@
           targetProperty: 'arbitraryB'
         }
       ]
-    },
-
-    {
-      name: 'middle',
-      active: false,
-      weight: 6,
-      drawFunction: function(ctx) {
-        var cw = ctx.canvas.width;
-        var ch = ctx.canvas.height;
-        loadImg(cw, ch, skies[this.serie || 0].middle, function(err, img) {
-          if (!img) { return; }
-          ctx.drawImage(img, 0, 0, cw, ch);
-        });
-      },
-      props: {
-        serie: ['number', true, 0]
-      }
+    // },
+    // {
+    //   name: 'middle',
+    //   active: false,
+    //   weight: 6,
+    //   drawFunction: function(ctx) {
+    //     var cw = ctx.canvas.width;
+    //     var ch = ctx.canvas.height;
+    //     loadImg(cw, ch, skies[this.serie || 0].middle, function(err, img) {
+    //       if (!img) { return; }
+    //       ctx.drawImage(img, 0, 0, cw, ch);
+    //     });
+    //   },
+    //   props: {
+    //     serie: ['number', true, 0]
+    //   }
     },
     {
       name: 'soundbars',
@@ -261,42 +260,40 @@
           x += barWidth + 1;
         }
       }
-    },
-    {
-      name: 'front',
-      blending: 'source-out',
-      active: false,
-      weight: 7,
-      drawFunction: function(ctx) {
-        var layerState = this;
-        var cw = layerState.width;
-        var ch = layerState.height;
-        loadImg(cw, ch, skies[this.serie || 0].front, function(err, img) {
-          if (!img) { return; }
-          ctx.drawImage(img, 0, 0, cw, ch);
-        });
-      },
-      props: {
-        serie: ['number', true, 0]
-      }
-    },
-    {
-      name: 'frontCache',
-      blending: 'source-out',
-      weight: 8,
-      active: false,
-      drawFunction: function(ctx) {
-        var layerState = this;
-        var cw = layerState.width;
-        var ch = layerState.height;
-        loadImg(cw, ch, skies[this.serie || 0].frontCache, function(err, img) {
-          if (!img) { return; }
-          ctx.drawImage(img, 0, 0, layerState.width, layerState.height);
-        });
-      },
-      props: {
-        serie: ['number', true, 0]
-      }
+    // },
+    // {
+    //   name: 'front',
+    //   blending: 'source-out',
+    //   active: false,
+    //   weight: 7,
+    //   drawFunction: function(ctx) {
+    //     var cw = ctx.canvas.width;
+    //     var ch = ctx.canvas.height;
+    //     loadImg(cw, ch, skies[this.serie || 0].front, function(err, img) {
+    //       if (!img) { return; }
+    //       ctx.drawImage(img, 0, 0, cw, ch);
+    //     });
+    //   },
+    //   props: {
+    //     serie: ['number', true, 0]
+    //   }
+    // },
+    // {
+    //   name: 'frontCache',
+    //   blending: 'source-out',
+    //   weight: 8,
+    //   active: false,
+    //   drawFunction: function(ctx) {
+    //     var cw = ctx.canvas.width;
+    //     var ch = ctx.canvas.height;
+    //     loadImg(cw, ch, skies[this.serie || 0].frontCache, function(err, img) {
+    //       if (!img) { return; }
+    //       ctx.drawImage(img, 0, 0, cw, ch);
+    //     });
+    //   },
+    //   props: {
+    //     serie: ['number', true, 0]
+    //   }
     }
   ];
 
@@ -395,6 +392,12 @@
 
 
     screenLayers: [
+      {
+        type: 'img',
+        name: 'Sky 1 back',
+        active: true,
+        src: './assets/sky1/sky1-back.png'
+      },
       // {
       //   type: 'video',
       //   name: 'Video 1',
@@ -404,20 +407,27 @@
       {
         type: 'SVG',
         name: 'zeropaper',
-        active: true,
+        active: false,
         src: './assets/zeropaper-fat.svg'
       },
       {
         type: 'SVG',
         name: 'Visual Fiha',
-        active: false,
+        active: true,
         src: './assets/visual-fiha.svg'
+
       },
       {
         type: 'canvas',
         name: 'Canvas layer',
-        active: false,
+        active: true,
         canvasLayers: canvasLayers
+      },
+      {
+        type: 'img',
+        name: 'Sky 1 front',
+        active: true,
+        src: './assets/sky1/sky1-front.png'
       }
     ]
   };
