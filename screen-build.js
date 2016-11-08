@@ -6,7 +6,7 @@ var MappableState = require('./../../mappable/state');
 var CanvasLayer = MappableState.extend({
   idAttribute: 'name',
 
-  initialize: function() {
+  fillCollection: function() {
     var mappings = this.mappings;
     var propNames = Object.keys(this.constructor.prototype._definition).filter(function (propName) {
       return ['drawFunction', 'name'].indexOf(propName) < 0;
@@ -213,15 +213,19 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
-  // },
+  },
 
-  // render: function() {
-  //   if (!this.el) {
-  //     this.renderWithTemplate();
-  //   }
 
-  //   return this.update();
-  }
+  bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
+  }, ScreenLayerView.prototype.bindings)
 });
 },{"./../view":10}],3:[function(require,module,exports){
 'use strict';
@@ -232,6 +236,7 @@ module.exports = ScreenLayerState.img = ScreenLayerState.extend({
   },
 
   initialize: function() {
+    ScreenLayerState.prototype.initialize.apply(this, arguments);
     if (!this.src) {
       throw new Error('Missing src attribute for img layer');
     }
@@ -242,7 +247,22 @@ module.exports = ScreenLayerState.img = ScreenLayerState.extend({
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.img = ScreenLayerView.extend({
-  template: '<img />'
+  template: '<img />',
+
+  bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
+    'model.src': {
+      type: 'attribute',
+      name: 'src'
+    }
+  }, ScreenLayerView.prototype.bindings)
 });
 },{"./../view":10}],5:[function(require,module,exports){
 'use strict';
@@ -305,21 +325,21 @@ var LayerState = MappableState.extend({
     // },
     scaleX: {
       type: 'number',
-      default: 100,
-      min: -1000,
-      max: 1000
+      default: 1,
+      min: -10,
+      max: 10
     },
     scaleY: {
       type: 'number',
-      default: 100,
-      min: -1000,
-      max: 1000
+      default: 1,
+      min: -10,
+      max: 10
     },
     // scaleZ: {
     //   type: 'number',
-    //   default: 100,
-    //   min: -1000,
-    //   max: 1000
+    //   default: 1,
+    //   min: -10,
+    //   max: 10
     // },
     originX: {
       type: 'number',
@@ -360,6 +380,7 @@ module.exports = ScreenLayerState.SVG = ScreenLayerState.extend({
   },
 
   initialize: function() {
+    ScreenLayerState.prototype.initialize.apply(this, arguments);
     if (!this.src) {
       throw new Error('Missing src attribute for SVG layer');
     }
@@ -372,7 +393,16 @@ var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
   template: '<img />',
 
+
   bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
     'model.src': {
       type: 'attribute',
       name: 'src'
@@ -388,6 +418,7 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
   },
 
   initialize: function() {
+    ScreenLayerState.prototype.initialize.apply(this, arguments);
     if (!this.src) {
       throw new Error('Missing src attribute for video layer');
     }
@@ -401,6 +432,14 @@ module.exports = ScreenLayerView.video = ScreenLayerView.extend({
   template: '<video autoplay loop muted></video>',
 
   bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
     'model.src': {
       type: 'attribute',
       name: 'src'
@@ -428,6 +467,8 @@ var LayerView = View.extend({
   derived: {
     style: {
       deps: [
+        'width',
+        'height',
         'model.opacity',
         'model.skewX',
         'model.skewY',
@@ -445,9 +486,10 @@ var LayerView = View.extend({
         'model.backfaceVisibility'
       ],
       fn: function() {
-        // console.info('compute %s %s layer styles', this.model.name, this.model.type);
         return {
           opacity: this.model.opacity,
+          width: this.width + 'px',
+          height: this.height + 'px',
           transform:
                     'rotateX(' + this.model.rotateX + 'deg) ' +
                     'rotateY(' + this.model.rotateY + 'deg) ' +
@@ -455,8 +497,8 @@ var LayerView = View.extend({
                     'translateX(' + this.model.translateX + '%) ' +
                     'translateY(' + this.model.translateY + '%) ' +
                     // 'translateZ(' + this.model.translateZ + '%) ' +
-                    'scaleX(' + this.model.scaleX + '%) ' +
-                    'scaleY(' + this.model.scaleY + '%) ' +
+                    'scaleX(' + this.model.scaleX + ') ' +
+                    'scaleY(' + this.model.scaleY + ') ' +
                     // 'scaleZ(' + this.model.scaleZ + '%) ' +
                     'skewX(' + this.model.skewX + 'deg) ' +
                     'skewY(' + this.model.skewY + 'deg) ' +
@@ -478,14 +520,6 @@ var LayerView = View.extend({
     },
     'model.type': '[data-hook=type]',
     'model.name': '[data-hook=name]',
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
-    },
     style: {
       type: function() {
         var computed = this.style;
@@ -547,7 +581,7 @@ var MappingState = State.extend({
     }
   },
 
-  applyValue: function(originalVal/*, midiInputState, triggeredEvtName*/) {
+  applyValue: function(originalVal) {
     var val = originalVal;
     if (typeof this.value !== 'undefined' && this.value !== null) {
       val = this.value;
@@ -603,14 +637,28 @@ var MappingsCollection = Collection.extend({
 });
 
 var MappableState = State.extend({
+  initialize: function() {
+    this.fillCollection();
+  },
+
+  fillCollection: function() {
+    var mappings = this.mappings;
+    var propNames = Object.keys(this.constructor.prototype._definition).filter(function (propName) {
+      return ['type', 'name'].indexOf(propName) < 0;
+    });
+
+    propNames.forEach(function (propName) {
+      if (!mappings.get(propName)) {
+        mappings.add({
+          targetProperty: propName
+        });
+      }
+    });
+    return this;
+  },
+
   collections: {
     mappings: MappingsCollection
-  // },
-
-  // toJSON: function() {
-  //   var obj = State.prototype.toJSON.apply(this, arguments);
-  //   obj.mappings = obj.mappings || this.mappings.toJSON.apply(this.mappings, arguments);
-  //   return obj;
   }
 });
 module.exports = MappableState;
@@ -621,11 +669,21 @@ var ScreenState = require('./screen/state');
 var ScreenView = require('./screen/view');
 
 var screenView = new ScreenView({
+  broadcastId: window.location.hash.slice(1),
   el: document.querySelector('.screen'),
   model: new ScreenState({})
 });
-screenView.render();
 
+var bdy = document.body;
+function resize() {
+  screenView.set({
+    width: bdy.clientWidth,
+    height: bdy.clientHeight
+  });
+  screenView.render();
+}
+window.addEventListener('resize', VFDeps.throttle(resize, 100));
+setTimeout(resize, 1500);
 },{"./screen/state":13,"./screen/view":14}],13:[function(require,module,exports){
 'use strict';
 var State = VFDeps.State;
@@ -707,12 +765,10 @@ var ScreenView = View.extend({
     }
   },
 
-  props: {
-  },
-
   session: {
     width: ['number', true, 400],
     height: ['number', true, 300],
+    broadcastId: ['string', true, 'vfBus'],
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();
@@ -741,7 +797,7 @@ var ScreenView = View.extend({
     }
 
     if (window.BroadcastChannel) {
-      var channel = screenView.channel = new window.BroadcastChannel('vf_bus');
+      var channel = screenView.channel = new window.BroadcastChannel(this.broadcastId);
       channel.onmessage = function(e) {
         e.data.latency = performance.now() - e.timeStamp;
         // console.info('update for %s, %s', screenView.cid, e.data.latency);

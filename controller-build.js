@@ -43,7 +43,7 @@ controllerSetup.el = document.querySelector('.controller');
 // controllerSetup.record = window.location.hash === '#record';
 window.visualFiha = setupController(controllerSetup);
 
-},{"./controller/view":4}],2:[function(require,module,exports){
+},{"./controller/view":5}],2:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var MappingControlView = require('./../mappable/control-view');
@@ -62,7 +62,6 @@ var DetailsView = View.extend({
     mappingsView: {
       selector: '.mappings',
       prepareView: function (el) {
-        console.info('details view mappingsView');
         return this.renderCollection(this.model.mappings, function (opts) {
           var Constructor = MappingControlView[opts.model.targetProperty] || MappingControlView;
           return new Constructor(opts);
@@ -76,7 +75,7 @@ var DetailsView = View.extend({
   }
 });
 module.exports = DetailsView;
-},{"./../mappable/control-view":17}],3:[function(require,module,exports){
+},{"./../mappable/control-view":18}],3:[function(require,module,exports){
 'use strict';
 module.exports = VFDeps.View.extend({
   autoRender: true,
@@ -220,6 +219,212 @@ module.exports = VFDeps.View.extend({
 
 },{}],4:[function(require,module,exports){
 'use strict';
+var SuggestionItem = VFDeps.View.extend({
+  template: '<li></li>',
+  bindings: {
+    'model.text': {type: 'text'}
+  },
+  events: {
+    click: '_handleClick'
+  },
+  _handleClick: function (evt) {
+    evt.preventDefault();
+    this.parent.trigger('selected', this.model.value || this.model.text);
+  }
+});
+
+var SuggestionView = VFDeps.View.extend({
+  autoRender: true,
+
+  attach: function (el, selectCb, newCollection) {
+    this.inputEl = typeof el === 'string' ? this.parent.query(el) : el;
+    selectCb = selectCb || function(selected) { this.inputEl.textContent = selected; this.detach(); }.bind(this);
+    this.off('selected');
+    this.once('selected', selectCb);
+
+    if (newCollection) {
+      if (newCollection.isCollection) {
+        this.collection = newCollection;
+      }
+      else {
+        this.collection.reset(newCollection);
+      }
+    }
+
+    return this;
+  },
+
+  fill: function (arr) {
+    this.collection.reset(arr.map(function (v) { return {text:v}; }));
+    return this.filterCollection();
+  },
+
+  detach: function () {
+    this.off('selected');
+    this.unset('inputEl');
+    this.collection.reset([]);
+    return this;
+  },
+
+  filterCollection: function () {
+    var update = [];
+    if (!this.inputEl) {
+      update = this.collection.serialize();
+    }
+    else {
+      var inputElVal = this.inputEl.textContent || this.inputEl.value;
+
+      if (!inputElVal) {
+        update = this.collection.serialize();
+      }
+      else {
+        update = this.collection.filter(function (suggestion) {
+          return suggestion.text.indexOf(inputElVal) === 0;
+        });
+      }
+    }
+
+    this.suggestions.reset(update);
+
+    return this;
+  },
+
+  session: {
+    inputEl: 'element'
+  },
+
+  _handleInput: function() {
+    this.filterCollection();
+  },
+
+  resetPosition: function() {
+    var view = this;
+    if (!view.el || !view.el.parentNode || !view.inputEl) { return view; }
+    view.el.style.visibility = 'hidden';
+
+    setTimeout(function () {
+      if (!view.el || !view.el.parentNode || !view.inputEl) { return; }
+      var ipos = view.inputEl.getBoundingClientRect();
+      var bpos = view.el.getBoundingClientRect();
+
+      if (ipos.top > view.el.parentNode.clientHeight * 0.5) {
+        view.el.style.maxHeight = Math.min(ipos.top, view.el.parentNode.clientHeight * 0.33) + 'px';
+        view.el.style.top = ((ipos.top - view.el.clientHeight) - 3) + 'px';
+      }
+      else {
+        view.el.style.maxHeight = Math.min(ipos.bottom, view.el.parentNode.clientHeight * 0.33) + 'px';
+        view.el.style.top = (ipos.bottom + 3) + 'px';
+      }
+
+      var s = window.getComputedStyle(view.inputEl);
+      view.el.style.textAlign = s.textAlign;
+      if (s.textAlign === 'right') {
+        view.el.style.left = (ipos.left - (bpos.width - ipos.width)) + 'px';
+      }
+      else {
+        view.el.style.left = (ipos.left) + 'px';
+      }
+
+      view.el.style.visibility = 'visible';
+    });
+
+    return view;
+  },
+
+  initialize: function () {
+    if (!this.parent) { throw new Error('Suggestion view need a parent view'); }
+
+    this.collection = this.collection || new VFDeps.Collection([], {parent: this});
+
+    this.on('change:collection', function () {
+      this.listenToAndRun(this.collection, 'add remove reset', this.filterCollection);
+    });
+
+    this.listenTo(this.suggestions, 'add remove reset', this.resetPosition);
+
+    var _handleInput = this._handleInput.bind(this);
+    var _handleBlur = function(evt) {
+      evt.preventDefault();
+    }.bind(this);
+
+    this.on('change:inputEl', function() {
+      var previous = this.previousAttributes();
+      if (previous.inputEl) {
+        previous.inputEl.removeEventListener('blur', _handleBlur);
+        previous.inputEl.removeEventListener('input', _handleInput);
+        previous.inputEl.removeEventListener('change', _handleInput);
+      }
+
+      var list = this.el;
+      var holderEl = this.parent.el;
+      var inputEl = this.inputEl;
+
+      if (!inputEl) {
+        if (this.el && this.el.parentNode === holderEl) {
+          holderEl.removeChild(this.el);
+        }
+        return;
+      }
+
+      if (!list || !holderEl) { return; }
+      if (list.parentNode !== holderEl) {
+
+        var holderElStyle = window.getComputedStyle(holderEl);
+        if (holderElStyle.position === 'static') {
+          holderEl.style.position = 'relative';
+        }
+
+        holderEl.appendChild(list);
+      }
+
+      this.resetPosition();
+      inputEl.addEventListener('blur', _handleBlur);
+      inputEl.addEventListener('input', _handleInput);
+      inputEl.addEventListener('change', _handleInput);
+    });
+
+    var _handleHolderClick = function (evt) {
+      evt.preventDefault();
+      if (evt.target !== this.inputEl && !this.el.contains(evt.target)) {
+        this.detach();
+      }
+    }.bind(this);
+
+    this.listenToAndRun(this.parent, 'change:el', function() {
+      var previous = this.parent.previousAttributes();
+      if (previous.el) {
+        previous.el.removeEventListener('click', _handleHolderClick);
+      }
+      if (this.parent.el) {
+        this.parent.el.addEventListener('click', _handleHolderClick);
+      }
+    });
+  },
+
+  collections: {
+    suggestions: VFDeps.Collection.extend({
+      model: VFDeps.State.extend({
+        props: {
+          text: ['string', true, ''],
+          value: ['any', false, null]
+        }
+      })
+    })
+  },
+
+  template: '<ul class="suggestion-view"></ul>',
+
+  render: function () {
+    this.renderWithTemplate();
+
+    this.items = this.renderCollection(this.suggestions, SuggestionItem, this.el);
+
+    return this;
+  }
+});
+module.exports = SuggestionView;
+},{}],5:[function(require,module,exports){
+'use strict';
 var View = VFDeps.View;
 var debounce = VFDeps.debounce;
 var ResizeSensor = VFDeps.ResizeSensor;
@@ -237,7 +442,7 @@ require('./../signal/beat/control-view');
 require('./../signal/hsla/control-view');
 require('./../signal/rgba/control-view');
 
-var SuggestionView = require('./../suggestion-view');
+var SuggestionView = require('./suggestion-view');
 var SparklineView = require('./sparkline-view');
 // var AceEditor = require('./ace-view');
 // var TimelineView = require('./timeline-view');
@@ -266,7 +471,7 @@ var ControllerView = View.extend({
     }
 
     if (window.BroadcastChannel) {
-      controllerView.channel = new window.BroadcastChannel('vf_bus');
+      controllerView.channel = new window.BroadcastChannel(this.broadcastId);
     }
 
     // navigator.getUserMedia({
@@ -292,17 +497,21 @@ var ControllerView = View.extend({
 
   _animate: function(timestamp) {
     if (this.controllerSparkline) {
-      this.controllerSparkline.update((timestamp - this.frametime) - this.firstframetime);
+      this.controllerSparkline.update((timestamp - this.model.frametime) - this.model.firstframetime);
     }
-    this.frametime = timestamp - this.firstframetime;
+    if (this.screenSparkline) {
+      this.screenSparkline.update(this.screenView.model.latency);
+    }
+
+    this.model.frametime = timestamp - this.model.firstframetime;
     this.update({
-      frametime: this.frametime
+      frametime: this.model.frametime
     });
-    this._animationRequest = window.requestAnimationFrame(this._animate.bind(this));
+    this._arId = window.requestAnimationFrame(this._animate.bind(this));
   },
 
   update: function(options) {
-    var newState = this.model.toJSON();
+    var newState = this.model.serialize();
 
     var analyser = this.audioAnalyser;
     var bufferLength = analyser.frequencyBinCount;
@@ -364,30 +573,31 @@ var ControllerView = View.extend({
   },
 
   session: {
-    _animationRequest: 'number',
+    broadcastId: ['string', true, 'vfBus'],
+    _arId: 'number',
     currentDetails: 'state'
   },
 
   play: function() {
-    console.info('play', this._animationRequest, this.firstframetime);
-    if (this._animationRequest) {
+    console.info('play', this._arId, this.model.firstframetime);
+    if (this._arId) {
       throw new Error('Animation already played');
     }
-    this.firstframetime = this.firstframetime || performance.now();
-    return this._animate(this.firstframetime);
+    this.model.firstframetime = this.model.firstframetime || performance.now();
+    return this._animate(this.model.firstframetime);
   },
   pause: function() {
-    console.info('pause', this._animationRequest, this.firstframetime);
-    if (this._animationRequest) {
-      window.cancelAnimationFrame(this._animationRequest);
+    console.info('pause', this._arId, this.model.firstframetime);
+    if (this._arId) {
+      window.cancelAnimationFrame(this._arId);
     }
-    this._animationRequest = null;
+    this._arId = null;
     return this;
   },
   stop: function() {
-    console.info('stop', this._animationRequest, this.firstframetime);
+    console.info('stop', this._arId, this.model.firstframetime);
     this.pause();
-    this.firstframetime = 0;
+    this.model.firstframetime = 0;
     return this;
   },
 
@@ -473,9 +683,6 @@ var ControllerView = View.extend({
           model: screenModel,
           mode: 'control'
         });
-        this.listenTo(screenModel, 'change:latency', function() {
-          this.screenSparkline.update(screenModel.latency);
-        });
 
         var p = this.query('.screen-cell').parentNode;
         this.screenCellSensor = new ResizeSensor(p, debounce(function resize() {
@@ -529,7 +736,7 @@ var ControllerView = View.extend({
   },
 
   bindings: {
-    _animationRequest: [
+    _arId: [
       {
         type: 'toggle',
         selector: '[name="play"]',
@@ -560,7 +767,7 @@ var ControllerView = View.extend({
   },
 
   _openScreen: function() {
-    window.open('./screen.html', 'screen');
+    window.open('./screen.html#' + this.broadcastId, 'screen');
   },
 
   _changeRatio: function (evt) {
@@ -640,11 +847,11 @@ var ControllerView = View.extend({
       '</div>'+
     '</div>'+
     '<div class="row columns body">'+
-      '<div class="column grow-l rows">'+
+      '<div class="column no-grow rows">'+
         '<div class="row no-grow screen-cell">'+
           '<div class="screen"></div>'+
         '</div>'+
-        '<div class="row details"></div>'+
+        '<div class="row  grow-l details"></div>'+
         '<div class="row debug no-grow"></div>'+
       '</div>'+
       '<div class="column rows settings">'+
@@ -684,7 +891,7 @@ var ControllerView = View.extend({
   '</div>'
 });
 module.exports = ControllerView;
-},{"./../layer/canvas/control-view":5,"./../layer/control-view":8,"./../midi/state":19,"./../screen/state":20,"./../screen/view":21,"./../signal/beat/control-view":22,"./../signal/control-view":24,"./../signal/hsla/control-view":26,"./../signal/rgba/control-view":28,"./../suggestion-view":31,"./sparkline-view":3}],5:[function(require,module,exports){
+},{"./../layer/canvas/control-view":6,"./../layer/control-view":9,"./../midi/state":20,"./../screen/state":21,"./../screen/view":22,"./../signal/beat/control-view":23,"./../signal/control-view":25,"./../signal/hsla/control-view":27,"./../signal/rgba/control-view":29,"./sparkline-view":3,"./suggestion-view":4}],6:[function(require,module,exports){
 'use strict';
 var LayerControlView = require('./../control-view');
 
@@ -838,7 +1045,7 @@ module.exports = LayerControlView.canvas = LayerControlView.extend({
     }
   }
 });
-},{"./../control-view":8}],6:[function(require,module,exports){
+},{"./../control-view":9}],7:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 // var CanvasLayer = ScreenLayerState.extend({
@@ -846,7 +1053,7 @@ var MappableState = require('./../../mappable/state');
 var CanvasLayer = MappableState.extend({
   idAttribute: 'name',
 
-  initialize: function() {
+  fillCollection: function() {
     var mappings = this.mappings;
     var propNames = Object.keys(this.constructor.prototype._definition).filter(function (propName) {
       return ['drawFunction', 'name'].indexOf(propName) < 0;
@@ -967,7 +1174,7 @@ module.exports = ScreenLayerState.canvas = ScreenLayerState.extend({
     canvasLayers: CanvasLayers
   }
 });
-},{"./../../mappable/state":18,"./../state":11}],7:[function(require,module,exports){
+},{"./../../mappable/state":19,"./../state":12}],8:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
@@ -1053,17 +1260,21 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
-  // },
+  },
 
-  // render: function() {
-  //   if (!this.el) {
-  //     this.renderWithTemplate();
-  //   }
 
-  //   return this.update();
-  }
+  bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
+  }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":16}],8:[function(require,module,exports){
+},{"./../view":17}],9:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var DetailsView = require('./../controller/details-view');
@@ -1150,7 +1361,7 @@ var LayerControlView = View.extend({
   }
 });
 module.exports = LayerControlView;
-},{"./../controller/details-view":2}],9:[function(require,module,exports){
+},{"./../controller/details-view":2}],10:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.img = ScreenLayerState.extend({
@@ -1159,19 +1370,35 @@ module.exports = ScreenLayerState.img = ScreenLayerState.extend({
   },
 
   initialize: function() {
+    ScreenLayerState.prototype.initialize.apply(this, arguments);
     if (!this.src) {
       throw new Error('Missing src attribute for img layer');
     }
   }
 });
-},{"./../state":11}],10:[function(require,module,exports){
+},{"./../state":12}],11:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.img = ScreenLayerView.extend({
-  template: '<img />'
+  template: '<img />',
+
+  bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
+    'model.src': {
+      type: 'attribute',
+      name: 'src'
+    }
+  }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":16}],11:[function(require,module,exports){
+},{"./../view":17}],12:[function(require,module,exports){
 'use strict';
 var MappableState = require('./../mappable/state');
 var LayerState = MappableState.extend({
@@ -1232,21 +1459,21 @@ var LayerState = MappableState.extend({
     // },
     scaleX: {
       type: 'number',
-      default: 100,
-      min: -1000,
-      max: 1000
+      default: 1,
+      min: -10,
+      max: 10
     },
     scaleY: {
       type: 'number',
-      default: 100,
-      min: -1000,
-      max: 1000
+      default: 1,
+      min: -10,
+      max: 10
     },
     // scaleZ: {
     //   type: 'number',
-    //   default: 100,
-    //   min: -1000,
-    //   max: 1000
+    //   default: 1,
+    //   min: -10,
+    //   max: 10
     // },
     originX: {
       type: 'number',
@@ -1278,7 +1505,7 @@ var LayerState = MappableState.extend({
   collections: MappableState.prototype.collections
 });
 module.exports = LayerState;
-},{"./../mappable/state":18}],12:[function(require,module,exports){
+},{"./../mappable/state":19}],13:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.SVG = ScreenLayerState.extend({
@@ -1287,26 +1514,36 @@ module.exports = ScreenLayerState.SVG = ScreenLayerState.extend({
   },
 
   initialize: function() {
+    ScreenLayerState.prototype.initialize.apply(this, arguments);
     if (!this.src) {
       throw new Error('Missing src attribute for SVG layer');
     }
   }
 });
-},{"./../state":11}],13:[function(require,module,exports){
+},{"./../state":12}],14:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
   template: '<img />',
 
+
   bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
     'model.src': {
       type: 'attribute',
       name: 'src'
     }
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":16}],14:[function(require,module,exports){
+},{"./../view":17}],15:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.video = ScreenLayerState.extend({
@@ -1315,12 +1552,13 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
   },
 
   initialize: function() {
+    ScreenLayerState.prototype.initialize.apply(this, arguments);
     if (!this.src) {
       throw new Error('Missing src attribute for video layer');
     }
   }
 });
-},{"./../state":11}],15:[function(require,module,exports){
+},{"./../state":12}],16:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
@@ -1328,13 +1566,21 @@ module.exports = ScreenLayerView.video = ScreenLayerView.extend({
   template: '<video autoplay loop muted></video>',
 
   bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
     'model.src': {
       type: 'attribute',
       name: 'src'
     }
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":16}],16:[function(require,module,exports){
+},{"./../view":17}],17:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 
@@ -1355,6 +1601,8 @@ var LayerView = View.extend({
   derived: {
     style: {
       deps: [
+        'width',
+        'height',
         'model.opacity',
         'model.skewX',
         'model.skewY',
@@ -1372,9 +1620,10 @@ var LayerView = View.extend({
         'model.backfaceVisibility'
       ],
       fn: function() {
-        // console.info('compute %s %s layer styles', this.model.name, this.model.type);
         return {
           opacity: this.model.opacity,
+          width: this.width + 'px',
+          height: this.height + 'px',
           transform:
                     'rotateX(' + this.model.rotateX + 'deg) ' +
                     'rotateY(' + this.model.rotateY + 'deg) ' +
@@ -1382,8 +1631,8 @@ var LayerView = View.extend({
                     'translateX(' + this.model.translateX + '%) ' +
                     'translateY(' + this.model.translateY + '%) ' +
                     // 'translateZ(' + this.model.translateZ + '%) ' +
-                    'scaleX(' + this.model.scaleX + '%) ' +
-                    'scaleY(' + this.model.scaleY + '%) ' +
+                    'scaleX(' + this.model.scaleX + ') ' +
+                    'scaleY(' + this.model.scaleY + ') ' +
                     // 'scaleZ(' + this.model.scaleZ + '%) ' +
                     'skewX(' + this.model.skewX + 'deg) ' +
                     'skewY(' + this.model.skewY + 'deg) ' +
@@ -1405,14 +1654,6 @@ var LayerView = View.extend({
     },
     'model.type': '[data-hook=type]',
     'model.name': '[data-hook=name]',
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
-    },
     style: {
       type: function() {
         var computed = this.style;
@@ -1428,7 +1669,7 @@ var LayerView = View.extend({
 });
 
 module.exports = LayerView;
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var assign = window.VFDeps.assign;
@@ -1508,16 +1749,15 @@ var MappingControlView = View.extend({
     var model = this.model;
     var layer = model.targetModel;
     helper.attach(inputEl, function (selected) {
-      console.info('selected', selected);
       model.eventNames = selected;
       layer.trigger('change:mappings', layer.mappings);
       helper.detach();
     }).fill(this.signalNames);
   },
 
-  _mappingBlur: function(evt) {
-    this.rootView.suggestionHelper.detach();
-    this._mappingChange(evt);
+  _mappingBlur: function() {
+    this._mappingChange();
+    // this.rootView.suggestionHelper.detach();
   },
 
   _mappingChange: function () {
@@ -1704,7 +1944,7 @@ MappingControlView.blending = MappingControlView.extend({
   ].join('')
 });
 module.exports = MappingControlView;
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 var State = VFDeps.State;
 var Collection = VFDeps.Collection;
@@ -1750,7 +1990,7 @@ var MappingState = State.extend({
     }
   },
 
-  applyValue: function(originalVal/*, midiInputState, triggeredEvtName*/) {
+  applyValue: function(originalVal) {
     var val = originalVal;
     if (typeof this.value !== 'undefined' && this.value !== null) {
       val = this.value;
@@ -1806,19 +2046,33 @@ var MappingsCollection = Collection.extend({
 });
 
 var MappableState = State.extend({
+  initialize: function() {
+    this.fillCollection();
+  },
+
+  fillCollection: function() {
+    var mappings = this.mappings;
+    var propNames = Object.keys(this.constructor.prototype._definition).filter(function (propName) {
+      return ['type', 'name'].indexOf(propName) < 0;
+    });
+
+    propNames.forEach(function (propName) {
+      if (!mappings.get(propName)) {
+        mappings.add({
+          targetProperty: propName
+        });
+      }
+    });
+    return this;
+  },
+
   collections: {
     mappings: MappingsCollection
-  // },
-
-  // toJSON: function() {
-  //   var obj = State.prototype.toJSON.apply(this, arguments);
-  //   obj.mappings = obj.mappings || this.mappings.toJSON.apply(this.mappings, arguments);
-  //   return obj;
   }
 });
 module.exports = MappableState;
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 var VFDeps = window.VFDeps;
 
@@ -2167,7 +2421,7 @@ var MIDIAccessState = State.extend({
 
 module.exports = MIDIAccessState;
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 var State = VFDeps.State;
 var Collection = VFDeps.Collection;
@@ -2212,7 +2466,7 @@ var ScreenState = State.extend({
   }
 });
 module.exports = ScreenState;
-},{"./../layer/canvas/state":6,"./../layer/img/state":9,"./../layer/state":11,"./../layer/svg/state":12,"./../layer/video/state":14,"./../signal/beat/state":23,"./../signal/hsla/state":27,"./../signal/rgba/state":29,"./../signal/state":30}],21:[function(require,module,exports){
+},{"./../layer/canvas/state":7,"./../layer/img/state":10,"./../layer/state":12,"./../layer/svg/state":13,"./../layer/video/state":15,"./../signal/beat/state":24,"./../signal/hsla/state":28,"./../signal/rgba/state":30,"./../signal/state":31}],22:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var LayerView = require('./../layer/view');
@@ -2248,12 +2502,10 @@ var ScreenView = View.extend({
     }
   },
 
-  props: {
-  },
-
   session: {
     width: ['number', true, 400],
     height: ['number', true, 300],
+    broadcastId: ['string', true, 'vfBus'],
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();
@@ -2282,7 +2534,7 @@ var ScreenView = View.extend({
     }
 
     if (window.BroadcastChannel) {
-      var channel = screenView.channel = new window.BroadcastChannel('vf_bus');
+      var channel = screenView.channel = new window.BroadcastChannel(this.broadcastId);
       channel.onmessage = function(e) {
         e.data.latency = performance.now() - e.timeStamp;
         // console.info('update for %s, %s', screenView.cid, e.data.latency);
@@ -2396,7 +2648,7 @@ var ScreenView = View.extend({
   }
 });
 module.exports = ScreenView;
-},{"./../layer/canvas/view":7,"./../layer/img/view":10,"./../layer/svg/view":13,"./../layer/video/view":15,"./../layer/view":16}],22:[function(require,module,exports){
+},{"./../layer/canvas/view":8,"./../layer/img/view":11,"./../layer/svg/view":14,"./../layer/video/view":16,"./../layer/view":17}],23:[function(require,module,exports){
 'use strict';
 var assign = window.VFDeps.assign;
 var SignalControlView = require('./../control-view');
@@ -2452,7 +2704,7 @@ var BeatSignalControlView = SignalControlView.beatSignal = SignalControlView.ext
   }
 });
 module.exports = BeatSignalControlView;
-},{"./../control-view":24}],23:[function(require,module,exports){
+},{"./../control-view":25}],24:[function(require,module,exports){
 'use strict';
 var SignalState = require('./../state');
 
@@ -2491,7 +2743,7 @@ var BeatState = SignalState.extend({
 });
 
 module.exports = BeatState;
-},{"./../state":30}],24:[function(require,module,exports){
+},{"./../state":31}],25:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var SignalDetailsView = require('./details-view');
@@ -2571,7 +2823,7 @@ var SignalControlView = View.extend({
   }
 });
 module.exports = SignalControlView;
-},{"./details-view":25}],25:[function(require,module,exports){
+},{"./details-view":26}],26:[function(require,module,exports){
 'use strict';
 var assign = window.VFDeps.assign;
 var DetailsView = require('./../controller/details-view');
@@ -2598,11 +2850,7 @@ var SignalDetailsView = DetailsView.extend({
     transformationsView: {
       selector: '.transformations',
       prepareView: function (el) {
-        return this.renderCollection(this.model.transformations, /*function (opts) {
-          var TransformationControlView = VF.TransformationControlView;
-          var Constructor = TransformationControlView[opts.model.targetProperty] || TransformationControlView['type' + opts.model.targetProperty] || TransformationControlView;
-          return new Constructor(opts);
-        }*/TransformationControlView, el);
+        return this.renderCollection(this.model.transformations, TransformationControlView, el);
       }
     }
   }),
@@ -2634,12 +2882,12 @@ var SignalDetailsView = DetailsView.extend({
     });
   },
 
-  bindings: {
+  bindings: assign({
     'model.name': '[data-hook=name]'
-  }
+  }, DetailsView.prototype.bindings)
 });
 module.exports = SignalDetailsView;
-},{"./../controller/details-view":2,"./../transformation/control-view":32,"./../transformation/functions":33}],26:[function(require,module,exports){
+},{"./../controller/details-view":2,"./../transformation/control-view":32,"./../transformation/functions":33}],27:[function(require,module,exports){
 'use strict';
 var assign = window.VFDeps.assign;
 var SignalControlView = require('./../control-view');
@@ -2675,7 +2923,7 @@ var HSLASignalControlView = SignalControlView.hslaSignal = SignalControlView.ext
   })
 });
 module.exports = HSLASignalControlView;
-},{"./../control-view":24}],27:[function(require,module,exports){
+},{"./../control-view":25}],28:[function(require,module,exports){
 'use strict';
 var SignalState = require('./../state');
 
@@ -2724,7 +2972,7 @@ var HSLASignalState = SignalState.hslaSignal = SignalState.extend({
 });
 
 module.exports = HSLASignalState;
-},{"./../state":30}],28:[function(require,module,exports){
+},{"./../state":31}],29:[function(require,module,exports){
 'use strict';
 var SignalControlView = require('./../control-view');
 var HSLASignalControlView = require('./../hsla/control-view');
@@ -2732,7 +2980,7 @@ var HSLASignalControlView = require('./../hsla/control-view');
 var RGBASignalControlView = SignalControlView.rgbaSignal = HSLASignalControlView.extend({});
 
 module.exports = RGBASignalControlView;
-},{"./../control-view":24,"./../hsla/control-view":26}],29:[function(require,module,exports){
+},{"./../control-view":25,"./../hsla/control-view":27}],30:[function(require,module,exports){
 'use strict';
 var SignalState = require('./../state');
 var _255 = {
@@ -2778,7 +3026,7 @@ var RGBASignalState = SignalState.rgbaSignal = SignalState.extend({
   }
 });
 module.exports = RGBASignalState;
-},{"./../state":30}],30:[function(require,module,exports){
+},{"./../state":31}],31:[function(require,module,exports){
 'use strict';
 var State = window.VFDeps.State;
 var Collection = window.VFDeps.Collection;
@@ -2910,214 +3158,7 @@ var SignalState = MappableState.extend({
   }
 });
 module.exports = SignalState;
-},{"./../mappable/state":18}],31:[function(require,module,exports){
-'use strict';
-var SuggestionItem = VFDeps.View.extend({
-  template: '<li></li>',
-  bindings: {
-    'model.text': {type: 'text'}
-  },
-  events: {
-    click: '_handleClick'
-  },
-  _handleClick: function (evt) {
-    evt.preventDefault();
-    this.parent.trigger('selected', this.model.value || this.model.text);
-  }
-});
-
-var SuggestionView = VFDeps.View.extend({
-  autoRender: true,
-
-  attach: function (el, selectCb, newCollection) {
-    this.inputEl = typeof el === 'string' ? this.parent.query(el) : el;
-    selectCb = selectCb || function(selected) { this.inputEl.textContent = selected; this.detach(); }.bind(this);
-    this.off('selected');
-    this.once('selected', selectCb);
-
-    if (newCollection) {
-      if (newCollection.isCollection) {
-        this.collection = newCollection;
-      }
-      else {
-        this.collection.reset(newCollection);
-      }
-    }
-
-    return this;
-  },
-
-  fill: function (arr) {
-    this.collection.reset(arr.map(function (v) { return {text:v}; }));
-    return this.filterCollection();
-  },
-
-  detach: function () {
-    this.unset('inputEl');
-    this.collection.reset([]);
-    return this;
-  },
-
-  filterCollection: function () {
-    var update = [];
-    if (!this.inputEl) {
-      update = this.collection.serialize();
-    }
-    else {
-      var inputElVal = this.inputEl.textContent || this.inputEl.value;
-
-      if (!inputElVal) {
-        update = this.collection.serialize();
-      }
-      else {
-        update = this.collection.filter(function (suggestion) {
-          return suggestion.text.indexOf(inputElVal) === 0;
-        })/*.map(function(suggestion) {
-          return suggestion;
-        })*/;
-      }
-    }
-
-    this.suggestions.reset(update);
-
-    return this;
-  },
-
-  session: {
-    inputEl: 'element'
-  },
-
-  _handleInput: function() {
-    this.filterCollection();
-  },
-
-  resetPosition: function() {
-    var view = this;
-    if (!view.el || !view.el.parentNode || !view.inputEl) { return view; }
-    view.el.style.visibility = 'hidden';
-
-    setTimeout(function () {
-      if (!view.el || !view.el.parentNode || !view.inputEl) { return; }
-      var ipos = view.inputEl.getBoundingClientRect();
-      var bpos = view.el.getBoundingClientRect();
-
-      if (ipos.top > view.el.parentNode.clientHeight * 0.5) {
-        view.el.style.maxHeight = Math.min(ipos.top, view.el.parentNode.clientHeight * 0.33) + 'px';
-        view.el.style.top = ((ipos.top - view.el.clientHeight) - 3) + 'px';
-      }
-      else {
-        view.el.style.maxHeight = Math.min(ipos.bottom, view.el.parentNode.clientHeight * 0.33) + 'px';
-        view.el.style.top = (ipos.bottom + 3) + 'px';
-      }
-
-      var s = window.getComputedStyle(view.inputEl);
-      view.el.style.textAlign = s.textAlign;
-      if (s.textAlign === 'right') {
-        view.el.style.left = (ipos.left - (bpos.width - ipos.width)) + 'px';
-      }
-      else {
-        view.el.style.left = (ipos.left) + 'px';
-      }
-
-      view.el.style.visibility = 'visible';
-    });
-
-    return view;
-  },
-
-  initialize: function () {
-    if (!this.parent) { throw new Error('Suggestion view need a parent view'); }
-
-    this.collection = this.collection || new VFDeps.Collection([], {parent: this});
-
-    this.on('change:collection', function () {
-      this.listenToAndRun(this.collection, 'add remove reset', this.filterCollection);
-    });
-
-    this.listenTo(this.suggestions, 'add remove reset', this.resetPosition);
-
-    var _handleInput = this._handleInput.bind(this);
-    var _handleBlur = function(evt) {
-      evt.preventDefault();
-    }.bind(this);
-
-    this.on('change:inputEl', function() {
-      var previous = this.previousAttributes();
-      if (previous.inputEl) {
-        previous.inputEl.removeEventListener('blur', _handleBlur);
-        previous.inputEl.removeEventListener('input', _handleInput);
-        previous.inputEl.removeEventListener('change', _handleInput);
-      }
-
-      var list = this.el;
-      var holderEl = this.parent.el;
-      var inputEl = this.inputEl;
-
-      if (!inputEl) {
-        if (this.el && this.el.parentNode === holderEl) {
-          holderEl.removeChild(this.el);
-        }
-        return;
-      }
-
-      if (!list || !holderEl) { return; }
-      if (list.parentNode !== holderEl) {
-
-        var holderElStyle = window.getComputedStyle(holderEl);
-        if (holderElStyle.position === 'static') {
-          holderEl.style.position = 'relative';
-        }
-
-        holderEl.appendChild(list);
-      }
-
-      this.resetPosition();
-      inputEl.addEventListener('blur', _handleBlur);
-      inputEl.addEventListener('input', _handleInput);
-      inputEl.addEventListener('change', _handleInput);
-    });
-
-    var _handleHolderClick = function (evt) {
-      evt.preventDefault();
-      if (evt.target !== this.inputEl && !this.el.contains(evt.target)) {
-        this.detach();
-      }
-    }.bind(this);
-
-    this.listenToAndRun(this.parent, 'change:el', function() {
-      var previous = this.parent.previousAttributes();
-      if (previous.el) {
-        previous.el.removeEventListener('click', _handleHolderClick);
-      }
-      if (this.parent.el) {
-        this.parent.el.addEventListener('click', _handleHolderClick);
-      }
-    });
-  },
-
-  collections: {
-    suggestions: VFDeps.Collection.extend({
-      model: VFDeps.State.extend({
-        props: {
-          text: ['string', true, ''],
-          value: ['any', false, null]
-        }
-      })
-    })
-  },
-
-  template: '<ul class="suggestion-view"></ul>',
-
-  render: function () {
-    this.renderWithTemplate();
-
-    this.items = this.renderCollection(this.suggestions, SuggestionItem, this.el);
-
-    return this;
-  }
-});
-module.exports = SuggestionView;
-},{}],32:[function(require,module,exports){
+},{"./../mappable/state":19}],32:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var TransformationControlView = View.extend({
