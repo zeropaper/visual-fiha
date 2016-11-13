@@ -3,6 +3,17 @@
 var _view;
 var ControllerView = require('./controller/view');
 
+// if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
+//   .then(function(reg) {
+//     // registration worked
+//     console.info('Registration succeeded. Scope is ' + reg.scope);
+//   }).catch(function(error) {
+//     // registration failed
+//     console.warn('Registration failed with ' + error);
+//   });
+// }
+
 function setupController(options) {
   options = options || {};
   if (!options.reboot && options.record) {
@@ -43,14 +54,149 @@ controllerSetup.el = document.querySelector('.controller');
 // controllerSetup.record = window.location.hash === '#record';
 window.visualFiha = setupController(controllerSetup);
 
-},{"./controller/view":5}],2:[function(require,module,exports){
+},{"./controller/view":6}],2:[function(require,module,exports){
 'use strict';
-var View = window.VFDeps.View;
+module.exports = VFDeps.View.extend({
+  autoRender: true,
+  template: '<canvas width="200" height="200"></canvas>',
+  session: {
+    audioAnalyser: ['any', true, null],
+    lineWidth: ['number', true, 1],
+    width: ['number', true, 200],
+    height: ['number', true, 200],
+    padding: ['number', true, 2],
+    color: ['string', true, '#000']
+  },
+  bindings: {
+    width: {
+      type: 'attribute',
+      name: 'width'
+    },
+    height: {
+      type: 'attribute',
+      name: 'height'
+    }
+  },
+  derived: {
+    ctx: {
+      deps: ['el', 'width', 'height'],
+      fn: function() {
+        return this.el.getContext('2d');
+      }
+    },
+    audioAnalyserDataArray: {
+      deps: ['audioAnalyser'],
+      fn: function () {
+        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
+      }
+    }
+  },
+
+  drawScales: function(bufferLength) {
+    var ctx = this.ctx;
+    var x = ctx.canvas.width * 0.5;
+    var y = ctx.canvas.height * 0.5;
+    var r = Math.min(x, y) - 20;
+    var rad = (Math.PI * 2);
+
+
+    // var samples = Math.round(length / 4)
+    // var start = Math.round(length / 4);
+    // var end = length - start;
+
+    // var i, a, ax, ay, bx, by, lx, ly, ca, sa;
+    // ctx.globalAlpha = 0.5;
+    // for (i = start; i < end; i++) {
+    //   a = ((rad / half) * (i - start)) - Math.PI;
+
+    var i, a, ax, ay, bx, by, lx, ly, ca, sa;
+    ctx.globalAlpha = 0.5;
+    for (i = 0; i < bufferLength; i++) {
+      a = ((rad / bufferLength) * i) - Math.PI;
+      ca = Math.cos(a);
+      sa = Math.sin(a);
+      ax = Math.round(x + (ca * (r / 10)));
+      ay = Math.round(y + (sa * (r / 10)));
+      bx = Math.round(x + (ca * (r - 5)));
+      by = Math.round(y + (sa * (r - 5)));
+      lx = Math.round(x + (ca * r));
+      ly = Math.round(y + (sa * r));
+
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+
+      ctx.textAlign = 'center';
+      if (lx < x) {
+        ctx.textAlign = 'right';
+      }
+      else if (lx > x) {
+        ctx.textAlign = 'left';
+      }
+
+      ctx.textBaseline = 'middle';
+      if (ly < y) {
+        ctx.textBaseline = 'bottom';
+      }
+      else if (ly > y) {
+        ctx.textBaseline = 'top';
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillText(i, lx, ly);
+      ctx.globalAlpha = 0.5;
+
+      ctx.stroke();
+      ctx.closePath();
+    }
+    ctx.globalAlpha = 1;
+
+    return this;
+  },
+
+  update: function() {
+    if (!this.el) {
+      return this;
+    }
+
+    var ctx = this.ctx;
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillStyle = ctx.strokeStyle = this.color;
+
+    var analyser = this.audioAnalyser;
+    var bufferLength = analyser.frequencyBinCount;
+    this.drawScales(bufferLength);
+    ctx.fillStyle = ctx.strokeStyle = this.color;
+
+    var dataArray = this.audioAnalyserDataArray;
+    analyser.getByteFrequencyData(dataArray);
+
+
+    var x = ctx.canvas.width * 0.5;
+    var y = ctx.canvas.height * 0.5;
+    var r = Math.min(x, y) - 20;
+    var rad = (Math.PI * 2);
+
+    var i, a, lx, ly;
+    ctx.beginPath();
+    for (i = 0; i < bufferLength; i++) {
+      a = ((rad / bufferLength) * i) - Math.PI;
+      lx = Math.round(x + Math.cos(a) * ((r / 100) * (dataArray[i] / 2)));
+      ly = Math.round(y + Math.sin(a) * ((r / 100) * (dataArray[i] / 2)));
+      ctx.lineTo(lx, ly);
+    }
+    ctx.stroke();
+
+    return this;
+  }
+});
+
+},{}],3:[function(require,module,exports){
+'use strict';
 var MappingControlView = require('./../mappable/control-view');
-var DetailsView = View.extend({
+var DetailsView = VFDeps.View.extend({
   template: [
-    '<section>',
-    '<header>',
+    '<section class="row rows">',
+    '<header class="row">',
     '<h3>Details for <span data-hook="name"></span></h3>',
     '</header>',
 
@@ -63,7 +209,10 @@ var DetailsView = View.extend({
       selector: '.mappings',
       prepareView: function (el) {
         return this.renderCollection(this.model.mappings, function (opts) {
-          var Constructor = MappingControlView[opts.model.targetProperty] || MappingControlView;
+          var type = opts.model.definition.type;
+          var name = opts.model.targetProperty;
+          var Constructor = MappingControlView[name] || MappingControlView[type] || MappingControlView;
+          console.info('property name: %s (%s), type: %s (%s)', name, !!MappingControlView[name], type, !!MappingControlView[type]);
           return new Constructor(opts);
         }, el);
       }
@@ -75,7 +224,7 @@ var DetailsView = View.extend({
   }
 });
 module.exports = DetailsView;
-},{"./../mappable/control-view":18}],3:[function(require,module,exports){
+},{"./../mappable/control-view":19}],4:[function(require,module,exports){
 'use strict';
 module.exports = VFDeps.View.extend({
   autoRender: true,
@@ -88,7 +237,8 @@ module.exports = VFDeps.View.extend({
     width: ['number', true, 120],
     height: ['number', true, 29],
     padding: ['number', true, 2],
-    color: ['string', true, '#000']
+    color: ['string', true, '#000'],
+    font: ['string', true, '11px sans']
   },
   bindings: {
     width: {
@@ -157,7 +307,6 @@ module.exports = VFDeps.View.extend({
     var lineWidth = this.lineWidth;
     var ctx = this.ctx;
     var avg = this.avg();
-    var min = this.min();
     var max = this.max();
 
     var padding = 2 * lineWidth;
@@ -179,6 +328,7 @@ module.exports = VFDeps.View.extend({
 
     ctx.clearRect(0, 0, this.width, this.height);
 
+    ctx.font = this.font;
     ctx.lineWidth = lineWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -207,17 +357,13 @@ module.exports = VFDeps.View.extend({
     current = Math.round(avg * 100) / 100;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
-    ctx.font = (innerH * 0.5) + 'px monospace';
-    ctx.clearRect(0, padding, ctx.measureText(current).width + (padding * 2), innerH);
-    ctx.fillText(current, padding, (innerH * 0.5) + padding);
-
-    this.el.setAttribute('title', 'Min: ' + min + ', Max: ' + max + ', Avg: ' + avg);
-
+    ctx.clearRect(0, padding, ctx.measureText(current).width + (padding * 2), ctx.canvas.height - padding);
+    ctx.fillText(current, padding, ctx.canvas.height * 0.5);
     return this;
   }
 });
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 var SuggestionItem = VFDeps.View.extend({
   template: '<li></li>',
@@ -238,7 +384,7 @@ var SuggestionView = VFDeps.View.extend({
 
   attach: function (el, selectCb, newCollection) {
     this.inputEl = typeof el === 'string' ? this.parent.query(el) : el;
-    selectCb = selectCb || function(selected) { this.inputEl.textContent = selected; this.detach(); }.bind(this);
+    selectCb = selectCb || function(selected) { this.inputEl.value = selected; this.detach(); }.bind(this);
     this.off('selected');
     this.once('selected', selectCb);
 
@@ -272,7 +418,7 @@ var SuggestionView = VFDeps.View.extend({
       update = this.collection.serialize();
     }
     else {
-      var inputElVal = this.inputEl.textContent || this.inputEl.value;
+      var inputElVal = this.inputEl.value || this.inputEl.value;
 
       if (!inputElVal) {
         update = this.collection.serialize();
@@ -343,16 +489,11 @@ var SuggestionView = VFDeps.View.extend({
     this.listenTo(this.suggestions, 'add remove reset', this.resetPosition);
 
     var _handleInput = this._handleInput.bind(this);
-    var _handleBlur = function(evt) {
-      evt.preventDefault();
-    }.bind(this);
 
     this.on('change:inputEl', function() {
       var previous = this.previousAttributes();
       if (previous.inputEl) {
-        previous.inputEl.removeEventListener('blur', _handleBlur);
-        previous.inputEl.removeEventListener('input', _handleInput);
-        previous.inputEl.removeEventListener('change', _handleInput);
+        previous.inputEl.removeEventListener('keyup', _handleInput);
       }
 
       var list = this.el;
@@ -378,9 +519,7 @@ var SuggestionView = VFDeps.View.extend({
       }
 
       this.resetPosition();
-      inputEl.addEventListener('blur', _handleBlur);
-      inputEl.addEventListener('input', _handleInput);
-      inputEl.addEventListener('change', _handleInput);
+      inputEl.addEventListener('keyup', _handleInput);
     });
 
     var _handleHolderClick = function (evt) {
@@ -423,7 +562,7 @@ var SuggestionView = VFDeps.View.extend({
   }
 });
 module.exports = SuggestionView;
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 var View = VFDeps.View;
 var debounce = VFDeps.debounce;
@@ -432,6 +571,7 @@ var ResizeSensor = VFDeps.ResizeSensor;
 var ScreenView = require('./../screen/view');
 var ScreenState = require('./../screen/state');
 var MIDIAccessState = require('./../midi/state');
+var MIDIAccessView = require('./../midi/view');
 var LayerControlView = require('./../layer/control-view');
 require('./../layer/canvas/control-view');
 // require('./../layer/video/control-view');
@@ -444,11 +584,12 @@ require('./../signal/rgba/control-view');
 
 var SuggestionView = require('./suggestion-view');
 var SparklineView = require('./sparkline-view');
+var AudioMonitor = require('./audio-monitor-view');
 // var AceEditor = require('./ace-view');
 // var TimelineView = require('./timeline-view');
 
 
-
+var MultiMappingControlView = require('./../mappable/multi-control-view');
 
 
 
@@ -463,25 +604,20 @@ var ControllerView = View.extend({
       screenLayers: options.screenLayers,
       screenSignals: options.screenSignals
     });
-
-    if (controllerView.MIDIAccess) {
-      controllerView.listenTo(controllerView.MIDIAccess, 'all', function() {
-        controllerView.trigger.apply(controllerView, arguments);
-      });
-    }
+    controllerView.model.signals = {};
 
     if (window.BroadcastChannel) {
       controllerView.channel = new window.BroadcastChannel(this.broadcastId);
     }
 
-    // navigator.getUserMedia({
-    //   audio: true
-    // }, function(stream) {
-    //   var source = controllerView.audioContext.createMediaStreamSource(stream);
-    //   source.connect(controllerView.audioAnalyser);
-    // }, function(err) {
-    //   console.log('The following gUM error occured: ' + err);
-    // });
+    navigator.getUserMedia({
+      audio: true
+    }, function(stream) {
+      var source = controllerView.audioContext.createMediaStreamSource(stream);
+      source.connect(controllerView.audioAnalyser);
+    }, function(err) {
+      console.info('The following gUM error occured: ' + err);
+    });
 
     if (controllerView.el) {
       controllerView._attachSuggestionHelper();
@@ -490,8 +626,14 @@ var ControllerView = View.extend({
       controllerView.once('change:el', controllerView._attachSuggestionHelper);
     }
 
+    controllerView.model.signals.midi = {};
+    controllerView.listenToAndRun(controllerView.midiAccess, 'midi', function(evtName, value) {
+      controllerView.model.signals.midi[evtName] = value;
+      controllerView.model.trigger(evtName, value);
+    });
+
     if (options.autoStart !== false) {
-      this.play();
+      controllerView.play();
     }
   },
 
@@ -504,46 +646,49 @@ var ControllerView = View.extend({
     }
 
     this.model.frametime = timestamp - this.model.firstframetime;
-    this.update({
-      frametime: this.model.frametime
-    });
+    this.update();
     this._arId = window.requestAnimationFrame(this._animate.bind(this));
   },
 
-  update: function(options) {
-    var newState = this.model.serialize();
-
+  update: function() {
     var analyser = this.audioAnalyser;
     var bufferLength = analyser.frequencyBinCount;
     var dataArray = this.audioAnalyserDataArray;
     analyser.getByteFrequencyData(dataArray);
 
-    newState.mic = {};
+    this.model.signals.mic = {};
     for(var i = 0; i < bufferLength; i++) {
-      newState.mic['mic:' + i] = dataArray[i];
+      this.model.signals.mic['mic:' + i] = dataArray[i];
+      this.model.trigger('mic:' + i, dataArray[i]);
     }
 
-    newState.frametime = options.frametime || 0;
-    this.channel.postMessage(newState);
+    var posted = this.model.serialize();
+    this.channel.postMessage(posted);
   },
 
   derived: {
-    computedStyle: {
+    playing: {
+      deps: ['_arId'],
       fn: function() {
-        return window.getComputedStyle(this.el);
+        return !!this._arId;
       }
     },
-    midiAccess: {
+    computedStyle: {
+      deps: ['el'],
       fn: function() {
-        return new MIDIAccessState({
-          parent: this
-        });
+        return window.getComputedStyle(this.el);
       }
     },
     signalNames: {
       deps: ['screenView'],
       fn: function () {
-        return this.screenView ? this.screenView.signalNames : [];
+        var mic = [];
+        var analyser = this.audioAnalyser;
+        var bufferLength = analyser.frequencyBinCount;
+        for(var i = 0; i < bufferLength; i++) {
+          mic.push('mic:' + i);
+        }
+        return mic.concat(this.screenView ? this.screenView.signalNames : [], this.midiAccess.signalNames);
       }
     },
 
@@ -570,6 +715,10 @@ var ControllerView = View.extend({
         return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
       }
     }
+  },
+
+  children: {
+    midiAccess: MIDIAccessState
   },
 
   session: {
@@ -602,12 +751,11 @@ var ControllerView = View.extend({
   },
 
   subviews: {
-    /*
     MIDIAccess: {
       waitFor: 'el',
       selector: '.midi-access',
       prepareView: function(el) {
-        var subview = new window.MIDIAccessView({
+        var subview = new MIDIAccessView({
           parent: this,
           el: el,
           model: this.midiAccess
@@ -616,6 +764,7 @@ var ControllerView = View.extend({
       }
     },
 
+    /*
     timeline: {
       waitFor: 'el',
       selector: '.timeline',
@@ -639,6 +788,26 @@ var ControllerView = View.extend({
     },
     */
 
+    audioMonitor: {
+      waitFor: 'el',
+      selector: '.audio-monitor',
+      prepareView: function(el) {
+        var styles = window.getComputedStyle(el);
+        var view = new AudioMonitor({
+          audioAnalyser: this.audioAnalyser,
+          parent: this,
+          color: styles.color
+        });
+        el.appendChild(view.el);
+
+        this.listenToAndRun(this.model, 'change:frametime', function() {
+          view.update();
+        });
+
+        return view;
+      }
+    },
+
     controllerSparkline: {
       waitFor: 'el',
       selector: '.fps-controller',
@@ -646,7 +815,8 @@ var ControllerView = View.extend({
         var styles = window.getComputedStyle(el);
         var view = new SparklineView({
           parent: this,
-          color: styles.color
+          color: styles.color,
+          font: styles.fontSize + ' ' + styles.fontFamily.split(' ').pop()
         });
         el.appendChild(view.el);
         return view;
@@ -660,7 +830,8 @@ var ControllerView = View.extend({
         var styles = window.getComputedStyle(el);
         var view = new SparklineView({
           parent: this,
-          color: styles.color
+          color: styles.color,
+          font: styles.fontSize + ' ' + styles.fontFamily.split(' ').pop()
         });
         el.appendChild(view.el);
         return view;
@@ -679,7 +850,7 @@ var ControllerView = View.extend({
         var screenView = new ScreenView({
           parent: this,
           el: el,
-          MIDIAccess: this.midiAccess,
+          // MIDIAccess: this.midiAccess,
           model: screenModel,
           mode: 'control'
         });
@@ -714,6 +885,21 @@ var ControllerView = View.extend({
           var Constructor = SignalControlView[type]|| SignalControlView;
           return new Constructor(opts);
         }, el);
+      }
+    },
+
+    multiMappings: {
+      waitFor: 'el',
+      selector: '.multi-mapping',
+      prepareView: function(el) {
+        var view = new MultiMappingControlView({
+          parent: this,
+          el: el
+        });
+        view.listenTo(view.mappings, 'all', function(evtName) {
+          console.info('mutli mapping collection evt', evtName);
+        });
+        return view;
       }
     }
   },
@@ -759,7 +945,9 @@ var ControllerView = View.extend({
     'click [name="stop"]': 'stop',
     'click [name="debug"]': '_debug',
     'click [name="screen"]': '_openScreen',
-    'click [name="ratio"]': '_changeRatio'
+    'click [name="ratio"]': '_changeRatio',
+    'click [name="add-layer"]': '_addLayer',
+    'click [name="add-signal"]': '_addSignal'
   },
 
   _debug: function() {
@@ -767,7 +955,7 @@ var ControllerView = View.extend({
   },
 
   _openScreen: function() {
-    window.open('./screen.html#' + this.broadcastId, 'screen');
+    window.open('./screen.html#' + this.broadcastId, 'screen', 'width=800,height=600,location=no');
   },
 
   _changeRatio: function (evt) {
@@ -776,11 +964,46 @@ var ControllerView = View.extend({
     this.screenView.resize();
   },
 
+  addMultiMapping: function(mappingModel) {
+    console.info('add multi mapping', mappingModel.targetProperty, mappingModel.targetModel);
+    this.multiMappings.mappings.add({
+      targetModel: mappingModel.targetModel,
+      targetProperty: mappingModel.targetProperty
+    });
+  },
+
   showDetails: function (view) {
     if (view === this.currentDetails) { return this; }
     this.detailsSwitcher.set(view);
     return this;
   },
+
+  _addSignal: function() {
+    var typeEl = this.queryByHook('signal-type');
+    var nameEl = this.queryByHook('signal-name');
+    var type = typeEl.value;
+    var name = nameEl.value;
+    if (!type || !name) { return; }
+    this.model.screenSignals.add({
+      name: name,
+      type: type
+    });
+    typeEl.value = nameEl.value = '';
+  },
+
+  _addLayer: function() {
+    var typeEl = this.queryByHook('signal-type');
+    var nameEl = this.queryByHook('signal-name');
+    var type = typeEl.value;
+    var name = nameEl.value;
+    if (!type || !name) { return; }
+    this.model.screenLayers.add({
+      name: name,
+      type: type
+    });
+    typeEl.value = nameEl.value = '';
+  },
+
 
 
   render: function () {
@@ -805,9 +1028,9 @@ var ControllerView = View.extend({
     }
 
     // this.perfInterval = setInterval(function () {
-    //   controllerView.jsHeapLimit.textContent = performance.memory.jsHeapSizeLimit * 0.0001;
-    //   controllerView.jsHeapTotal.textContent = performance.memory.totalJSHeapSize * 0.0001;
-    //   controllerView.jsHeapUsed.textContent = performance.memory.usedJSHeapSize * 0.0001;
+    //   controllerView.jsHeapLimit.value = performance.memory.jsHeapSizeLimit * 0.0001;
+    //   controllerView.jsHeapTotal.value = performance.memory.totalJSHeapSize * 0.0001;
+    //   controllerView.jsHeapUsed.value = performance.memory.usedJSHeapSize * 0.0001;
     // }, 500);
 
     return this;
@@ -848,11 +1071,11 @@ var ControllerView = View.extend({
     '</div>'+
     '<div class="row columns body">'+
       '<div class="column no-grow rows">'+
-        '<div class="row no-grow screen-cell">'+
+        '<div class="row grow-l screen-cell">'+
           '<div class="screen"></div>'+
         '</div>'+
-        '<div class="row  grow-l details"></div>'+
-        '<div class="row debug no-grow"></div>'+
+        '<div class="row no-grow details"></div>'+
+        '<div class="row debug"></div>'+
       '</div>'+
       '<div class="column rows settings">'+
         '<div class="row columns">'+
@@ -860,8 +1083,12 @@ var ControllerView = View.extend({
             '<div class="row layers">'+
               '<div class="section-name gutter">Layers</div>'+
               '<div class="columns gutter">'+
-                '<div data-hook="type" data-placeholder="Type" contenteditable="true" class="column gutter-right">'+
-                '</div>'+
+                '<div class="column gutter-right">' +
+                  '<input data-hook="layer-name" placeholder="Name" type="text"/>'+
+                '</div>' +
+                '<div class="column gutter-horizontal">' +
+                  '<input data-hook="layer-type" placeholder="Type" type="text"/>'+
+                '</div>' +
                 '<div class="column no-grow gutter-left">'+
                   '<button name="add-layer" class="vfi-plus"></button>'+
                 '</div>'+
@@ -873,8 +1100,12 @@ var ControllerView = View.extend({
             '<div class="row signals">'+
               '<div class="section-name gutter">Signals</div>'+
               '<div class="columns gutter">'+
-                '<div data-hook="type" data-placeholder="Type" contenteditable="true" class="column gutter-right">'+
-                '</div>'+
+                '<div class="column gutter-right">' +
+                  '<input data-hook="signal-name" placeholder="Name" type="text"/>'+
+                '</div>' +
+                '<div class="column gutter-horizontal">' +
+                  '<input data-hook="signal-type" placeholder="Type" type="text"/>'+
+                '</div>' +
                 '<div class="column no-grow gutter-left">'+
                   '<button name="add-signal" class="vfi-plus"></button>'+
                 '</div>'+
@@ -883,29 +1114,38 @@ var ControllerView = View.extend({
             '</div>'+
           '</div>'+
         '</div>'+
-        '<div class="row no-grow audio-source">'+
-          '<audio controls colume="0.5"></audio>'+
+
+
+        '<div class="row no-grow columns">'+
+          '<div class="multi-mapping"></div>' +
+        '</div>'+
+
+
+        '<div class="row no-grow columns">'+
+          '<div class="column midi-access"></div>'+
+          '<div class="column audio-source">'+
+            '<div class="audio-monitor"></div>'+
+            '<audio controls muted></audio>'+
+          '</div>'+
         '</div>'+
       '</div>'+
     '</div>'+
   '</div>'
 });
 module.exports = ControllerView;
-},{"./../layer/canvas/control-view":6,"./../layer/control-view":9,"./../midi/state":20,"./../screen/state":21,"./../screen/view":22,"./../signal/beat/control-view":23,"./../signal/control-view":25,"./../signal/hsla/control-view":27,"./../signal/rgba/control-view":29,"./sparkline-view":3,"./suggestion-view":4}],6:[function(require,module,exports){
+},{"./../layer/canvas/control-view":7,"./../layer/control-view":10,"./../mappable/multi-control-view":20,"./../midi/state":22,"./../midi/view":23,"./../screen/state":24,"./../screen/view":25,"./../signal/beat/control-view":26,"./../signal/control-view":28,"./../signal/hsla/control-view":30,"./../signal/rgba/control-view":32,"./audio-monitor-view":2,"./sparkline-view":4,"./suggestion-view":5}],7:[function(require,module,exports){
 'use strict';
 var LayerControlView = require('./../control-view');
 
 var ControlCanvasLayerView = VFDeps.View.extend({
-  template: [
-    '<section class="canvas-layer">',
-    '<header class="columns">',
-    '<div class="column no-grow gutter-right"><button name="active"></button></div>',
-    '<div class="column no-grow gutter-horizontal"><button class="edit-draw-function vfi-cog-alt"></button></div>',
-    '<h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>',
-    '<div class="column no-grow text-right gutter-left"><button class="vfi-trash-empty remove-canvas-layer"></button></div>',
-    '</header>',
-    '</section>'
-  ].join(''),
+  template: '<section class="canvas-layer">' +
+    '<header class="columns">' +
+      '<div class="column no-grow gutter-right"><button name="active"></button></div>' +
+      '<div class="column no-grow gutter-horizontal"><button class="edit-draw-function vfi-cog-alt"></button></div>' +
+      '<h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>' +
+      '<div class="column no-grow text-right gutter-left"><button class="vfi-trash-empty remove-canvas-layer"></button></div>' +
+    '</header>' +
+    '</section>',
 
   derived: {
     rootView: {
@@ -969,43 +1209,41 @@ var ControlCanvasLayerView = VFDeps.View.extend({
 });
 
 module.exports = LayerControlView.canvas = LayerControlView.extend({
-  template: [
-    '<section class="row canvas-control">',
-    '<header class="rows">',
-    '  <div class="row columns">',
-    '    <div class="column no-grow"><button class="active prop-toggle"></button></div>',
-    '    <h3 class="column layer-name" data-hook="name"></h3>',
-    '  </div>',
-    '  <div class="row columns">',
-    '    <div class="column gutter-right" contenteditable="true" data-placeholder="new-layer-name" data-hook="new-layer-name"></div>',
-    '    <div class="column gutter-horizontal" contenteditable="true" data-placeholder="propA, propB" data-hook="new-layer-props"></div>',
-    '    <div class="column no-grow gutter-left">',
-    '      <button name="add-layer" class="vfi-plus"></button>',
-    '    </div>',
-    '  </div>',
-    '</header>',
+  template: '<section class="row canvas-control">' +
+      '<header class="rows">' +
+        '<div class="row columns">' +
+          '<div class="column no-grow"><button class="active prop-toggle"></button></div>' +
+          '<h3 class="column layer-name" data-hook="name"></h3>' +
+        '</div>' +
+        '<div class="row columns">' +
+          '<input type="text" class="column gutter-right" placeholder="new-layer-name" data-hook="new-layer-name" />' +
+          '<input type="text" class="column gutter-horizontal" placeholder="propA, propB" data-hook="new-layer-props" />' +
+          '<div class="column no-grow gutter-left">' +
+            '<button name="add-layer" class="vfi-plus"></button>' +
+          '</div>' +
+        '</div>' +
+      '</header>' +
 
-    '<div class="layers">',
-    '<div class="items"></div>',
-    '</div>',
-    '</section>'
-  ].join(''),
+      '<div class="layers">' +
+        '<div class="items"></div>' +
+      '</div>' +
+    '</section>',
 
   events: VFDeps.assign({
-    'input [data-hook=new-layer-name]': '_inputLayerName',
+    'change [data-hook=new-layer-name]': '_inputLayerName',
     'click [name=add-layer]': '_addLayer'
   }, LayerControlView.prototype.events),
 
   _inputLayerName: function() {
-    this.query('[name=add-layer]').disabled = !this.queryByHook('new-layer-name').textContent.trim();
+    this.query('[name=add-layer]').disabled = !this.queryByHook('new-layer-name').value.trim();
   },
 
   _addLayer: function(evt) {
     evt.preventDefault();
     var nameEl = this.queryByHook('new-layer-name');
-    var name = nameEl.textContent.trim();
+    var name = nameEl.value.trim();
     var propsEl = this.queryByHook('new-layer-props');
-    var propsVal = propsEl ? propsEl.textContent.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; }) : [];
+    var propsVal = propsEl ? propsEl.value.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; }) : [];
 
     var props = {};
     propsVal.forEach(function(prop) {
@@ -1021,7 +1259,7 @@ module.exports = LayerControlView.canvas = LayerControlView.extend({
       console.warn('new layer?', res);
       return;
     }
-    nameEl.textContent = '';
+    nameEl.value = '';
     var layerControlView = this.model.canvasLayersView.views.find(function(v) {
       return v.model === res;
     });
@@ -1045,11 +1283,29 @@ module.exports = LayerControlView.canvas = LayerControlView.extend({
     }
   }
 });
-},{"./../control-view":9}],7:[function(require,module,exports){
+},{"./../control-view":10}],8:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 // var CanvasLayer = ScreenLayerState.extend({
 var MappableState = require('./../../mappable/state');
+var CanvasLayerMapState = MappableState.State.extend({
+  derived: {
+    targetModel: {
+      deps: ['collection', 'collection.parent'],
+      fn: function () {
+        return this.collection.parent;
+      }
+    },
+    observedModel: {
+      deps: ['targetModel', 'targetModel.collection', 'targetModel.collection.parent'],
+      fn: function() {
+        return this.targetModel.collection.parent.collection.parent;
+      }
+    }
+  }
+});
+
+
 var CanvasLayer = MappableState.extend({
   idAttribute: 'name',
 
@@ -1101,30 +1357,72 @@ var CanvasLayer = MappableState.extend({
 
 
   serialize: function() {
-    var obj = ScreenLayerState.prototype.serialize.apply(this, arguments);
+    var obj = MappableState.prototype.serialize.apply(this, arguments);
+    var returned = {};
 
+
+    var props = this.serializationProps.props || [];
+    // if (props.length) {
+    //   returned.props = {};
+    //   props.forEach(function(propName) {
+    //     returned.props[propName] = obj[propName];
+    //   });
+    // }
+
+    // var propName;
+    // for (propName in obj) {
+    //   if (props.indexOf(propName) < 0) {
+    //     returned[propName] = obj[propName];
+    //   }
+    // }
+
+    // better like that??
+    if (props.length) {
+      returned.props = {};
+    }
+
+    var propName;
+    var def = this.constructor.prototype._definition;
+    for (propName in obj) {
+      // if (props.indexOf(propName) < 0) {
+      returned[propName] = obj[propName];
+      // }
+      // else {
+      //   console.info();
+      //   returned.props[propName] = obj[propName];
+      // }
+      if (props.indexOf(propName) > -1) {
+        returned.props[propName] = def[propName];
+      }
+    }
+    returned.props = def;
     var type = typeof this.drawFunction;
     if (type === 'function') {
-      obj.drawFunction = this.drawFunction.toString();
+      returned.drawFunction = this.drawFunction.toString();
     }
     else if (type === 'string') {
-      obj.drawFunction = this.drawFunction;
+      returned.drawFunction = this.drawFunction;
     }
-
-    return obj;
+    return returned;
   },
 
   derived: {
-    width: {
-      deps: ['collection', 'collection.parent', 'collection.parent.width'],
+    screenState: {
+      deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
       fn: function() {
-        return this.collection.parent.width || 400;
+        return this.collection.parent.collection.parent;
+      }
+    },
+    width: {
+      deps: ['screenState', 'screenState.width'],
+      fn: function() {
+        return this.screenState.width || 400;
       }
     },
     height: {
-      deps: ['collection', 'collection.parent', 'collection.parent.height'],
+      deps: ['screenState', 'screenState.height'],
       fn: function() {
-        return this.collection.parent.height || 300;
+        return this.screenState.height || 300;
       }
     },
     draw: {
@@ -1142,6 +1440,16 @@ var CanvasLayer = MappableState.extend({
         return (typeof fn === 'function' ? fn : function() {}).bind(this);
       }
     }
+  },
+
+  collections: {
+    mappings: MappableState.Collection.extend({
+      model: function (attrs, options) {
+        var model = new CanvasLayerMapState(attrs, options);
+        if (options.init === false) model.initialize();
+        return model;
+      }
+    })
   }
 });
 
@@ -1154,8 +1462,13 @@ var CanvasLayers = VFDeps.Collection.extend({
   model: function (attrs, options) {
     var def = {
       props: attrs.props || {},
-      session: attrs.session || {},
-      derived: attrs.derived || {}
+      // session: attrs.session || {},
+      // derived: attrs.derived || {},
+      serializationProps: {
+        props: Object.keys(attrs.props || {}),
+        // session: Object.keys(attrs.session),
+        // derived: Object.keys(attrs.prderived)
+      }
     };
     var Constructor = _CanvasLayersCache[attrs.name] || CanvasLayer.extend(def);
     _CanvasLayersCache[attrs.name] = Constructor;
@@ -1174,7 +1487,7 @@ module.exports = ScreenLayerState.canvas = ScreenLayerState.extend({
     canvasLayers: CanvasLayers
   }
 });
-},{"./../../mappable/state":19,"./../state":12}],8:[function(require,module,exports){
+},{"./../../mappable/state":21,"./../state":13}],9:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
@@ -1211,11 +1524,11 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
 
 
     offCanvas: {
-      deps: ['width', 'height'],
+      deps: ['width', 'height', 'el'],
       fn: function() {
         var canvas = document.createElement('canvas');
-        canvas.width = this.el.width;
-        canvas.height = this.el.height;
+        canvas.width = this.width;
+        canvas.height = this.height;
         return canvas;
       }
     },
@@ -1223,6 +1536,12 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       deps: ['offCanvas'],
       fn: function() {
         return this.offCanvas.getContext('2d');
+      }
+    },
+    destCtx: {
+      deps: ['el', 'width', 'height'],
+      fn: function() {
+        return this.el.getContext('2d');
       }
     }
   },
@@ -1235,9 +1554,9 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     options = options || {};
     this.frametime = options.frametime || 0;
 
+    var cw = this.width = this.parent.el.clientWidth;
+    var ch = this.height = this.parent.el.clientHeight;
     var ctx = this.ctx;
-    var cw = ctx.canvas.width;
-    var ch = ctx.canvas.height;
     ctx.clearRect(0, 0, cw, ch);
     if (!this.model.active) { return this; }
 
@@ -1255,9 +1574,8 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       layer.draw(ctx);
     });
 
-    var destCtx = this.el.getContext('2d');
-    destCtx.clearRect(0, 0, cw, ch);
-    destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
+    this.destCtx.clearRect(0, 0, cw, ch);
+    this.destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
   },
@@ -1274,7 +1592,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     },
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":17}],9:[function(require,module,exports){
+},{"./../view":18}],10:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var DetailsView = require('./../controller/details-view');
@@ -1361,7 +1679,7 @@ var LayerControlView = View.extend({
   }
 });
 module.exports = LayerControlView;
-},{"./../controller/details-view":2}],10:[function(require,module,exports){
+},{"./../controller/details-view":3}],11:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.img = ScreenLayerState.extend({
@@ -1376,7 +1694,7 @@ module.exports = ScreenLayerState.img = ScreenLayerState.extend({
     }
   }
 });
-},{"./../state":12}],11:[function(require,module,exports){
+},{"./../state":13}],12:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
@@ -1398,7 +1716,7 @@ module.exports = ScreenLayerView.img = ScreenLayerView.extend({
     }
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":17}],12:[function(require,module,exports){
+},{"./../view":18}],13:[function(require,module,exports){
 'use strict';
 var MappableState = require('./../mappable/state');
 var LayerState = MappableState.extend({
@@ -1407,20 +1725,43 @@ var LayerState = MappableState.extend({
 
   props: {
     active: ['boolean', true, true],
-    backfaceVisibility: ['boolean', true, false],
+    // backfaceVisibility: ['boolean', true, false],
+    mixBlendMode: {
+      type: 'string',
+      default: 'normal',
+      required: true,
+      values: [
+        'normal',
+        'multiply',
+        'screen',
+        'overlay',
+        'darken',
+        'lighten',
+        'color-dodge',
+        'color-burn',
+        'hard-light',
+        'soft-light',
+        'difference',
+        'exclusion',
+        'hue',
+        'saturation',
+        'color',
+        'luminosity'
+      ]
+    },
     name: ['string', true, null],
     opacity: {
       type: 'number',
-      default: 1,
+      default: 100,
       min: 0,
-      max: 1
-    },
-    perspective: {
-      type: 'number',
-      default: 0,
-      min: -100,
       max: 100
     },
+    // perspective: {
+    //   type: 'number',
+    //   default: 0,
+    //   min: -100,
+    //   max: 100
+    // },
     rotateX: {
       type: 'number',
       default: 0,
@@ -1451,12 +1792,12 @@ var LayerState = MappableState.extend({
       min: -100,
       max: 100
     },
-    // translateZ: {
-    //   type: 'number',
-    //   default: 0,
-    //   min: -100,
-    //   max: 100
-    // },
+    // // translateZ: {
+    // //   type: 'number',
+    // //   default: 0,
+    // //   min: -100,
+    // //   max: 100
+    // // },
     scaleX: {
       type: 'number',
       default: 1,
@@ -1469,22 +1810,22 @@ var LayerState = MappableState.extend({
       min: -10,
       max: 10
     },
-    // scaleZ: {
+    // // scaleZ: {
+    // //   type: 'number',
+    // //   default: 1,
+    // //   min: -10,
+    // //   max: 10
+    // // },
+    // originX: {
     //   type: 'number',
-    //   default: 1,
-    //   min: -10,
-    //   max: 10
+    //   required: false,
+    //   default: 0
     // },
-    originX: {
-      type: 'number',
-      required: false,
-      default: 0
-    },
-    originY: {
-      type: 'number',
-      required: false,
-      default: 0
-    },
+    // originY: {
+    //   type: 'number',
+    //   required: false,
+    //   default: 0
+    // },
     skewX: {
       type: 'number',
       required: false,
@@ -1499,13 +1840,12 @@ var LayerState = MappableState.extend({
       min: -360,
       max: 360
     },
-    type: ['string', true, 'default']
-  },
-
-  collections: MappableState.prototype.collections
+    type: ['string', true, 'default'],
+    zIndex: ['number', true, 0]
+  }
 });
 module.exports = LayerState;
-},{"./../mappable/state":19}],13:[function(require,module,exports){
+},{"./../mappable/state":21}],14:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.SVG = ScreenLayerState.extend({
@@ -1520,7 +1860,7 @@ module.exports = ScreenLayerState.SVG = ScreenLayerState.extend({
     }
   }
 });
-},{"./../state":12}],14:[function(require,module,exports){
+},{"./../state":13}],15:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
@@ -1543,7 +1883,7 @@ module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
     }
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":17}],15:[function(require,module,exports){
+},{"./../view":18}],16:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.video = ScreenLayerState.extend({
@@ -1558,7 +1898,7 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
     }
   }
 });
-},{"./../state":12}],16:[function(require,module,exports){
+},{"./../state":13}],17:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
@@ -1580,7 +1920,7 @@ module.exports = ScreenLayerView.video = ScreenLayerView.extend({
     }
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":17}],17:[function(require,module,exports){
+},{"./../view":18}],18:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 
@@ -1617,13 +1957,18 @@ var LayerView = View.extend({
         // 'model.scaleZ',
         'model.originX',
         'model.originY',
-        'model.backfaceVisibility'
+        'model.backfaceVisibility',
+        'model.mixBlendMode',
+        'model.zIndex'
       ],
       fn: function() {
         return {
-          opacity: this.model.opacity,
+          opacity: this.model.opacity * 0.01,
+          mixBlendMode: this.model.mixBlendMode,
           width: this.width + 'px',
           height: this.height + 'px',
+          zIndex: this.zIndex || 0,
+          perspective: this.model.perspective + 'px',
           transform:
                     'rotateX(' + this.model.rotateX + 'deg) ' +
                     'rotateY(' + this.model.rotateY + 'deg) ' +
@@ -1636,7 +1981,7 @@ var LayerView = View.extend({
                     // 'scaleZ(' + this.model.scaleZ + '%) ' +
                     'skewX(' + this.model.skewX + 'deg) ' +
                     'skewY(' + this.model.skewY + 'deg) ' +
-                    'perspective(' + this.model.perspective + ')' +
+                    // 'perspective(' + this.model.perspective + ')' +
                     ''
         };
       }
@@ -1669,7 +2014,7 @@ var LayerView = View.extend({
 });
 
 module.exports = LayerView;
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var assign = window.VFDeps.assign;
@@ -1678,7 +2023,6 @@ var MappingControlView = View.extend({
     var mappingView = this;
     var target = this.model.targetProperty;
     var layer = this.model.targetModel;
-
     this.listenToAndRun(layer, 'change:' + target, function () {
       mappingView.propValue = layer[target];
     });
@@ -1694,7 +2038,7 @@ var MappingControlView = View.extend({
       }
     },
     signalNames: {
-      deps: ['rootView'],
+      deps: ['rootView', 'rootView.signalNames'],
       fn: function () {
         return this.rootView ? this.rootView.signalNames || [] : [];
       }
@@ -1702,26 +2046,29 @@ var MappingControlView = View.extend({
   },
 
   events: {
+    'click [name=to-multi-mapping]': '_addToMulti',
     'click [name=default-value]': '_defaultValue',
 
 
     'click [name=clear-mapping]': '_clearMapping',
 
+    'focus [data-hook=value]': '_valueFocus',
 
-    'focus [data-hook=value][contenteditable=true]': '_valueFocus',
-    'blur [data-hook=value][contenteditable=true]': '_valueBlur',
+    'wheel [data-hook=value]': '_valueWheel',
 
-    'wheel [data-hook=value][contenteditable=true]': '_valueWheel',
-
-    'paste [data-hook=value][contenteditable=true]': '_valueChange',
-    'input [data-hook=value][contenteditable=true]': '_valueChange',
+    'paste [data-hook=value]': '_valueChange',
+    'change [data-hook=value]': '_valueChange',
 
 
-    'focus [data-hook=mapping][contenteditable=true]': '_mappingFocus',
-    'blur [data-hook=mapping][contenteditable=true]': '_mappingBlur',
+    'focus [data-hook=mapping]': '_mappingFocus',
+    'blur [data-hook=mapping]': '_mappingBlur',
 
-    'paste [data-hook=mapping][contenteditable=true]': '_mappingChange',
-    'input [data-hook=mapping][contenteditable=true]': '_mappingChange'
+    'paste [data-hook=mapping]': '_mappingChange',
+    'change [data-hook=mapping]': '_mappingChange'
+  },
+
+  _addToMulti: function() {
+    this.rootView.addMultiMapping(this.model);
   },
 
 
@@ -1738,6 +2085,9 @@ var MappingControlView = View.extend({
     evt.preventDefault();
     this.model.unset('eventNames');
     this.model.targetModel.trigger('change:mappings', this.model.targetModel.mappings);
+    if (!evt.shiftKey) {
+      this._defaultValue(evt);
+    }
   },
 
 
@@ -1745,10 +2095,10 @@ var MappingControlView = View.extend({
   _mappingFocus: function() {
     var helper = this.rootView.suggestionHelper;
     if (!helper) { return; }
-    var inputEl = this.queryByHook('mapping');
+    var mappingEl = this.queryByHook('mapping');
     var model = this.model;
     var layer = model.targetModel;
-    helper.attach(inputEl, function (selected) {
+    helper.attach(mappingEl, function (selected) {
       model.eventNames = selected;
       layer.trigger('change:mappings', layer.mappings);
       helper.detach();
@@ -1763,7 +2113,8 @@ var MappingControlView = View.extend({
   _mappingChange: function () {
     var model = this.model;
     var layer = model.targetModel;
-    var newEventNames = this.queryByHook('mapping').textContent.trim();
+    var mappingEl = this.queryByHook('mapping');
+    var newEventNames = mappingEl.value.trim();
     if ((model.eventNames || '') === newEventNames) { return; }
     model.eventNames = newEventNames;
     layer.trigger('change:mappings', layer.mappings);
@@ -1779,24 +2130,28 @@ var MappingControlView = View.extend({
 
 
   _valueFocus: function() {
+    var model = this.model;
+    var layer = model.targetModel;
     var def = this.model.definition;
     if (!def) {
       console.warn('no model definition', this.model);
       return;
     }
+
+    var valueEl = this.queryByHook('value');
+    if (valueEl.select) valueEl.select();
+
     if (def.values && def.values.length > 1) {
       var helper = this.rootView.suggestionHelper;
       if (!helper) { return; }
-      var inputEl = this.queryByHook('value');
-      helper.attach(inputEl, function() {}).fill(def.values);
+
+      helper.attach(valueEl, function(selected) {
+        valueEl.value = selected;
+        layer[model.targetProperty] = selected;
+        helper.detach();
+      }).fill(def.values);
     }
   },
-
-  _valueBlur: function(evt) {
-    this.rootView.suggestionHelper.detach();
-    this._valueChange(evt);
-  },
-
 
 
 
@@ -1807,7 +2162,7 @@ var MappingControlView = View.extend({
 
     var def = this.model.definition;
     var valueEl = this.queryByHook('value');
-    var value = valueEl.textContent.trim();
+    var value = valueEl.value.trim();
 
     var added = Math.round(evt.wheelDeltaY * (1 / 120));
 
@@ -1826,7 +2181,7 @@ var MappingControlView = View.extend({
       if (def.min) { value = Math.min(def.min, value); }
       if (def.max) { value = Math.max(def.max, value); }
     }
-    valueEl.textContent = value;
+    valueEl.value = value;
     this._valueChange();
   },
 
@@ -1840,7 +2195,7 @@ var MappingControlView = View.extend({
     var def = model.definition;
     if (!def) { return; }
 
-    var value = this.queryByHook('value').textContent.trim();
+    var value = this.queryByHook('value').value.trim();
     switch (def.type) {
     case 'number':
       value = value === '' ? def.default : Number(value);
@@ -1877,74 +2232,228 @@ var MappingControlView = View.extend({
       {
         selector: '[data-hook=value]',
         type: function(el, val) {
-          el.setAttribute('contenteditable', !val);
+          el.disabled = !!val;
         }
       },
       {
-        selector: '[data-hook=mapping]'
+        selector: '[data-hook=mapping]',
+        type: 'value'
       }
     ],
-    propValue: '[data-hook=value]'
-  },
-
-  template: [
-    '<div class="prop columns">',
-    '<strong class="prop-name column gutter-right"></strong>',
-    '<span class="column columns">',
-    '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>',
-    '<span class="column gutter-left" data-placeholder="Value" data-hook="value"></span>',
-    '</span>',
-    '<span class="column columns mapping">',
-    '<span class="column gutter-right" data-placeholder="Events" contenteditable="true" data-hook="mapping"></span>',
-    '<span class="column gutter-left no-grow"><button name="clear-mapping" class="vfi-trash-empty"></button></span>',
-    '</span>',
-    '</div>'
-  ].join('')
-});
-
-
-MappingControlView.opacity = MappingControlView.extend({
-  template: [
-    '<div class="prop columns">',
-    '<strong class="prop-name column gutter-right"></strong>',
-    '<span class="column columns">',
-    '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>',
-    '<span class="column gutter-left percents" data-hook="value"></span>',
-    '</span>',
-    '<span class="column columns mapping">',
-    '<span class="column gutter-right" contenteditable="true" data-hook="mapping"></span>',
-    '<span class="column gutter-left no-grow"><button name="clear-mapping" class="vfi-trash-empty"></button></span>',
-    '</span>',
-    '</div>'
-  ].join(''),
-
-  bindings: assign({}, MappingControlView.prototype.bindings, {
     propValue: {
       hook: 'value',
-      type: function (el, val) {
-        el.textContent = Math.round(val || 0);
-      }
+      type: 'value'
     }
-  })
+  },
+
+  template: '<div class="prop columns">' +
+    '<span class="column no-grow gutter-right"><button name="to-multi-mapping" class="vfi-attach"></button></span>' +
+    '<strong class="prop-name column gutter-horizontal"></strong>' +
+    '<span class="column columns">' +
+      '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>' +
+      '<input type="text" class="column gutter-left" placeholder="Value" data-hook="value" />' +
+    '</span>' +
+    '<span class="column columns mapping">' +
+      '<input type="text" class="column gutter-right" placeholder="Events" data-hook="mapping" />' +
+      '<span class="column gutter-left no-grow"><button name="clear-mapping" class="vfi-trash-empty"></button></span>' +
+    '</span>' +
+  '</div>'
 });
 
-MappingControlView.blending = MappingControlView.extend({
-  template: [
-    '<div class="prop columns">',
-    '<strong class="prop-name column gutter-right"></strong>',
-    '<span class="column columns">',
-    '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>',
-    '<span class="column gutter-left" data-hook="value"></span>',
-    '</span>',
-    '<span class="column columns mapping">',
-    '<span class="column gutter-right" contenteditable="true" data-hook="mapping"></span>',
-    '<span class="column gutter-left no-grow"><button name="clear-mapping" class="vfi-trash-empty"></button></span>',
-    '</span>',
-    '</div>'
-  ].join('')
+
+MappingControlView.boolean = MappingControlView.extend({
+  template: '<div class="prop columns">' +
+    '<span class="column no-grow gutter-right"><button name="to-multi-mapping" class="vfi-attach"></button></span>' +
+    '<strong class="prop-name column gutter-horizontal"></strong>' +
+    '<span class="column columns">' +
+      '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>' +
+      '<span class="column gutter-left"><button data-hook="value"></button></span>' +
+    '</span>' +
+    '<span class="column columns mapping">' +
+      '<input class="column gutter-right" placeholder="Events" data-hook="mapping" />' +
+      '<span class="column gutter-left no-grow"><button name="clear-mapping" class="vfi-trash-empty"></button></span>' +
+    '</span>' +
+  '</div>',
+
+  bindings: {
+    propValue: {
+      hook: 'value',
+      type: 'booleanClass',
+      yes: 'vfi-toggle-on',
+      no: 'vfi-toggle-off'
+    },
+    'model.targetProperty': [
+      { selector: '.prop-name' },
+      { type: 'class' }
+    ],
+    'model.eventNames': [
+      {
+        selector: '[data-hook=value]',
+        type: function(el, eventNames) {
+          el.disabled = !!eventNames;
+        }
+      },
+      {
+        selector: '[data-hook=mapping]',
+        type: 'value'
+      }
+    ]
+  },
+
+  events: assign({}, MappingControlView.prototype.events, {
+    'click [data-hook=value]': '_toggle'
+  }),
+
+  _toggle: function() {
+    this.model.targetModel.toggle(this.model.targetProperty);
+  }
 });
+
+
+MappingControlView.number = MappingControlView.extend({
+  _valueChange: function () {
+    var model = this.model;
+    var layer = model.targetModel;
+
+    var value = parseInt(this.queryByHook('value').value.trim() || 0, 10);
+
+    if (layer[model.targetProperty] !== value) {
+      layer[model.targetProperty] = value;
+    }
+  },
+
+  template: '<div class="prop columns">' +
+    '<span class="column no-grow gutter-right"><button name="to-multi-mapping" class="vfi-attach"></button></span>' +
+    '<strong class="prop-name column gutter-horizontal"></strong>' +
+    '<span class="column columns">' +
+      '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>' +
+      '<input type="number" class="column gutter-left" placeholder="Value" data-hook="value" />' +
+    '</span>' +
+    '<span class="column columns mapping">' +
+      '<input type="text" class="column gutter-right" placeholder="Events" data-hook="mapping" />' +
+      '<span class="column gutter-left no-grow"><button name="clear-mapping" class="vfi-trash-empty"></button></span>' +
+    '</span>' +
+  '</div>'
+});
+
+MappingControlView.range = MappingControlView.number.extend({
+  min: 0,
+  max: 100,
+
+  _valueChange: function () {
+    var model = this.model;
+    var min = this.min;
+    var max = this.max;
+
+    var layer = model.targetModel;
+
+    var value = parseInt(this.queryByHook('value').value.trim() || 0, 10);
+    value = value < min ? min : (value > max ? max : value);
+
+    if (layer[model.targetProperty] !== value) {
+      layer[model.targetProperty] = value;
+    }
+  },
+
+  template: function() {
+    return '<div class="prop columns">' +
+      '<span class="column no-grow gutter-right"><button name="to-multi-mapping" class="vfi-attach"></button></span>' +
+      '<strong class="prop-name column gutter-horizontal"></strong>' +
+      '<span class="column columns">' +
+        '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>' +
+        '<input type="range" min="' + this.min + '" max="' + this.max + '" class="column gutter-left" placeholder="Value" data-hook="value" />' +
+      '</span>' +
+      '<span class="column columns mapping">' +
+        '<input type="text" class="column gutter-right" placeholder="Events" data-hook="mapping" />' +
+        '<span class="column gutter-left no-grow"><button name="clear-mapping" class="vfi-trash-empty"></button></span>' +
+      '</span>' +
+    '</div>';
+  }
+});
+
+MappingControlView.rotateX =
+MappingControlView.rotateY =
+MappingControlView.rotateZ = MappingControlView.range.extend({
+  min: 0,
+  max: 360
+});
+
+
+MappingControlView.shadowBlur = MappingControlView.range.extend({
+  min: 0,
+  max: 50
+});
+
+MappingControlView.scaleX =
+MappingControlView.scaleY = MappingControlView.range.extend({
+  min: -10,
+  max: 10
+});
+
+MappingControlView.translateX =
+MappingControlView.translateY =
+MappingControlView.shadowOffsetX =
+MappingControlView.shadowOffsetY = MappingControlView.range.extend({
+  min: -100,
+  max: 100
+});
+
+
+MappingControlView.opacity = MappingControlView.range.extend({});
+
+// MappingControlView.blending = MappingControlView.extend({
+//   template: '<div class="prop columns">' +
+//       '<span class="column no-grow gutter-right"><button name="to-multi-mapping" class="vfi-attach"></button></span>' +
+//       '<strong class="prop-name column gutter-horizontal"></strong>' +
+//       '<span class="column columns">' +
+//         '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>' +
+//         '<span class="column gutter-left" data-hook="value"></span>' +
+//       '</span>' +
+//       '<span class="column columns mapping">' +
+//         '<input class="column gutter-right" placeholder="Events" data-hook="mapping" />' +
+//         '<span class="column gutter-left no-grow"><button name="clear-mapping" class="vfi-trash-empty"></button></span>' +
+//       '</span>' +
+//     '</div>'
+// });
 module.exports = MappingControlView;
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+'use strict';
+var MappableState = require('./state');
+var MappingControlView = require('./../mappable/control-view');
+var MultiMappingControlView = VFDeps.View.extend({
+  template: '<section class="row rows">' +
+    '<header class="row">' +
+      '<h3>Multi mapping</h3>' +
+    '</header>' +
+
+    '<div class="row mappings props"></div>' +
+  '</section>',
+
+  initialize: function() {
+    console.info('initialize multi mapping control view', this.mappings);
+  },
+
+  collections: {
+    mappings: MappableState.Collection
+  },
+
+  subviews: {
+    mappingsView: {
+      selector: '.mappings',
+      prepareView: function (el) {
+        return this.renderCollection(this.mappings, function (opts) {
+          var type = opts.model.definition.type;
+          var name = opts.model.targetProperty;
+          var Constructor = MappingControlView[name] || MappingControlView[type] || MappingControlView;
+          console.info('multi mapping property name: %s (%s), type: %s (%s)', name, !!MappingControlView[name], type, !!MappingControlView[type]);
+          return new Constructor(opts);
+        }, el);
+      }
+    }
+  }
+});
+module.exports = MultiMappingControlView;
+},{"./../mappable/control-view":19,"./state":21}],21:[function(require,module,exports){
 'use strict';
 var State = VFDeps.State;
 var Collection = VFDeps.Collection;
@@ -1974,12 +2483,13 @@ var MappingState = State.extend({
       }
     },
     observedModel: {
-      deps: ['targetModel', 'targetModel.parent'],
+      deps: ['targetModel', 'targetModel.collection', 'targetModel.collection.parent'],
       fn: function() {
-        for (var inst = this.targetModel; inst; inst = inst.parent) {
-          if (inst.mappingEventsEmmiter) { return inst.mappingEventsEmmiter === true ? inst : inst.mappingEventsEmmiter; }
-        }
-        return false;
+        return this.targetModel.collection.parent;
+        // for (var inst = this.targetModel; inst; inst = inst.parent) {
+        //   if (inst.frametime) { return inst; }
+        // }
+        // return false;
       }
     },
     definition: {
@@ -2066,13 +2576,50 @@ var MappableState = State.extend({
     return this;
   },
 
+  derived: {
+    propDefaults: {
+      fn: function() {
+        var returned = {};
+        var definition = this.constructor.prototype._definition;
+        var propName;
+        for (propName in definition) {
+          returned[propName] = definition[propName].default;
+        }
+        return returned;
+      }
+    }
+  },
+
+  serialize: function(options) {
+    options = options || {};
+    var serialized = State.prototype.serialize.call(this, options);
+    var defaults = this.propDefaults;
+    var returned = {};
+
+    var propName;
+    for (propName in serialized) {
+      if (propName !== 'mappings' && (typeof defaults[propName] === 'undefined' || serialized[propName] !== defaults[propName])) {
+        returned[propName] = serialized[propName];
+      }
+    }
+
+    if (options.mappings) {
+      returned.mappings = serialized.mappings;
+    }
+
+    return serialized;
+  },
+
   collections: {
     mappings: MappingsCollection
   }
 });
+
+MappableState.State = MappingState;
+MappableState.Collection = MappingsCollection;
 module.exports = MappableState;
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 var VFDeps = window.VFDeps;
 
@@ -2105,6 +2652,8 @@ var KP3LetterButoons = [
 ];
 
 var KP3Mappings = {
+  prefix: 'kp3',
+
   type: {
     128: 'noteOn',
     144: 'noteOff',
@@ -2173,34 +2722,34 @@ var KP3Mappings = {
   },
 
   signalNames: [
-    'kp3:buttonA:noteOn',
-    'kp3:buttonA:noteOff',
-    'kp3:buttonB:noteOn',
-    'kp3:buttonB:noteOff',
-    'kp3:buttonC:noteOn',
-    'kp3:buttonC:noteOff',
-    'kp3:buttonD:noteOn',
-    'kp3:buttonD:noteOff',
+    'buttonA:noteOn',
+    'buttonA:noteOff',
+    'buttonB:noteOn',
+    'buttonB:noteOff',
+    'buttonC:noteOn',
+    'buttonC:noteOff',
+    'buttonD:noteOn',
+    'buttonD:noteOff',
 
-    'kp3:num1:noteOn',
-    'kp3:num1:noteOff',
-    'kp3:num2:noteOn',
-    'kp3:num2:noteOff',
-    'kp3:num3:noteOn',
-    'kp3:num3:noteOff',
-    'kp3:num4:noteOn',
-    'kp3:num4:noteOff',
-    'kp3:num5:noteOn',
-    'kp3:num5:noteOff',
-    'kp3:num6:noteOn',
-    'kp3:num6:noteOff',
-    'kp3:num7:noteOn',
-    'kp3:num7:noteOff',
-    'kp3:num8:noteOn',
-    'kp3:num8:noteOff',
+    'num1:noteOn',
+    'num1:noteOff',
+    'num2:noteOn',
+    'num2:noteOff',
+    'num3:noteOn',
+    'num3:noteOff',
+    'num4:noteOn',
+    'num4:noteOff',
+    'num5:noteOn',
+    'num5:noteOff',
+    'num6:noteOn',
+    'num6:noteOff',
+    'num7:noteOn',
+    'num7:noteOff',
+    'num8:noteOn',
+    'num8:noteOff',
 
-    'kp3:effectKnob:change',
-    'kp3:effectSlider:change'
+    'effectKnob:change',
+    'effectSlider:change'
   ]
 };
 
@@ -2240,7 +2789,10 @@ var MIDIState = State.extend({
     signalNames: {
       deps: ['midiMappings'],
       fn: function() {
-        return this.midiMapping.signalNames;
+        var prefix = this.midiMapping.prefix;
+        return this.midiMapping.signalNames.map(function(str) {
+          return prefix + ':' + str;
+        });
       }
     }
   }
@@ -2294,8 +2846,8 @@ function handleMIDIMessage(accessState, model) {
       signalNote:     _result(model.midiMapping, 'note', note, data),
       signalVelocity: _result(model.midiMapping, 'velocity', velocity, data)
     };
-    var eventName = 'kp3:' + obj.signalNote + ':' + obj.signalType;
-    accessState.trigger(eventName, obj.signalVelocity/*, model, eventName*/);
+    var eventName = model.midiMapping.prefix + ':' + obj.signalNote + ':' + obj.signalType;
+    accessState.trigger('midi', eventName, obj.signalVelocity/*, model, eventName*/);
 
     model.set(obj);
   };
@@ -2325,44 +2877,42 @@ var MIDIAccessState = State.extend({
 
       var inputs = [];
       var outputs = [];
-      var entry;
       var model;
 
-      for (entry in accessState.MIDIAccess.inputs) {
+      accessState.MIDIAccess.inputs.forEach(function(info) {
         model = new MIDIState({
-          connection: entry[1].connection,
-          state: entry[1].state,
-          type: entry[1].type,
-          id: entry[1].id,
-          manufacturer: entry[1].manufacturer,
-          name: entry[1].name,
-          version: entry[1].version
+          connection: info.connection,
+          state: info.state,
+          type: info.type,
+          id: info.id,
+          manufacturer: info.manufacturer,
+          name: info.name,
+          version: info.version
         });
-
         if (model.midiMapping) {
-          if (typeof entry[1].onmidimessage !== 'undefined') {
-            entry[1].onmidimessage = handleMIDIMessage(accessState, model);
+          if (typeof info.onmidimessage !== 'undefined') {
+            info.onmidimessage = handleMIDIMessage(accessState, model);
           }
 
           inputs.push(model);
         }
-      }
+      });
 
-      for (entry in accessState.MIDIAccess.outputs) {
+      accessState.MIDIAccess.outputs.forEach(function(info) {
         model = new MIDIState({
-          connection: entry[1].connection,
-          state: entry[1].state,
-          type: entry[1].type,
-          id: entry[1].id,
-          manufacturer: entry[1].manufacturer,
-          name: entry[1].name,
-          version: entry[1].version
+          connection: info.connection,
+          state: info.state,
+          type: info.type,
+          id: info.id,
+          manufacturer: info.manufacturer,
+          name: info.name,
+          version: info.version
         });
 
         if (model.midiMapping) {
           outputs.push(model);
         }
-      }
+      });
 
       accessState.inputs.reset(inputs);
       accessState.outputs.reset(outputs);
@@ -2421,7 +2971,63 @@ var MIDIAccessState = State.extend({
 
 module.exports = MIDIAccessState;
 
-},{}],21:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
+'use strict';
+var VFDeps = window.VFDeps;
+var View = VFDeps.View;
+var MIDIView = View.extend({
+  template: [
+    '<li class="gutter">',
+    '<span class="name"></span> ',
+    '</li>'
+  ].join(''),
+  bindings: {
+    'model.active': {
+      type: 'booleanClass'
+    },
+    'model.state': '.state',
+    'model.name': '.name'
+  },
+
+  events: {
+    click: '_handleClick'
+  },
+
+  _handleClick: function() {
+    this.model.toggle('active');
+  }
+});
+
+var MIDIAccessView = View.extend({
+  template:
+    '<div class="midi-access">' +
+      '<div class="midi-inputs">' +
+        '<div class="gutter">Inputs</div>' +
+        '<ul></ul>' +
+      '</div>' +
+    //   '<div class="midi-outputs">' +
+    //     '<div class="gutter">Outputs</div>' +
+    //     '<ul></ul>' +
+    //   '</div>' +
+    '</div>',
+
+  render: function() {
+    var originalClass;
+    if (this.el) {
+      originalClass = this.el.className;
+    }
+    this.renderWithTemplate();
+    if (originalClass) {
+      this.el.className = originalClass;
+    }
+    this.inputsView = this.renderCollection(this.model.inputs, MIDIView, '.midi-inputs ul');
+    // this.outputsView = this.renderCollection(this.model.outputs, MIDIView, '.midi-outputs ul');
+    return this;
+  }
+});
+
+module.exports = MIDIAccessView;
+},{}],24:[function(require,module,exports){
 'use strict';
 var State = VFDeps.State;
 var Collection = VFDeps.Collection;
@@ -2436,8 +3042,23 @@ require('./../signal/hsla/state');
 require('./../signal/rgba/state');
 
 var ScreenState = State.extend({
+  initialize: function() {
+    this.on('change:frametime', function() {
+      this.trigger('frametime', this.frametime);
+    });
+  },
+
+  props: {
+    frametime: ['number', true, 0],
+    firstframetime: ['any', true, function () {
+      return performance.now();
+    }],
+    signals: ['object', true, function() { return {}; }]
+  },
+
   collections: {
     screenLayers: Collection.extend({
+      comparator: 'zIndex',
       mainIndex: 'name',
       model: function(attrs, opts) {
         var Constructor = LayerState[attrs.type] || LayerState;
@@ -2456,17 +3077,10 @@ var ScreenState = State.extend({
 
   session: {
     latency: ['number', true, 0]
-  },
-
-  toJSON: function() {
-    var obj = State.prototype.toJSON.apply(this, arguments);
-    obj.screenLayers = this.screenLayers.toJSON.apply(this.screenLayers, arguments);
-    obj.screenSignals = this.screenSignals.toJSON.apply(this.screenSignals, arguments);
-    return obj;
   }
 });
 module.exports = ScreenState;
-},{"./../layer/canvas/state":7,"./../layer/img/state":10,"./../layer/state":12,"./../layer/svg/state":13,"./../layer/video/state":15,"./../signal/beat/state":24,"./../signal/hsla/state":28,"./../signal/rgba/state":30,"./../signal/state":31}],22:[function(require,module,exports){
+},{"./../layer/canvas/state":8,"./../layer/img/state":11,"./../layer/state":13,"./../layer/svg/state":14,"./../layer/video/state":16,"./../signal/beat/state":27,"./../signal/hsla/state":31,"./../signal/rgba/state":33,"./../signal/state":34}],25:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var LayerView = require('./../layer/view');
@@ -2506,10 +3120,6 @@ var ScreenView = View.extend({
     width: ['number', true, 400],
     height: ['number', true, 300],
     broadcastId: ['string', true, 'vfBus'],
-    frametime: ['number', true, 0],
-    firstframetime: ['any', true, function () {
-      return performance.now();
-    }],
     ratio: {
       type: 'number',
       required: true,
@@ -2527,6 +3137,11 @@ var ScreenView = View.extend({
     }
   },
 
+  execCommand: function(name, evt) {
+    evt.data.latency = performance.now() - evt.timeStamp;
+    this.update(evt.data);
+  },
+
   initialize: function () {
     var screenView = this;
     if (!screenView.model) {
@@ -2535,10 +3150,8 @@ var ScreenView = View.extend({
 
     if (window.BroadcastChannel) {
       var channel = screenView.channel = new window.BroadcastChannel(this.broadcastId);
-      channel.onmessage = function(e) {
-        e.data.latency = performance.now() - e.timeStamp;
-        // console.info('update for %s, %s', screenView.cid, e.data.latency);
-        screenView.update(e.data);
+      channel.onmessage = function(evt) {
+        screenView.execCommand('update', evt);
       };
     }
   },
@@ -2577,10 +3190,13 @@ var ScreenView = View.extend({
 
   resizeLayers: function() {
     if (!this.layersView || !this.layersView.views) { return this; }
+    var w = this.width;
+    var h = this.height;
+
     this.layersView.views.forEach(function(view) {
-      view.width = this.width;
-      view.height = this.height;
-    }, this);
+      view.width = w;
+      view.height = h;
+    });
     return this;
   },
 
@@ -2648,34 +3264,28 @@ var ScreenView = View.extend({
   }
 });
 module.exports = ScreenView;
-},{"./../layer/canvas/view":8,"./../layer/img/view":11,"./../layer/svg/view":14,"./../layer/video/view":16,"./../layer/view":17}],23:[function(require,module,exports){
+},{"./../layer/canvas/view":9,"./../layer/img/view":12,"./../layer/svg/view":15,"./../layer/video/view":17,"./../layer/view":18}],26:[function(require,module,exports){
 'use strict';
 var assign = window.VFDeps.assign;
 var SignalControlView = require('./../control-view');
 var BeatSignalControlView = SignalControlView.beatSignal = SignalControlView.extend({
-  template: [
-    '<section class="rows signal signal-beat">',
-    '<header class="row">',
-    '<h3 class="name"></h3>',
-    '</header>',
+  template: '<section class="rows signal signal-beat">' +
+    '<header class="row">' +
+      '<h3 class="name"></h3>' +
+    '</header>' +
 
-    '<div class="row columns gutter-horizontal gutter-bottom">',
-    '<div class="column result-dot no-grow gutter-right"></div>',
-    '<div class="column result gutter-left">',
-    '<div class="column input" data-placeholder="BPM" data-hook="input" contenteditable="true"></div>',
-    '</div>',
-    '</div>',
+    '<div class="row columns gutter-horizontal gutter-bottom">' +
+      '<div class="column result-dot no-grow gutter-right"></div>' +
+      '<div class="column result gutter-left">' +
+        '<input class="column input" placeholder="BPM" data-hook="input" />' +
+      '</div>' +
+    '</div>' +
 
-    '<div class="row mappings props"></div>',
-    '</section>'
-  ].join(''),
+    '<div class="row mappings props"></div>' +
+  '</section>',
 
   bindings: assign({}, SignalControlView.prototype.bindings, {
     'model.result': [
-      // {
-      //   selector: '.result',
-      //   type: 'text'
-      // },
       {
         selector: '.result-dot',
         type: function(el, val) {
@@ -2686,44 +3296,44 @@ var BeatSignalControlView = SignalControlView.beatSignal = SignalControlView.ext
   }),
 
   events: assign({}, SignalControlView.prototype.events, {
-    'input [data-hook=input]': '_updateBPM'
+    'change [data-hook=input]': '_updateBPM'
   }),
 
   _updateBPM: function() {
-    this.model.input = parseInt(this.queryByHook('input').textContent.trim(), 10);
+    this.model.input = parseInt(this.queryByHook('input').value.trim(), 10);
     console.info('Changing BPM', this.model.input);
   },
 
   render: function () {
     this.renderWithTemplate();
     var inputEl = this.queryByHook('input');
-    if (inputEl && !inputEl.textContent) {
-      inputEl.textContent = this.model.input;
+    if (inputEl && !inputEl.value) {
+      inputEl.value = this.model.input;
     }
     return this;
   }
 });
 module.exports = BeatSignalControlView;
-},{"./../control-view":25}],24:[function(require,module,exports){
+},{"./../control-view":28}],27:[function(require,module,exports){
 'use strict';
 var SignalState = require('./../state');
 
-var BeatState = SignalState.extend({
+var BeatState = SignalState.beatSignal = SignalState.extend({
   initialize: function() {
     SignalState.prototype.initialize.apply(this, arguments);
-    if (this.observedModel) this.listenTo(this.observedModel, 'frametime', function (value) {
-      if (isNaN(value)) { return; }
-      this.frametime = value;
+    var state = this;
+    this.collection.parent.on('change:frametime', function(screenState, frametime) {
+      state._ft = frametime;
     });
   },
 
-  props: {
-    frametime: ['number', true, 0]
+  session: {
+    _ft: ['number', true, 0]
   },
 
   derived: {
     result: {
-      deps: ['timeBetweenBeats', 'frametime'],
+      deps: ['timeBetweenBeats', '_ft'],
       fn: function() {
         return this.computeSignal();
       }
@@ -2737,36 +3347,37 @@ var BeatState = SignalState.extend({
   },
 
   computeSignal: function() {
-    var preTransform = !this.frametime ? 0 : (100 - (((this.frametime % this.timeBetweenBeats) / this.timeBetweenBeats) * 100));
-    return SignalState.prototype.computeSignal.apply(this, [preTransform]);
+    var frametime = this._ft;
+    var preTransform = !frametime ? 0 : (100 - (((frametime % this.timeBetweenBeats) / this.timeBetweenBeats) * 100));
+    var result = SignalState.prototype.computeSignal.apply(this, [preTransform]);
+    // this.collection.parent.signals[this.name] = result;
+    return result;
   }
 });
 
 module.exports = BeatState;
-},{"./../state":31}],25:[function(require,module,exports){
+},{"./../state":34}],28:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var SignalDetailsView = require('./details-view');
 var SignalControlView = View.extend({
-  template: [
-    '<section class="rows signal">',
-    '<header class="row">',
-    '<h3 class="row name"></h3>',
-    '</header>',
+  template: '<section class="rows signal">' +
+    '<header class="row">' +
+      '<h3 class="row name"></h3>' +
+    '</header>' +
 
-    '<div class="row gutter-horizontal columns model text-center">',
-    '<div class="column input"></div>',
-    '<div class="column gutter-horizontal no-grow">&raquo;</div>',
-    '<div class="column result"></div>',
-    '</div>',
+    // '<div class="row gutter-horizontal columns model text-center">' +
+    //   '<div class="column input"></div>' +
+    //   '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
+    //   '<div class="column result"></div>' +
+    // '</div>' +
 
-    '<div class="row gutter-horizontal columns test text-center">',
-    '<div class="column input" data-placeholder="Input" contenteditable="true"></div>',
-    '<div class="column gutter-horizontal no-grow">&raquo;</div>',
-    '<div class="column result"></div>',
-    '</div>',
-    '</section>'
-  ].join(''),
+    '<div class="row gutter-horizontal columns test text-center">' +
+      '<input class="column input" placeholder="Input" type="text"/>' +
+      '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
+      '<div class="column result"></div>' +
+    '</div>' +
+  '</section>',
 
   session: {
     input: 'any',
@@ -2792,13 +3403,13 @@ var SignalControlView = View.extend({
 
   bindings: {
     'model.name': '.name',
-    'model.input': '.model .input',
-    'model.result': '.model .result',
+    // 'model.input': '.model .input',
+    // 'model.result': '.model .result',
     result: '.test .result'
   },
 
   events: {
-    'input .test .input': '_testValue',
+    'change .test .input': '_testValue',
     'click header h3': '_showDetails'
   },
 
@@ -2810,41 +3421,39 @@ var SignalControlView = View.extend({
   },
 
   _testValue: function(evt) {
-    this.input = evt.target.textContent.trim();
+    this.input = evt.target.value.trim();
   },
 
   render: function () {
     this.renderWithTemplate();
     var inputEl = this.query('.test .input');
-    if (inputEl && !inputEl.textContent) {
-      inputEl.textContent = this.input;
+    if (inputEl && !inputEl.value) {
+      inputEl.value = this.input || null;
     }
     return this;
   }
 });
 module.exports = SignalControlView;
-},{"./details-view":26}],26:[function(require,module,exports){
+},{"./details-view":29}],29:[function(require,module,exports){
 'use strict';
 var assign = window.VFDeps.assign;
 var DetailsView = require('./../controller/details-view');
 var TransformationControlView = require('./../transformation/control-view');
 var transformationFunctions = require('./../transformation/functions');
 var SignalDetailsView = DetailsView.extend({
-  template: [
-    '<section>',
-    '<header>',
-    '<h3>Details for <span data-hook="name"></span></h3>',
-    '</header>',
+  template: '<section>' +
+    '<header>' +
+      '<h3>Details for <span data-hook="name"></span></h3>' +
+    '</header>' +
 
-    '<div class="row mappings props"></div>',
+    '<div class="row mappings props"></div>' +
 
-    '<div class="row gutter transformations-control columns">',
-    '<div class="column gutter-right" data-placeholder="New transformation" data-hook="new-transformation-name" contenteditable="true"></div>',
-    '<div class="column gutter-left no-grow"><button name="add-transformation" class="vfi-plus"></button></div>',
-    '</div>',
-    '<div class="row transformations props"></div>',
-    '</section>'
-  ].join('\n'),
+    '<div class="row gutter transformations-control columns">' +
+      '<input class="column gutter-right" placeholder="New transformation" data-hook="new-transformation-name" type="text"/>' +
+      '<div class="column gutter-left no-grow"><button name="add-transformation" class="vfi-plus"></button></div>' +
+    '</div>' +
+    '<div class="row transformations props"></div>' +
+  '</section>',
 
   subviews: assign({}, DetailsView.prototype.subviews, {
     transformationsView: {
@@ -2873,12 +3482,19 @@ var SignalDetailsView = DetailsView.extend({
   },
 
   _focusName: function() {
-    this.rootView.suggestionHelper.attach(this.queryByHook('new-transformation-name')).fill(Object.keys(transformationFunctions));
+    var nameEl = this.queryByHook('new-transformation-name');
+    var helper = this.rootView.suggestionHelper;
+
+    nameEl.select();
+    helper.attach(nameEl, function(selected){
+      nameEl.value = selected;
+      helper.detach();
+    }).fill(Object.keys(transformationFunctions));
   },
 
   _addTransformation: function () {
     this.model.transformations.add({
-      name: this.queryByHook('new-transformation-name').textContent.trim()
+      name: this.queryByHook('new-transformation-name').value.trim()
     });
   },
 
@@ -2887,7 +3503,7 @@ var SignalDetailsView = DetailsView.extend({
   }, DetailsView.prototype.bindings)
 });
 module.exports = SignalDetailsView;
-},{"./../controller/details-view":2,"./../transformation/control-view":32,"./../transformation/functions":33}],27:[function(require,module,exports){
+},{"./../controller/details-view":3,"./../transformation/control-view":35,"./../transformation/functions":36}],30:[function(require,module,exports){
 'use strict';
 var assign = window.VFDeps.assign;
 var SignalControlView = require('./../control-view');
@@ -2923,7 +3539,7 @@ var HSLASignalControlView = SignalControlView.hslaSignal = SignalControlView.ext
   })
 });
 module.exports = HSLASignalControlView;
-},{"./../control-view":25}],28:[function(require,module,exports){
+},{"./../control-view":28}],31:[function(require,module,exports){
 'use strict';
 var SignalState = require('./../state');
 
@@ -2972,7 +3588,7 @@ var HSLASignalState = SignalState.hslaSignal = SignalState.extend({
 });
 
 module.exports = HSLASignalState;
-},{"./../state":31}],29:[function(require,module,exports){
+},{"./../state":34}],32:[function(require,module,exports){
 'use strict';
 var SignalControlView = require('./../control-view');
 var HSLASignalControlView = require('./../hsla/control-view');
@@ -2980,7 +3596,7 @@ var HSLASignalControlView = require('./../hsla/control-view');
 var RGBASignalControlView = SignalControlView.rgbaSignal = HSLASignalControlView.extend({});
 
 module.exports = RGBASignalControlView;
-},{"./../control-view":25,"./../hsla/control-view":27}],30:[function(require,module,exports){
+},{"./../control-view":28,"./../hsla/control-view":30}],33:[function(require,module,exports){
 'use strict';
 var SignalState = require('./../state');
 var _255 = {
@@ -3026,12 +3642,141 @@ var RGBASignalState = SignalState.rgbaSignal = SignalState.extend({
   }
 });
 module.exports = RGBASignalState;
-},{"./../state":31}],31:[function(require,module,exports){
+},{"./../state":34}],34:[function(require,module,exports){
 'use strict';
 var State = window.VFDeps.State;
 var Collection = window.VFDeps.Collection;
 var MappableState = require('./../mappable/state');
+var transformationFunctions = require('./../transformation/functions');
 
+var SignalTransformationState = State.extend({
+  props: {
+    name: ['string', true, null],
+    arguments: ['array', true, function () { return []; }]
+  }
+});
+
+
+var SignalState = MappableState.extend({
+  idAttribute: 'name',
+  typeAttribute: 'type',
+
+  initialize: function() {
+    this.on('change:result', function() {
+      // this.collection.parent.signals[this.name] = this.result;
+      this.collection.parent.trigger(this.name, this.result);
+    });
+
+    if (this.input === null || this.input === undefined) {
+      this.input = this.defaultValue;
+    }
+  },
+
+  props: {
+    name: ['string', true, null],
+    type: ['string', true, 'default'],
+    defaultValue: ['any', true, function () { return 1; }]
+  },
+
+  session: {
+    input: ['any', false, null]
+  },
+
+  collections: {
+    transformations: Collection.extend({
+      model: SignalTransformationState
+    })
+  },
+
+  derived: {
+    result: {
+      deps: ['input', 'transformations'],
+      fn: function() {
+        return this.computeSignal();
+      }
+    }
+  },
+
+  computeSignal: function(val) {
+    val = val || this.input;
+
+    this.transformations.forEach(function(transformationState) {
+      var args = [val].concat(transformationState.arguments);
+      val = transformationFunctions[transformationState.name].apply(this, args);
+    });
+
+    return val;
+  }
+});
+module.exports = SignalState;
+},{"./../mappable/state":21,"./../transformation/functions":36}],35:[function(require,module,exports){
+'use strict';
+var View = window.VFDeps.View;
+var TransformationControlView = View.extend({
+  template: '<div class="transformation gutter columns">' +
+      '<div class="column gutter-right text-right" data-hook="name"></div>' +
+      '<div class="column gutter-horizontal no-grow"><button name="remove" class="vfi-trash-empty"></button></div>' +
+      '<input class="column gutter-left" data-hook="arguments" type="text"/>' +
+    '</div>',
+
+  derived: {
+    rootView: {
+      deps: ['parent'],
+      fn: function () {
+        for (var inst = this; inst; inst = inst.parent) {
+          if (!inst.parent) { return inst; }
+        }
+      }
+    },
+    arguments: {
+      deps: ['model', 'model.arguments'],
+      fn: function() {
+        return (this.model.arguments || []).join(',');
+      }
+    }
+  },
+
+  parseArguments: function(value) {
+    var state = this.model;
+    value = (value || this.queryByHook('arguments').value).trim();
+    var math = state.name.indexOf('math.') === 0;
+    var values = value.split(',').map(function(arg) {
+      arg = math ? Number(arg) : arg;
+      arg = math && isNaN(arg) ? 0 : arg;
+      return arg;
+    });
+    this.model.arguments = values;
+  },
+
+  bindings: {
+    'model.name': '[data-hook=name]',
+    'model.arguments': {
+      hook: 'arguments',
+      type: function(el) {
+        if (el === document.activeElement) { return; }
+        el.value = this.model.arguments.join(',');
+      }
+    }
+  },
+
+  events: {
+    'click [name=remove]': '_remove',
+
+    'keyup [data-hook=arguments]': '_changeArguments'
+  },
+
+  _remove: function() {
+    this.model.collection.remove(this.model);
+  },
+
+  _changeArguments: function() {
+    this.parseArguments();
+  }
+});
+
+module.exports = TransformationControlView;
+},{}],36:[function(require,module,exports){
+'use strict';
 var transformationFunctions = {};
 transformationFunctions['math.multiply'] = function(val, factor) {
   return val * factor;
@@ -3089,123 +3834,5 @@ transformationFunctions['string.toNumber'] = function(val) {
   return Number(val);
 };
 
-var SignalTransformationState = State.extend({
-  props: {
-    name: ['string', true, null],
-    arguments: ['array', true, function () { return []; }]
-  }
-});
-
-
-var SignalState = MappableState.extend({
-  idAttribute: 'name',
-  typeAttribute: 'type',
-
-  props: {
-    name: ['string', true, null],
-    type: ['string', true, 'default'],
-    defaultValue: ['any', true, function () { return 1; }]
-  },
-
-  session: {
-    input: ['any', true, null]
-  },
-
-  collections: {
-    transformations: Collection.extend({
-      model: SignalTransformationState
-    })
-  },
-
-  derived: {
-    observedModel: {
-      deps: ['collection', 'parent'],
-      fn: function() {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (inst.mappingEventsEmmiter) {
-            return inst.mappingEventsEmmiter === true ? inst : inst.mappingEventsEmmiter;
-          }
-        }
-        return false;
-      }
-    },
-    result: {
-      deps: ['input', 'transformations'],
-      fn: function() {
-        return this.computeSignal();
-      }
-    }
-  },
-
-  computeSignal: function(val) {
-    val = val || this.input;
-
-    this.transformations.forEach(function(transformationState) {
-      var args = [val].concat(transformationState.arguments);
-      val = transformationFunctions[transformationState.name].apply(this, args);
-    });
-
-    return val;
-  },
-
-  initialize: function() {
-    this.on('change:result', function() {
-      if (this.observedModel) this.observedModel.trigger(this.name, this.result);
-    });
-    if (this.input === null || this.input === undefined) {
-      this.input = this.defaultValue;
-    }
-  }
-});
-module.exports = SignalState;
-},{"./../mappable/state":19}],32:[function(require,module,exports){
-'use strict';
-var View = window.VFDeps.View;
-var TransformationControlView = View.extend({
-  template: [
-    '<div class="transformation gutter columns">',
-    '<div class="column gutter-right text-right" data-hook="name"></div>',
-    '<div class="column gutter-horizontal no-grow"><button name="remove" class="vfi-trash-empty"></button></div>',
-    '<div class="column gutter-left" data-hook="arguments" contenteditable="true"></div>',
-    '</div>'
-  ].join('\n'),
-
-  derived: {
-    rootView: {
-      deps: ['parent'],
-      fn: function () {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (!inst.parent) { return inst; }
-        }
-      }
-    }
-  },
-
-  bindings: {
-    'model.name': '[data-hook=name]',
-    'model.arguments': '[data-hook=arguments]'
-  },
-
-  events: {
-    'click [name=remove]': '_remove',
-
-    'focus [data-hook=arguments]': '_focusArguments',
-    'input [data-hook=arguments]': '_changeArguments',
-    'blur [data-hook=arguments]': '_blurArguments'
-  },
-
-  _remove: function() {
-    this.model.collection.remove(this.model);
-  },
-
-  _focusArguments: function() {},
-  _changeArguments: function() {},
-  _blurArguments: function() {},
-});
-
-module.exports = TransformationControlView;
-},{}],33:[function(require,module,exports){
-var functions = {};
-
-module.exports = functions;
+module.exports = transformationFunctions;
 },{}]},{},[1]);

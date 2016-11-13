@@ -3,6 +3,24 @@
 var ScreenLayerState = require('./../state');
 // var CanvasLayer = ScreenLayerState.extend({
 var MappableState = require('./../../mappable/state');
+var CanvasLayerMapState = MappableState.State.extend({
+  derived: {
+    targetModel: {
+      deps: ['collection', 'collection.parent'],
+      fn: function () {
+        return this.collection.parent;
+      }
+    },
+    observedModel: {
+      deps: ['targetModel', 'targetModel.collection', 'targetModel.collection.parent'],
+      fn: function() {
+        return this.targetModel.collection.parent.collection.parent;
+      }
+    }
+  }
+});
+
+
 var CanvasLayer = MappableState.extend({
   idAttribute: 'name',
 
@@ -54,30 +72,72 @@ var CanvasLayer = MappableState.extend({
 
 
   serialize: function() {
-    var obj = ScreenLayerState.prototype.serialize.apply(this, arguments);
+    var obj = MappableState.prototype.serialize.apply(this, arguments);
+    var returned = {};
 
+
+    var props = this.serializationProps.props || [];
+    // if (props.length) {
+    //   returned.props = {};
+    //   props.forEach(function(propName) {
+    //     returned.props[propName] = obj[propName];
+    //   });
+    // }
+
+    // var propName;
+    // for (propName in obj) {
+    //   if (props.indexOf(propName) < 0) {
+    //     returned[propName] = obj[propName];
+    //   }
+    // }
+
+    // better like that??
+    if (props.length) {
+      returned.props = {};
+    }
+
+    var propName;
+    var def = this.constructor.prototype._definition;
+    for (propName in obj) {
+      // if (props.indexOf(propName) < 0) {
+      returned[propName] = obj[propName];
+      // }
+      // else {
+      //   console.info();
+      //   returned.props[propName] = obj[propName];
+      // }
+      if (props.indexOf(propName) > -1) {
+        returned.props[propName] = def[propName];
+      }
+    }
+    returned.props = def;
     var type = typeof this.drawFunction;
     if (type === 'function') {
-      obj.drawFunction = this.drawFunction.toString();
+      returned.drawFunction = this.drawFunction.toString();
     }
     else if (type === 'string') {
-      obj.drawFunction = this.drawFunction;
+      returned.drawFunction = this.drawFunction;
     }
-
-    return obj;
+    return returned;
   },
 
   derived: {
-    width: {
-      deps: ['collection', 'collection.parent', 'collection.parent.width'],
+    screenState: {
+      deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
       fn: function() {
-        return this.collection.parent.width || 400;
+        return this.collection.parent.collection.parent;
+      }
+    },
+    width: {
+      deps: ['screenState', 'screenState.width'],
+      fn: function() {
+        return this.screenState.width || 400;
       }
     },
     height: {
-      deps: ['collection', 'collection.parent', 'collection.parent.height'],
+      deps: ['screenState', 'screenState.height'],
       fn: function() {
-        return this.collection.parent.height || 300;
+        return this.screenState.height || 300;
       }
     },
     draw: {
@@ -95,6 +155,16 @@ var CanvasLayer = MappableState.extend({
         return (typeof fn === 'function' ? fn : function() {}).bind(this);
       }
     }
+  },
+
+  collections: {
+    mappings: MappableState.Collection.extend({
+      model: function (attrs, options) {
+        var model = new CanvasLayerMapState(attrs, options);
+        if (options.init === false) model.initialize();
+        return model;
+      }
+    })
   }
 });
 
@@ -107,8 +177,13 @@ var CanvasLayers = VFDeps.Collection.extend({
   model: function (attrs, options) {
     var def = {
       props: attrs.props || {},
-      session: attrs.session || {},
-      derived: attrs.derived || {}
+      // session: attrs.session || {},
+      // derived: attrs.derived || {},
+      serializationProps: {
+        props: Object.keys(attrs.props || {}),
+        // session: Object.keys(attrs.session),
+        // derived: Object.keys(attrs.prderived)
+      }
     };
     var Constructor = _CanvasLayersCache[attrs.name] || CanvasLayer.extend(def);
     _CanvasLayersCache[attrs.name] = Constructor;
@@ -164,11 +239,11 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
 
 
     offCanvas: {
-      deps: ['width', 'height'],
+      deps: ['width', 'height', 'el'],
       fn: function() {
         var canvas = document.createElement('canvas');
-        canvas.width = this.el.width;
-        canvas.height = this.el.height;
+        canvas.width = this.width;
+        canvas.height = this.height;
         return canvas;
       }
     },
@@ -176,6 +251,12 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       deps: ['offCanvas'],
       fn: function() {
         return this.offCanvas.getContext('2d');
+      }
+    },
+    destCtx: {
+      deps: ['el', 'width', 'height'],
+      fn: function() {
+        return this.el.getContext('2d');
       }
     }
   },
@@ -188,9 +269,9 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     options = options || {};
     this.frametime = options.frametime || 0;
 
+    var cw = this.width = this.parent.el.clientWidth;
+    var ch = this.height = this.parent.el.clientHeight;
     var ctx = this.ctx;
-    var cw = ctx.canvas.width;
-    var ch = ctx.canvas.height;
     ctx.clearRect(0, 0, cw, ch);
     if (!this.model.active) { return this; }
 
@@ -208,9 +289,8 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       layer.draw(ctx);
     });
 
-    var destCtx = this.el.getContext('2d');
-    destCtx.clearRect(0, 0, cw, ch);
-    destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
+    this.destCtx.clearRect(0, 0, cw, ch);
+    this.destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
   },
@@ -273,20 +353,43 @@ var LayerState = MappableState.extend({
 
   props: {
     active: ['boolean', true, true],
-    backfaceVisibility: ['boolean', true, false],
+    // backfaceVisibility: ['boolean', true, false],
+    mixBlendMode: {
+      type: 'string',
+      default: 'normal',
+      required: true,
+      values: [
+        'normal',
+        'multiply',
+        'screen',
+        'overlay',
+        'darken',
+        'lighten',
+        'color-dodge',
+        'color-burn',
+        'hard-light',
+        'soft-light',
+        'difference',
+        'exclusion',
+        'hue',
+        'saturation',
+        'color',
+        'luminosity'
+      ]
+    },
     name: ['string', true, null],
     opacity: {
       type: 'number',
-      default: 1,
+      default: 100,
       min: 0,
-      max: 1
-    },
-    perspective: {
-      type: 'number',
-      default: 0,
-      min: -100,
       max: 100
     },
+    // perspective: {
+    //   type: 'number',
+    //   default: 0,
+    //   min: -100,
+    //   max: 100
+    // },
     rotateX: {
       type: 'number',
       default: 0,
@@ -317,12 +420,12 @@ var LayerState = MappableState.extend({
       min: -100,
       max: 100
     },
-    // translateZ: {
-    //   type: 'number',
-    //   default: 0,
-    //   min: -100,
-    //   max: 100
-    // },
+    // // translateZ: {
+    // //   type: 'number',
+    // //   default: 0,
+    // //   min: -100,
+    // //   max: 100
+    // // },
     scaleX: {
       type: 'number',
       default: 1,
@@ -335,22 +438,22 @@ var LayerState = MappableState.extend({
       min: -10,
       max: 10
     },
-    // scaleZ: {
+    // // scaleZ: {
+    // //   type: 'number',
+    // //   default: 1,
+    // //   min: -10,
+    // //   max: 10
+    // // },
+    // originX: {
     //   type: 'number',
-    //   default: 1,
-    //   min: -10,
-    //   max: 10
+    //   required: false,
+    //   default: 0
     // },
-    originX: {
-      type: 'number',
-      required: false,
-      default: 0
-    },
-    originY: {
-      type: 'number',
-      required: false,
-      default: 0
-    },
+    // originY: {
+    //   type: 'number',
+    //   required: false,
+    //   default: 0
+    // },
     skewX: {
       type: 'number',
       required: false,
@@ -365,10 +468,9 @@ var LayerState = MappableState.extend({
       min: -360,
       max: 360
     },
-    type: ['string', true, 'default']
-  },
-
-  collections: MappableState.prototype.collections
+    type: ['string', true, 'default'],
+    zIndex: ['number', true, 0]
+  }
 });
 module.exports = LayerState;
 },{"./../mappable/state":11}],6:[function(require,module,exports){
@@ -483,13 +585,18 @@ var LayerView = View.extend({
         // 'model.scaleZ',
         'model.originX',
         'model.originY',
-        'model.backfaceVisibility'
+        'model.backfaceVisibility',
+        'model.mixBlendMode',
+        'model.zIndex'
       ],
       fn: function() {
         return {
-          opacity: this.model.opacity,
+          opacity: this.model.opacity * 0.01,
+          mixBlendMode: this.model.mixBlendMode,
           width: this.width + 'px',
           height: this.height + 'px',
+          zIndex: this.zIndex || 0,
+          perspective: this.model.perspective + 'px',
           transform:
                     'rotateX(' + this.model.rotateX + 'deg) ' +
                     'rotateY(' + this.model.rotateY + 'deg) ' +
@@ -502,7 +609,7 @@ var LayerView = View.extend({
                     // 'scaleZ(' + this.model.scaleZ + '%) ' +
                     'skewX(' + this.model.skewX + 'deg) ' +
                     'skewY(' + this.model.skewY + 'deg) ' +
-                    'perspective(' + this.model.perspective + ')' +
+                    // 'perspective(' + this.model.perspective + ')' +
                     ''
         };
       }
@@ -565,12 +672,13 @@ var MappingState = State.extend({
       }
     },
     observedModel: {
-      deps: ['targetModel', 'targetModel.parent'],
+      deps: ['targetModel', 'targetModel.collection', 'targetModel.collection.parent'],
       fn: function() {
-        for (var inst = this.targetModel; inst; inst = inst.parent) {
-          if (inst.mappingEventsEmmiter) { return inst.mappingEventsEmmiter === true ? inst : inst.mappingEventsEmmiter; }
-        }
-        return false;
+        return this.targetModel.collection.parent;
+        // for (var inst = this.targetModel; inst; inst = inst.parent) {
+        //   if (inst.frametime) { return inst; }
+        // }
+        // return false;
       }
     },
     definition: {
@@ -657,32 +765,79 @@ var MappableState = State.extend({
     return this;
   },
 
+  derived: {
+    propDefaults: {
+      fn: function() {
+        var returned = {};
+        var definition = this.constructor.prototype._definition;
+        var propName;
+        for (propName in definition) {
+          returned[propName] = definition[propName].default;
+        }
+        return returned;
+      }
+    }
+  },
+
+  serialize: function(options) {
+    options = options || {};
+    var serialized = State.prototype.serialize.call(this, options);
+    var defaults = this.propDefaults;
+    var returned = {};
+
+    var propName;
+    for (propName in serialized) {
+      if (propName !== 'mappings' && (typeof defaults[propName] === 'undefined' || serialized[propName] !== defaults[propName])) {
+        returned[propName] = serialized[propName];
+      }
+    }
+
+    if (options.mappings) {
+      returned.mappings = serialized.mappings;
+    }
+
+    return serialized;
+  },
+
   collections: {
     mappings: MappingsCollection
   }
 });
+
+MappableState.State = MappingState;
+MappableState.Collection = MappingsCollection;
 module.exports = MappableState;
 
 },{}],12:[function(require,module,exports){
 'use strict';
 var ScreenState = require('./screen/state');
 var ScreenView = require('./screen/view');
+var bdy = document.body;
+
+// if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
+//   .then(function(reg) {
+//     // registration worked
+//     console.info('Registration succeeded. Scope is ' + reg.scope);
+//   }).catch(function(error) {
+//     // registration failed
+//     console.warn('Registration failed with ' + error);
+//   });
+// }
 
 var screenView = new ScreenView({
-  broadcastId: window.location.hash.slice(1),
+  model: new ScreenState({}),
+  broadcastId: window.location.hash.slice(1) || 'vfBus',
   el: document.querySelector('.screen'),
-  model: new ScreenState({})
+  width: bdy.clientWidth,
+  height: bdy.clientHeight
 });
+screenView.render();
 
-var bdy = document.body;
 function resize() {
-  screenView.set({
-    width: bdy.clientWidth,
-    height: bdy.clientHeight
-  });
-  screenView.render();
+  screenView.resize(bdy);
 }
-window.addEventListener('resize', VFDeps.throttle(resize, 100));
+window.addEventListener('resize', VFDeps.debounce(resize, 100));
 setTimeout(resize, 1500);
 },{"./screen/state":13,"./screen/view":14}],13:[function(require,module,exports){
 'use strict';
@@ -699,8 +854,23 @@ require('./../signal/hsla/state');
 require('./../signal/rgba/state');
 
 var ScreenState = State.extend({
+  initialize: function() {
+    this.on('change:frametime', function() {
+      this.trigger('frametime', this.frametime);
+    });
+  },
+
+  props: {
+    frametime: ['number', true, 0],
+    firstframetime: ['any', true, function () {
+      return performance.now();
+    }],
+    signals: ['object', true, function() { return {}; }]
+  },
+
   collections: {
     screenLayers: Collection.extend({
+      comparator: 'zIndex',
       mainIndex: 'name',
       model: function(attrs, opts) {
         var Constructor = LayerState[attrs.type] || LayerState;
@@ -719,13 +889,6 @@ var ScreenState = State.extend({
 
   session: {
     latency: ['number', true, 0]
-  },
-
-  toJSON: function() {
-    var obj = State.prototype.toJSON.apply(this, arguments);
-    obj.screenLayers = this.screenLayers.toJSON.apply(this.screenLayers, arguments);
-    obj.screenSignals = this.screenSignals.toJSON.apply(this.screenSignals, arguments);
-    return obj;
   }
 });
 module.exports = ScreenState;
@@ -769,10 +932,6 @@ var ScreenView = View.extend({
     width: ['number', true, 400],
     height: ['number', true, 300],
     broadcastId: ['string', true, 'vfBus'],
-    frametime: ['number', true, 0],
-    firstframetime: ['any', true, function () {
-      return performance.now();
-    }],
     ratio: {
       type: 'number',
       required: true,
@@ -790,6 +949,11 @@ var ScreenView = View.extend({
     }
   },
 
+  execCommand: function(name, evt) {
+    evt.data.latency = performance.now() - evt.timeStamp;
+    this.update(evt.data);
+  },
+
   initialize: function () {
     var screenView = this;
     if (!screenView.model) {
@@ -798,10 +962,8 @@ var ScreenView = View.extend({
 
     if (window.BroadcastChannel) {
       var channel = screenView.channel = new window.BroadcastChannel(this.broadcastId);
-      channel.onmessage = function(e) {
-        e.data.latency = performance.now() - e.timeStamp;
-        // console.info('update for %s, %s', screenView.cid, e.data.latency);
-        screenView.update(e.data);
+      channel.onmessage = function(evt) {
+        screenView.execCommand('update', evt);
       };
     }
   },
@@ -840,10 +1002,13 @@ var ScreenView = View.extend({
 
   resizeLayers: function() {
     if (!this.layersView || !this.layersView.views) { return this; }
+    var w = this.width;
+    var h = this.height;
+
     this.layersView.views.forEach(function(view) {
-      view.width = this.width;
-      view.height = this.height;
-    }, this);
+      view.width = w;
+      view.height = h;
+    });
     return this;
   },
 
@@ -915,22 +1080,22 @@ module.exports = ScreenView;
 'use strict';
 var SignalState = require('./../state');
 
-var BeatState = SignalState.extend({
+var BeatState = SignalState.beatSignal = SignalState.extend({
   initialize: function() {
     SignalState.prototype.initialize.apply(this, arguments);
-    if (this.observedModel) this.listenTo(this.observedModel, 'frametime', function (value) {
-      if (isNaN(value)) { return; }
-      this.frametime = value;
+    var state = this;
+    this.collection.parent.on('change:frametime', function(screenState, frametime) {
+      state._ft = frametime;
     });
   },
 
-  props: {
-    frametime: ['number', true, 0]
+  session: {
+    _ft: ['number', true, 0]
   },
 
   derived: {
     result: {
-      deps: ['timeBetweenBeats', 'frametime'],
+      deps: ['timeBetweenBeats', '_ft'],
       fn: function() {
         return this.computeSignal();
       }
@@ -944,8 +1109,11 @@ var BeatState = SignalState.extend({
   },
 
   computeSignal: function() {
-    var preTransform = !this.frametime ? 0 : (100 - (((this.frametime % this.timeBetweenBeats) / this.timeBetweenBeats) * 100));
-    return SignalState.prototype.computeSignal.apply(this, [preTransform]);
+    var frametime = this._ft;
+    var preTransform = !frametime ? 0 : (100 - (((frametime % this.timeBetweenBeats) / this.timeBetweenBeats) * 100));
+    var result = SignalState.prototype.computeSignal.apply(this, [preTransform]);
+    // this.collection.parent.signals[this.name] = result;
+    return result;
   }
 });
 
@@ -1050,7 +1218,70 @@ module.exports = RGBASignalState;
 var State = window.VFDeps.State;
 var Collection = window.VFDeps.Collection;
 var MappableState = require('./../mappable/state');
+var transformationFunctions = require('./../transformation/functions');
 
+var SignalTransformationState = State.extend({
+  props: {
+    name: ['string', true, null],
+    arguments: ['array', true, function () { return []; }]
+  }
+});
+
+
+var SignalState = MappableState.extend({
+  idAttribute: 'name',
+  typeAttribute: 'type',
+
+  initialize: function() {
+    this.on('change:result', function() {
+      // this.collection.parent.signals[this.name] = this.result;
+      this.collection.parent.trigger(this.name, this.result);
+    });
+
+    if (this.input === null || this.input === undefined) {
+      this.input = this.defaultValue;
+    }
+  },
+
+  props: {
+    name: ['string', true, null],
+    type: ['string', true, 'default'],
+    defaultValue: ['any', true, function () { return 1; }]
+  },
+
+  session: {
+    input: ['any', false, null]
+  },
+
+  collections: {
+    transformations: Collection.extend({
+      model: SignalTransformationState
+    })
+  },
+
+  derived: {
+    result: {
+      deps: ['input', 'transformations'],
+      fn: function() {
+        return this.computeSignal();
+      }
+    }
+  },
+
+  computeSignal: function(val) {
+    val = val || this.input;
+
+    this.transformations.forEach(function(transformationState) {
+      var args = [val].concat(transformationState.arguments);
+      val = transformationFunctions[transformationState.name].apply(this, args);
+    });
+
+    return val;
+  }
+});
+module.exports = SignalState;
+},{"./../mappable/state":11,"./../transformation/functions":19}],19:[function(require,module,exports){
+'use strict';
 var transformationFunctions = {};
 transformationFunctions['math.multiply'] = function(val, factor) {
   return val * factor;
@@ -1108,73 +1339,5 @@ transformationFunctions['string.toNumber'] = function(val) {
   return Number(val);
 };
 
-var SignalTransformationState = State.extend({
-  props: {
-    name: ['string', true, null],
-    arguments: ['array', true, function () { return []; }]
-  }
-});
-
-
-var SignalState = MappableState.extend({
-  idAttribute: 'name',
-  typeAttribute: 'type',
-
-  props: {
-    name: ['string', true, null],
-    type: ['string', true, 'default'],
-    defaultValue: ['any', true, function () { return 1; }]
-  },
-
-  session: {
-    input: ['any', true, null]
-  },
-
-  collections: {
-    transformations: Collection.extend({
-      model: SignalTransformationState
-    })
-  },
-
-  derived: {
-    observedModel: {
-      deps: ['collection', 'parent'],
-      fn: function() {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (inst.mappingEventsEmmiter) {
-            return inst.mappingEventsEmmiter === true ? inst : inst.mappingEventsEmmiter;
-          }
-        }
-        return false;
-      }
-    },
-    result: {
-      deps: ['input', 'transformations'],
-      fn: function() {
-        return this.computeSignal();
-      }
-    }
-  },
-
-  computeSignal: function(val) {
-    val = val || this.input;
-
-    this.transformations.forEach(function(transformationState) {
-      var args = [val].concat(transformationState.arguments);
-      val = transformationFunctions[transformationState.name].apply(this, args);
-    });
-
-    return val;
-  },
-
-  initialize: function() {
-    this.on('change:result', function() {
-      if (this.observedModel) this.observedModel.trigger(this.name, this.result);
-    });
-    if (this.input === null || this.input === undefined) {
-      this.input = this.defaultValue;
-    }
-  }
-});
-module.exports = SignalState;
-},{"./../mappable/state":11}]},{},[12]);
+module.exports = transformationFunctions;
+},{}]},{},[12]);
