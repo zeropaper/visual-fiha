@@ -1,10 +1,9 @@
 'use strict';
-var View = window.VFDeps.View;
 var MappingControlView = require('./../mappable/control-view');
-var DetailsView = View.extend({
+var DetailsView = VFDeps.View.extend({
   template: [
-    '<section>',
-    '<header>',
+    '<section class="row rows">',
+    '<header class="row">',
     '<h3>Details for <span data-hook="name"></span></h3>',
     '</header>',
 
@@ -17,7 +16,10 @@ var DetailsView = View.extend({
       selector: '.mappings',
       prepareView: function (el) {
         return this.renderCollection(this.model.mappings, function (opts) {
-          var Constructor = MappingControlView[opts.model.targetProperty] || MappingControlView;
+          var type = opts.model.definition.type;
+          var name = opts.model.targetProperty;
+          var Constructor = MappingControlView[name] || MappingControlView[type] || MappingControlView;
+          console.info('property name: %s (%s), type: %s (%s)', name, !!MappingControlView[name], type, !!MappingControlView[type]);
           return new Constructor(opts);
         }, el);
       }

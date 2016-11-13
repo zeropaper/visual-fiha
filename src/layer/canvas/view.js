@@ -34,11 +34,11 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
 
 
     offCanvas: {
-      deps: ['width', 'height'],
+      deps: ['width', 'height', 'el'],
       fn: function() {
         var canvas = document.createElement('canvas');
-        canvas.width = this.el.width;
-        canvas.height = this.el.height;
+        canvas.width = this.width;
+        canvas.height = this.height;
         return canvas;
       }
     },
@@ -46,6 +46,12 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       deps: ['offCanvas'],
       fn: function() {
         return this.offCanvas.getContext('2d');
+      }
+    },
+    destCtx: {
+      deps: ['el', 'width', 'height'],
+      fn: function() {
+        return this.el.getContext('2d');
       }
     }
   },
@@ -58,9 +64,9 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     options = options || {};
     this.frametime = options.frametime || 0;
 
+    var cw = this.width = this.parent.el.clientWidth;
+    var ch = this.height = this.parent.el.clientHeight;
     var ctx = this.ctx;
-    var cw = ctx.canvas.width;
-    var ch = ctx.canvas.height;
     ctx.clearRect(0, 0, cw, ch);
     if (!this.model.active) { return this; }
 
@@ -78,9 +84,8 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       layer.draw(ctx);
     });
 
-    var destCtx = this.el.getContext('2d');
-    destCtx.clearRect(0, 0, cw, ch);
-    destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
+    this.destCtx.clearRect(0, 0, cw, ch);
+    this.destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
   },

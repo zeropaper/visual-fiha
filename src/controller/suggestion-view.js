@@ -18,7 +18,7 @@ var SuggestionView = VFDeps.View.extend({
 
   attach: function (el, selectCb, newCollection) {
     this.inputEl = typeof el === 'string' ? this.parent.query(el) : el;
-    selectCb = selectCb || function(selected) { this.inputEl.textContent = selected; this.detach(); }.bind(this);
+    selectCb = selectCb || function(selected) { this.inputEl.value = selected; this.detach(); }.bind(this);
     this.off('selected');
     this.once('selected', selectCb);
 
@@ -52,7 +52,7 @@ var SuggestionView = VFDeps.View.extend({
       update = this.collection.serialize();
     }
     else {
-      var inputElVal = this.inputEl.textContent || this.inputEl.value;
+      var inputElVal = this.inputEl.value || this.inputEl.value;
 
       if (!inputElVal) {
         update = this.collection.serialize();
@@ -123,16 +123,11 @@ var SuggestionView = VFDeps.View.extend({
     this.listenTo(this.suggestions, 'add remove reset', this.resetPosition);
 
     var _handleInput = this._handleInput.bind(this);
-    var _handleBlur = function(evt) {
-      evt.preventDefault();
-    }.bind(this);
 
     this.on('change:inputEl', function() {
       var previous = this.previousAttributes();
       if (previous.inputEl) {
-        previous.inputEl.removeEventListener('blur', _handleBlur);
-        previous.inputEl.removeEventListener('input', _handleInput);
-        previous.inputEl.removeEventListener('change', _handleInput);
+        previous.inputEl.removeEventListener('keyup', _handleInput);
       }
 
       var list = this.el;
@@ -158,9 +153,7 @@ var SuggestionView = VFDeps.View.extend({
       }
 
       this.resetPosition();
-      inputEl.addEventListener('blur', _handleBlur);
-      inputEl.addEventListener('input', _handleInput);
-      inputEl.addEventListener('change', _handleInput);
+      inputEl.addEventListener('keyup', _handleInput);
     });
 
     var _handleHolderClick = function (evt) {

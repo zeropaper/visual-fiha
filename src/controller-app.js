@@ -2,6 +2,17 @@
 var _view;
 var ControllerView = require('./controller/view');
 
+// if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
+//   .then(function(reg) {
+//     // registration worked
+//     console.info('Registration succeeded. Scope is ' + reg.scope);
+//   }).catch(function(error) {
+//     // registration failed
+//     console.warn('Registration failed with ' + error);
+//   });
+// }
+
 function setupController(options) {
   options = options || {};
   if (!options.reboot && options.record) {

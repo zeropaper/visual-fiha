@@ -6,20 +6,43 @@ var LayerState = MappableState.extend({
 
   props: {
     active: ['boolean', true, true],
-    backfaceVisibility: ['boolean', true, false],
+    // backfaceVisibility: ['boolean', true, false],
+    mixBlendMode: {
+      type: 'string',
+      default: 'normal',
+      required: true,
+      values: [
+        'normal',
+        'multiply',
+        'screen',
+        'overlay',
+        'darken',
+        'lighten',
+        'color-dodge',
+        'color-burn',
+        'hard-light',
+        'soft-light',
+        'difference',
+        'exclusion',
+        'hue',
+        'saturation',
+        'color',
+        'luminosity'
+      ]
+    },
     name: ['string', true, null],
     opacity: {
       type: 'number',
-      default: 1,
+      default: 100,
       min: 0,
-      max: 1
-    },
-    perspective: {
-      type: 'number',
-      default: 0,
-      min: -100,
       max: 100
     },
+    // perspective: {
+    //   type: 'number',
+    //   default: 0,
+    //   min: -100,
+    //   max: 100
+    // },
     rotateX: {
       type: 'number',
       default: 0,
@@ -50,12 +73,12 @@ var LayerState = MappableState.extend({
       min: -100,
       max: 100
     },
-    // translateZ: {
-    //   type: 'number',
-    //   default: 0,
-    //   min: -100,
-    //   max: 100
-    // },
+    // // translateZ: {
+    // //   type: 'number',
+    // //   default: 0,
+    // //   min: -100,
+    // //   max: 100
+    // // },
     scaleX: {
       type: 'number',
       default: 1,
@@ -68,22 +91,22 @@ var LayerState = MappableState.extend({
       min: -10,
       max: 10
     },
-    // scaleZ: {
+    // // scaleZ: {
+    // //   type: 'number',
+    // //   default: 1,
+    // //   min: -10,
+    // //   max: 10
+    // // },
+    // originX: {
     //   type: 'number',
-    //   default: 1,
-    //   min: -10,
-    //   max: 10
+    //   required: false,
+    //   default: 0
     // },
-    originX: {
-      type: 'number',
-      required: false,
-      default: 0
-    },
-    originY: {
-      type: 'number',
-      required: false,
-      default: 0
-    },
+    // originY: {
+    //   type: 'number',
+    //   required: false,
+    //   default: 0
+    // },
     skewX: {
       type: 'number',
       required: false,
@@ -98,9 +121,8 @@ var LayerState = MappableState.extend({
       min: -360,
       max: 360
     },
-    type: ['string', true, 'default']
-  },
-
-  collections: MappableState.prototype.collections
+    type: ['string', true, 'default'],
+    zIndex: ['number', true, 0]
+  }
 });
 module.exports = LayerState;

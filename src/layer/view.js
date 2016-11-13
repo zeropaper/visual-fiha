@@ -34,13 +34,18 @@ var LayerView = View.extend({
         // 'model.scaleZ',
         'model.originX',
         'model.originY',
-        'model.backfaceVisibility'
+        'model.backfaceVisibility',
+        'model.mixBlendMode',
+        'model.zIndex'
       ],
       fn: function() {
         return {
-          opacity: this.model.opacity,
+          opacity: this.model.opacity * 0.01,
+          mixBlendMode: this.model.mixBlendMode,
           width: this.width + 'px',
           height: this.height + 'px',
+          zIndex: this.zIndex || 0,
+          perspective: this.model.perspective + 'px',
           transform:
                     'rotateX(' + this.model.rotateX + 'deg) ' +
                     'rotateY(' + this.model.rotateY + 'deg) ' +
@@ -53,7 +58,7 @@ var LayerView = View.extend({
                     // 'scaleZ(' + this.model.scaleZ + '%) ' +
                     'skewX(' + this.model.skewX + 'deg) ' +
                     'skewY(' + this.model.skewY + 'deg) ' +
-                    'perspective(' + this.model.perspective + ')' +
+                    // 'perspective(' + this.model.perspective + ')' +
                     ''
         };
       }

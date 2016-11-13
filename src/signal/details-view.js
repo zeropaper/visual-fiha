@@ -4,21 +4,19 @@ var DetailsView = require('./../controller/details-view');
 var TransformationControlView = require('./../transformation/control-view');
 var transformationFunctions = require('./../transformation/functions');
 var SignalDetailsView = DetailsView.extend({
-  template: [
-    '<section>',
-    '<header>',
-    '<h3>Details for <span data-hook="name"></span></h3>',
-    '</header>',
+  template: '<section>' +
+    '<header>' +
+      '<h3>Details for <span data-hook="name"></span></h3>' +
+    '</header>' +
 
-    '<div class="row mappings props"></div>',
+    '<div class="row mappings props"></div>' +
 
-    '<div class="row gutter transformations-control columns">',
-    '<div class="column gutter-right" data-placeholder="New transformation" data-hook="new-transformation-name" contenteditable="true"></div>',
-    '<div class="column gutter-left no-grow"><button name="add-transformation" class="vfi-plus"></button></div>',
-    '</div>',
-    '<div class="row transformations props"></div>',
-    '</section>'
-  ].join('\n'),
+    '<div class="row gutter transformations-control columns">' +
+      '<input class="column gutter-right" placeholder="New transformation" data-hook="new-transformation-name" type="text"/>' +
+      '<div class="column gutter-left no-grow"><button name="add-transformation" class="vfi-plus"></button></div>' +
+    '</div>' +
+    '<div class="row transformations props"></div>' +
+  '</section>',
 
   subviews: assign({}, DetailsView.prototype.subviews, {
     transformationsView: {
@@ -47,12 +45,19 @@ var SignalDetailsView = DetailsView.extend({
   },
 
   _focusName: function() {
-    this.rootView.suggestionHelper.attach(this.queryByHook('new-transformation-name')).fill(Object.keys(transformationFunctions));
+    var nameEl = this.queryByHook('new-transformation-name');
+    var helper = this.rootView.suggestionHelper;
+
+    nameEl.select();
+    helper.attach(nameEl, function(selected){
+      nameEl.value = selected;
+      helper.detach();
+    }).fill(Object.keys(transformationFunctions));
   },
 
   _addTransformation: function () {
     this.model.transformations.add({
-      name: this.queryByHook('new-transformation-name').textContent.trim()
+      name: this.queryByHook('new-transformation-name').value.trim()
     });
   },
 

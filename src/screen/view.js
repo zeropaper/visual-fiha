@@ -37,10 +37,6 @@ var ScreenView = View.extend({
     width: ['number', true, 400],
     height: ['number', true, 300],
     broadcastId: ['string', true, 'vfBus'],
-    frametime: ['number', true, 0],
-    firstframetime: ['any', true, function () {
-      return performance.now();
-    }],
     ratio: {
       type: 'number',
       required: true,
@@ -58,6 +54,11 @@ var ScreenView = View.extend({
     }
   },
 
+  execCommand: function(name, evt) {
+    evt.data.latency = performance.now() - evt.timeStamp;
+    this.update(evt.data);
+  },
+
   initialize: function () {
     var screenView = this;
     if (!screenView.model) {
@@ -66,10 +67,8 @@ var ScreenView = View.extend({
 
     if (window.BroadcastChannel) {
       var channel = screenView.channel = new window.BroadcastChannel(this.broadcastId);
-      channel.onmessage = function(e) {
-        e.data.latency = performance.now() - e.timeStamp;
-        // console.info('update for %s, %s', screenView.cid, e.data.latency);
-        screenView.update(e.data);
+      channel.onmessage = function(evt) {
+        screenView.execCommand('update', evt);
       };
     }
   },
@@ -108,10 +107,13 @@ var ScreenView = View.extend({
 
   resizeLayers: function() {
     if (!this.layersView || !this.layersView.views) { return this; }
+    var w = this.width;
+    var h = this.height;
+
     this.layersView.views.forEach(function(view) {
-      view.width = this.width;
-      view.height = this.height;
-    }, this);
+      view.width = w;
+      view.height = h;
+    });
     return this;
   },
 

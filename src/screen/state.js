@@ -12,8 +12,23 @@ require('./../signal/hsla/state');
 require('./../signal/rgba/state');
 
 var ScreenState = State.extend({
+  initialize: function() {
+    this.on('change:frametime', function() {
+      this.trigger('frametime', this.frametime);
+    });
+  },
+
+  props: {
+    frametime: ['number', true, 0],
+    firstframetime: ['any', true, function () {
+      return performance.now();
+    }],
+    signals: ['object', true, function() { return {}; }]
+  },
+
   collections: {
     screenLayers: Collection.extend({
+      comparator: 'zIndex',
       mainIndex: 'name',
       model: function(attrs, opts) {
         var Constructor = LayerState[attrs.type] || LayerState;
@@ -32,13 +47,6 @@ var ScreenState = State.extend({
 
   session: {
     latency: ['number', true, 0]
-  },
-
-  toJSON: function() {
-    var obj = State.prototype.toJSON.apply(this, arguments);
-    obj.screenLayers = this.screenLayers.toJSON.apply(this.screenLayers, arguments);
-    obj.screenSignals = this.screenSignals.toJSON.apply(this.screenSignals, arguments);
-    return obj;
   }
 });
 module.exports = ScreenState;

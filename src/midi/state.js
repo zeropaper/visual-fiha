@@ -30,6 +30,8 @@ var KP3LetterButoons = [
 ];
 
 var KP3Mappings = {
+  prefix: 'kp3',
+
   type: {
     128: 'noteOn',
     144: 'noteOff',
@@ -98,34 +100,34 @@ var KP3Mappings = {
   },
 
   signalNames: [
-    'kp3:buttonA:noteOn',
-    'kp3:buttonA:noteOff',
-    'kp3:buttonB:noteOn',
-    'kp3:buttonB:noteOff',
-    'kp3:buttonC:noteOn',
-    'kp3:buttonC:noteOff',
-    'kp3:buttonD:noteOn',
-    'kp3:buttonD:noteOff',
+    'buttonA:noteOn',
+    'buttonA:noteOff',
+    'buttonB:noteOn',
+    'buttonB:noteOff',
+    'buttonC:noteOn',
+    'buttonC:noteOff',
+    'buttonD:noteOn',
+    'buttonD:noteOff',
 
-    'kp3:num1:noteOn',
-    'kp3:num1:noteOff',
-    'kp3:num2:noteOn',
-    'kp3:num2:noteOff',
-    'kp3:num3:noteOn',
-    'kp3:num3:noteOff',
-    'kp3:num4:noteOn',
-    'kp3:num4:noteOff',
-    'kp3:num5:noteOn',
-    'kp3:num5:noteOff',
-    'kp3:num6:noteOn',
-    'kp3:num6:noteOff',
-    'kp3:num7:noteOn',
-    'kp3:num7:noteOff',
-    'kp3:num8:noteOn',
-    'kp3:num8:noteOff',
+    'num1:noteOn',
+    'num1:noteOff',
+    'num2:noteOn',
+    'num2:noteOff',
+    'num3:noteOn',
+    'num3:noteOff',
+    'num4:noteOn',
+    'num4:noteOff',
+    'num5:noteOn',
+    'num5:noteOff',
+    'num6:noteOn',
+    'num6:noteOff',
+    'num7:noteOn',
+    'num7:noteOff',
+    'num8:noteOn',
+    'num8:noteOff',
 
-    'kp3:effectKnob:change',
-    'kp3:effectSlider:change'
+    'effectKnob:change',
+    'effectSlider:change'
   ]
 };
 
@@ -165,7 +167,10 @@ var MIDIState = State.extend({
     signalNames: {
       deps: ['midiMappings'],
       fn: function() {
-        return this.midiMapping.signalNames;
+        var prefix = this.midiMapping.prefix;
+        return this.midiMapping.signalNames.map(function(str) {
+          return prefix + ':' + str;
+        });
       }
     }
   }
@@ -219,8 +224,8 @@ function handleMIDIMessage(accessState, model) {
       signalNote:     _result(model.midiMapping, 'note', note, data),
       signalVelocity: _result(model.midiMapping, 'velocity', velocity, data)
     };
-    var eventName = 'kp3:' + obj.signalNote + ':' + obj.signalType;
-    accessState.trigger(eventName, obj.signalVelocity/*, model, eventName*/);
+    var eventName = model.midiMapping.prefix + ':' + obj.signalNote + ':' + obj.signalType;
+    accessState.trigger('midi', eventName, obj.signalVelocity/*, model, eventName*/);
 
     model.set(obj);
   };
@@ -250,44 +255,42 @@ var MIDIAccessState = State.extend({
 
       var inputs = [];
       var outputs = [];
-      var entry;
       var model;
 
-      for (entry in accessState.MIDIAccess.inputs) {
+      accessState.MIDIAccess.inputs.forEach(function(info) {
         model = new MIDIState({
-          connection: entry[1].connection,
-          state: entry[1].state,
-          type: entry[1].type,
-          id: entry[1].id,
-          manufacturer: entry[1].manufacturer,
-          name: entry[1].name,
-          version: entry[1].version
+          connection: info.connection,
+          state: info.state,
+          type: info.type,
+          id: info.id,
+          manufacturer: info.manufacturer,
+          name: info.name,
+          version: info.version
         });
-
         if (model.midiMapping) {
-          if (typeof entry[1].onmidimessage !== 'undefined') {
-            entry[1].onmidimessage = handleMIDIMessage(accessState, model);
+          if (typeof info.onmidimessage !== 'undefined') {
+            info.onmidimessage = handleMIDIMessage(accessState, model);
           }
 
           inputs.push(model);
         }
-      }
+      });
 
-      for (entry in accessState.MIDIAccess.outputs) {
+      accessState.MIDIAccess.outputs.forEach(function(info) {
         model = new MIDIState({
-          connection: entry[1].connection,
-          state: entry[1].state,
-          type: entry[1].type,
-          id: entry[1].id,
-          manufacturer: entry[1].manufacturer,
-          name: entry[1].name,
-          version: entry[1].version
+          connection: info.connection,
+          state: info.state,
+          type: info.type,
+          id: info.id,
+          manufacturer: info.manufacturer,
+          name: info.name,
+          version: info.version
         });
 
         if (model.midiMapping) {
           outputs.push(model);
         }
-      }
+      });
 
       accessState.inputs.reset(inputs);
       accessState.outputs.reset(outputs);

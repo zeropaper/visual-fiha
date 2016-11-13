@@ -1,9 +1,12 @@
 :root {
-  --main-bg-color: #272822;
+  --bg-color: #272822;
+  --bg-color-alt: #222;
   --text-color: #F8F8F2;
   --text-color-alt: #75715E;
   --yes: #A6E22E;
   --no: #F92672;
+  --value: #E6DB74;
+  --editable: #66D9EF;
   --border-color: #666;
   --spacing: .5rem;
 }
@@ -21,20 +24,7 @@ body {
   margin: 0;
   padding: 0;
 }
-/*
-html,
-body {
-  margin: 0;
-  padding: 0;
-  font-size: 13px;
-}
 
-body {
-  font-family: sans;
-  color: var(--text-color);
-  background-color: var(--main-bg-color);
-}
-*/
 .index-page a,
 .index-page a:link,
 .index-page a:visited,
@@ -52,6 +42,11 @@ body {
 }
 .text-right {
   text-align: right;
+}
+
+.list-unstyled {
+  padding: 0;
+  list-style: none;
 }
 
 /*
@@ -213,28 +208,52 @@ Grid
   display: table-cell;
 }
 
-.gutter {
+.gutter:not(input) {
   padding: var(--spacing);
 }
-.gutter-left {
+.gutter-left:not(input) {
   padding-left: var(--spacing);
 }
-.gutter-top {
+.gutter-top:not(input) {
   padding-top: var(--spacing);
 }
-.gutter-horizontal {
+.gutter-horizontal:not(input) {
   padding-left: var(--spacing);
   padding-right: var(--spacing);
 }
-.gutter-right {
+.gutter-right:not(input) {
   padding-right: var(--spacing);
 }
-.gutter-bottom {
+.gutter-bottom:not(input) {
   padding-bottom: var(--spacing);
 }
-.gutter-vertical {
+.gutter-vertical:not(input) {
   padding-top: var(--spacing);
   padding-bottom: var(--spacing);
+}
+
+input.gutter {
+  margin: var(--spacing);
+}
+input.gutter-left {
+  margin-left: var(--spacing);
+}
+input.gutter-top {
+  margin-top: var(--spacing);
+}
+input.gutter-horizontal {
+  margin-left: var(--spacing);
+  margin-right: var(--spacing);
+}
+input.gutter-right {
+  margin-right: var(--spacing);
+}
+input.gutter-bottom {
+  margin-bottom: var(--spacing);
+}
+input.gutter-vertical {
+  margin-top: var(--spacing);
+  margin-bottom: var(--spacing);
 }
 
 
@@ -272,8 +291,8 @@ button[disabled] {
 button.yes,
 button.no {
   padding: 2px var(--spacing);
-  border: 1px solid var(--main-bg-color);/*var(--text-color);*/
-  color: var(--main-bg-color);
+  border: 1px solid var(--bg-color);/*var(--text-color);*/
+  color: var(--bg-color);
 }
 button.yes {
   background-color: var(--yes);
@@ -282,37 +301,21 @@ button.no {
   background-color: var(--no);
 }
 
-[contenteditable=true] {
-  color: #66D9EF;
+input {
+  color: var(--editable);
   border-bottom: 1px dashed currentColor;
+  background: transparent;
+  border: none;
   position: relative;
   z-index: 2;
   cursor: text;
+  max-width:  100;
 }
-[contenteditable=true]:before {
-  display: inherit;
-  opacity: 0.5;
-  position: relative;
-  z-index: 1;
-}
-/*
-[contenteditable=true]:empty{
-  color: var(--no);
-  color: #AE81FF;
-}
-*/
-[contenteditable=true]:empty:before {
-  content: 'null';
-}
-[contenteditable=true]:empty:focus:before {
-  opacity: 0;
-}
-[contenteditable=true][data-placeholder]:empty:before {
-  content: attr(data-placeholder);
-}
-[contenteditable=true]:focus {
-  text-overflow: initial;
-}
+
+
+
+
+
 
 /*
 Layout
@@ -321,8 +324,10 @@ Layout
 .index-page,
 .test-page,
 .controller-app {
-  background: var(--main-bg-color);
+  /*font-size: 13px;*/
+  font-family: sans;
   color: var(--text-color);
+  background-color: var(--bg-color);
 }
 
 
@@ -337,7 +342,7 @@ Layout
   font-size: 13px;
   font-family: sans;
   color: var(--text-color);
-  background-color: var(--main-bg-color);
+  background-color: var(--bg-color);
 }
 .controller a,
 .controller a:link,
@@ -451,7 +456,7 @@ MIDI
   margin: 0;
 }
 .midi-access li.active {
-  background-color: lightgreen;
+  background-color: var(--yes);
 }
 
 
@@ -469,12 +474,8 @@ Canvas layer controls
 .signal,
 .canvas-layer {
   border-top: 1px solid var(--text-color-alt);
-  border-bottom: 1px solid var(--main-bg-color);
+  border-bottom: 1px solid var(--bg-color);
   margin-bottom: 0;
-}
-.details {
-  border-top: 1px solid var(--text-color-alt);
-  max-height: 60%;
 }
 .row.layers {
   border-right: 1px solid var(--text-color-alt);
@@ -488,7 +489,7 @@ Canvas layer controls
 
 .signal:hover,
 .canvas-layer:hover {
-  background-color: #222;
+  background-color: var(--bg-color-alt);
 }
 
 
@@ -501,7 +502,7 @@ section.disabled button {
   transition: color 0.218s ease-in-out;
 }
 section.disabled:hover button {
-  color: #fff;
+  color: var(--text-color);
 }
 .canvas-layer .vfi-trash-empty {
   opacity: 0;
@@ -526,7 +527,6 @@ header > .column.no-grow {
 }
 header h3 {
   flex-grow: 2;
-  text-transform: uppercase;
 }
 
 
@@ -536,7 +536,7 @@ header h3 {
 }
 
 .signal .test.columns {
-  color: #aaa;
+  color: var(--text-color-alt);
   margin-bottom: var(--spacing);
 }
 
@@ -584,19 +584,10 @@ header h3 {
 }
 
 [data-hook=value] {
-  color: #E6DB74;
+  color: var(--value);
 }
-[data-hook=value],
-[data-hook=mapping] {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-[data-hook=value]:focus,
-[data-hook=mapping]:focus {
-  white-space: normal;
-  text-overflow: initial;
-}
+
+
 
 
 .prop-value > .column {
@@ -609,6 +600,7 @@ header h3 {
 
 .result-dot,
 .signal-color .result-color {
+  display: block;
   width: 1em;
   height: 1em;
   line-height: 1em;
@@ -616,7 +608,8 @@ header h3 {
   overflow: hidden;
 }
 
-.result-dot {
+.result-dot:empty {
+  display: block;
   border-radius: 1em;
 }
 
@@ -637,13 +630,13 @@ header h3 {
 .suggestion-view {
   position: absolute;
   overflow: auto;
-  background: var(--main-bg-color);
+  background: var(--bg-color);
   list-style: none;
   overflow: auto;
   z-index: 1000;
   padding: 0;
   margin: 0;
-  box-shadow: 0 1px 2px 2px #000;/*var(--text-color);*/
+  box-shadow: 0 1px 2px 2px #000;
   max-height: 50vh;
 }
 .suggestion-view li {
@@ -653,4 +646,19 @@ header h3 {
 }
 .suggestion-view li:hover {
   background-color: #000;
+}
+
+
+/*
+details
+*/
+
+
+
+.details {
+  border-top: 1px solid var(--text-color-alt);
+}
+.details > section {
+  max-height: 35vh;
+  overflow-y: auto;
 }

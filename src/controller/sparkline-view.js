@@ -10,7 +10,8 @@ module.exports = VFDeps.View.extend({
     width: ['number', true, 120],
     height: ['number', true, 29],
     padding: ['number', true, 2],
-    color: ['string', true, '#000']
+    color: ['string', true, '#000'],
+    font: ['string', true, '11px sans']
   },
   bindings: {
     width: {
@@ -79,7 +80,6 @@ module.exports = VFDeps.View.extend({
     var lineWidth = this.lineWidth;
     var ctx = this.ctx;
     var avg = this.avg();
-    var min = this.min();
     var max = this.max();
 
     var padding = 2 * lineWidth;
@@ -101,6 +101,7 @@ module.exports = VFDeps.View.extend({
 
     ctx.clearRect(0, 0, this.width, this.height);
 
+    ctx.font = this.font;
     ctx.lineWidth = lineWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -129,12 +130,8 @@ module.exports = VFDeps.View.extend({
     current = Math.round(avg * 100) / 100;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
-    ctx.font = (innerH * 0.5) + 'px monospace';
-    ctx.clearRect(0, padding, ctx.measureText(current).width + (padding * 2), innerH);
-    ctx.fillText(current, padding, (innerH * 0.5) + padding);
-
-    this.el.setAttribute('title', 'Min: ' + min + ', Max: ' + max + ', Avg: ' + avg);
-
+    ctx.clearRect(0, padding, ctx.measureText(current).width + (padding * 2), ctx.canvas.height - padding);
+    ctx.fillText(current, padding, ctx.canvas.height * 0.5);
     return this;
   }
 });

@@ -2,25 +2,23 @@
 var View = window.VFDeps.View;
 var SignalDetailsView = require('./details-view');
 var SignalControlView = View.extend({
-  template: [
-    '<section class="rows signal">',
-    '<header class="row">',
-    '<h3 class="row name"></h3>',
-    '</header>',
+  template: '<section class="rows signal">' +
+    '<header class="row">' +
+      '<h3 class="row name"></h3>' +
+    '</header>' +
 
-    '<div class="row gutter-horizontal columns model text-center">',
-    '<div class="column input"></div>',
-    '<div class="column gutter-horizontal no-grow">&raquo;</div>',
-    '<div class="column result"></div>',
-    '</div>',
+    // '<div class="row gutter-horizontal columns model text-center">' +
+    //   '<div class="column input"></div>' +
+    //   '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
+    //   '<div class="column result"></div>' +
+    // '</div>' +
 
-    '<div class="row gutter-horizontal columns test text-center">',
-    '<div class="column input" data-placeholder="Input" contenteditable="true"></div>',
-    '<div class="column gutter-horizontal no-grow">&raquo;</div>',
-    '<div class="column result"></div>',
-    '</div>',
-    '</section>'
-  ].join(''),
+    '<div class="row gutter-horizontal columns test text-center">' +
+      '<input class="column input" placeholder="Input" type="text"/>' +
+      '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
+      '<div class="column result"></div>' +
+    '</div>' +
+  '</section>',
 
   session: {
     input: 'any',
@@ -46,13 +44,13 @@ var SignalControlView = View.extend({
 
   bindings: {
     'model.name': '.name',
-    'model.input': '.model .input',
-    'model.result': '.model .result',
+    // 'model.input': '.model .input',
+    // 'model.result': '.model .result',
     result: '.test .result'
   },
 
   events: {
-    'input .test .input': '_testValue',
+    'change .test .input': '_testValue',
     'click header h3': '_showDetails'
   },
 
@@ -64,14 +62,14 @@ var SignalControlView = View.extend({
   },
 
   _testValue: function(evt) {
-    this.input = evt.target.textContent.trim();
+    this.input = evt.target.value.trim();
   },
 
   render: function () {
     this.renderWithTemplate();
     var inputEl = this.query('.test .input');
-    if (inputEl && !inputEl.textContent) {
-      inputEl.textContent = this.input;
+    if (inputEl && !inputEl.value) {
+      inputEl.value = this.input || null;
     }
     return this;
   }

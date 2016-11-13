@@ -27,12 +27,13 @@ var MappingState = State.extend({
       }
     },
     observedModel: {
-      deps: ['targetModel', 'targetModel.parent'],
+      deps: ['targetModel', 'targetModel.collection', 'targetModel.collection.parent'],
       fn: function() {
-        for (var inst = this.targetModel; inst; inst = inst.parent) {
-          if (inst.mappingEventsEmmiter) { return inst.mappingEventsEmmiter === true ? inst : inst.mappingEventsEmmiter; }
-        }
-        return false;
+        return this.targetModel.collection.parent;
+        // for (var inst = this.targetModel; inst; inst = inst.parent) {
+        //   if (inst.frametime) { return inst; }
+        // }
+        // return false;
       }
     },
     definition: {
@@ -119,8 +120,45 @@ var MappableState = State.extend({
     return this;
   },
 
+  derived: {
+    propDefaults: {
+      fn: function() {
+        var returned = {};
+        var definition = this.constructor.prototype._definition;
+        var propName;
+        for (propName in definition) {
+          returned[propName] = definition[propName].default;
+        }
+        return returned;
+      }
+    }
+  },
+
+  serialize: function(options) {
+    options = options || {};
+    var serialized = State.prototype.serialize.call(this, options);
+    var defaults = this.propDefaults;
+    var returned = {};
+
+    var propName;
+    for (propName in serialized) {
+      if (propName !== 'mappings' && (typeof defaults[propName] === 'undefined' || serialized[propName] !== defaults[propName])) {
+        returned[propName] = serialized[propName];
+      }
+    }
+
+    if (options.mappings) {
+      returned.mappings = serialized.mappings;
+    }
+
+    return serialized;
+  },
+
   collections: {
     mappings: MappingsCollection
   }
 });
+
+MappableState.State = MappingState;
+MappableState.Collection = MappingsCollection;
 module.exports = MappableState;

@@ -2,6 +2,24 @@
 var ScreenLayerState = require('./../state');
 // var CanvasLayer = ScreenLayerState.extend({
 var MappableState = require('./../../mappable/state');
+var CanvasLayerMapState = MappableState.State.extend({
+  derived: {
+    targetModel: {
+      deps: ['collection', 'collection.parent'],
+      fn: function () {
+        return this.collection.parent;
+      }
+    },
+    observedModel: {
+      deps: ['targetModel', 'targetModel.collection', 'targetModel.collection.parent'],
+      fn: function() {
+        return this.targetModel.collection.parent.collection.parent;
+      }
+    }
+  }
+});
+
+
 var CanvasLayer = MappableState.extend({
   idAttribute: 'name',
 
@@ -53,30 +71,72 @@ var CanvasLayer = MappableState.extend({
 
 
   serialize: function() {
-    var obj = ScreenLayerState.prototype.serialize.apply(this, arguments);
+    var obj = MappableState.prototype.serialize.apply(this, arguments);
+    var returned = {};
 
+
+    var props = this.serializationProps.props || [];
+    // if (props.length) {
+    //   returned.props = {};
+    //   props.forEach(function(propName) {
+    //     returned.props[propName] = obj[propName];
+    //   });
+    // }
+
+    // var propName;
+    // for (propName in obj) {
+    //   if (props.indexOf(propName) < 0) {
+    //     returned[propName] = obj[propName];
+    //   }
+    // }
+
+    // better like that??
+    if (props.length) {
+      returned.props = {};
+    }
+
+    var propName;
+    var def = this.constructor.prototype._definition;
+    for (propName in obj) {
+      // if (props.indexOf(propName) < 0) {
+      returned[propName] = obj[propName];
+      // }
+      // else {
+      //   console.info();
+      //   returned.props[propName] = obj[propName];
+      // }
+      if (props.indexOf(propName) > -1) {
+        returned.props[propName] = def[propName];
+      }
+    }
+    returned.props = def;
     var type = typeof this.drawFunction;
     if (type === 'function') {
-      obj.drawFunction = this.drawFunction.toString();
+      returned.drawFunction = this.drawFunction.toString();
     }
     else if (type === 'string') {
-      obj.drawFunction = this.drawFunction;
+      returned.drawFunction = this.drawFunction;
     }
-
-    return obj;
+    return returned;
   },
 
   derived: {
-    width: {
-      deps: ['collection', 'collection.parent', 'collection.parent.width'],
+    screenState: {
+      deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
       fn: function() {
-        return this.collection.parent.width || 400;
+        return this.collection.parent.collection.parent;
+      }
+    },
+    width: {
+      deps: ['screenState', 'screenState.width'],
+      fn: function() {
+        return this.screenState.width || 400;
       }
     },
     height: {
-      deps: ['collection', 'collection.parent', 'collection.parent.height'],
+      deps: ['screenState', 'screenState.height'],
       fn: function() {
-        return this.collection.parent.height || 300;
+        return this.screenState.height || 300;
       }
     },
     draw: {
@@ -94,6 +154,16 @@ var CanvasLayer = MappableState.extend({
         return (typeof fn === 'function' ? fn : function() {}).bind(this);
       }
     }
+  },
+
+  collections: {
+    mappings: MappableState.Collection.extend({
+      model: function (attrs, options) {
+        var model = new CanvasLayerMapState(attrs, options);
+        if (options.init === false) model.initialize();
+        return model;
+      }
+    })
   }
 });
 
@@ -106,8 +176,13 @@ var CanvasLayers = VFDeps.Collection.extend({
   model: function (attrs, options) {
     var def = {
       props: attrs.props || {},
-      session: attrs.session || {},
-      derived: attrs.derived || {}
+      // session: attrs.session || {},
+      // derived: attrs.derived || {},
+      serializationProps: {
+        props: Object.keys(attrs.props || {}),
+        // session: Object.keys(attrs.session),
+        // derived: Object.keys(attrs.prderived)
+      }
     };
     var Constructor = _CanvasLayersCache[attrs.name] || CanvasLayer.extend(def);
     _CanvasLayersCache[attrs.name] = Constructor;
