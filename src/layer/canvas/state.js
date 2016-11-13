@@ -39,7 +39,13 @@ var CanvasLayer = MappableState.extend({
     return this;
   },
 
+  session: {
+    frametime: ['number', true, 0],
+    duration: ['number', true, 1000],
+  },
+
   props: {
+    fps: ['number', true, 16],
     weight: ['number', true, 0],
     name: ['string', true, null],
     active: ['boolean', true, true],
@@ -121,6 +127,24 @@ var CanvasLayer = MappableState.extend({
   },
 
   derived: {
+    frames: {
+      deps: ['duration', 'fps'],
+      fn: function() {
+        return Math.round(this.duration / 1000 * this.fps);
+      }
+    },
+    frame: {
+      deps: ['frametime', 'fps'],
+      fn: function() {
+        return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
+      }
+    },
+    direction: {
+      deps: ['frametime', 'duration'],
+      fn: function() {
+        return this.frame < this.frames * 0.5 ? 1 : -1;
+      }
+    },
     screenState: {
       deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
       fn: function() {

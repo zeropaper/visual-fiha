@@ -4,35 +4,7 @@ var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
   template: '<canvas></canvas>',
 
-  session: {
-    duration: ['number', true, 1000],
-    fps: ['number', true, 16],
-    frametime: ['number', true, 0]
-  },
-
   derived: {
-    frames: {
-      deps: ['duration', 'fps'],
-      fn: function() {
-        return Math.round(this.duration / 1000 * this.fps);
-      }
-    },
-    frame: {
-      deps: ['frametime', 'fps'],
-      fn: function() {
-        return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
-      }
-    },
-
-
-    direction: {
-      deps: ['frametime', 'duration'],
-      fn: function() {
-        return this.frame < this.frames * 0.5 ? 1 : -1;
-      }
-    },
-
-
     offCanvas: {
       deps: ['width', 'height', 'el'],
       fn: function() {
@@ -62,7 +34,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
 
   update: function(options) {
     options = options || {};
-    this.frametime = options.frametime || 0;
+    this.model.frametime = options.frametime || 0;
 
     var cw = this.width = this.parent.el.clientWidth;
     var ch = this.height = this.parent.el.clientHeight;
