@@ -53,8 +53,8 @@ var LayerView = View.extend({
                     'translateX(' + this.model.translateX + '%) ' +
                     'translateY(' + this.model.translateY + '%) ' +
                     // 'translateZ(' + this.model.translateZ + '%) ' +
-                    'scaleX(' + this.model.scaleX + ') ' +
-                    'scaleY(' + this.model.scaleY + ') ' +
+                    'scaleX(' + (this.model.scaleX * 0.01) + ') ' +
+                    'scaleY(' + (this.model.scaleY * 0.01) + ') ' +
                     // 'scaleZ(' + this.model.scaleZ + '%) ' +
                     'skewX(' + this.model.skewX + 'deg) ' +
                     'skewY(' + this.model.skewY + 'deg) ' +

@@ -354,6 +354,14 @@ MappingControlView.range = MappingControlView.number.extend({
   }
 });
 
+MappingControlView.red =
+MappingControlView.green =
+MappingControlView.blue = MappingControlView.range.extend({
+  min: 0,
+  max: 255
+});
+
+MappingControlView.hue =
 MappingControlView.rotateX =
 MappingControlView.rotateY =
 MappingControlView.rotateZ = MappingControlView.range.extend({
@@ -369,8 +377,8 @@ MappingControlView.shadowBlur = MappingControlView.range.extend({
 
 MappingControlView.scaleX =
 MappingControlView.scaleY = MappingControlView.range.extend({
-  min: -10,
-  max: 10
+  min: -200,
+  max: 200
 });
 
 MappingControlView.translateX =
@@ -382,7 +390,10 @@ MappingControlView.shadowOffsetY = MappingControlView.range.extend({
 });
 
 
-MappingControlView.opacity = MappingControlView.range.extend({});
+MappingControlView.alpha =
+MappingControlView.opacity =
+MappingControlView.lightness =
+MappingControlView.saturation = MappingControlView.range.extend({});
 
 // MappingControlView.blending = MappingControlView.extend({
 //   template: '<div class="prop columns">' +

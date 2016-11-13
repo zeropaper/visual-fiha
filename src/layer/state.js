@@ -27,75 +27,52 @@ var LayerState = MappableState.extend({
         'hue',
         'saturation',
         'color',
-        'luminosity'
       ]
     },
     name: ['string', true, null],
     opacity: {
       type: 'number',
-      default: 100,
-      min: 0,
-      max: 100
+      default: 100
     },
     // perspective: {
     //   type: 'number',
-    //   default: 0,
-    //   min: -100,
-    //   max: 100
+    //   default: 0
     // },
     rotateX: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     rotateY: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     rotateZ: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     translateX: {
       type: 'number',
-      default: 0,
-      min: -100,
-      max: 100
+      default: 0
     },
     translateY: {
       type: 'number',
-      default: 0,
-      min: -100,
-      max: 100
+      default: 0
     },
     // // translateZ: {
     // //   type: 'number',
-    // //   default: 0,
-    // //   min: -100,
-    // //   max: 100
+    // //   default: 0
     // // },
     scaleX: {
       type: 'number',
-      default: 1,
-      min: -10,
-      max: 10
+      default: 100
     },
     scaleY: {
       type: 'number',
-      default: 1,
-      min: -10,
-      max: 10
+      default: 100
     },
     // // scaleZ: {
     // //   type: 'number',
-    // //   default: 1,
-    // //   min: -10,
-    // //   max: 10
+    // //   default: 1
     // // },
     // originX: {
     //   type: 'number',
@@ -110,16 +87,12 @@ var LayerState = MappableState.extend({
     skewX: {
       type: 'number',
       required: false,
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     skewY: {
       type: 'number',
       required: false,
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     type: ['string', true, 'default'],
     zIndex: ['number', true, 0]
