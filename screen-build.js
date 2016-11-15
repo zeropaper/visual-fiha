@@ -40,7 +40,15 @@ var CanvasLayer = MappableState.extend({
     return this;
   },
 
+  session: {
+    // frametime: ['number', true, 0],
+    duration: ['number', true, 1000],
+  },
+
+  cache: {},
+
   props: {
+    fps: ['number', true, 16],
     weight: ['number', true, 0],
     name: ['string', true, null],
     active: ['boolean', true, true],
@@ -122,6 +130,30 @@ var CanvasLayer = MappableState.extend({
   },
 
   derived: {
+    frames: {
+      deps: ['duration', 'fps'],
+      fn: function() {
+        return Math.round(this.duration / 1000 * this.fps);
+      }
+    },
+    frame: {
+      deps: ['frametime', 'fps'],
+      fn: function() {
+        return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
+      }
+    },
+    direction: {
+      deps: ['frametime', 'duration'],
+      fn: function() {
+        return this.frame < this.frames * 0.5 ? 1 : -1;
+      }
+    },
+    frametime: {
+      cache: false,
+      fn: function() {
+        return this.screenState.frametime;
+      }
+    },
     screenState: {
       deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
       fn: function() {
@@ -209,35 +241,7 @@ var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
   template: '<canvas></canvas>',
 
-  session: {
-    duration: ['number', true, 1000],
-    fps: ['number', true, 16],
-    frametime: ['number', true, 0]
-  },
-
   derived: {
-    frames: {
-      deps: ['duration', 'fps'],
-      fn: function() {
-        return Math.round(this.duration / 1000 * this.fps);
-      }
-    },
-    frame: {
-      deps: ['frametime', 'fps'],
-      fn: function() {
-        return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
-      }
-    },
-
-
-    direction: {
-      deps: ['frametime', 'duration'],
-      fn: function() {
-        return this.frame < this.frames * 0.5 ? 1 : -1;
-      }
-    },
-
-
     offCanvas: {
       deps: ['width', 'height', 'el'],
       fn: function() {
@@ -267,7 +271,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
 
   update: function(options) {
     options = options || {};
-    this.frametime = options.frametime || 0;
+    this.model.frametime = options.frametime || 0;
 
     var cw = this.width = this.parent.el.clientWidth;
     var ch = this.height = this.parent.el.clientHeight;
@@ -284,7 +288,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       ctx.shadowColor = layer.shadowColor;
 
       ctx.globalAlpha = layer.opacity / 100;
-      ctx.globalCompositionOperation = layer.blending;
+      ctx.globalCompositeOperation = layer.blending;
 
       layer.draw(ctx);
     });
@@ -374,75 +378,52 @@ var LayerState = MappableState.extend({
         'hue',
         'saturation',
         'color',
-        'luminosity'
       ]
     },
     name: ['string', true, null],
     opacity: {
       type: 'number',
-      default: 100,
-      min: 0,
-      max: 100
+      default: 100
     },
     // perspective: {
     //   type: 'number',
-    //   default: 0,
-    //   min: -100,
-    //   max: 100
+    //   default: 0
     // },
     rotateX: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     rotateY: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     rotateZ: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     translateX: {
       type: 'number',
-      default: 0,
-      min: -100,
-      max: 100
+      default: 0
     },
     translateY: {
       type: 'number',
-      default: 0,
-      min: -100,
-      max: 100
+      default: 0
     },
     // // translateZ: {
     // //   type: 'number',
-    // //   default: 0,
-    // //   min: -100,
-    // //   max: 100
+    // //   default: 0
     // // },
     scaleX: {
       type: 'number',
-      default: 1,
-      min: -10,
-      max: 10
+      default: 100
     },
     scaleY: {
       type: 'number',
-      default: 1,
-      min: -10,
-      max: 10
+      default: 100
     },
     // // scaleZ: {
     // //   type: 'number',
-    // //   default: 1,
-    // //   min: -10,
-    // //   max: 10
+    // //   default: 1
     // // },
     // originX: {
     //   type: 'number',
@@ -457,16 +438,12 @@ var LayerState = MappableState.extend({
     skewX: {
       type: 'number',
       required: false,
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     skewY: {
       type: 'number',
       required: false,
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     type: ['string', true, 'default'],
     zIndex: ['number', true, 0]
@@ -604,8 +581,8 @@ var LayerView = View.extend({
                     'translateX(' + this.model.translateX + '%) ' +
                     'translateY(' + this.model.translateY + '%) ' +
                     // 'translateZ(' + this.model.translateZ + '%) ' +
-                    'scaleX(' + this.model.scaleX + ') ' +
-                    'scaleY(' + this.model.scaleY + ') ' +
+                    'scaleX(' + (this.model.scaleX * 0.01) + ') ' +
+                    'scaleY(' + (this.model.scaleY * 0.01) + ') ' +
                     // 'scaleZ(' + this.model.scaleZ + '%) ' +
                     'skewX(' + this.model.skewX + 'deg) ' +
                     'skewY(' + this.model.skewY + 'deg) ' +

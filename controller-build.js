@@ -54,7 +54,125 @@ controllerSetup.el = document.querySelector('.controller');
 // controllerSetup.record = window.location.hash === '#record';
 window.visualFiha = setupController(controllerSetup);
 
-},{"./controller/view":6}],2:[function(require,module,exports){
+},{"./controller/view":7}],2:[function(require,module,exports){
+'use strict';
+var View = window.VFDeps.View;
+var AceEditor = View.extend({
+  edit: function(target, propName) {
+    if (target && propName) {
+      this.set({
+        model: target,
+        targetProperty: propName
+      });
+    }
+    this.script = this.original;
+    this.editor.setValue(this.original);
+  },
+
+  template:
+    '<div class="row debug rows">' +
+      '<div class="ace-editor row grow-xl"></div>' +
+      '<div class="ace-controls row no-grow gutter columns">' +
+        '<div class="column"></div>' +
+        '<div class="column no-grow gutter-right">' +
+          '<button class="no" name="cancel">Cancel</button>' +
+        '</div>' +
+        '<div class="column gutter-left text-right">' +
+          '<button class="yes" name="apply">Apply</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>',
+
+  session: {
+    editor: 'any',
+    script: ['string', true, ''],
+    targetProperty: 'string'
+  },
+
+  derived: {
+    original: {
+      deps: ['model', 'targetProperty'],
+      fn: function() {
+        return (this.model ? this.model[this.targetProperty] || '' : '').toString();
+      }
+    },
+    changed: {
+      deps: ['original', 'script'],
+      fn: function() {
+        return this.original != this.script;
+      }
+    }
+  },
+
+  bindings: {
+    changed: {
+      type: 'toggle',
+      selector: 'button'
+    }
+  },
+
+  events: {
+    'click [name=cancel]': '_handleCancel',
+    'click [name=apply]': '_handleApply'
+  },
+
+  _handleCancel: function(evt) {
+    evt.preventDefault();
+    if (!this.model || !this.targetProperty || !this.editor) return;
+
+    this.editor.setValue(this.original);
+  },
+
+  _handleApply: function(evt) {
+    evt.preventDefault();
+    if (!this.model || !this.targetProperty || !this.editor) return;
+
+
+    try {
+      eval('var fn = ' + this.script +';');// jshint ignore:line
+    }
+    catch (err) {
+      console.info('script error!', err.stack, err.message, err.line);
+      return;
+    }
+
+    var m = this.model;
+    var p = this.targetProperty;
+    var s = this.script;
+
+    m[p] = s;
+
+    this._cache.changed = false;
+    this.trigger('original:changed');
+    this.trigger('change:changed');
+  },
+
+  render: function() {
+    if (this.editor) { return this; }
+    var view = this;
+    view.renderWithTemplate();
+
+    var editor = view.editor = window.ace.edit(view.query('.ace-editor'));
+    editor.$blockScrolling = Infinity;
+    editor.on('change', function() {
+      view.set('script', editor.getValue());//, {silent: true});
+    });
+    editor.setTheme('ace/theme/monokai');
+    editor.getSession().setMode('ace/mode/javascript');
+    editor.setShowInvisibles();
+    editor.getSession().setUseSoftTabs(true);
+    editor.getSession().setTabSize(2);
+    editor.getSession().setUseWrapMode(true);
+
+    if (view.original) {
+      editor.setValue(view.original);
+    }
+
+    return this;
+  }
+});
+module.exports = AceEditor;
+},{}],3:[function(require,module,exports){
 'use strict';
 module.exports = VFDeps.View.extend({
   autoRender: true,
@@ -190,7 +308,7 @@ module.exports = VFDeps.View.extend({
   }
 });
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 var MappingControlView = require('./../mappable/control-view');
 var DetailsView = VFDeps.View.extend({
@@ -224,7 +342,7 @@ var DetailsView = VFDeps.View.extend({
   }
 });
 module.exports = DetailsView;
-},{"./../mappable/control-view":19}],4:[function(require,module,exports){
+},{"./../mappable/control-view":20}],5:[function(require,module,exports){
 'use strict';
 module.exports = VFDeps.View.extend({
   autoRender: true,
@@ -363,7 +481,7 @@ module.exports = VFDeps.View.extend({
   }
 });
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 var SuggestionItem = VFDeps.View.extend({
   template: '<li></li>',
@@ -562,7 +680,7 @@ var SuggestionView = VFDeps.View.extend({
   }
 });
 module.exports = SuggestionView;
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 var View = VFDeps.View;
 var debounce = VFDeps.debounce;
@@ -585,7 +703,7 @@ require('./../signal/rgba/control-view');
 var SuggestionView = require('./suggestion-view');
 var SparklineView = require('./sparkline-view');
 var AudioMonitor = require('./audio-monitor-view');
-// var AceEditor = require('./ace-view');
+var AceEditor = require('./ace-view');
 // var TimelineView = require('./timeline-view');
 
 
@@ -641,8 +759,8 @@ var ControllerView = View.extend({
     if (this.controllerSparkline) {
       this.controllerSparkline.update((timestamp - this.model.frametime) - this.model.firstframetime);
     }
-    if (this.screenSparkline) {
-      this.screenSparkline.update(this.screenView.model.latency);
+    if (this.latencySparkline) {
+      this.latencySparkline.update(this.screenView.model.latency);
     }
 
     this.model.frametime = timestamp - this.model.firstframetime;
@@ -775,6 +893,7 @@ var ControllerView = View.extend({
         });
       }
     },
+    */
 
     codeEditor: {
       waitFor: 'el',
@@ -786,7 +905,6 @@ var ControllerView = View.extend({
         });
       }
     },
-    */
 
     audioMonitor: {
       waitFor: 'el',
@@ -810,7 +928,7 @@ var ControllerView = View.extend({
 
     controllerSparkline: {
       waitFor: 'el',
-      selector: '.fps-controller',
+      selector: '.sparkline-controller',
       prepareView: function(el) {
         var styles = window.getComputedStyle(el);
         var view = new SparklineView({
@@ -823,9 +941,9 @@ var ControllerView = View.extend({
       }
     },
 
-    screenSparkline: {
+    latencySparkline: {
       waitFor: 'el',
-      selector: '.fps-screen',
+      selector: '.sparkline-latency',
       prepareView: function(el) {
         var styles = window.getComputedStyle(el);
         var view = new SparklineView({
@@ -1061,8 +1179,8 @@ var ControllerView = View.extend({
           '</div>'+
         '</div>'+
         '<div class="column gutter-horizontal no-grow columns performance">'+
-          'Screen <span class="column fps-screen"></span>'+
-          'Controller <span class="column fps-controller"></span>'+
+          'SCL <span title="Screen Communication Latency" class="column sparkline-latency"></span>'+
+          'Controller <span class="column sparkline-controller"></span>'+
         '</div>'+
       '</div>'+
       '<div class="column gutter-horizontal">'+
@@ -1133,7 +1251,7 @@ var ControllerView = View.extend({
   '</div>'
 });
 module.exports = ControllerView;
-},{"./../layer/canvas/control-view":7,"./../layer/control-view":10,"./../mappable/multi-control-view":20,"./../midi/state":22,"./../midi/view":23,"./../screen/state":24,"./../screen/view":25,"./../signal/beat/control-view":26,"./../signal/control-view":28,"./../signal/hsla/control-view":30,"./../signal/rgba/control-view":32,"./audio-monitor-view":2,"./sparkline-view":4,"./suggestion-view":5}],7:[function(require,module,exports){
+},{"./../layer/canvas/control-view":8,"./../layer/control-view":11,"./../mappable/multi-control-view":21,"./../midi/state":23,"./../midi/view":24,"./../screen/state":25,"./../screen/view":26,"./../signal/beat/control-view":27,"./../signal/control-view":29,"./../signal/hsla/control-view":31,"./../signal/rgba/control-view":33,"./ace-view":2,"./audio-monitor-view":3,"./sparkline-view":5,"./suggestion-view":6}],8:[function(require,module,exports){
 'use strict';
 var LayerControlView = require('./../control-view');
 
@@ -1283,7 +1401,7 @@ module.exports = LayerControlView.canvas = LayerControlView.extend({
     }
   }
 });
-},{"./../control-view":10}],8:[function(require,module,exports){
+},{"./../control-view":11}],9:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 // var CanvasLayer = ScreenLayerState.extend({
@@ -1325,7 +1443,15 @@ var CanvasLayer = MappableState.extend({
     return this;
   },
 
+  session: {
+    // frametime: ['number', true, 0],
+    duration: ['number', true, 1000],
+  },
+
+  cache: {},
+
   props: {
+    fps: ['number', true, 16],
     weight: ['number', true, 0],
     name: ['string', true, null],
     active: ['boolean', true, true],
@@ -1407,6 +1533,30 @@ var CanvasLayer = MappableState.extend({
   },
 
   derived: {
+    frames: {
+      deps: ['duration', 'fps'],
+      fn: function() {
+        return Math.round(this.duration / 1000 * this.fps);
+      }
+    },
+    frame: {
+      deps: ['frametime', 'fps'],
+      fn: function() {
+        return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
+      }
+    },
+    direction: {
+      deps: ['frametime', 'duration'],
+      fn: function() {
+        return this.frame < this.frames * 0.5 ? 1 : -1;
+      }
+    },
+    frametime: {
+      cache: false,
+      fn: function() {
+        return this.screenState.frametime;
+      }
+    },
     screenState: {
       deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
       fn: function() {
@@ -1487,42 +1637,14 @@ module.exports = ScreenLayerState.canvas = ScreenLayerState.extend({
     canvasLayers: CanvasLayers
   }
 });
-},{"./../../mappable/state":21,"./../state":13}],9:[function(require,module,exports){
+},{"./../../mappable/state":22,"./../state":14}],10:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
   template: '<canvas></canvas>',
 
-  session: {
-    duration: ['number', true, 1000],
-    fps: ['number', true, 16],
-    frametime: ['number', true, 0]
-  },
-
   derived: {
-    frames: {
-      deps: ['duration', 'fps'],
-      fn: function() {
-        return Math.round(this.duration / 1000 * this.fps);
-      }
-    },
-    frame: {
-      deps: ['frametime', 'fps'],
-      fn: function() {
-        return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
-      }
-    },
-
-
-    direction: {
-      deps: ['frametime', 'duration'],
-      fn: function() {
-        return this.frame < this.frames * 0.5 ? 1 : -1;
-      }
-    },
-
-
     offCanvas: {
       deps: ['width', 'height', 'el'],
       fn: function() {
@@ -1552,7 +1674,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
 
   update: function(options) {
     options = options || {};
-    this.frametime = options.frametime || 0;
+    this.model.frametime = options.frametime || 0;
 
     var cw = this.width = this.parent.el.clientWidth;
     var ch = this.height = this.parent.el.clientHeight;
@@ -1569,7 +1691,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       ctx.shadowColor = layer.shadowColor;
 
       ctx.globalAlpha = layer.opacity / 100;
-      ctx.globalCompositionOperation = layer.blending;
+      ctx.globalCompositeOperation = layer.blending;
 
       layer.draw(ctx);
     });
@@ -1592,7 +1714,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     },
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":18}],10:[function(require,module,exports){
+},{"./../view":19}],11:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var DetailsView = require('./../controller/details-view');
@@ -1679,7 +1801,7 @@ var LayerControlView = View.extend({
   }
 });
 module.exports = LayerControlView;
-},{"./../controller/details-view":3}],11:[function(require,module,exports){
+},{"./../controller/details-view":4}],12:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.img = ScreenLayerState.extend({
@@ -1694,7 +1816,7 @@ module.exports = ScreenLayerState.img = ScreenLayerState.extend({
     }
   }
 });
-},{"./../state":13}],12:[function(require,module,exports){
+},{"./../state":14}],13:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
@@ -1716,7 +1838,7 @@ module.exports = ScreenLayerView.img = ScreenLayerView.extend({
     }
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":18}],13:[function(require,module,exports){
+},{"./../view":19}],14:[function(require,module,exports){
 'use strict';
 var MappableState = require('./../mappable/state');
 var LayerState = MappableState.extend({
@@ -1746,75 +1868,52 @@ var LayerState = MappableState.extend({
         'hue',
         'saturation',
         'color',
-        'luminosity'
       ]
     },
     name: ['string', true, null],
     opacity: {
       type: 'number',
-      default: 100,
-      min: 0,
-      max: 100
+      default: 100
     },
     // perspective: {
     //   type: 'number',
-    //   default: 0,
-    //   min: -100,
-    //   max: 100
+    //   default: 0
     // },
     rotateX: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     rotateY: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     rotateZ: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     translateX: {
       type: 'number',
-      default: 0,
-      min: -100,
-      max: 100
+      default: 0
     },
     translateY: {
       type: 'number',
-      default: 0,
-      min: -100,
-      max: 100
+      default: 0
     },
     // // translateZ: {
     // //   type: 'number',
-    // //   default: 0,
-    // //   min: -100,
-    // //   max: 100
+    // //   default: 0
     // // },
     scaleX: {
       type: 'number',
-      default: 1,
-      min: -10,
-      max: 10
+      default: 100
     },
     scaleY: {
       type: 'number',
-      default: 1,
-      min: -10,
-      max: 10
+      default: 100
     },
     // // scaleZ: {
     // //   type: 'number',
-    // //   default: 1,
-    // //   min: -10,
-    // //   max: 10
+    // //   default: 1
     // // },
     // originX: {
     //   type: 'number',
@@ -1829,23 +1928,19 @@ var LayerState = MappableState.extend({
     skewX: {
       type: 'number',
       required: false,
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     skewY: {
       type: 'number',
       required: false,
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     type: ['string', true, 'default'],
     zIndex: ['number', true, 0]
   }
 });
 module.exports = LayerState;
-},{"./../mappable/state":21}],14:[function(require,module,exports){
+},{"./../mappable/state":22}],15:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.SVG = ScreenLayerState.extend({
@@ -1860,7 +1955,7 @@ module.exports = ScreenLayerState.SVG = ScreenLayerState.extend({
     }
   }
 });
-},{"./../state":13}],15:[function(require,module,exports){
+},{"./../state":14}],16:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
@@ -1883,7 +1978,7 @@ module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
     }
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":18}],16:[function(require,module,exports){
+},{"./../view":19}],17:[function(require,module,exports){
 'use strict';
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.video = ScreenLayerState.extend({
@@ -1898,7 +1993,7 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
     }
   }
 });
-},{"./../state":13}],17:[function(require,module,exports){
+},{"./../state":14}],18:[function(require,module,exports){
 'use strict';
 
 var ScreenLayerView = require('./../view');
@@ -1920,7 +2015,7 @@ module.exports = ScreenLayerView.video = ScreenLayerView.extend({
     }
   }, ScreenLayerView.prototype.bindings)
 });
-},{"./../view":18}],18:[function(require,module,exports){
+},{"./../view":19}],19:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 
@@ -1976,8 +2071,8 @@ var LayerView = View.extend({
                     'translateX(' + this.model.translateX + '%) ' +
                     'translateY(' + this.model.translateY + '%) ' +
                     // 'translateZ(' + this.model.translateZ + '%) ' +
-                    'scaleX(' + this.model.scaleX + ') ' +
-                    'scaleY(' + this.model.scaleY + ') ' +
+                    'scaleX(' + (this.model.scaleX * 0.01) + ') ' +
+                    'scaleY(' + (this.model.scaleY * 0.01) + ') ' +
                     // 'scaleZ(' + this.model.scaleZ + '%) ' +
                     'skewX(' + this.model.skewX + 'deg) ' +
                     'skewY(' + this.model.skewY + 'deg) ' +
@@ -2014,7 +2109,7 @@ var LayerView = View.extend({
 });
 
 module.exports = LayerView;
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var assign = window.VFDeps.assign;
@@ -2371,6 +2466,14 @@ MappingControlView.range = MappingControlView.number.extend({
   }
 });
 
+MappingControlView.red =
+MappingControlView.green =
+MappingControlView.blue = MappingControlView.range.extend({
+  min: 0,
+  max: 255
+});
+
+MappingControlView.hue =
 MappingControlView.rotateX =
 MappingControlView.rotateY =
 MappingControlView.rotateZ = MappingControlView.range.extend({
@@ -2386,8 +2489,8 @@ MappingControlView.shadowBlur = MappingControlView.range.extend({
 
 MappingControlView.scaleX =
 MappingControlView.scaleY = MappingControlView.range.extend({
-  min: -10,
-  max: 10
+  min: -200,
+  max: 200
 });
 
 MappingControlView.translateX =
@@ -2399,7 +2502,10 @@ MappingControlView.shadowOffsetY = MappingControlView.range.extend({
 });
 
 
-MappingControlView.opacity = MappingControlView.range.extend({});
+MappingControlView.alpha =
+MappingControlView.opacity =
+MappingControlView.lightness =
+MappingControlView.saturation = MappingControlView.range.extend({});
 
 // MappingControlView.blending = MappingControlView.extend({
 //   template: '<div class="prop columns">' +
@@ -2416,7 +2522,7 @@ MappingControlView.opacity = MappingControlView.range.extend({});
 //     '</div>'
 // });
 module.exports = MappingControlView;
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 var MappableState = require('./state');
 var MappingControlView = require('./../mappable/control-view');
@@ -2453,7 +2559,7 @@ var MultiMappingControlView = VFDeps.View.extend({
   }
 });
 module.exports = MultiMappingControlView;
-},{"./../mappable/control-view":19,"./state":21}],21:[function(require,module,exports){
+},{"./../mappable/control-view":20,"./state":22}],22:[function(require,module,exports){
 'use strict';
 var State = VFDeps.State;
 var Collection = VFDeps.Collection;
@@ -2619,7 +2725,7 @@ MappableState.State = MappingState;
 MappableState.Collection = MappingsCollection;
 module.exports = MappableState;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 var VFDeps = window.VFDeps;
 
@@ -2971,7 +3077,7 @@ var MIDIAccessState = State.extend({
 
 module.exports = MIDIAccessState;
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 var VFDeps = window.VFDeps;
 var View = VFDeps.View;
@@ -3027,7 +3133,7 @@ var MIDIAccessView = View.extend({
 });
 
 module.exports = MIDIAccessView;
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 'use strict';
 var State = VFDeps.State;
 var Collection = VFDeps.Collection;
@@ -3080,7 +3186,7 @@ var ScreenState = State.extend({
   }
 });
 module.exports = ScreenState;
-},{"./../layer/canvas/state":8,"./../layer/img/state":11,"./../layer/state":13,"./../layer/svg/state":14,"./../layer/video/state":16,"./../signal/beat/state":27,"./../signal/hsla/state":31,"./../signal/rgba/state":33,"./../signal/state":34}],25:[function(require,module,exports){
+},{"./../layer/canvas/state":9,"./../layer/img/state":12,"./../layer/state":14,"./../layer/svg/state":15,"./../layer/video/state":17,"./../signal/beat/state":28,"./../signal/hsla/state":32,"./../signal/rgba/state":34,"./../signal/state":35}],26:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var LayerView = require('./../layer/view');
@@ -3264,7 +3370,7 @@ var ScreenView = View.extend({
   }
 });
 module.exports = ScreenView;
-},{"./../layer/canvas/view":9,"./../layer/img/view":12,"./../layer/svg/view":15,"./../layer/video/view":17,"./../layer/view":18}],26:[function(require,module,exports){
+},{"./../layer/canvas/view":10,"./../layer/img/view":13,"./../layer/svg/view":16,"./../layer/video/view":18,"./../layer/view":19}],27:[function(require,module,exports){
 'use strict';
 var assign = window.VFDeps.assign;
 var SignalControlView = require('./../control-view');
@@ -3314,7 +3420,7 @@ var BeatSignalControlView = SignalControlView.beatSignal = SignalControlView.ext
   }
 });
 module.exports = BeatSignalControlView;
-},{"./../control-view":28}],27:[function(require,module,exports){
+},{"./../control-view":29}],28:[function(require,module,exports){
 'use strict';
 var SignalState = require('./../state');
 
@@ -3356,7 +3462,7 @@ var BeatState = SignalState.beatSignal = SignalState.extend({
 });
 
 module.exports = BeatState;
-},{"./../state":34}],28:[function(require,module,exports){
+},{"./../state":35}],29:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var SignalDetailsView = require('./details-view');
@@ -3434,7 +3540,7 @@ var SignalControlView = View.extend({
   }
 });
 module.exports = SignalControlView;
-},{"./details-view":29}],29:[function(require,module,exports){
+},{"./details-view":30}],30:[function(require,module,exports){
 'use strict';
 var assign = window.VFDeps.assign;
 var DetailsView = require('./../controller/details-view');
@@ -3503,7 +3609,7 @@ var SignalDetailsView = DetailsView.extend({
   }, DetailsView.prototype.bindings)
 });
 module.exports = SignalDetailsView;
-},{"./../controller/details-view":3,"./../transformation/control-view":35,"./../transformation/functions":36}],30:[function(require,module,exports){
+},{"./../controller/details-view":4,"./../transformation/control-view":36,"./../transformation/functions":37}],31:[function(require,module,exports){
 'use strict';
 var assign = window.VFDeps.assign;
 var SignalControlView = require('./../control-view');
@@ -3539,7 +3645,7 @@ var HSLASignalControlView = SignalControlView.hslaSignal = SignalControlView.ext
   })
 });
 module.exports = HSLASignalControlView;
-},{"./../control-view":28}],31:[function(require,module,exports){
+},{"./../control-view":29}],32:[function(require,module,exports){
 'use strict';
 var SignalState = require('./../state');
 
@@ -3588,7 +3694,7 @@ var HSLASignalState = SignalState.hslaSignal = SignalState.extend({
 });
 
 module.exports = HSLASignalState;
-},{"./../state":34}],32:[function(require,module,exports){
+},{"./../state":35}],33:[function(require,module,exports){
 'use strict';
 var SignalControlView = require('./../control-view');
 var HSLASignalControlView = require('./../hsla/control-view');
@@ -3596,7 +3702,7 @@ var HSLASignalControlView = require('./../hsla/control-view');
 var RGBASignalControlView = SignalControlView.rgbaSignal = HSLASignalControlView.extend({});
 
 module.exports = RGBASignalControlView;
-},{"./../control-view":28,"./../hsla/control-view":30}],33:[function(require,module,exports){
+},{"./../control-view":29,"./../hsla/control-view":31}],34:[function(require,module,exports){
 'use strict';
 var SignalState = require('./../state');
 var _255 = {
@@ -3642,7 +3748,7 @@ var RGBASignalState = SignalState.rgbaSignal = SignalState.extend({
   }
 });
 module.exports = RGBASignalState;
-},{"./../state":34}],34:[function(require,module,exports){
+},{"./../state":35}],35:[function(require,module,exports){
 'use strict';
 var State = window.VFDeps.State;
 var Collection = window.VFDeps.Collection;
@@ -3709,7 +3815,7 @@ var SignalState = MappableState.extend({
   }
 });
 module.exports = SignalState;
-},{"./../mappable/state":21,"./../transformation/functions":36}],35:[function(require,module,exports){
+},{"./../mappable/state":22,"./../transformation/functions":37}],36:[function(require,module,exports){
 'use strict';
 var View = window.VFDeps.View;
 var TransformationControlView = View.extend({
@@ -3775,7 +3881,7 @@ var TransformationControlView = View.extend({
 });
 
 module.exports = TransformationControlView;
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 'use strict';
 var transformationFunctions = {};
 transformationFunctions['math.multiply'] = function(val, factor) {
