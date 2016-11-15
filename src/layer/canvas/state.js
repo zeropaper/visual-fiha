@@ -44,6 +44,8 @@ var CanvasLayer = MappableState.extend({
     duration: ['number', true, 1000],
   },
 
+  cache: {},
+
   props: {
     fps: ['number', true, 16],
     weight: ['number', true, 0],
