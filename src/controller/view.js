@@ -20,7 +20,7 @@ require('./../signal/rgba/control-view');
 var SuggestionView = require('./suggestion-view');
 var SparklineView = require('./sparkline-view');
 var AudioMonitor = require('./audio-monitor-view');
-// var AceEditor = require('./ace-view');
+var AceEditor = require('./ace-view');
 // var TimelineView = require('./timeline-view');
 
 
@@ -210,6 +210,7 @@ var ControllerView = View.extend({
         });
       }
     },
+    */
 
     codeEditor: {
       waitFor: 'el',
@@ -221,7 +222,6 @@ var ControllerView = View.extend({
         });
       }
     },
-    */
 
     audioMonitor: {
       waitFor: 'el',
