@@ -51,7 +51,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       ctx.shadowColor = layer.shadowColor;
 
       ctx.globalAlpha = layer.opacity / 100;
-      ctx.globalCompositionOperation = layer.blending;
+      ctx.globalCompositeOperation = layer.blending;
 
       layer.draw(ctx);
     });
