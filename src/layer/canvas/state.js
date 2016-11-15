@@ -40,7 +40,6 @@ var CanvasLayer = MappableState.extend({
   },
 
   session: {
-    frametime: ['number', true, 0],
     duration: ['number', true, 1000],
   },
 
@@ -145,6 +144,12 @@ var CanvasLayer = MappableState.extend({
       deps: ['frametime', 'duration'],
       fn: function() {
         return this.frame < this.frames * 0.5 ? 1 : -1;
+      }
+    },
+    frametime: {
+      cache: false,
+      fn: function() {
+        return this.screenState.frametime;
       }
     },
     screenState: {

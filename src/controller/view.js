@@ -76,8 +76,8 @@ var ControllerView = View.extend({
     if (this.controllerSparkline) {
       this.controllerSparkline.update((timestamp - this.model.frametime) - this.model.firstframetime);
     }
-    if (this.screenSparkline) {
-      this.screenSparkline.update(this.screenView.model.latency);
+    if (this.latencySparkline) {
+      this.latencySparkline.update(this.screenView.model.latency);
     }
 
     this.model.frametime = timestamp - this.model.firstframetime;
@@ -245,7 +245,7 @@ var ControllerView = View.extend({
 
     controllerSparkline: {
       waitFor: 'el',
-      selector: '.fps-controller',
+      selector: '.sparkline-controller',
       prepareView: function(el) {
         var styles = window.getComputedStyle(el);
         var view = new SparklineView({
@@ -258,9 +258,9 @@ var ControllerView = View.extend({
       }
     },
 
-    screenSparkline: {
+    latencySparkline: {
       waitFor: 'el',
-      selector: '.fps-screen',
+      selector: '.sparkline-latency',
       prepareView: function(el) {
         var styles = window.getComputedStyle(el);
         var view = new SparklineView({
@@ -496,8 +496,8 @@ var ControllerView = View.extend({
           '</div>'+
         '</div>'+
         '<div class="column gutter-horizontal no-grow columns performance">'+
-          'Screen <span class="column fps-screen"></span>'+
-          'Controller <span class="column fps-controller"></span>'+
+          'SCL <span title="Screen Communication Latency" class="column sparkline-latency"></span>'+
+          'Controller <span class="column sparkline-controller"></span>'+
         '</div>'+
       '</div>'+
       '<div class="column gutter-horizontal">'+
