@@ -3,6 +3,156 @@ window.VF = window.VF || {};
 
 var canvasLayers = [
   {
+    name: 'background',
+    weight: 0,
+    drawFunction: function(ctx) {
+      ctx.fillStyle = this.colorA;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    },
+    props: {
+      colorA: ['string', true, '#bbb']
+    }
+  },
+
+  {
+    name: 'loungeA',
+    weight: 1,
+    drawFunction: function(ctx) {
+      var cw = ctx.canvas.width;
+      var ch = ctx.canvas.height;
+      var bw = this.barWidth;
+      var sh = (bw - (ch % bw)) * 0.5;
+      var c = (ch / Math.max(2, bw)) + bw;
+      var s = this.frametime % cw;
+      var b, l, r, y;
+
+      ctx.lineWidth = bw;
+      ctx.lineCap = 'round';
+
+      ctx.strokeStyle = this.colorA;
+      for (b = 0; b < c; b += 2) {
+        l = 0;
+        r = s;
+        y = (b * bw) - sh;
+        ctx.beginPath();
+        ctx.moveTo(l, y);
+        ctx.lineTo(r, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = this.colorB;
+      for (b = 1; b < c; b += 2) {
+        l = cw - s;
+        r = cw;
+        y = (b * bw) - sh;
+        ctx.beginPath();
+        ctx.moveTo(l, y);
+        ctx.lineTo(r, y);
+        ctx.stroke();
+      }
+    },
+    props: {
+      barWidth: ['number', true, 50],
+      colorA: ['string', true, 'rgb(234, 105, 41)'],
+      colorB: ['string', true, 'rgb(236, 183, 156)'],
+      beat: ['number', true, 100],
+      lineWidth: ['number', true, 0]
+    },
+    mappings: [
+      {
+        eventNames: 'kp3:padX:change',
+        targetProperty: 'lineWidth'
+      },
+      {
+        eventNames: 'beat:a',
+        targetProperty: 'beat'
+      },
+      {
+        eventNames: 'color:a',
+        targetProperty: 'colorA'
+      },
+      {
+        eventNames: 'color:b',
+        targetProperty: 'colorB'
+      }
+    ]
+  },
+
+  {
+    name: 'loungeB',
+    weight: 1,
+    drawFunction: function(ctx) {
+      var cw = ctx.canvas.width;
+      var ch = ctx.canvas.height;
+      var bw = this.barWidth;
+      var sh = (bw - (ch % bw)) * 0.5;
+      var c = (ch / Math.max(2, bw)) + bw;
+      var s = this.frametime % cw;
+      var b, l, r, y;
+
+      ctx.lineWidth = bw;
+      ctx.lineCap = 'round';
+
+      ctx.strokeStyle = this.colorA;
+      for (b = 0; b < c; b += 2) {
+        l = 0;
+        r = s;
+        y = (b * bw) - sh;
+        ctx.beginPath();
+        ctx.moveTo(l, y);
+        ctx.lineTo(r, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = this.colorB;
+      for (b = 1; b < c; b += 2) {
+        l = cw - s;
+        r = cw;
+        y = (b * bw) - sh;
+        ctx.beginPath();
+        ctx.moveTo(l, y);
+        ctx.lineTo(r, y);
+        ctx.stroke();
+      }
+    },
+    props: {
+      barWidth: ['number', true, 50],
+      colorA: ['string', true, 'rgb(234, 105, 41)'],
+      colorB: ['string', true, 'rgb(236, 183, 156)'],
+      strokeColorA: ['string', true, 'rgb(234, 105, 41)'],
+      strokeColorB: ['string', true, 'rgb(236, 183, 156)'],
+      beat: ['number', true, 100],
+      lineWidth: ['number', true, 0]
+    },
+    mappings: [
+      {
+        eventNames: 'kp3:padX:change',
+        targetProperty: 'lineWidth'
+      },
+      {
+        eventNames: 'beat:a',
+        targetProperty: 'beat'
+      },
+      {
+        eventNames: 'color:a',
+        targetProperty: 'colorA'
+      },
+      {
+        eventNames: 'color:b',
+        targetProperty: 'colorB'
+      },
+      {
+        eventNames: 'color:a',
+        targetProperty: 'strokeColorA'
+      },
+      {
+        eventNames: 'color:b',
+        targetProperty: 'strokeColorB'
+      }
+    ]
+  },
+
+  {
     name: 'circles',
     active: false,
     weight: 2,
@@ -96,11 +246,7 @@ var canvasLayers = [
       }
     },
     props: {
-      barWidth: {
-        type: 'number',
-        required: true,
-        default: 10
-      },
+      barWidth: ['number', true, 50],
       strokeStyle: {
         type: 'string',
         required: true,
@@ -128,7 +274,7 @@ var canvasLayers = [
         targetProperty: 'arbitraryA'
       },
       {
-        eventNames: 'mic:60',
+        eventNames: 'mic:15',
         targetProperty: 'arbitraryB'
       }
     ]
@@ -187,20 +333,24 @@ window.VF._defaultSetup = {
       ]
     },
     {
-      type: 'rgbaSignal',
-      defaultValue: '122,122,122,0.5',
+      type: 'hslaSignal',
+      defaultValue: '190,50%,50%,1',
       name: 'color:b',
+      hue: 180,
+      saturation: 100,
+      lightness: 50,
+      alpha: 100,
       mappings: [
         {
-          targetProperty: 'red',
+          targetProperty: 'hue',
+          eventNames: 'effectSlider*3.6'
+        },
+        {
+          targetProperty: 'saturation',
           eventNames: ''
         },
         {
-          targetProperty: 'green',
-          eventNames: ''
-        },
-        {
-          targetProperty: 'blue',
+          targetProperty: 'lightness',
           eventNames: ''
         },
         {
@@ -209,6 +359,29 @@ window.VF._defaultSetup = {
         }
       ]
     },
+    // {
+    //   type: 'rgbaSignal',
+    //   defaultValue: '122,122,122,0.5',
+    //   name: 'color:b',
+    //   mappings: [
+    //     {
+    //       targetProperty: 'red',
+    //       eventNames: ''
+    //     },
+    //     {
+    //       targetProperty: 'green',
+    //       eventNames: ''
+    //     },
+    //     {
+    //       targetProperty: 'blue',
+    //       eventNames: ''
+    //     },
+    //     {
+    //       targetProperty: 'alpha',
+    //       eventNames: ''
+    //     }
+    //   ]
+    // },
     {
       type: 'beatSignal',
       name: 'beat:a',
@@ -253,8 +426,8 @@ window.VF._defaultSetup = {
     {
       type: 'img',
       name: 'Sky 1 back',
-      active: true,
-      src: './assets/sky1/sky1-back.png'
+      active: false,
+      src: './assets/sky1/sky1-back-grey.png'
     },
     {
       type: 'SVG',
@@ -278,8 +451,8 @@ window.VF._defaultSetup = {
     {
       type: 'img',
       name: 'Sky 1 front',
-      active: true,
-      src: './assets/sky1/sky1-front.png'
+      active: false,
+      src: './assets/sky1/sky1-front-grey.png'
     }
   ]
 };
