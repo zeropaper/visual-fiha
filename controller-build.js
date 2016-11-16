@@ -728,14 +728,8 @@ var ControllerView = View.extend({
       controllerView.channel = new window.BroadcastChannel(this.broadcastId);
     }
 
-    navigator.getUserMedia({
-      audio: true
-    }, function(stream) {
-      var source = controllerView.audioContext.createMediaStreamSource(stream);
-      source.connect(controllerView.audioAnalyser);
-    }, function(err) {
-      console.info('The following gUM error occured: ' + err);
-    });
+    controllerView.on('change:audioContext change:audioAnalyser', this.connectAudioSource);
+    this.connectAudioSource();
 
     if (controllerView.el) {
       controllerView._attachSuggestionHelper();
@@ -753,6 +747,19 @@ var ControllerView = View.extend({
     if (options.autoStart !== false) {
       controllerView.play();
     }
+  },
+
+  connectAudioSource: function() {
+    var controllerView = this;
+    navigator.getUserMedia({
+      audio: true
+    }, function(stream) {
+      var source = controllerView.audioContext.createMediaStreamSource(stream);
+      source.connect(controllerView.audioAnalyser);
+    }, function(err) {
+      console.info('The following gUM error occured: ' + err);
+    });
+    return this;
   },
 
   _animate: function(timestamp) {
@@ -817,13 +824,13 @@ var ControllerView = View.extend({
       }
     },
     audioAnalyser: {
-      deps: ['audioContext'],
+      deps: ['audioContext', 'model', 'model.audioMinDb', 'model.audioMaxDb', 'model.audioSmoothing', 'model.audioFftSize'],
       fn: function() {
         var analyser = this.audioContext.createAnalyser();
-        analyser.minDecibels = -90;
-        analyser.maxDecibels = -10;
-        analyser.smoothingTimeConstant = 0.85;
-        analyser.fftSize = 64;
+        analyser.minDecibels = this.model.audioMinDb;
+        analyser.maxDecibels = this.model.audioMaxDb;
+        analyser.smoothingTimeConstant = this.model.audioSmoothing;
+        analyser.fftSize = this.model.audioFftSize;
         return analyser;
       }
     },
@@ -1054,7 +1061,23 @@ var ControllerView = View.extend({
         type: 'toggle',
         selector: '[name="pause"]'
       }
-    ]
+    ],
+    'model.audioMinDb': {
+      selector: '[name="audioMinDb"]',
+      type: 'value'
+    },
+    'model.audioMaxDb': {
+      selector: '[name="audioMaxDb"]',
+      type: 'value'
+    },
+    'model.audioSmoothing': {
+      selector: '[name="audioSmoothing"]',
+      type: 'value'
+    },
+    'model.audioFftSize': {
+      selector: '[name="audioFftSize"]',
+      type: 'value'
+    }
   },
 
   events: {
@@ -1065,7 +1088,10 @@ var ControllerView = View.extend({
     'click [name="screen"]': '_openScreen',
     'click [name="ratio"]': '_changeRatio',
     'click [name="add-layer"]': '_addLayer',
-    'click [name="add-signal"]': '_addSignal'
+    'click [name="add-signal"]': '_addSignal',
+    'focus [data-hook="layer-type"]': '_suggestLayerType',
+    'focus [data-hook="signal-type"]': '_suggestSignalType',
+    'change .audio-source [name]': '_changeAudioParams'
   },
 
   _debug: function() {
@@ -1080,6 +1106,39 @@ var ControllerView = View.extend({
     var val = evt.target.value;
     this.screenView.ratio = val === '0' ? 0 : (val === '4/3' ? 4/3 : 16/9);
     this.screenView.resize();
+  },
+
+  _suggestLayerType: function() {
+    var helper = this.suggestionHelper;
+    var el = this.queryByHook('layer-type');
+    helper.attach(el, function(selected) {
+      el.value = selected;
+      helper.detach();
+    }).fill([
+      'default',
+      'img',
+      'SVG',
+      'canvas'
+    ]);
+  },
+
+  _suggestSignalType: function() {
+    var helper = this.suggestionHelper;
+    var el = this.queryByHook('signal-type');
+    helper.attach(this.queryByHook('signal-type'), function(selected) {
+      el.value = selected;
+      helper.detach();
+    }).fill([
+      'default',
+      'beatSignal',
+      'hslaSignal',
+      'rgbaSignal'
+    ]);
+  },
+
+  _changeAudioParams: function(evt) {
+    this.model.set(evt.target.name, Number(evt.target.value));
+    this.audioMonitor.set('audioAnalyser', this.audioAnalyser);
   },
 
   addMultiMapping: function(mappingModel) {
@@ -1241,9 +1300,24 @@ var ControllerView = View.extend({
 
         '<div class="row no-grow columns">'+
           '<div class="column midi-access"></div>'+
-          '<div class="column audio-source">'+
-            '<div class="audio-monitor"></div>'+
-            '<audio controls muted></audio>'+
+          '<div class="column rows audio-source">'+
+            '<div class="row columns">'+
+              '<div class="column audio-monitor"></div>'+
+              '<div class="column audio-controls">' +
+                '<label>MinDb: <input type="number" name="audioMinDb" value="-90" step="1" /></label>' +
+                '<label>MaxDb: <input type="number" name="audioMaxDb" value="-10" min="-70" step="1" /></label>' +
+                '<label>Smoothing: <input type="number" name="audioSmoothing" value="0.85" step="0.01" /></label>' +
+                '<label>FftSize: <select type="number" name="audioFftSize" value="32" step="2">' +
+                  '<option value="32">32</option>' +
+                  '<option value="64">64</option>' +
+                  '<option value="128">128</option>' +
+                  '<option value="256">256</option>' +
+                  '<option value="1024">1024</option>' +
+                  '<option value="2048">2048</option>' +
+                '</select></label>' +
+              '</div>'+
+            '</div>' +
+            '<audio class="row" controls muted></audio>'+
           '</div>'+
         '</div>'+
       '</div>'+
@@ -1444,7 +1518,6 @@ var CanvasLayer = MappableState.extend({
   },
 
   session: {
-    // frametime: ['number', true, 0],
     duration: ['number', true, 1000],
   },
 
@@ -3155,6 +3228,10 @@ var ScreenState = State.extend({
   },
 
   props: {
+    audioMinDb: ['number', true, -90],
+    audioMaxDb: ['number', true, -10],
+    audioSmoothing: ['number', true, 0.85],
+    audioFftSize: ['number', true, 32],
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();

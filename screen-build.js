@@ -41,7 +41,6 @@ var CanvasLayer = MappableState.extend({
   },
 
   session: {
-    // frametime: ['number', true, 0],
     duration: ['number', true, 1000],
   },
 
@@ -838,6 +837,10 @@ var ScreenState = State.extend({
   },
 
   props: {
+    audioMinDb: ['number', true, -90],
+    audioMaxDb: ['number', true, -10],
+    audioSmoothing: ['number', true, 0.85],
+    audioFftSize: ['number', true, 32],
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();
