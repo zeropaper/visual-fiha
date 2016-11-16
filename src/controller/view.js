@@ -382,7 +382,9 @@ var ControllerView = View.extend({
     'click [name="screen"]': '_openScreen',
     'click [name="ratio"]': '_changeRatio',
     'click [name="add-layer"]': '_addLayer',
-    'click [name="add-signal"]': '_addSignal'
+    'click [name="add-signal"]': '_addSignal',
+    'focus [data-hook="layer-type"]': '_suggestLayerType',
+    'focus [data-hook="signal-type"]': '_suggestSignalType'
   },
 
   _debug: function() {
@@ -397,6 +399,34 @@ var ControllerView = View.extend({
     var val = evt.target.value;
     this.screenView.ratio = val === '0' ? 0 : (val === '4/3' ? 4/3 : 16/9);
     this.screenView.resize();
+  },
+
+  _suggestLayerType: function() {
+    var helper = this.suggestionHelper;
+    var el = this.queryByHook('layer-type');
+    helper.attach(el, function(selected) {
+      el.value = selected;
+      helper.detach();
+    }).fill([
+      'default',
+      'img',
+      'SVG',
+      'canvas'
+    ]);
+  },
+
+  _suggestSignalType: function() {
+    var helper = this.suggestionHelper;
+    var el = this.queryByHook('signal-type');
+    helper.attach(this.queryByHook('signal-type'), function(selected) {
+      el.value = selected;
+      helper.detach();
+    }).fill([
+      'default',
+      'beatSignal',
+      'hslaSignal',
+      'rgbaSignal'
+    ]);
   },
 
   addMultiMapping: function(mappingModel) {
