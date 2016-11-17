@@ -1,6 +1,54 @@
 'use strict';
 window.VF = window.VF || {};
 
+window.VF.canvasTools = {};
+
+window.VF.canvasTools.drawPoint = function(ctx, x, y, radius, borderWidth, num) {
+  var fs  = ctx.fillStyle;
+  ctx.fillStyle = '#000';
+  var lw = ctx.lineWidth;
+  ctx.lineWidth = borderWidth;
+
+
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  ctx.beginPath();
+  // ctx.moveTo(x - radius, y);
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.closePath();
+
+  if (typeof num !== 'undefined') {
+    ctx.fillStyle = '#fff';
+    ctx.fillText(num, x, y);
+  }
+
+  ctx.lineWidth = lw;
+  ctx.fillStyle = fs;
+};
+
+window.VF.canvasTools.drawLine = function(ctx, x1, y1, x2, y2, width, borderWidth, vertical) {
+  var halfWidth = width * 0.5;
+  var adj = Math.abs(y1 - y2);
+  var opp = Math.abs(x1 - x2);
+  var tilt = Math.atan(adj / opp) || 0;
+
+  var a = (Math.PI * 0.5) + tilt;
+  var b = (Math.PI * 1.5) + tilt;
+  var dp = window.VF.canvasTools.drawPoint;
+
+  ctx.lineWidth = borderWidth;
+  ctx.beginPath();
+
+  ctx.arc(x1, y1, halfWidth, a, b);
+
+  ctx.arc(x2, y2, halfWidth, b, a);
+
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+};
+
 var canvasLayers = [
   {
     name: 'background',
@@ -16,52 +64,53 @@ var canvasLayers = [
 
   {
     name: 'loungeA',
+    active: false,
     weight: 1,
     drawFunction: function(ctx) {
       var cw = ctx.canvas.width;
       var ch = ctx.canvas.height;
-      var bw = this.barWidth;
+      var bw = Math.max(1, this.barWidth);
+      var bbw = this.borderWidth;
       var sh = (bw - (ch % bw)) * 0.5;
       var c = (ch / Math.max(2, bw)) + bw;
       var s = this.frametime % cw;
+      var dl = window.VF.canvasTools.drawLine;
       var b, l, r, y;
 
-      ctx.lineWidth = bw;
-      ctx.lineCap = 'round';
+      ctx.fillStyle = this.barColor;
+      ctx.strokeStyle = this.borderColor;
 
-      ctx.strokeStyle = this.colorA;
-      for (b = 0; b < c; b += 2) {
-        l = 0;
-        r = s;
-        y = (b * bw) - sh;
-        ctx.beginPath();
-        ctx.moveTo(l, y);
-        ctx.lineTo(r, y);
-        ctx.stroke();
-      }
 
-      ctx.strokeStyle = this.colorB;
-      for (b = 1; b < c; b += 2) {
-        l = cw - s;
-        r = cw;
-        y = (b * bw) - sh;
-        ctx.beginPath();
-        ctx.moveTo(l, y);
-        ctx.lineTo(r, y);
-        ctx.stroke();
+      for (b = 0; b < c; b++) {
+        if (b % 2) {
+          l = s - cw;
+          r = l + cw;
+          y = (b * bw) - sh;
+          dl(ctx, l, y, r, y, bw, bbw);
+        }
+        else {
+          l = s + cw;
+          r = l - cw;
+          y = (b * bw) - sh;
+          dl(ctx, r, y, l, y, bw, bbw);
+        }
       }
     },
     props: {
+      borderWidth: ['number', true, 0],
       barWidth: ['number', true, 50],
-      colorA: ['string', true, 'rgb(234, 105, 41)'],
-      colorB: ['string', true, 'rgb(236, 183, 156)'],
-      beat: ['number', true, 100],
-      lineWidth: ['number', true, 0]
+      barColor: ['string', true, 'rgb(234, 105, 41)'],
+      borderColor: ['string', true, 'rgb(236, 183, 156)'],
+      beat: ['number', true, 100]
     },
     mappings: [
       {
-        eventNames: 'kp3:padX:change',
-        targetProperty: 'lineWidth'
+        eventNames: 'kp3:effectSlider:change',
+        targetProperty: 'barWidth'
+      },
+      {
+        eventNames: 'kp3:effectKnob:change',
+        targetProperty: 'borderWidth'
       },
       {
         eventNames: 'beat:a',
@@ -69,85 +118,11 @@ var canvasLayers = [
       },
       {
         eventNames: 'color:a',
-        targetProperty: 'colorA'
+        targetProperty: 'barColor'
       },
       {
         eventNames: 'color:b',
-        targetProperty: 'colorB'
-      }
-    ]
-  },
-
-  {
-    name: 'loungeB',
-    weight: 1,
-    drawFunction: function(ctx) {
-      var cw = ctx.canvas.width;
-      var ch = ctx.canvas.height;
-      var bw = this.barWidth;
-      var sh = (bw - (ch % bw)) * 0.5;
-      var c = (ch / Math.max(2, bw)) + bw;
-      var s = this.frametime % cw;
-      var b, l, r, y;
-
-      ctx.lineWidth = bw;
-      ctx.lineCap = 'round';
-
-      ctx.strokeStyle = this.colorA;
-      for (b = 0; b < c; b += 2) {
-        l = 0;
-        r = s;
-        y = (b * bw) - sh;
-        ctx.beginPath();
-        ctx.moveTo(l, y);
-        ctx.lineTo(r, y);
-        ctx.stroke();
-      }
-
-      ctx.strokeStyle = this.colorB;
-      for (b = 1; b < c; b += 2) {
-        l = cw - s;
-        r = cw;
-        y = (b * bw) - sh;
-        ctx.beginPath();
-        ctx.moveTo(l, y);
-        ctx.lineTo(r, y);
-        ctx.stroke();
-      }
-    },
-    props: {
-      barWidth: ['number', true, 50],
-      colorA: ['string', true, 'rgb(234, 105, 41)'],
-      colorB: ['string', true, 'rgb(236, 183, 156)'],
-      strokeColorA: ['string', true, 'rgb(234, 105, 41)'],
-      strokeColorB: ['string', true, 'rgb(236, 183, 156)'],
-      beat: ['number', true, 100],
-      lineWidth: ['number', true, 0]
-    },
-    mappings: [
-      {
-        eventNames: 'kp3:padX:change',
-        targetProperty: 'lineWidth'
-      },
-      {
-        eventNames: 'beat:a',
-        targetProperty: 'beat'
-      },
-      {
-        eventNames: 'color:a',
-        targetProperty: 'colorA'
-      },
-      {
-        eventNames: 'color:b',
-        targetProperty: 'colorB'
-      },
-      {
-        eventNames: 'color:a',
-        targetProperty: 'strokeColorA'
-      },
-      {
-        eventNames: 'color:b',
-        targetProperty: 'strokeColorB'
+        targetProperty: 'borderColor'
       }
     ]
   },
@@ -199,7 +174,6 @@ var canvasLayers = [
         required: true,
         default: '#000'
       },
-      lineCap: ['string', true, 'round'],
       arbitraryA: ['number', true, 10],
       arbitraryB: ['number', true, 10]
     }
@@ -219,30 +193,26 @@ var canvasLayers = [
       var hcw = cw * 0.5;
       var hch = ch * 0.5;
       var bw = Math.max(1, this.barWidth || 0);
+      var bbw = bw * 0.25;
+      var dl = window.VF.canvasTools.drawLine;
+      // dl(ctx, 100, 100, 200, 100, 50, 2);
+
+      // dl(ctx, 100, 200, 200, 350, 50, 2);
 
       var _ca = 100 - this.arbitraryA;
       var _cb = 100 - this.arbitraryB;
       var dbw = bw * 2;
       ctx.strokeStyle = this.strokeStyle;
-      ctx.lineWidth = bw;
-      ctx.lineCap = this.lineCap;
+      // ctx.lineWidth = bw;
 
       vh = (ch / 200) * _ca;
       for (w = (hcw - (Math.floor(hcw / dbw) * dbw)); w <= cw; w += dbw) {
-        ctx.beginPath();
-        ctx.moveTo(w, vh);
-        ctx.lineTo(w, ch - vh);
-        ctx.stroke();
-        ctx.closePath();
+        dl(ctx, w, vh, w, ch - vh, bw, bbw);
       }
 
       vw = (cw / 200) * _cb;
       for (h = (hch - (Math.floor(hcw / dbw) * dbw)); h <= ch; h += dbw) {
-        ctx.beginPath();
-        ctx.moveTo(vw, h);
-        ctx.lineTo(cw - vw, h);
-        ctx.stroke();
-        ctx.closePath();
+        dl(ctx, vw, h, cw - vw, h, bw, bbw, true);
       }
     },
     props: {
@@ -252,7 +222,6 @@ var canvasLayers = [
         required: true,
         default: '#fff'
       },
-      lineCap: ['string', true, 'round'],
       arbitraryA: ['number', true, 10],
       arbitraryB: ['number', true, 10]
     },
@@ -260,10 +229,6 @@ var canvasLayers = [
       {
         eventNames: 'beat:a',
         targetProperty: 'opacity'
-      },
-      {
-        eventNames: 'color:a',
-        targetProperty: 'strokeStyle'
       },
       {
         eventNames: 'color:a',
@@ -316,7 +281,7 @@ window.VF._defaultSetup = {
       mappings: [
         {
           targetProperty: 'hue',
-          eventNames: 'effectSlider*3.6'
+          eventNames: 'padX*3.6'
         },
         {
           targetProperty: 'saturation',
@@ -338,12 +303,12 @@ window.VF._defaultSetup = {
       name: 'color:b',
       hue: 180,
       saturation: 100,
-      lightness: 50,
+      lightness: 30,
       alpha: 100,
       mappings: [
         {
           targetProperty: 'hue',
-          eventNames: 'effectSlider*3.6'
+          eventNames: 'padX*3.6'
         },
         {
           targetProperty: 'saturation',
@@ -389,7 +354,7 @@ window.VF._defaultSetup = {
     },
     {
       type: 'default',
-      name: 'effectSlider*3.6',
+      name: 'padX*3.6',
       transformations: [
         {
           name: 'math.multiply',
@@ -399,7 +364,7 @@ window.VF._defaultSetup = {
       mappings: [
         {
           targetProperty: 'input',
-          eventNames: 'kp3:effectSlider:change'
+          eventNames: 'kp3:padX:change'
         }
       ]
     },
