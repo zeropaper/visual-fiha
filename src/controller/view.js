@@ -105,7 +105,7 @@ var ControllerView = View.extend({
     }
 
     var posted = this.model.serialize();
-    this.channel.postMessage(posted);
+    this.channel.postMessage({type: 'update', data: posted});
   },
 
   derived: {

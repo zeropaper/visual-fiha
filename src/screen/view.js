@@ -54,9 +54,12 @@ var ScreenView = View.extend({
     }
   },
 
-  execCommand: function(name, evt) {
-    evt.data.latency = performance.now() - evt.timeStamp;
-    this.update(evt.data);
+  execCommand: function(name, data, timeStamp) {
+    if (this.inactive) {
+      return;
+    }
+    data.latency = performance.now() - timeStamp;
+    this.update(data);
   },
 
   initialize: function () {
@@ -68,7 +71,7 @@ var ScreenView = View.extend({
     if (window.BroadcastChannel) {
       var channel = screenView.channel = new window.BroadcastChannel(this.broadcastId);
       channel.onmessage = function(evt) {
-        screenView.execCommand('update', evt);
+        screenView.execCommand(evt.data.type, evt.data.data, evt.timeStamp);
       };
     }
   },
