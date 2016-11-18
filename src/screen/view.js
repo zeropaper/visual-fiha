@@ -14,6 +14,12 @@ var ScreenView = View.extend({
   template: '<div class="screen"></div>',
 
   derived: {
+    inactive: {
+      deps: ['mode', 'controlScreenDeactivated'],
+      fn: function() {
+        return this.mode === 'control' && this.controlScreenDeactivated;
+      }
+    },
     signalNames: {
       deps: ['screenSignals', 'MIDIAccess'],
       fn: function() {
@@ -34,6 +40,7 @@ var ScreenView = View.extend({
   },
 
   session: {
+    controlScreenDeactivated: ['boolean', true, false],
     width: ['number', true, 400],
     height: ['number', true, 300],
     broadcastId: ['string', true, 'vfBus'],
@@ -51,6 +58,13 @@ var ScreenView = View.extend({
       required: true,
       default: 'screen',
       values: ['screen', 'control']
+    }
+  },
+
+  bindings: {
+    inactive: {
+      type: 'toggle',
+      invert: true
     }
   },
 
