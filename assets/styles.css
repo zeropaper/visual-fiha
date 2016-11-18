@@ -661,4 +661,13 @@ details
 .details > section {
   max-height: 35vh;
   overflow-y: auto;
+/*
+SVG layer
+*/
+
+
+.layer-svg > svg {
+  max-width: 100%;
+  max-height: 100%;
+}
 }
