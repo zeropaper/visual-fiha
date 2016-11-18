@@ -22,7 +22,7 @@ var ScreenState = State.extend({
     audioMinDb: ['number', true, -90],
     audioMaxDb: ['number', true, -10],
     audioSmoothing: ['number', true, 0.85],
-    audioFftSize: ['number', true, 32],
+    audioFftSize: ['number', true, 256],
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();

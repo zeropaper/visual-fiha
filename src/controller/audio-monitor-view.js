@@ -35,7 +35,7 @@ module.exports = VFDeps.View.extend({
     }
   },
 
-  drawScales: function(bufferLength) {
+  drawScales: function(/*bufferLength*/) {
     var ctx = this.ctx;
     var x = ctx.canvas.width * 0.5;
     var y = ctx.canvas.height * 0.5;
@@ -54,8 +54,8 @@ module.exports = VFDeps.View.extend({
 
     var i, a, ax, ay, bx, by, lx, ly, ca, sa;
     ctx.globalAlpha = 0.5;
-    for (i = 0; i < bufferLength; i++) {
-      a = ((rad / bufferLength) * i) - Math.PI;
+    for (i = 0; i < 360; i += 15) {
+      a = ((rad / 360) * i) - Math.PI;
       ca = Math.cos(a);
       sa = Math.sin(a);
       ax = Math.round(x + (ca * (r / 10)));
