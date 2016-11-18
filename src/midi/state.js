@@ -126,6 +126,17 @@ var KP3Mappings = {
     'num8:noteOn',
     'num8:noteOff',
 
+    'pad:noteOn',
+    'pad:noteOff',
+
+    'padX:change',
+    'padY:change',
+    'pad72:change',
+    'pad73:change',
+    'pad74:change',
+    'pad75:change',
+    'pad76:change',
+
     'effectKnob:change',
     'effectSlider:change'
   ]
