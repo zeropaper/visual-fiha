@@ -224,20 +224,23 @@ function handleMIDIMessage(accessState, model) {
 
     var data = MIDIMessageEvent.data;
     var type = data[0] || 0;
-    if (type === 248) { return clear(); }
+    // if (type === 248) { return clear(); }
 
     var note = data[1] || 0;
     var velocity = data[2] || 0;
-
 
     var obj = {
       signalType:     _result(model.midiMapping, 'type', type, data),
       signalNote:     _result(model.midiMapping, 'note', note, data),
       signalVelocity: _result(model.midiMapping, 'velocity', velocity, data)
     };
+    if (obj.type === 248) {
+      console.info('248', obj.signalNote, obj.signalVelocity);
+    }
     var eventName = model.midiMapping.prefix + ':' + obj.signalNote + ':' + obj.signalType;
     accessState.trigger('midi', eventName, obj.signalVelocity/*, model, eventName*/);
 
+    // console.info('midi event', type, note, velocity, eventName);
     model.set(obj);
   };
 }

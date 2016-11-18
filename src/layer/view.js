@@ -71,6 +71,14 @@ var LayerView = View.extend({
   },
 
   bindings: {
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    },
     'model.active': {
       type: 'toggle'
     },

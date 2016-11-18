@@ -10,10 +10,6 @@ var MultiMappingControlView = VFDeps.View.extend({
     '<div class="row mappings props"></div>' +
   '</section>',
 
-  initialize: function() {
-    console.info('initialize multi mapping control view', this.mappings);
-  },
-
   collections: {
     mappings: MappableState.Collection
   },

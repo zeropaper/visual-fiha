@@ -141,16 +141,16 @@ var MappingControlView = View.extend({
 
 
   _valueWheel: function (evt) {
-    if (evt.target !== document.activeElement) { return; }
+    if (evt.target !== document.activeElement || !evt.shiftKey) { return; }
+    evt.preventDefault();
 
     var def = this.model.definition;
     var valueEl = this.queryByHook('value');
     var value = valueEl.value.trim();
 
-    var added = Math.round(evt.wheelDeltaY * (1 / 120));
+    var added = Math.round(evt.wheelDeltaX * (1 / 120));
 
     if (def.values && def.values.length > 1) {
-      evt.preventDefault();
       var currentIndex = def.values.indexOf(value);
       if (currentIndex < 0) { currentIndex = 0; }
       if (added > 0 && currentIndex === def.values.length - 1) { currentIndex = 0; }
@@ -159,7 +159,6 @@ var MappingControlView = View.extend({
       value = def.values[currentIndex];
     }
     else if (def.type === 'number') {
-      evt.preventDefault();
       value = (Number(value) + added);
       if (def.min) { value = Math.min(def.min, value); }
       if (def.max) { value = Math.max(def.max, value); }
@@ -395,18 +394,4 @@ MappingControlView.opacity =
 MappingControlView.lightness =
 MappingControlView.saturation = MappingControlView.range.extend({});
 
-// MappingControlView.blending = MappingControlView.extend({
-//   template: '<div class="prop columns">' +
-//       '<span class="column no-grow gutter-right"><button name="to-multi-mapping" class="vfi-attach"></button></span>' +
-//       '<strong class="prop-name column gutter-horizontal"></strong>' +
-//       '<span class="column columns">' +
-//         '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>' +
-//         '<span class="column gutter-left" data-hook="value"></span>' +
-//       '</span>' +
-//       '<span class="column columns mapping">' +
-//         '<input class="column gutter-right" placeholder="Events" data-hook="mapping" />' +
-//         '<span class="column gutter-left no-grow"><button name="clear-mapping" class="vfi-trash-empty"></button></span>' +
-//       '</span>' +
-//     '</div>'
-// });
 module.exports = MappingControlView;

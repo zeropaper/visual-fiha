@@ -2,19 +2,16 @@
 var View = window.VFDeps.View;
 var DetailsView = require('./../controller/details-view');
 var LayerControlView = View.extend({
-  template: [
-    '<section class="default-layer-control">',
-    '<header class="columns">',
-    '<div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>',
-    '<h3 class="column layer-name gutter-left" data-hook="name"></h3>',
-    '</header>',
+  template: '<section class="default-layer-control">' +
+    '<header class="columns">' +
+      '<div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>' +
+      '<h3 class="column layer-name gutter-left" data-hook="name"></h3>' +
+    '</header>' +
 
-    '<div class="preview gutter-horizontal"></div>',
+    '<div class="preview gutter-horizontal"></div>' +
 
-    '<div class="mappings props">',
-    '</div>',
-    '</section>'
-  ].join(''),
+    '<div class="mappings props"></div>' +
+  '</section>',
 
   derived: {
     rootView: {

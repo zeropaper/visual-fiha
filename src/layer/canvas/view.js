@@ -2,7 +2,7 @@
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
-  template: '<canvas></canvas>',
+  template: function() { return '<canvas layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></canvas>'; },
 
   derived: {
     offCanvas: {
@@ -64,13 +64,5 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
 
 
   bindings: VFDeps.assign({
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
-    },
   }, ScreenLayerView.prototype.bindings)
 });

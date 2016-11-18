@@ -1,53 +1,6 @@
 'use strict';
+
 window.VF = window.VF || {};
-
-window.VF.canvasTools = {};
-
-window.VF.canvasTools.drawPoint = function(ctx, x, y, radius, borderWidth, num) {
-  var fs  = ctx.fillStyle;
-  ctx.fillStyle = '#000';
-  var lw = ctx.lineWidth;
-  ctx.lineWidth = borderWidth;
-
-
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
-  ctx.beginPath();
-  // ctx.moveTo(x - radius, y);
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.closePath();
-
-  if (typeof num !== 'undefined') {
-    ctx.fillStyle = '#fff';
-    ctx.fillText(num, x, y);
-  }
-
-  ctx.lineWidth = lw;
-  ctx.fillStyle = fs;
-};
-
-window.VF.canvasTools.drawLine = function(ctx, x1, y1, x2, y2, width, borderWidth, vertical) {
-  var halfWidth = width * 0.5;
-  var adj = Math.abs(y1 - y2);
-  var opp = Math.abs(x1 - x2);
-  var tilt = Math.atan(adj / opp) || 0;
-
-  var a = (Math.PI * 0.5) + tilt;
-  var b = (Math.PI * 1.5) + tilt;
-  var dp = window.VF.canvasTools.drawPoint;
-
-  ctx.lineWidth = borderWidth;
-  ctx.beginPath();
-
-  ctx.arc(x1, y1, halfWidth, a, b);
-
-  ctx.arc(x2, y2, halfWidth, b, a);
-
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-};
 
 var canvasLayers = [
   {
@@ -63,9 +16,98 @@ var canvasLayers = [
   },
 
   {
+    name: 'vidA',
+    weight: 10,
+    active: false,
+    drawFunction: function(ctx) {
+      // var reverse = this.reverse;
+      // var frametime = (this.frametime || 0) * 0.001;
+      var url = this.src;
+      // var cache = this.cache;
+      window.VF.canvasTools.loadVideo(url, function(err, video) {
+        if (!video) return;
+
+        // var is = Math.min(video.videoWidth, video.videoHeight);
+        // var cs = Math.min(ctx.canvas.width, ctx.canvas.height);
+        // var s = Math.min(is, cs);
+        // var x = (ctx.canvas.width - s) * 0.5;
+        // var y = (ctx.canvas.height - s) * 0.5;
+
+
+        // var ct = frametime % video.duration;
+        // ct = reverse ? video.duration - ct : ct;
+        // video.currentTime = ct;
+        // // console.info('currentTime', video.currentTime);
+        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, ctx.canvas.width, ctx.canvas.height);
+      });
+    },
+    props: {
+      reverse: ['boolean', true, false],
+      src: ['string', true, './assets/kd/fire.mp4']
+      // src: ['string', true, './assets/kd/DJ Fresh ft. Rita Ora - Hot Right Now (Official Video).mp4';]
+    }
+  },
+
+  // {
+  //   name: 'imgA',
+  //   weight: 20,
+  //   active: false,
+  //   drawFunction: function(ctx) {
+  //     var url = './assets/kd/kd_logo_final.svg';
+  //     window.VF.canvasTools.loadImg(url, function(err, img) {
+  //       if (!img) return;
+  //       var is = Math.min(img.width, img.height);
+  //       var cs = Math.min(ctx.canvas.width, ctx.canvas.height);
+  //       var s = Math.min(is, cs);
+  //       var x = (ctx.canvas.width - s) * 0.5;
+  //       var y = (ctx.canvas.height - s) * 0.5;
+  //       ctx.drawImage(img, x, y, s, s);
+  //     });
+  //   },
+  //   props: {
+  //     colorA: ['string', true, '#bbb']
+  //   }
+  // },
+
+  {
+    name: 'panorama',
+    weight: 20,
+    active: true,
+    drawFunction: function(ctx) {
+      var url = this.src;
+      var shift = this.shift;
+      var frametime = this.frametime || 0;
+      window.VF.canvasTools.loadImg(url, function(err, img) {
+        if (!img) return;
+        var iw = img.width;
+        var ih = img.height;
+        var cw = ctx.canvas.width;
+        var ch = ctx.canvas.height;
+        var fh = ch / ih;
+        var fw = cw / iw;
+        var sx = (frametime % (iw - (cw * fh)) + shift);
+        var dw = cw / fw;
+        var dh = ch / fh;
+
+        ctx.drawImage(img, sx, 0, iw, ih, 0, 0, dw, dh);
+      });
+    },
+    props: {
+      src: ['string', true, './assets/panorma-karl-marx-allee.jpg'],
+      shift: ['number', true, 0]
+    },
+    mappings: [
+      {
+        eventNames: 'kp3:padY:change',
+        targetProperty: 'shift'
+      }
+    ]
+  },
+
+  {
     name: 'loungeA',
     active: false,
-    weight: 1,
+    weight: 40,
     drawFunction: function(ctx) {
       var cw = ctx.canvas.width;
       var ch = ctx.canvas.height;
@@ -127,62 +169,56 @@ var canvasLayers = [
     ]
   },
 
-  {
-    name: 'circles',
-    active: false,
-    weight: 2,
-    drawFunction: function(ctx) {
-      var _debug = this.collection.parent._debugNextUpdate;
+  // {
+  //   name: 'circles',
+  //   active: false,
+  //   weight: 51,
+  //   drawFunction: function(ctx) {
+  //     var bw = Math.max(1, this.barWidth);
+  //     var ch = ctx.canvas.height * 0.5;
+  //     var cw = ctx.canvas.width * 0.5;
+  //     var fs = this.frames;
+  //     var f = this.frame;
+  //     var r = Math.sqrt(Math.pow(cw, 2) + Math.pow(ch, 2));
+  //     var dbw = bw * 2;
+  //     var _ca = Math.round((this.arbitraryA -50) / 10);
+  //     var _cb = Math.round((this.arbitraryB -50) / 10);
+  //     var d = this.direction;
+  //     var a = (Math.PI * 2) / (fs / f);
+  //     var af = -1 * d * a;
+  //     var at = d * a;
 
-      var bw = Math.max(1, this.barWidth);
-      var ch = ctx.canvas.height * 0.5;
-      var cw = ctx.canvas.width * 0.5;
-      var fs = this.frames;
-      var f = this.frame;
-      var r = Math.sqrt(Math.pow(cw, 2) + Math.pow(ch, 2));
-      var dbw = bw * 2;
-      var _ca = Math.round((this.arbitraryA -50) / 10);
-      var _cb = Math.round((this.arbitraryB -50) / 10);
-      var d = this.direction;
-      if (_debug) {
-        console.info('layer state draw function (circles)', this, bw, cw, ch);
-      }
+  //     ctx.strokeStyle = this.strokeStyle;
+  //     ctx.lineWidth = bw;
 
-      var a = (Math.PI * 2) / (fs / f);
-      var af = -1 * d * a;
-      var at = d * a;
-
-      ctx.strokeStyle = this.strokeStyle;
-      ctx.lineWidth = bw;
-
-      var i;
-      for (i = 0; i < r / dbw; i++) {
-        ctx.beginPath();
-        ctx.arc(cw, ch, (1 + i) * dbw, af + (Math.PI * (i % _ca) / _cb), at - (Math.PI * (i % _ca) / _cb));
-        ctx.stroke();
-        ctx.closePath();
-      }
-    },
-    props: {
-      barWidth: {
-        type: 'number',
-        required: true,
-        default: 10
-      },
-      strokeStyle: {
-        type: 'string',
-        required: true,
-        default: '#000'
-      },
-      arbitraryA: ['number', true, 10],
-      arbitraryB: ['number', true, 10]
-    }
-  },
+  //     var i;
+  //     for (i = 0; i < r / dbw; i++) {
+  //       ctx.beginPath();
+  //       ctx.arc(cw, ch, (1 + i) * dbw, af + (Math.PI * (i % _ca) / _cb), at - (Math.PI * (i % _ca) / _cb));
+  //       ctx.stroke();
+  //       ctx.closePath();
+  //     }
+  //   },
+  //   props: {
+  //     barWidth: {
+  //       type: 'number',
+  //       required: true,
+  //       default: 10
+  //     },
+  //     strokeStyle: {
+  //       type: 'string',
+  //       required: true,
+  //       default: '#000'
+  //     },
+  //     arbitraryA: ['number', true, 10],
+  //     arbitraryB: ['number', true, 10]
+  //   }
+  // },
 
   {
     name: 'lines',
-    active: true,
-    weight: 5,
+    active: false,
+    weight: 50,
     drawFunction: function(ctx) {
       var h;
       var w;
@@ -202,7 +238,7 @@ var canvasLayers = [
       var _ca = 100 - this.arbitraryA;
       var _cb = 100 - this.arbitraryB;
       var dbw = bw * 2;
-      ctx.strokeStyle = this.strokeStyle;
+      ctx.barColor = this.barColor;
       // ctx.lineWidth = bw;
 
       vh = (ch / 200) * _ca;
@@ -217,11 +253,8 @@ var canvasLayers = [
     },
     props: {
       barWidth: ['number', true, 50],
-      strokeStyle: {
-        type: 'string',
-        required: true,
-        default: '#fff'
-      },
+      barColor: ['string', true, '#fff'],
+      borderColor: ['string', true, '#fff'],
       arbitraryA: ['number', true, 10],
       arbitraryB: ['number', true, 10]
     },
@@ -232,7 +265,11 @@ var canvasLayers = [
       },
       {
         eventNames: 'color:a',
-        targetProperty: 'strokeStyle'
+        targetProperty: 'barColor'
+      },
+      {
+        eventNames: 'color:b',
+        targetProperty: 'borderColor'
       },
       {
         eventNames: 'mic:12',
@@ -248,7 +285,7 @@ var canvasLayers = [
   {
     name: 'soundbars',
     active: false,
-    weight: 15,
+    weight: 60,
     drawFunction: function(ctx) {
       var cw = ctx.canvas.width;
       var ch = ctx.canvas.height;
@@ -390,29 +427,48 @@ window.VF._defaultSetup = {
   screenLayers: [
     {
       type: 'img',
+      name: 'no signal',
+      active: true,
+      src: './assets/no-signal.jpg'
+    },
+    {
+      type: 'img',
       name: 'Sky 1 back',
       active: false,
       src: './assets/sky1/sky1-back-grey.png'
     },
+
     {
-      type: 'SVG',
+      // type: 'SVG',
+      type: 'img',
       name: 'zeropaper',
       active: false,
       src: './assets/zeropaper-fat.svg'
     },
-    {
-      type: 'SVG',
-      name: 'Visual Fiha',
-      active: true,
-      src: './assets/visual-fiha.svg'
 
+    {
+      // type: 'SVG',
+      type: 'img',
+      name: 'Visual Fiha',
+      active: false,
+      src: './assets/visual-fiha.svg'
     },
+
+    {
+      // type: 'SVG',
+      type: 'img',
+      name: 'KD',
+      active: true,
+      src: './assets/kd/kd_logo_final.svg'
+    },
+
     {
       type: 'canvas',
       name: 'Canvas layer',
       active: true,
       canvasLayers: canvasLayers
     },
+
     {
       type: 'img',
       name: 'Sky 1 front',

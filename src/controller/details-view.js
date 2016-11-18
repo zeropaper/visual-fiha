@@ -19,7 +19,7 @@ var DetailsView = VFDeps.View.extend({
           var type = opts.model.definition.type;
           var name = opts.model.targetProperty;
           var Constructor = MappingControlView[name] || MappingControlView[type] || MappingControlView;
-          console.info('property name: %s (%s), type: %s (%s)', name, !!MappingControlView[name], type, !!MappingControlView[type]);
+          // console.info('property name: %s (%s), type: %s (%s)', name, !!MappingControlView[name], type, !!MappingControlView[type]);
           return new Constructor(opts);
         }, el);
       }

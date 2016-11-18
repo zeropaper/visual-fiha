@@ -100,7 +100,7 @@ var ControllerView = View.extend({
 
     this.model.signals.mic = {};
     for(var i = 0; i < bufferLength; i++) {
-      this.model.signals.mic['mic:' + i] = dataArray[i];
+      // this.model.signals.mic['mic:' + i] = dataArray[i];
       this.model.trigger('mic:' + i, dataArray[i]);
     }
 
@@ -190,6 +190,10 @@ var ControllerView = View.extend({
     this.pause();
     this.model.firstframetime = 0;
     return this;
+  },
+
+  resizeScreen: function() {
+    this.channel.postMessage({type: 'resize'});
   },
 
   subviews: {
@@ -292,7 +296,7 @@ var ControllerView = View.extend({
         var screenView = new ScreenView({
           parent: this,
           el: el,
-          // MIDIAccess: this.midiAccess,
+          // controlScreenDeactivated: true,
           model: screenModel,
           mode: 'control'
         });
@@ -401,6 +405,7 @@ var ControllerView = View.extend({
     'click [name="play"]': 'play',
     'click [name="pause"]': 'pause',
     'click [name="stop"]': 'stop',
+    'click [name="resize"]': 'resizeScreen',
     'click [name="debug"]': '_debug',
     'click [name="screen"]': '_openScreen',
     'click [name="ratio"]': '_changeRatio',
@@ -537,10 +542,11 @@ var ControllerView = View.extend({
       '<div class="column no-grow gutter-right">Visual Fiha</div>'+
       '<div class="column columns">'+
         '<div class="column columns gutter-horizontal no-grow">'+
-          '<span class="column columns gutter-horizontal button-group">'+
-            '<button class="column gutter-horizontal" name="play"><span class="vfi-play"></span></button>'+
+          '<span class="column columns button-group">'+
+            '<button class="column gutter-right" name="play"><span class="vfi-play"></span></button>'+
             '<button class="column gutter-horizontal" name="pause"><span class="vfi-pause"></span></button>'+
             '<button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>'+
+            '<button class="column gutter-left" name="resize"><span class="vfi-circle"></span></button>'+
           '</span>'+
         '</div>'+
         '<div class="column columns gutter-horizontal no-grow">'+
@@ -634,7 +640,7 @@ var ControllerView = View.extend({
                 '</select></label>' +
               '</div>'+
             '</div>' +
-            '<audio class="row" controls muted></audio>'+
+            // '<audio class="row" controls muted></audio>'+
           '</div>'+
         '</div>'+
       '</div>'+

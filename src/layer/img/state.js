@@ -2,7 +2,9 @@
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.img = ScreenLayerState.extend({
   props: {
-    src: ['string', true, null]
+    src: ['string', true, null],
+    backgroundSize: ['string', true, 'cover'],
+    backgroundRepeat: ['string', true, 'no-repeat']
   },
 
   initialize: function() {

@@ -1,37 +1,45 @@
 'use strict';
-
+var _ids = 0;
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
   autoRender: true,
 
   template: function() { return '<div class="layer-svg" layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></div>'; },
 
-  bindings: VFDeps.assign({
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
+  derived: {
+    styleEl: {
+      deps: ['model.src'],
+      fn: function() {
+        var el = document.createElement('style');
+        el.id = this.cid;
+        document.head.appendChild(el);
+        return el;
+      }
     }
+  },
+
+  bindings: VFDeps.assign({
   }, ScreenLayerView.prototype.bindings),
 
   extractStyles: function() {
     var viewId = this.cid;
-    var style = document.getElementById(this.cid);
+    var style = this.styleEl;
     this.queryAll('[style]').forEach(function(el) {
       var elStyle = el.getAttribute('style');
-      console.info('svg element %s with style', el.id, elStyle.length);
+
       if (!el.id) {
-        // should generate an id!
-        return;
+        _ids++;
+        el.id = 'auto-svg-id-' + _ids;
       }
 
-      style.innerHTML += '\n/* '+ el.id +' */\n [view-id="' + viewId + '"] #' + el.id + ' {\n' + elStyle + '\n}';
+      style.innerHTML += '\n/* '+ el.id +' */\n [view-id="' + viewId + '"] #' + el.id + ' {\n' + elStyle.split(';').join(';\n  ') + '\n}';
       el.removeAttribute('style');
     });
     return this;
+  },
+
+  editStyles: function() {
+
   },
 
   loadSVG: function() {
@@ -61,7 +69,7 @@ module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
   },
 
   remove: function() {
-    var style = document.getElementById(this.cid);
+    var style = this.styleEl;//document.getElementById(this.cid);
     console.info('remove svg style element', style);
     style.parentNode.removeChild(style);
     ScreenLayerView.prototype.remove.apply(this, arguments);
@@ -69,12 +77,9 @@ module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
 
   render: function() {
     if (this.el) {
-      // console.info('svg el exists for %s', this.cid, this.model.cid);
       return this;
     }
-    var style = document.createElement('style');
-    style.id = this.cid;
-    document.head.appendChild(style);
+
     this.renderWithTemplate();
     return this;
   }

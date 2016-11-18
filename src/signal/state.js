@@ -30,10 +30,7 @@ var SignalState = MappableState.extend({
   props: {
     name: ['string', true, null],
     type: ['string', true, 'default'],
-    defaultValue: ['any', true, function () { return 1; }]
-  },
-
-  session: {
+    defaultValue: ['any', true, function () { return 1; }],
     input: ['any', false, null]
   },
 

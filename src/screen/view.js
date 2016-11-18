@@ -72,8 +72,15 @@ var ScreenView = View.extend({
     if (this.inactive) {
       return;
     }
-    data.latency = performance.now() - timeStamp;
-    this.update(data);
+    console.info('execute command %s', name);
+
+    if (name === 'update') {
+      data.latency = performance.now() - timeStamp;
+      this.update(data);
+    }
+    else if (name === 'resize') {
+      this.resize();
+    }
   },
 
   initialize: function () {
