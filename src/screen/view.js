@@ -72,7 +72,6 @@ var ScreenView = View.extend({
     if (this.inactive) {
       return;
     }
-    console.info('execute command %s', name);
 
     if (name === 'update') {
       data.latency = performance.now() - timeStamp;

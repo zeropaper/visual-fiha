@@ -240,7 +240,6 @@ function handleMIDIMessage(accessState, model) {
     var eventName = model.midiMapping.prefix + ':' + obj.signalNote + ':' + obj.signalType;
     accessState.trigger('midi', eventName, obj.signalVelocity/*, model, eventName*/);
 
-    // console.info('midi event', type, note, velocity, eventName);
     model.set(obj);
   };
 }
