@@ -36,7 +36,11 @@ var ScreenState = State.extend({
       mainIndex: 'name',
       model: function(attrs, opts) {
         var Constructor = LayerState[attrs.type] || LayerState;
-        return new Constructor(attrs, opts);
+        var state = new Constructor(attrs, opts);
+        state.on('change:zIndex', function() {
+          state.collection.sort();
+        });
+        return state;
       }
     }),
 
