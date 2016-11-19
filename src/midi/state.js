@@ -224,7 +224,7 @@ function handleMIDIMessage(accessState, model) {
 
     var data = MIDIMessageEvent.data;
     var type = data[0] || 0;
-    // if (type === 248) { return clear(); }
+    if (type === 248) { return /*clear()*/; }
 
     var note = data[1] || 0;
     var velocity = data[2] || 0;
