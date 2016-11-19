@@ -343,7 +343,7 @@ MappingControlView.range = MappingControlView.number.extend({
       '<strong class="prop-name column gutter-horizontal"></strong>' +
       '<span class="column columns">' +
         '<span class="column no-grow gutter-horizontal"><button name="default-value" class="vfi-trash-empty"></button></span>' +
-        '<input type="range" min="' + this.min + '" max="' + this.max + '" class="column gutter-left" placeholder="Value" data-hook="value" />' +
+        '<input type="number" min="' + this.min + '" max="' + this.max + '" class="column gutter-left" placeholder="Value" data-hook="value" />' +
       '</span>' +
       '<span class="column columns mapping">' +
         '<input type="text" class="column gutter-right" placeholder="Events" data-hook="mapping" />' +
