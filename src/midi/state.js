@@ -312,6 +312,12 @@ var MIDIAccessState = State.extend({
     accessState.on('change:MIDIAccess', MIDIAccessChanged);
 
     if (typeof options.MIDIAccess === 'undefined') {
+      if (!navigator.requestMIDIAccess) {
+        console.warn('No WebMIDI API support');
+        accessState.MIDIAccess = false;
+        return;
+      }
+
       navigator.requestMIDIAccess()
         .then(function(MIDIAccess) {
           accessState.MIDIAccess = MIDIAccess;

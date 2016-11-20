@@ -6,10 +6,6 @@
   <link rel="stylesheet" type="text/css" href="assets/styles.css">
 </head>
 <body class="index-page">
-<header>
-  <h1>Visual Fiha</h1>
-</header>
-
 <div class="columns">
   <div class="column"></div>
 <pre class="column no-grow">
@@ -35,15 +31,68 @@ __________________________________
   <div class="column"></div>
 </div>
 <div class="text-center">
-  <ul class="list-unstyled">
-    <li><a href="controller.html">controller</a></li>
-    <li><a href="screen.html">screen</a></li>
-    <li><a href="test/">test</a></li>
-    <li><a href="https://github.com/zeropaper/visual-fiha/issues">issues</a></li>
+  <ul class="list-inline">
+    <li><a href="controller.html">Controller</a></li>
+    <li><a href="screen.html">Screen</a></li>
+    <!-- <li><a href="test/">Test</a></li> -->
+    <li><a href="https://github.com/zeropaper/visual-fiha">GitHub</a></li>
+    <li><a href="https://facebook.com/visualfiha">Facebook</a></li>
   </ul>
+  <div class="browser-support"></div>
+
+  <hr/>
+  <!-- <iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fvisualfiha%2Fposts%2F1821319684759622&width=500" width="500" height="626" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true"></iframe> -->
 </div>
 
 <footer>
 </footer>
+<script>
+(function() {
+  'use strict';
+
+  function list(array) {
+    var li;
+    var frag = document.createDocumentFragment();
+    var ul = document.createElement('ul');
+    array.forEach(function(txt) {
+      li = document.createElement('li');
+      li.textContent = txt;
+      ul.appendChild(li);
+    });
+    frag.appendChild(ul);
+    return frag;
+  }
+
+
+  window.addEventListener('DOMContentLoaded', function() {
+    var el = document.querySelector('.browser-support');
+    var errors = [];
+    var warnings = [];
+
+    if (!window.BroadcastChannel) {
+      errors.push('Sorry, your browser does not support BroadcastChannel');
+    }
+
+    if (!navigator.requestMIDIAccess) {
+      warnings.push('Too bad your browser does not support WebMIDI API. The MIDI features will not be available.');
+    }
+
+    var frag;
+    if (errors.length) {
+      frag = list(errors);
+      el.appendChild(frag);
+      el.classList.add('no');
+    }
+    if (warnings.length) {
+      frag = list(warnings);
+      el.appendChild(frag);
+    }
+    if (errors.length || warnings.length) {
+      var div = document.createElement('div');
+      div.textContent = 'The development of this software is done with the latest official releases from Google Chrome.';
+      el.appendChild(div);
+    }
+  });
+})();</script>
 </body>
 </html>

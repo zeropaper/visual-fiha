@@ -68,14 +68,25 @@ var ControllerView = View.extend({
 
   connectAudioSource: function() {
     var controllerView = this;
-    navigator.getUserMedia({
+    var capture = {
       audio: true
-    }, function(stream) {
+    };
+
+    function success(stream) {
       var source = controllerView.audioContext.createMediaStreamSource(stream);
       source.connect(controllerView.audioAnalyser);
-    }, function(err) {
+    }
+    function error(err) {
       console.info('The following gUM error occured: ' + err);
-    });
+    }
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia(capture).then(success).catch(error);
+    }
+    else if (navigator.getUserMedia) {
+      navigator.getUserMedia(capture, success, error);
+    }
+
     return this;
   },
 

@@ -52,51 +52,23 @@ And whatever… I don't want money… I want the perfect tool and I don't mind s
 
 By putting all that stuff in a git repository (and pushing to GitHub from time to time…) my goal is to do better than what I did before (and it's easy because I lost most of what I did at the time I started VJing).
 
+# Browser support
+
+For now, development is focused on the latest version Google Chrome.  
+Firefox is a decent browser but behaves too slowly and does not support the WebMIDI API.  
+Browsers from Mircosoft or Apple are sh!+ and do not deserve attention.  
 
 # Installation
 
-[No need to install, just enjoy.](https://zeropaper.github.io/visual-fiha)
-
-
-# Development
-
-```
-git clone https://github.com/zeropaper/visual-fiha.git
-cd visual-fiha
-npm i
-npm i http-server
-
-http-server . # and open your browser at the given URL(s)
-```
-
-In second terminal
-
-```
-npm run dev # will rebuild the scripts on file changes
-```
-
-Optionally, in third terminal
-
-```
-livereload . # if you don't have it… npm i livereload
-```
-
-or
-
-
-```
-npm run pretest #
-```
-
-and then (in your browser) go to the test folder (if livereload)
+[No need to install, open Google Chrome and enjoy.](https://zeropaper.github.io/visual-fiha)
 
 # Usage
 
-## Layers
+See the [usage guide in the wiki](https://github.com/zeropaper/visual-fiha/wiki/Usage).
 
-## Signals
+# Development
 
-## MIDI controllers
+See the [development guide in the wiki](https://github.com/zeropaper/visual-fiha/wiki/Development).
 
 
 

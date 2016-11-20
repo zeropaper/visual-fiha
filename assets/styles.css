@@ -48,6 +48,21 @@ body {
   padding: 0;
   list-style: none;
 }
+.list-inline {
+  padding: 0;
+  list-style: none;
+}
+.list-inline li {
+  display: inline-block;
+}
+.list-inline li:after {
+  display: inline-block;
+  content: '-';
+  margin-left: 0.3em;
+}
+.list-inline li:last-child:after {
+  display: none;
+}
 
 /*
 Icons
@@ -661,6 +676,8 @@ details
 .details > section {
   max-height: 35vh;
   overflow-y: auto;
+}
+
 /*
 SVG layer
 */
@@ -670,4 +687,20 @@ SVG layer
   max-width: 100%;
   max-height: 100%;
 }
+
+/*
+browser support
+*/
+.browser-support {
+  max-width: 550px;
+  padding: 1em;
+  margin: 1em auto;
+  background: var(--value);
+  color: var(--text-color-alt);
+}
+.browser-support ul {
+  margin-top: 0;
+}
+.browser-support:empty {
+  display: none;
 }
