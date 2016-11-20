@@ -21,7 +21,8 @@
     "dev-controller": "nodemon -w \"./src\" -x \"eslint ./src && npm run dev-build-controller\"",
     "dev-screen": "nodemon -w \"./src\" -x \"eslint ./src && npm run dev-build-screen\"",
     "test": "mocha -u bdd --check-leaks --full-trace test/**/state-spec.js",
-    "postinstall": "npm run build"
+    "postinstall": "npm run build",
+    "gh-pages": "git checkout master && npm run build && git add *-build.js && git commit --allow-empty -m \"update builds\" && git push origin master"
   },
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",
