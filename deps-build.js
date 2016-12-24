@@ -48,7 +48,7 @@ var extend = function(protoProps) {
 module.exports = extend;
 
 },{"lodash/assign":220}],2:[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-view"] = window.ampersand["ampersand-collection-view"] || [];  window.ampersand["ampersand-collection-view"].push("2.0.2");}
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-view"] = window.ampersand["ampersand-collection-view"] || [];  window.ampersand["ampersand-collection-view"].push("2.0.1");}
 var assign = require('lodash/assign');
 var invokeMap = require('lodash/invokeMap');
 var pick = require('lodash/pick');
@@ -112,7 +112,7 @@ assign(CollectionView.prototype, Events, {
             return;
         }
         if (this.renderedEmptyView) {
-            this._removeView(this.renderedEmptyView);
+            this.renderedEmptyView.remove();
             delete this.renderedEmptyView;
         }
         var view = this._getOrCreateByModel(model, {containerEl: this.el});
@@ -125,15 +125,19 @@ assign(CollectionView.prototype, Events, {
     _insertViewAtIndex: function (view) {
         if (!view.insertSelf) {
             var pos = this.collection.indexOf(view.model);
-            pos = this.reverse ? pos - 1 : pos + 1;
+            var modelToInsertBefore, viewToInsertBefore;
 
-            var modelToInsertBefore = this.collection.at(pos);
+            if (this.reverse) {
+                modelToInsertBefore = this.collection.at(pos - 1);
+            } else {
+                modelToInsertBefore = this.collection.at(pos + 1);
+            }
 
-            var viewToInsertBefore = this._getViewByModel(modelToInsertBefore);
+            viewToInsertBefore = this._getViewByModel(modelToInsertBefore);
 
             // FIX IE bug (https://developer.mozilla.org/en-US/docs/Web/API/Node.insertBefore)
             // "In Internet Explorer an undefined value as referenceElement will throw errors, while in rest of the modern browsers, this works fine."
-            if (viewToInsertBefore) {
+            if(viewToInsertBefore) {
                 this.el.insertBefore(view.el, viewToInsertBefore && viewToInsertBefore.el);
             } else {
                 this.el.appendChild(view.el);
@@ -160,7 +164,9 @@ assign(CollectionView.prototype, Events, {
             // to give user option of gracefully destroying.
             view = this.views.splice(index, 1)[0];
             this._removeView(view);
-            this._renderEmptyView();
+            if (this.views.length === 0) {
+                this._renderEmptyView();
+            }
         }
     },
     _removeView: function (view) {
@@ -172,7 +178,9 @@ assign(CollectionView.prototype, Events, {
     },
     _renderAll: function () {
         this.collection.each(bind(this._addViewForModel, this));
-        this._renderEmptyView();
+        if (this.views.length === 0) {
+            this._renderEmptyView();
+        }
     },
     _rerenderAll: function (collection, options) {
         options = options || {};
@@ -181,9 +189,9 @@ assign(CollectionView.prototype, Events, {
         }, this));
     },
     _renderEmptyView: function() {
-        if (this.views.length === 0 && this.emptyView && !this.renderedEmptyView) {
-            this.renderedEmptyView = new this.emptyView({parent: this});
-            this.el.appendChild(this.renderedEmptyView.render().el);
+        if (this.emptyView && !this.renderedEmptyView) {
+            var view = this.renderedEmptyView = new this.emptyView({parent: this});
+            this.el.appendChild(view.render().el);
         }
     },
     _reset: function () {
@@ -196,7 +204,9 @@ assign(CollectionView.prototype, Events, {
         //Rerender the full list with the new views
         this.views = newViews;
         this._rerenderAll();
-        this._renderEmptyView();
+        if (this.views.length === 0) {
+            this._renderEmptyView();
+        }
     }
 });
 
@@ -587,25 +597,20 @@ Collection.extend = classExtend;
 module.exports = Collection;
 
 },{"ampersand-class-extend":1,"ampersand-events":6,"lodash/assign":220,"lodash/bind":222,"lodash/isArray":239}],4:[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.9.0");}
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.8.0");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
 var matchesSelector = require('matches-selector');
 var partial = require('lodash.partial');
 var slice = Array.prototype.slice;
 
-function getMatches(el, selector, firstOnly) {
+function getMatches(el, selector) {
     if (selector === '') return [el];
     var matches = [];
-    if (!selector) return matches;
-    if (firstOnly) {
-        if (matchesSelector(el, selector)) return [el];
-        return el.querySelector(selector) ? [el.querySelector(selector)] : [];
-    } else {
-        if (matchesSelector(el, selector)) matches.push(el);
-        return matches.concat(slice.call(el.querySelectorAll(selector)));
-    }
+    if (matchesSelector(el, selector)) matches.push(el);
+    return matches.concat(slice.call(el.querySelectorAll(selector)));
 }
+
 function setAttributes(el, attrs) {
     for (var name in attrs) {
         dom.setAttribute(el, name, attrs[name]);
@@ -625,20 +630,16 @@ function makeArray(val) {
 function switchHandler(binding, el, value) {
     // the element selector to show
     var showValue = binding.cases[value];
-
-    var firstMatchOnly = binding.firstMatchOnly;
-
     // hide all the other elements with a different value
     for (var item in binding.cases) {
         var curValue = binding.cases[item];
-
         if (value !== item && curValue !== showValue) {
-            getMatches(el, curValue, firstMatchOnly).forEach(function (match) {
+            getMatches(el, curValue).forEach(function (match) {
                 dom.hide(match);
             });
         }
     }
-    getMatches(el, showValue, firstMatchOnly).forEach(function (match) {
+    getMatches(el, showValue).forEach(function (match) {
         dom.show(match);
     });
 }
@@ -657,7 +658,6 @@ function getBindingFunc(binding, context) {
     var type = binding.type || 'text';
     var isCustomBinding = typeof type === 'function';
     var selector = getSelector(binding);
-    var firstMatchOnly = binding.firstMatchOnly;
     var yes = binding.yes;
     var no = binding.no;
     var hasYesNo = !!(yes || no);
@@ -667,20 +667,20 @@ function getBindingFunc(binding, context) {
 
     if (isCustomBinding) {
         return function (el, value) {
-            getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+            getMatches(el, selector).forEach(function (match) {
                 type.call(context, match, value, previousValue);
             });
             previousValue = value;
         };
     } else if (type === 'text') {
         return function (el, value) {
-            getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+            getMatches(el, selector).forEach(function (match) {
                 dom.text(match, value);
             });
         };
     } else if (type === 'class') {
         return function (el, value) {
-            getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+            getMatches(el, selector).forEach(function (match) {
                 dom.switchClass(match, previousValue, value);
             });
             previousValue = value;
@@ -689,7 +689,7 @@ function getBindingFunc(binding, context) {
         if (!binding.name) throw Error('attribute bindings must have a "name"');
         return function (el, value) {
             var names = makeArray(binding.name);
-            getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+            getMatches(el, selector).forEach(function (match) {
                 names.forEach(function (name) {
                     dom.setAttribute(match, name, value);
                 });
@@ -698,7 +698,7 @@ function getBindingFunc(binding, context) {
         };
     } else if (type === 'value') {
         return function (el, value) {
-            getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+            getMatches(el, selector).forEach(function (match) {
                 if (!value && value !== 0) value = '';
                 // only apply bindings if element is not currently focused
                 if (document.activeElement !== match) match.value = value;
@@ -713,7 +713,7 @@ function getBindingFunc(binding, context) {
             return function (el, value) {
                 var prevClass = value ? no : yes;
                 var newClass = value ? yes : no;
-                getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+                getMatches(el, selector).forEach(function (match) {
                     prevClass.forEach(function (pc) {
                         dom.removeClass(match, pc);
                     });
@@ -727,7 +727,7 @@ function getBindingFunc(binding, context) {
                 var name = makeArray(binding.name || keyName);
                 var invert = (binding.invert || false);
                 value = (invert ? (value ? false : true) : value);
-                getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+                getMatches(el, selector).forEach(function (match) {
                     name.forEach(function (className) {
                         dom[value ? 'addClass' : 'removeClass'](match, className);
                     });
@@ -742,7 +742,7 @@ function getBindingFunc(binding, context) {
             return function (el, value) {
                 var prevAttribute = value ? no : yes;
                 var newAttribute = value ? yes : no;
-                getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+                getMatches(el, selector).forEach(function (match) {
                     prevAttribute.forEach(function (pa) {
                         if (pa) {
                             dom.removeAttribute(match, pa);
@@ -760,7 +760,7 @@ function getBindingFunc(binding, context) {
                 var name = makeArray(binding.name || keyName);
                 var invert = (binding.invert || false);
                 value = (invert ? (value ? false : true) : value);
-                getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+                getMatches(el, selector).forEach(function (match) {
                     name.forEach(function (attr) {
                         dom[value ? 'addAttribute' : 'removeAttribute'](match, attr);
                     });
@@ -773,17 +773,17 @@ function getBindingFunc(binding, context) {
         // this doesn't require a selector since we can pass yes/no selectors
         if (hasYesNo) {
             return function (el, value) {
-                getMatches(el, yes, firstMatchOnly).forEach(function (match) {
+                getMatches(el, yes).forEach(function (match) {
                     dom[value ? 'show' : 'hide'](match, mode);
                 });
-                getMatches(el, no, firstMatchOnly).forEach(function (match) {
+                getMatches(el, no).forEach(function (match) {
                     dom[value ? 'hide' : 'show'](match, mode);
                 });
             };
         } else {
             return function (el, value) {
                 value = (invert ? (value ? false : true) : value);
-                getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+                getMatches(el, selector).forEach(function (match) {
                     dom[value ? 'show' : 'hide'](match, mode);
                 });
             };
@@ -793,7 +793,7 @@ function getBindingFunc(binding, context) {
         return partial(switchHandler, binding);
     } else if (type === 'innerHTML') {
         return function (el, value) {
-            getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+            getMatches(el, selector).forEach(function (match) {
                 dom.html(match, value);
             });
         };
@@ -802,7 +802,7 @@ function getBindingFunc(binding, context) {
         return function (el, value, keyName) {
             var name = makeArray(binding.name || keyName);
             for (var item in binding.cases) {
-                getMatches(el, binding.cases[item], firstMatchOnly).forEach(function (match) {
+                getMatches(el, binding.cases[item]).forEach(function (match) {
                     name.forEach(function (className) {
                         dom[value === item ? 'addClass' : 'removeClass'](match, className);
                     });
@@ -812,7 +812,7 @@ function getBindingFunc(binding, context) {
     } else if (type === 'switchAttribute') {
         if (!binding.cases) throw Error('switchAttribute bindings must have "cases"');
         return function (el, value, keyName) {
-            getMatches(el, selector, firstMatchOnly).forEach(function (match) {
+            getMatches(el, selector).forEach(function (match) {
                 if (previousValue) {
                     removeAttributes(match, previousValue);
                 }
