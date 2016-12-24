@@ -1,4 +1,7 @@
 *.log
+*.map
+worker-javascript.js
+ignore
+wiki
+test/expect.js
 node_modules
-.idea
-*.mapwiki

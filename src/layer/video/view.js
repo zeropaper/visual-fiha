@@ -2,7 +2,9 @@
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.video = ScreenLayerView.extend({
-  template: '<video autoplay loop muted></video>',
+  template: function() {
+    return '<video layer-id="' + this.model.cid + '" view-id="' + this.cid + '" autoplay loop muted></video>';
+  },
 
   bindings: VFDeps.assign({
     'model.src': {

@@ -8,14 +8,6 @@ var TransformationControlView = View.extend({
     '</div>',
 
   derived: {
-    rootView: {
-      deps: ['parent'],
-      fn: function () {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (!inst.parent) { return inst; }
-        }
-      }
-    },
     arguments: {
       deps: ['model', 'model.arguments'],
       fn: function() {

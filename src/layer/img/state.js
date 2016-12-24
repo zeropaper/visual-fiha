@@ -4,6 +4,7 @@ module.exports = ScreenLayerState.img = ScreenLayerState.extend({
   props: {
     src: ['string', true, null],
     backgroundSize: ['string', true, 'cover'],
+    backgroundPosition: ['string', true, 'center'],
     backgroundRepeat: ['string', true, 'no-repeat']
   },
 

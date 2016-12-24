@@ -1,51 +1,29 @@
 'use strict';
+var State = VFDeps.State;
 var ScreenLayerState = require('./../state');
-// var CanvasLayer = ScreenLayerState.extend({
-var MappableState = require('./../../mappable/state');
-var CanvasLayerMapState = MappableState.State.extend({
-  derived: {
-    targetModel: {
-      deps: ['collection', 'collection.parent'],
-      fn: function () {
-        return this.collection.parent;
-      }
-    },
-    observedModel: {
-      deps: ['targetModel', 'targetModel.collection', 'targetModel.collection.parent'],
-      fn: function() {
-        return this.targetModel.collection.parent.collection.parent;
-      }
-    }
-  }
-});
 
 
-var CanvasLayer = MappableState.extend({
+var CanvasLayer = State.extend({
   idAttribute: 'name',
 
-  fillCollection: function() {
-    var mappings = this.mappings;
-    var propNames = Object.keys(this.constructor.prototype._definition).filter(function (propName) {
-      return ['drawFunction', 'name'].indexOf(propName) < 0;
-    });
+  initialize: function() {
+    State.prototype.initialize.apply(this, arguments);
+    var canvasLayer = this;
+    var screenLayer = canvasLayer.collection.parent;
 
-    propNames.forEach(function (propName) {
-      if (!mappings.get(propName)) {
-        mappings.add({
-          targetProperty: propName
-        });
-      }
+    canvasLayer.on('change', function() {
+      // trigger change on the screen layer
+      screenLayer._changed = {
+        canvasLayers: screenLayer.canvasLayers.serialize()
+      };
+      screenLayer.trigger('change');
     });
-    return this;
-  },
-
-  session: {
-    duration: ['number', true, 1000],
   },
 
   cache: {},
 
   props: {
+    duration: ['number', true, 1000],
     fps: ['number', true, 16],
     weight: ['number', true, 0],
     name: ['string', true, null],
@@ -76,47 +54,47 @@ var CanvasLayer = MappableState.extend({
     drawFunction: 'any'
   },
 
-
   serialize: function() {
-    var obj = MappableState.prototype.serialize.apply(this, arguments);
+    var obj = State.prototype.serialize.apply(this, arguments);
     var returned = {};
+    var propName;
 
 
     var props = this.serializationProps.props || [];
-    // if (props.length) {
-    //   returned.props = {};
-    //   props.forEach(function(propName) {
-    //     returned.props[propName] = obj[propName];
-    //   });
-    // }
+    /*
+    if (props.length) {
+      returned.props = {};
+      props.forEach(function(propName) {
+        returned.props[propName] = obj[propName];
+      });
+    }
 
-    // var propName;
-    // for (propName in obj) {
-    //   if (props.indexOf(propName) < 0) {
-    //     returned[propName] = obj[propName];
-    //   }
-    // }
+    for (propName in obj) {
+      if (props.indexOf(propName) < 0) {
+        returned[propName] = obj[propName];
+      }
+    }
+    */
 
     // better like that??
     if (props.length) {
       returned.props = {};
     }
 
-    var propName;
+    // var propName;
     var def = this.constructor.prototype._definition;
     for (propName in obj) {
       // if (props.indexOf(propName) < 0) {
       returned[propName] = obj[propName];
       // }
       // else {
-      //   console.info();
       //   returned.props[propName] = obj[propName];
       // }
       if (props.indexOf(propName) > -1) {
         returned.props[propName] = def[propName];
       }
     }
-    returned.props = def;
+    // returned.props = def;
     var type = typeof this.drawFunction;
     if (type === 'function') {
       returned.drawFunction = this.drawFunction.toString();
@@ -124,34 +102,35 @@ var CanvasLayer = MappableState.extend({
     else if (type === 'string') {
       returned.drawFunction = this.drawFunction;
     }
+    returned.name = this.name;
     return returned;
   },
 
   derived: {
-    frames: {
-      deps: ['duration', 'fps'],
-      fn: function() {
-        return Math.round(this.duration / 1000 * this.fps);
-      }
-    },
-    frame: {
-      deps: ['frametime', 'fps'],
-      fn: function() {
-        return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
-      }
-    },
-    direction: {
-      deps: ['frametime', 'duration'],
-      fn: function() {
-        return this.frame < this.frames * 0.5 ? 1 : -1;
-      }
-    },
-    frametime: {
-      cache: false,
-      fn: function() {
-        return this.screenState.frametime;
-      }
-    },
+    // frames: {
+    //   deps: ['duration', 'fps'],
+    //   fn: function() {
+    //     return Math.round(this.duration / 1000 * this.fps);
+    //   }
+    // },
+    // frame: {
+    //   deps: ['frametime', 'fps'],
+    //   fn: function() {
+    //     return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
+    //   }
+    // },
+    // direction: {
+    //   deps: ['frametime', 'duration'],
+    //   fn: function() {
+    //     return this.frame < this.frames * 0.5 ? 1 : -1;
+    //   }
+    // },
+    // frametime: {
+    //   cache: false,
+    //   fn: function() {
+    //     return this.screenState.frametime;
+    //   }
+    // },
     screenState: {
       deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
       fn: function() {
@@ -185,16 +164,16 @@ var CanvasLayer = MappableState.extend({
         return (typeof fn === 'function' ? fn : function() {}).bind(this);
       }
     }
-  },
+  // },
 
-  collections: {
-    mappings: MappableState.Collection.extend({
-      model: function (attrs, options) {
-        var model = new CanvasLayerMapState(attrs, options);
-        if (options.init === false) model.initialize();
-        return model;
-      }
-    })
+  // collections: {
+  //   mappings: State.Collection.extend({
+  //     model: function (attrs, options) {
+  //       var model = new CanvasLayerMapState(attrs, options);
+  //       if (options.init === false) model.initialize();
+  //       return model;
+  //     }
+  //   })
   }
 });
 
@@ -210,7 +189,15 @@ var CanvasLayers = VFDeps.Collection.extend({
       // session: attrs.session || {},
       // derived: attrs.derived || {},
       serializationProps: {
-        props: Object.keys(attrs.props || {}),
+        props: [].concat([
+          'active',
+          'blending',
+          'opacity',
+          'shadowBlur',
+          'shadowColor',
+          'shadowOffsetX',
+          'shadowOffsetY'
+        ], Object.keys(attrs.props || {})),
         // session: Object.keys(attrs.session),
         // derived: Object.keys(attrs.prderived)
       }

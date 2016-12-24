@@ -1,7 +1,7 @@
 'use strict';
 var assign = window.VFDeps.assign;
 var SignalControlView = require('./../control-view');
-var BeatSignalControlView = SignalControlView.beatSignal = SignalControlView.extend({
+var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlView.extend({
   template: '<section class="rows signal signal-beat">' +
     '<header class="row">' +
       '<h3 class="name"></h3>' +
@@ -34,7 +34,6 @@ var BeatSignalControlView = SignalControlView.beatSignal = SignalControlView.ext
 
   _updateBPM: function() {
     this.model.input = parseInt(this.queryByHook('input').value.trim(), 10);
-    console.info('Changing BPM', this.model.input);
   },
 
   render: function () {

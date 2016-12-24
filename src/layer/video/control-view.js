@@ -1,5 +1,5 @@
 'use strict';
 
 var ScreenLayerControlView = require('./../control-view');
-module.exports = ScreenLayerControlView.video = ScreenLayerControlView.extend({
+module.exports = ScreenLayerControlView.types.video = ScreenLayerControlView.extend({
 });

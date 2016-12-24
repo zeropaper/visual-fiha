@@ -27,7 +27,13 @@ module.exports = VFDeps.View.extend({
         return this.el.getContext('2d');
       }
     },
-    audioAnalyserDataArray: {
+    audioFrequencyArray: {
+      deps: ['audioAnalyser'],
+      fn: function () {
+        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
+      }
+    },
+    audioTimeDomainArray: {
       deps: ['audioAnalyser'],
       fn: function () {
         return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
@@ -41,16 +47,6 @@ module.exports = VFDeps.View.extend({
     var y = ctx.canvas.height * 0.5;
     var r = Math.min(x, y) - 20;
     var rad = (Math.PI * 2);
-
-
-    // var samples = Math.round(length / 4)
-    // var start = Math.round(length / 4);
-    // var end = length - start;
-
-    // var i, a, ax, ay, bx, by, lx, ly, ca, sa;
-    // ctx.globalAlpha = 0.5;
-    // for (i = start; i < end; i++) {
-    //   a = ((rad / half) * (i - start)) - Math.PI;
 
     var i, a, ax, ay, bx, by, lx, ly, ca, sa;
     ctx.globalAlpha = 0.5;
@@ -108,23 +104,40 @@ module.exports = VFDeps.View.extend({
     var analyser = this.audioAnalyser;
     var bufferLength = analyser.frequencyBinCount;
     this.drawScales(bufferLength);
+
     ctx.fillStyle = ctx.strokeStyle = this.color;
 
-    var dataArray = this.audioAnalyserDataArray;
-    analyser.getByteFrequencyData(dataArray);
+    var freqArray = this.audioFrequencyArray;
+    analyser.getByteFrequencyData(freqArray);
+
+    var timeDomainArray = this.audioTimeDomainArray;
+    analyser.getByteTimeDomainData(timeDomainArray);
 
 
     var x = ctx.canvas.width * 0.5;
     var y = ctx.canvas.height * 0.5;
     var r = Math.min(x, y) - 20;
-    var rad = (Math.PI * 2);
+    var rad = Math.PI * 2;
 
-    var i, a, lx, ly;
+    var i, a, f, td, lx, ly;
+    ctx.strokeStyle = 'red';
     ctx.beginPath();
     for (i = 0; i < bufferLength; i++) {
       a = ((rad / bufferLength) * i) - Math.PI;
-      lx = Math.round(x + Math.cos(a) * ((r / 100) * (dataArray[i] / 2)));
-      ly = Math.round(y + Math.sin(a) * ((r / 100) * (dataArray[i] / 2)));
+      f = (r / 100) * (freqArray[i] / 2);
+      lx = Math.round(x + Math.cos(a) * f);
+      ly = Math.round(y + Math.sin(a) * f);
+      ctx.lineTo(lx, ly);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = 'azure';
+    ctx.beginPath();
+    for (i = 0; i < bufferLength; i++) {
+      a = ((rad / bufferLength) * i) - Math.PI;
+      td = (r / 100) * (timeDomainArray[i] / 2);
+      lx = Math.round(x + Math.cos(a) * td);
+      ly = Math.round(y + Math.sin(a) * td);
       ctx.lineTo(lx, ly);
     }
     ctx.stroke();

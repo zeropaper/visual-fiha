@@ -33,17 +33,6 @@ var SignalDetailsView = DetailsView.extend({
     'focus [data-hook=new-transformation-name]': '_focusName'
   },
 
-  derived: {
-    rootView: {
-      deps: ['parent'],
-      fn: function () {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (!inst.parent) { return inst; }
-        }
-      }
-    }
-  },
-
   _focusName: function() {
     var nameEl = this.queryByHook('new-transformation-name');
     var helper = this.rootView.suggestionHelper;

@@ -153,7 +153,7 @@ var SuggestionView = VFDeps.View.extend({
       }
 
       this.resetPosition();
-      inputEl.addEventListener('keyup', _handleInput);
+      inputEl.addEventListener('keyup', _handleInput, false);
     });
 
     var _handleHolderClick = function (evt) {
@@ -169,7 +169,7 @@ var SuggestionView = VFDeps.View.extend({
         previous.el.removeEventListener('click', _handleHolderClick);
       }
       if (this.parent.el) {
-        this.parent.el.addEventListener('click', _handleHolderClick);
+        this.parent.el.addEventListener('click', _handleHolderClick, false);
       }
     });
   },

@@ -142,9 +142,154 @@ var KP3Mappings = {
   ]
 };
 
+var nanoKONTROL2Mappings = {
+  prefix: 'nk2',
+
+  type: {
+    176: 'change'
+  },
+
+  note: {
+    0: 'slider1',
+    1: 'slider2',
+    2: 'slider3',
+    3: 'slider4',
+    4: 'slider5',
+    5: 'slider6',
+    6: 'slider7',
+    7: 'slider8',
+
+    16: 'knob1',
+    17: 'knob2',
+    18: 'knob3',
+    19: 'knob4',
+    20: 'knob5',
+    21: 'knob6',
+    22: 'knob7',
+    23: 'knob8',
+
+    32: 's1',
+    33: 's2',
+    34: 's3',
+    35: 's4',
+    36: 's5',
+    37: 's6',
+    38: 's7',
+    39: 's8',
+
+    41: 'play',
+    42: 'stop',
+    43: 'rewind',
+    44: 'forward',
+    45: 'record',
+    46: 'cycle',
+
+    48: 'm1',
+    49: 'm2',
+    50: 'm3',
+    51: 'm4',
+    52: 'm5',
+    53: 'm6',
+    54: 'm7',
+    55: 'm8',
+
+    58: 'trackprevious',
+    59: 'tracknext',
+    60: 'markerset',
+    61: 'markerprevious',
+    62: 'markernext',
+
+    64: 'r1',
+    65: 'r2',
+    66: 'r3',
+    67: 'r4',
+    68: 'r5',
+    69: 'r6',
+    70: 'r7',
+    71: 'r8'
+  },
+
+  velocity: {
+    0: function(type, note, velocity) {
+      if (note > 23) {
+        return false;
+      }
+      return velocity;
+    },
+
+    127: function(type, note, velocity) {
+      if (note > 23) {
+        return true;
+      }
+      return toPrct(velocity);
+    }
+  },
+
+  signalNames: [
+    'slider1:change',
+    'slider2:change',
+    'slider3:change',
+    'slider4:change',
+    'slider5:change',
+    'slider6:change',
+    'slider7:change',
+    'slider8:change',
+
+    'knob1:change',
+    'knob2:change',
+    'knob3:change',
+    'knob4:change',
+    'knob5:change',
+    'knob6:change',
+    'knob7:change',
+    'knob8:change',
+
+    's1:change',
+    's2:change',
+    's3:change',
+    's4:change',
+    's5:change',
+    's6:change',
+    's7:change',
+    's8:change',
+
+    'play:change',
+    'stop:change',
+    'rewind:change',
+    'forward:change',
+    'record:change',
+    'cycle:change',
+
+    'm1:change',
+    'm2:change',
+    'm3:change',
+    'm4:change',
+    'm5:change',
+    'm6:change',
+    'm7:change',
+    'm8:change',
+
+    'trackprevious:change',
+    'tracknext:change',
+    'markerset:change',
+    'markerprevious:change',
+    'markernext:change',
+
+    'r1:change',
+    'r2:change',
+    'r3:change',
+    'r4:change',
+    'r5:change',
+    'r6:change',
+    'r7:change',
+    'r8:change'
+  ]
+};
+
 var midiMappings = {
-  'KP3 MIDI 1': {
-    'ALSA library version 1.0.25' : KP3Mappings
+  'KORG INC.': {
+    'KP3 MIDI 1': KP3Mappings,
+    'nanoKONTROL2 MIDI 1': nanoKONTROL2Mappings
   }
 };
 
@@ -166,13 +311,13 @@ var MIDIState = State.extend({
 
   derived: {
     midiMapping: {
-      deps: ['name', 'type', 'version'],
+      deps: ['name', 'name'],
       fn: function() {
         var m = midiMappings || {};
-        if (!m[this.name] || !m[this.name][this.version]) {
+        if (!m[this.manufacturer] || !m[this.manufacturer][this.name]) {
           return;
         }
-        return m[this.name][this.version];
+        return m[this.manufacturer][this.name];
       }
     },
     signalNames: {
@@ -200,7 +345,9 @@ function _result(mapping, scope, value, data) {
 
   var val = mapping[scope][''+value];
 
-  if (!val) { return scope === 'velocity' ? toPrct(value) : value; }
+  if (!val) {
+    return scope === 'velocity' ? toPrct(value) : value;
+  }
 
 
   if (typeof val === 'function') {
@@ -211,20 +358,20 @@ function _result(mapping, scope, value, data) {
 }
 
 function handleMIDIMessage(accessState, model) {
-  function clear() {
-    model.set({
-      signalType: '',
-      signalNote: '',
-      signalVelocity: ''
-    });
-  }
+  // function clear() {
+  //   model.set({
+  //     signalType: '',
+  //     signalNote: '',
+  //     signalVelocity: ''
+  //   });
+  // }
 
   return function(MIDIMessageEvent) {
-    if (!model.active) { return clear(); }
+    // if (!model.active) { return clear(); }
 
     var data = MIDIMessageEvent.data;
     var type = data[0] || 0;
-    if (type === 248) { return /*clear()*/; }
+    if (type === 248) { return; }
 
     var note = data[1] || 0;
     var velocity = data[2] || 0;
@@ -234,13 +381,12 @@ function handleMIDIMessage(accessState, model) {
       signalNote:     _result(model.midiMapping, 'note', note, data),
       signalVelocity: _result(model.midiMapping, 'velocity', velocity, data)
     };
-    if (obj.type === 248) {
-      console.info('248', obj.signalNote, obj.signalVelocity);
-    }
+    console.info('midi type: %s, note %s, velocity: %s', type, note, velocity, obj);
+
     var eventName = model.midiMapping.prefix + ':' + obj.signalNote + ':' + obj.signalType;
     accessState.trigger('midi', eventName, obj.signalVelocity/*, model, eventName*/);
 
-    model.set(obj);
+    // model.set(obj);
   };
 }
 

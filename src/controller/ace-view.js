@@ -1,19 +1,21 @@
 'use strict';
 var View = window.VFDeps.View;
 var AceEditor = View.extend({
-  edit: function(target, propName) {
-    if (target && propName) {
-      this.set({
-        model: target,
-        targetProperty: propName
-      });
-    }
+  edit: function(target, propName, defaultValue, targetName) {
+    this.set({
+      model: target,
+      targetProperty: propName,
+      targetName: targetName || ((target.name || '') + propName)
+    });
     this.script = this.original;
-    this.editor.setValue(this.original);
+    this.editor.setValue(this.original || defaultValue);
   },
 
   template:
-    '<div class="row debug rows">' +
+    '<section class="row code-editor rows">' +
+      '<header>' +
+        '<h3></h3>' +
+      '</header>' +
       '<div class="ace-editor row grow-xl"></div>' +
       '<div class="ace-controls row no-grow gutter columns">' +
         '<div class="column"></div>' +
@@ -24,11 +26,12 @@ var AceEditor = View.extend({
           '<button class="yes" name="apply">Apply</button>' +
         '</div>' +
       '</div>' +
-    '</div>',
+    '</section>',
 
   session: {
     editor: 'any',
     script: ['string', true, ''],
+    targetName: 'string',
     targetProperty: 'string'
   },
 
@@ -48,6 +51,7 @@ var AceEditor = View.extend({
   },
 
   bindings: {
+    targetName: 'header>h3',
     changed: {
       type: 'toggle',
       selector: 'button'
@@ -79,15 +83,12 @@ var AceEditor = View.extend({
       return;
     }
 
-    var m = this.model;
-    var p = this.targetProperty;
-    var s = this.script;
-
-    m[p] = s;
+    this.model.set(this.targetProperty, this.script);
 
     this._cache.changed = false;
     this.trigger('original:changed');
     this.trigger('change:changed');
+    this.model.trigger('change:' + this.targetProperty);
   },
 
   render: function() {

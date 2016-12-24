@@ -13,17 +13,6 @@ var LayerDetailsView = DetailsView.extend({
     '</section>'
   ].join('\n'),
 
-  derived: {
-    rootView: {
-      deps: ['parent'],
-      fn: function () {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (!inst.parent) { return inst; }
-        }
-      }
-    }
-  },
-
   bindings: {
     'model.name': '[data-hook=name]'
   }

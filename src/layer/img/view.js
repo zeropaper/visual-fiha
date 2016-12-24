@@ -2,17 +2,11 @@
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.img = ScreenLayerView.extend({
-  template: function() { return '<div class="layer-image" layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></div>'; },
+  template: function() {
+    return '<div class="layer-image" layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></div>';
+  },
 
   bindings: VFDeps.assign({
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
-    },
     'model.src': {
       type: function() {
         this.el.style.backgroundImage = 'url(' + this.model.src + ')';
@@ -21,6 +15,11 @@ module.exports = ScreenLayerView.img = ScreenLayerView.extend({
     'model.backgroundSize': {
       type: function() {
         this.el.style.backgroundSize = this.model.backgroundSize;
+      }
+    },
+    'model.backgroundPosition': {
+      type: function() {
+        this.el.style.backgroundPosition = this.model.backgroundPosition;
       }
     },
     'model.backgroundRepeat': {

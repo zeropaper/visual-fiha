@@ -36,29 +36,6 @@ describe('Screen State', function () {
           expect(instance.screenLayers.at(0).name).to.be('Layer A');
         });
       });
-
-      describe('screenSignals', function () {
-        var instance;
-
-        before(function () {
-          instance = new ScreenState({
-            screenSignals: [
-              {
-                name: 'Signal 1'
-              },
-              {
-                name: 'Signal 2'
-              }
-            ]
-          });
-        });
-
-        it('defines the screen signals', function () {
-          expect(instance.screenSignals.models).to.be.ok();
-          expect(instance.screenSignals.length).to.be(2);
-          expect(instance.screenSignals.at(0).name).to.be('Signal 1');
-        });
-      });
     });
 
     describe('methods', function() {
@@ -69,8 +46,7 @@ describe('Screen State', function () {
             {
               type: 'canvas'
             }
-          ],
-          screenSignals: []
+          ]
         });
       });
 
@@ -81,9 +57,8 @@ describe('Screen State', function () {
             JSON.stringify(obj);
           }).not.to.throwException();
           expect(obj).to.be.an('object');
-          expect(obj).to.have.keys(['screenLayers', 'screenSignals']);
+          expect(obj).to.have.keys(['screenLayers']);
           expect(obj.screenLayers).to.have.length(1);
-          expect(obj.screenSignals).to.have.length(0);
         });
       });
     });

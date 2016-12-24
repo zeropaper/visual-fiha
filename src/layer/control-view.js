@@ -1,10 +1,11 @@
 'use strict';
-var View = window.VFDeps.View;
+var View = VFDeps.View;
 var DetailsView = require('./../controller/details-view');
+
 var LayerControlView = View.extend({
   template: '<section class="default-layer-control">' +
     '<header class="columns">' +
-      '<div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>' +
+      '<div class="column no-grow"><button class="active prop-toggle"></button></div>' +
       '<h3 class="column layer-name gutter-left" data-hook="name"></h3>' +
     '</header>' +
 
@@ -12,17 +13,6 @@ var LayerControlView = View.extend({
 
     '<div class="mappings props"></div>' +
   '</section>',
-
-  derived: {
-    rootView: {
-      deps: ['parent'],
-      fn: function () {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (!inst.parent) { return inst; }
-        }
-      }
-    }
-  },
 
   events: {
     'click .remove-layer': '_removeLayer',
@@ -38,16 +28,11 @@ var LayerControlView = View.extend({
     this.model.toggle('active');
   },
 
-  _showMappings: function (evt) {
-    if (evt) {
-      evt.stopPropagation();
-      evt.preventDefault();
-    }
-    this._detailsView = this._detailsView || new DetailsView({
+  _showMappings: function () {
+    this.rootView.showDetails(new DetailsView({
       parent: this,
-      model: this.model,
-    });
-    this.rootView.showDetails(this._detailsView);
+      model: this.model
+    }));
   },
 
   bindings: {
@@ -80,4 +65,7 @@ var LayerControlView = View.extend({
     ]
   }
 });
+
+LayerControlView.types = {};
+
 module.exports = LayerControlView;

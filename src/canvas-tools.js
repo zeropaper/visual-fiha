@@ -1,8 +1,4 @@
-'use strict';var myWorker = new Worker('canvas-worker.js');
-myWorker.onmessage = function(e) {
-  console.info('Message received from worker', performance.now() - e.timeStamp);
-};
-
+'use strict';
 window.VF = window.VF || {};
 
 window.VF.canvasTools = {};
@@ -63,11 +59,9 @@ window.VF.canvasTools.loadImg = function(url, done) {
     return done();
   }
 
-  console.info('loading img %s', url);
   var img = new Image();
   _cacheImgs[url] = false;
   img.onload = function() {
-    console.info('loaded img %s %sx%s', url, img.width, img.height);
     _cacheImgs[url] = img;
   };
   img.src = url;
@@ -84,7 +78,6 @@ window.VF.canvasTools.loadVideo = function(url, done) {
     return done();
   }
 
-  console.info('loading video %s', url);
   var video = document.createElement('video');
   _cacheVideos[url] = false;
 
@@ -96,7 +89,6 @@ window.VF.canvasTools.loadVideo = function(url, done) {
   video.controls = false;
   video.oncanplaythrough = function() {
     if (_cacheVideos[url]) return;
-    console.info('loaded video %s %sx%s', url, video.videoWidth, video.videoHeight);
     video.width = video.videoWidth;
     video.height = video.videoHeight;
     _cacheVideos[url] = video;

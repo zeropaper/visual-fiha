@@ -1,17 +1,10 @@
 'use strict';
 var View = VFDeps.View;
-var debounce = VFDeps.debounce;
-var ResizeSensor = VFDeps.ResizeSensor;
-
-var ScreenView = require('./../screen/view');
 var ScreenState = require('./../screen/state');
 var MIDIAccessState = require('./../midi/state');
 var MIDIAccessView = require('./../midi/view');
 var LayerControlView = require('./../layer/control-view');
 require('./../layer/canvas/control-view');
-// require('./../layer/video/control-view');
-// require('./../layer/img/control-view');
-// require('./../layer/svg/control-view');
 var SignalControlView = require('./../signal/control-view');
 require('./../signal/beat/control-view');
 require('./../signal/hsla/control-view');
@@ -21,32 +14,102 @@ var SuggestionView = require('./suggestion-view');
 var SparklineView = require('./sparkline-view');
 var AudioMonitor = require('./audio-monitor-view');
 var AceEditor = require('./ace-view');
-// var TimelineView = require('./timeline-view');
+
+var mappings = require('./../mapping/state');
+var MappingsControlView = require('./../mapping/control-view');
+
+var controllerMixin = {};
+controllerMixin.initializeController = function initializeController() {
+  this.worker = new Worker('web-worker-build.js');
+};
+
+// almost unique id
+function auid() {
+  return parseInt((Math.random() + '.' + performance.now()).replace(/\./g, ''), 10);
+}
+controllerMixin.sendCommand = function sendCommand(name, payload, callback) {
+  // console.info('%ccontroller send command "%s"', 'color:green', name);
+  var worker = this.worker;
+  var message = {
+    command: name,
+    payload: payload
+  };
+
+  function makeListener(id, done) {
+    function eventListener(evt) {
+      if (evt.data.eventId !== id) return;
+      done(null, evt.data.payload);
+      worker.removeEventListener('message', eventListener);
+    }
+    return eventListener;
+  }
+
+  if (callback) {
+    message.eventId = auid();
+    worker.addEventListener('message', makeListener(message.eventId, callback), false);
+  }
+  worker.postMessage(message);
+};
 
 
-var MultiMappingControlView = require('./../mappable/multi-control-view');
-
-
-
-
-
-
-var ControllerView = View.extend({
+var ControllerView = View.extend(controllerMixin, {
+  _workerInit: false,
   initialize: function(options) {
     var controllerView = this;
+    controllerView.initializeController();
 
-    controllerView.model = controllerView.model || new ScreenState({
-      screenLayers: options.screenLayers,
-      screenSignals: options.screenSignals
+    controllerView.model = controllerView.model || new ScreenState({}, {
+      parent: controllerView
     });
-    controllerView.model.signals = {};
-
-    if (window.BroadcastChannel) {
-      controllerView.channel = new window.BroadcastChannel(this.broadcastId);
+    if (controllerView.model.parent !== controllerView) {
+      controllerView.model.parent = controllerView;
     }
 
-    controllerView.on('change:audioContext change:audioAnalyser', this.connectAudioSource);
-    this.connectAudioSource();
+    controllerView.worker.addEventListener('message', function() {
+      if (controllerView._workerInit) return;
+      controllerView._workerInit = true;
+
+      controllerView.sendCommand('resetLayers', {
+        layers: controllerView.model.screenLayers.serialize()
+      });
+
+      controllerView.sendCommand('resetSignals', {
+        signals: controllerView.model.screenSignals.serialize()
+      });
+    }, false);
+
+
+
+
+    controllerView._bindLayerEvents();
+    controllerView.model.set({
+      screenSignals: options.screenSignals,
+      screenLayers: options.screenLayers
+    });
+
+
+
+
+    controllerView.listenToAndRun(controllerView, 'change:audioContext change:audioAnalyser', controllerView.connectAudioSource);
+
+    controllerView.listenToAndRun(controllerView.midiAccess, 'midi', function(evtName, value) {
+      if (!evtName) return;
+
+      controllerView.sendCommand({
+        type: 'midi',
+        name: evtName,
+        value: value
+      });
+    });
+
+    controllerView._animate();
+
+    if (options.autoStart) {
+      controllerView.play();
+    }
+
+    var mappingContext = controllerView.model;
+    mappings.import(options.mappings, mappingContext);
 
     if (controllerView.el) {
       controllerView._attachSuggestionHelper();
@@ -54,16 +117,39 @@ var ControllerView = View.extend({
     else {
       controllerView.once('change:el', controllerView._attachSuggestionHelper);
     }
+  },
 
-    controllerView.model.signals.midi = {};
-    controllerView.listenToAndRun(controllerView.midiAccess, 'midi', function(evtName, value) {
-      controllerView.model.signals.midi[evtName] = value;
-      controllerView.model.trigger(evtName, value);
+  _bindLayerEvents: function() {
+    var controllerView = this;
+
+    controllerView.listenTo(controllerView.model.screenLayers, 'add', function(state) {
+      controllerView.sendCommand('addLayer', {
+        layer: state.serialize()
+      });
     });
 
-    if (options.autoStart !== false) {
-      controllerView.play();
-    }
+    controllerView.listenTo(controllerView.model.screenLayers, 'remove', function(state) {
+      controllerView.sendCommand('addLayer', {
+        layerName: state.name
+      });
+    });
+
+    controllerView.listenTo(controllerView.model.screenLayers, 'change:layer', function(state) {
+      if (!state) return;
+
+      var changed = state.changedAttributes();
+      if (!Object.keys(changed).length) {
+        changed = state.serialize();
+      }
+
+
+      controllerView.sendCommand('updateLayer', {
+        layer: state.changedAttributes(),
+        layerName: state.name
+      });
+    });
+
+    return this;
   },
 
   connectAudioSource: function() {
@@ -77,7 +163,7 @@ var ControllerView = View.extend({
       source.connect(controllerView.audioAnalyser);
     }
     function error(err) {
-      console.info('The following gUM error occured: ' + err);
+      console.warn(err);
     }
 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -92,40 +178,48 @@ var ControllerView = View.extend({
 
   _animate: function(timestamp) {
     if (this.controllerSparkline) {
-      this.controllerSparkline.update((timestamp - this.model.frametime) - this.model.firstframetime);
-    }
-    if (this.latencySparkline) {
-      this.latencySparkline.update(this.screenView.model.latency);
+      this.controllerSparkline.update(1000 / ((timestamp - this.model.frametime) - this.model.firstframetime));
     }
 
-    this.model.frametime = timestamp - this.model.firstframetime;
-    this.update();
+    if (this.latencySparkline) {
+      // this.latencySparkline.update(this.screenView.model.latency);
+    }
+
+    if (this.audioMonitor) {
+      this.audioMonitor.update();
+    }
+
+    if (this.playing) {
+      this.model.frametime = timestamp - this.model.firstframetime;
+
+      this.update();
+    }
+
     this._arId = window.requestAnimationFrame(this._animate.bind(this));
   },
 
   update: function() {
     var analyser = this.audioAnalyser;
-    var bufferLength = analyser.frequencyBinCount;
-    var dataArray = this.audioAnalyserDataArray;
-    analyser.getByteFrequencyData(dataArray);
 
-    this.model.signals.mic = {};
-    for(var i = 0; i < bufferLength; i++) {
-      // this.model.signals.mic['mic:' + i] = dataArray[i];
-      this.model.trigger('mic:' + i, dataArray[i]);
-    }
+    var freqArray = this.audioFrequencyDataArray;
+    analyser.getByteFrequencyData(freqArray);
 
-    var posted = this.model.serialize();
-    this.channel.postMessage({type: 'update', data: posted});
+    var timeDomainArray = this.audioTimeDomainDataArray;
+    analyser.getByteTimeDomainData(timeDomainArray);
+
+    var command = {
+      frametime: this.model.frametime,
+      audio: {
+        bufferLength: analyser.frequencyBinCount,
+        frequency: freqArray,
+        timeDomain: timeDomainArray
+      }
+    };
+
+    this.sendCommand('heartbeat', command);
   },
 
   derived: {
-    playing: {
-      deps: ['_arId'],
-      fn: function() {
-        return !!this._arId;
-      }
-    },
     computedStyle: {
       deps: ['el'],
       fn: function() {
@@ -133,13 +227,13 @@ var ControllerView = View.extend({
       }
     },
     signalNames: {
-      deps: ['screenView'],
       fn: function () {
         var mic = [];
         var analyser = this.audioAnalyser;
         var bufferLength = analyser.frequencyBinCount;
         for(var i = 0; i < bufferLength; i++) {
-          mic.push('mic:' + i);
+          mic.push('freq:' + i);
+          mic.push('atd:' + i);
         }
         return mic.concat(this.screenView ? this.screenView.signalNames : [], this.midiAccess.signalNames);
       }
@@ -152,17 +246,23 @@ var ControllerView = View.extend({
       }
     },
     audioAnalyser: {
-      deps: ['audioContext', 'model', 'model.audioMinDb', 'model.audioMaxDb', 'model.audioSmoothing', 'model.audioFftSize'],
+      deps: ['audioContext', 'model', 'audioMinDb', 'audioMaxDb', 'audioSmoothing', 'audioFftSize'],
       fn: function() {
         var analyser = this.audioContext.createAnalyser();
-        analyser.minDecibels = this.model.audioMinDb;
-        analyser.maxDecibels = this.model.audioMaxDb;
-        analyser.smoothingTimeConstant = this.model.audioSmoothing;
-        analyser.fftSize = this.model.audioFftSize;
+        analyser.minDecibels = this.audioMinDb;
+        analyser.maxDecibels = this.audioMaxDb;
+        analyser.smoothingTimeConstant = this.audioSmoothing;
+        analyser.fftSize = this.audioFftSize;
         return analyser;
       }
     },
-    audioAnalyserDataArray: {
+    audioFrequencyDataArray: {
+      deps: ['audioAnalyser'],
+      fn: function () {
+        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
+      }
+    },
+    audioTimeDomainDataArray: {
       deps: ['audioAnalyser'],
       fn: function () {
         return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
@@ -175,36 +275,31 @@ var ControllerView = View.extend({
   },
 
   session: {
+    audioMinDb: ['number', true, -90],
+    audioMaxDb: ['number', true, -10],
+    audioSmoothing: ['number', true, 0.85],
+    audioFftSize: ['number', true, 256],
+    playing: ['boolean', true, false],
     broadcastId: ['string', true, 'vfBus'],
     _arId: 'number',
     currentDetails: 'state'
   },
 
   play: function() {
-    console.info('play', this._arId, this.model.firstframetime);
-    if (this._arId) {
-      throw new Error('Animation already played');
+    this.playing = true;
+    if (!this.model.firstframetime) {
+      this.model.firstframetime = performance.now();
     }
-    this.model.firstframetime = this.model.firstframetime || performance.now();
-    return this._animate(this.model.firstframetime);
+    return this;
   },
   pause: function() {
-    console.info('pause', this._arId, this.model.firstframetime);
-    if (this._arId) {
-      window.cancelAnimationFrame(this._arId);
-    }
-    this._arId = null;
+    this.playing = false;
     return this;
   },
   stop: function() {
-    console.info('stop', this._arId, this.model.firstframetime);
-    this.pause();
-    this.model.firstframetime = 0;
+    this.playing = false;
+    this.model.firstframetime = this.model.frametime = 0;
     return this;
-  },
-
-  resizeScreen: function() {
-    this.channel.postMessage({type: 'resize'});
   },
 
   subviews: {
@@ -220,19 +315,6 @@ var ControllerView = View.extend({
         return subview;
       }
     },
-
-    /*
-    timeline: {
-      waitFor: 'el',
-      selector: '.timeline',
-      prepareView: function(el) {
-        return new TimelineView({
-          el: el,
-          parent: this
-        });
-      }
-    },
-    */
 
     codeEditor: {
       waitFor: 'el',
@@ -256,11 +338,6 @@ var ControllerView = View.extend({
           color: styles.color
         });
         el.appendChild(view.el);
-
-        this.listenToAndRun(this.model, 'change:frametime', function() {
-          view.update();
-        });
-
         return view;
       }
     },
@@ -295,39 +372,13 @@ var ControllerView = View.extend({
       }
     },
 
-    screenView: {
-      waitFor: 'el',
-      selector: '.screen',
-      prepareView: function(el) {
-        if (this.screenView) {
-          this.screenView.remove();
-        }
-
-        var screenModel = new ScreenState(this.model.toJSON());
-        var screenView = new ScreenView({
-          parent: this,
-          el: el,
-          // controlScreenDeactivated: true,
-          model: screenModel,
-          mode: 'control'
-        });
-
-        var p = this.query('.screen-cell').parentNode;
-        this.screenCellSensor = new ResizeSensor(p, debounce(function resize() {
-          screenView.resize(p);
-        }, 50));
-
-        return screenView;
-      }
-    },
-
     screenLayersView: {
       waitFor: 'el',
       selector: '.layers .items',
       prepareView: function(el) {
         return this.renderCollection(this.model.screenLayers, function (opts) {
           var type = opts.model.getType();
-          var Constructor = LayerControlView[type] || LayerControlView;
+          var Constructor = LayerControlView.types[type] || LayerControlView;
           return new Constructor(opts);
         }, el);
       }
@@ -339,22 +390,20 @@ var ControllerView = View.extend({
       prepareView: function(el) {
         return this.renderCollection(this.model.screenSignals, function (opts) {
           var type = opts.model.getType();
-          var Constructor = SignalControlView[type]|| SignalControlView;
+          var Constructor = SignalControlView.types[type]|| SignalControlView;
           return new Constructor(opts);
         }, el);
       }
     },
 
-    multiMappings: {
+    mappingsView: {
       waitFor: 'el',
-      selector: '.multi-mapping',
+      selector: '.mappings-view',
       prepareView: function(el) {
-        var view = new MultiMappingControlView({
+        var view = new MappingsControlView({
+          collection: mappings,
           parent: this,
           el: el
-        });
-        view.listenTo(view.mappings, 'all', function(evtName) {
-          console.info('mutli mapping collection evt', evtName);
         });
         return view;
       }
@@ -369,8 +418,6 @@ var ControllerView = View.extend({
   },
 
   remove: function() {
-    if (this.perfInterval) { clearInterval(this.perfInterval); }
-    if (this.screenCellSensor && this.screenCellSensor.detach) { this.screenCellSensor.detach(); }
     View.prototype.remove.apply(this, arguments);
   },
 
@@ -379,34 +426,37 @@ var ControllerView = View.extend({
   },
 
   bindings: {
-    _arId: [
+    broadcastId: {
+      selector: '.control-screen',
+      type: function(el, val) {
+        if (!val) return;
+        el.src = './screen.html#' + val;
+      }
+    },
+    playing: [
       {
         type: 'toggle',
         selector: '[name="play"]',
         invert: true
       },
-      // {
-      //   type: 'toggle',
-      //   selector: '[name="stop"]'
-      // },
       {
         type: 'toggle',
         selector: '[name="pause"]'
       }
     ],
-    'model.audioMinDb': {
+    audioMinDb: {
       selector: '[name="audioMinDb"]',
       type: 'value'
     },
-    'model.audioMaxDb': {
+    audioMaxDb: {
       selector: '[name="audioMaxDb"]',
       type: 'value'
     },
-    'model.audioSmoothing': {
+    audioSmoothing: {
       selector: '[name="audioSmoothing"]',
       type: 'value'
     },
-    'model.audioFftSize': {
+    audioFftSize: {
       selector: '[name="audioFftSize"]',
       type: 'value'
     }
@@ -417,9 +467,7 @@ var ControllerView = View.extend({
     'click [name="pause"]': 'pause',
     'click [name="stop"]': 'stop',
     'click [name="resize"]': 'resizeScreen',
-    'click [name="debug"]': '_debug',
     'click [name="screen"]': '_openScreen',
-    'click [name="ratio"]': '_changeRatio',
     'click [name="add-layer"]': '_addLayer',
     'click [name="add-signal"]': '_addSignal',
     'focus [data-hook="layer-type"]': '_suggestLayerType',
@@ -427,18 +475,8 @@ var ControllerView = View.extend({
     'change .audio-source [name]': '_changeAudioParams'
   },
 
-  _debug: function() {
-    this.screenView.captureDebug = true;
-  },
-
   _openScreen: function() {
     window.open('./screen.html#' + this.broadcastId, 'screen', 'width=800,height=600,location=no');
-  },
-
-  _changeRatio: function (evt) {
-    var val = evt.target.value;
-    this.screenView.ratio = val === '0' ? 0 : (val === '4/3' ? 4/3 : 16/9);
-    this.screenView.resize();
   },
 
   _suggestLayerType: function() {
@@ -475,8 +513,7 @@ var ControllerView = View.extend({
   },
 
   addMultiMapping: function(mappingModel) {
-    console.info('add multi mapping', mappingModel.targetProperty, mappingModel.targetModel);
-    this.multiMappings.mappings.add({
+    this.mappingsView.mappings.add({
       targetModel: mappingModel.targetModel,
       targetProperty: mappingModel.targetProperty
     });
@@ -533,108 +570,101 @@ var ControllerView = View.extend({
       }
     });
 
-    if (this.perfInterval) {
-      clearInterval(this.perfInterval);
-    }
-
-    // this.perfInterval = setInterval(function () {
-    //   controllerView.jsHeapLimit.value = performance.memory.jsHeapSizeLimit * 0.0001;
-    //   controllerView.jsHeapTotal.value = performance.memory.totalJSHeapSize * 0.0001;
-    //   controllerView.jsHeapUsed.value = performance.memory.usedJSHeapSize * 0.0001;
-    // }, 500);
-
     return this;
   },
 
   autoRender: true,
 
+  /*
+  :sout=#http{dst=:8080/stream} :sout-keep
+  */
   template: '<div class="controller rows">'+
     '<div class="row columns gutter-horizontal header">'+
       '<div class="column no-grow gutter-right">Visual Fiha</div>'+
+
       '<div class="column columns">'+
+        '<span class="column columns no-grow button-group">'+
+          '<button class="column gutter-horizontal" name="play"><span class="vfi-play"></span></button>'+
+          '<button class="column gutter-horizontal" name="pause"><span class="vfi-pause"></span></button>'+
+          '<button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>'+
+        '</span>'+
+
         '<div class="column columns gutter-horizontal no-grow">'+
-          '<span class="column columns button-group">'+
-            '<button class="column gutter-right" name="play"><span class="vfi-play"></span></button>'+
-            '<button class="column gutter-horizontal" name="pause"><span class="vfi-pause"></span></button>'+
-            '<button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>'+
-            '<button class="column gutter-left" name="resize"><span class="vfi-circle"></span></button>'+
-          '</span>'+
+          '<button name="screen">Open screen</button>'+
         '</div>'+
-        '<div class="column columns gutter-horizontal no-grow">'+
-          '<span class="column">Screen ratio</span>'+
-          '<span class="column columns gutter-horizontal button-group">'+
-            '<button class="column gutter-horizontal" name="ratio" value="16/9">16/9</button>'+
-            '<button class="column gutter-horizontal" name="ratio" value="4/3">4/3</button>'+
-            '<button class="column gutter-horizontal" name="ratio" value="0">free</button>'+
-          '</span>'+
-          '<div class="column gutter-left">'+
-            '<button name="screen">Open screen</button>'+
-          '</div>'+
-        '</div>'+
+
         '<div class="column gutter-horizontal no-grow columns performance">'+
-          'SCL <span title="Screen Communication Latency" class="column sparkline-latency"></span>'+
+          // 'SCL <span title="Screen Communication Latency" class="column sparkline-latency"></span>'+
           'Controller <span class="column sparkline-controller"></span>'+
         '</div>'+
       '</div>'+
-      '<div class="column gutter-horizontal">'+
-        '<button name="debug">Debug</button>'+
-      '</div>'+
     '</div>'+
+
     '<div class="row columns body">'+
-      '<div class="column no-grow rows">'+
-        '<div class="row grow-l screen-cell">'+
-          '<div class="screen"></div>'+
+      '<div class="region-left column no-grow rows">'+
+        '<iframe class="region-left-top row grow-l control-screen"></iframe>'+
+
+        '<div class="region-left-bottom row rows">' +
+          '<div class="row debug"></div>'+
+          '<div class="row details"></div>'+
         '</div>'+
-        '<div class="row no-grow details"></div>'+
-        '<div class="row debug"></div>'+
       '</div>'+
-      '<div class="column rows settings">'+
-        '<div class="row columns">'+
+
+      '<div class="region-right column rows settings">'+
+        '<div class="region-right-top row columns">'+
           '<div class="column rows">'+
             '<div class="row layers">'+
-              '<div class="section-name gutter">Layers</div>'+
-              '<div class="columns gutter">'+
-                '<div class="column gutter-right">' +
+              '<div class="section-name gutter-vertical">Layers</div>'+
+              '<div class="columns">'+
+                '<div class="column">' +
                   '<input data-hook="layer-name" placeholder="Name" type="text"/>'+
                 '</div>' +
-                '<div class="column gutter-horizontal">' +
+                '<div class="column">' +
                   '<input data-hook="layer-type" placeholder="Type" type="text"/>'+
                 '</div>' +
-                '<div class="column no-grow gutter-left">'+
+                '<div class="column no-grow">'+
                   '<button name="add-layer" class="vfi-plus"></button>'+
                 '</div>'+
               '</div>'+
               '<div class="items"></div>'+
             '</div>'+
           '</div>'+
+
           '<div class="column rows">'+
             '<div class="row signals">'+
-              '<div class="section-name gutter">Signals</div>'+
-              '<div class="columns gutter">'+
-                '<div class="column gutter-right">' +
+              '<div class="section-name gutter-vertical">Signals</div>'+
+              '<div class="columns">'+
+                '<div class="column">' +
                   '<input data-hook="signal-name" placeholder="Name" type="text"/>'+
                 '</div>' +
-                '<div class="column gutter-horizontal">' +
+                '<div class="column">' +
                   '<input data-hook="signal-type" placeholder="Type" type="text"/>'+
                 '</div>' +
-                '<div class="column no-grow gutter-left">'+
+                '<div class="column no-grow">'+
                   '<button name="add-signal" class="vfi-plus"></button>'+
                 '</div>'+
               '</div>'+
               '<div class="items"></div>'+
             '</div>'+
+
+            '<div class="column rows">'+
+              '<div class="row mappings-view"></div>' +
+            '</div>'+
           '</div>'+
         '</div>'+
 
 
-        '<div class="row no-grow columns">'+
-          '<div class="multi-mapping"></div>' +
-        '</div>'+
+        // '<div class="row no-grow columns">'+
+        //   '<div class="mappings-view"></div>' +
+        // '</div>'+
 
 
-        '<div class="row no-grow columns">'+
+        '<div class="region-right-bottom row no-grow columns">'+
           '<div class="column midi-access"></div>'+
+
+
           '<div class="column rows audio-source">'+
+            // '<audio class="row" src="http://localhost:8080/stream" controls autoplay></audio>'+
             '<div class="row columns">'+
               '<div class="column audio-monitor"></div>'+
               '<div class="column audio-controls">' +
@@ -651,7 +681,6 @@ var ControllerView = View.extend({
                 '</select></label>' +
               '</div>'+
             '</div>' +
-            // '<audio class="row" controls muted></audio>'+
           '</div>'+
         '</div>'+
       '</div>'+

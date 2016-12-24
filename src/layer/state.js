@@ -1,6 +1,6 @@
 'use strict';
-var MappableState = require('./../mappable/state');
-var LayerState = MappableState.extend({
+var State = VFDeps.State;
+var LayerState = State.extend({
   idAttribute: 'name',
   typeAttribute: 'type',
 

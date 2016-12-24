@@ -37,7 +37,6 @@ var canvasLayers = [
         // var ct = frametime % video.duration;
         // ct = reverse ? video.duration - ct : ct;
         // video.currentTime = ct;
-        // // console.info('currentTime', video.currentTime);
         ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, ctx.canvas.width, ctx.canvas.height);
       });
     },
@@ -72,11 +71,11 @@ var canvasLayers = [
   {
     name: 'panorama',
     weight: 20,
-    active: true,
+    active: false,
     drawFunction: function(ctx) {
       var url = this.src;
       var shift = this.shift;
-      var frametime = this.frametime || 0;
+      var frametime = this.screenState.frametime || 0;
       window.VF.canvasTools.loadImg(url, function(err, img) {
         if (!img) return;
         var iw = img.width;
@@ -96,12 +95,6 @@ var canvasLayers = [
       src: ['string', true, './assets/panorma-karl-marx-allee.jpg'],
       shift: ['number', true, 0]
     },
-    mappings: [
-      {
-        eventNames: 'kp3:padY:change',
-        targetProperty: 'shift'
-      }
-    ]
   },
 
   {
@@ -145,28 +138,6 @@ var canvasLayers = [
       borderColor: ['string', true, 'rgb(236, 183, 156)'],
       beat: ['number', true, 100]
     },
-    mappings: [
-      {
-        eventNames: 'kp3:effectSlider:change',
-        targetProperty: 'barWidth'
-      },
-      {
-        eventNames: 'kp3:effectKnob:change',
-        targetProperty: 'borderWidth'
-      },
-      {
-        eventNames: 'beat:a',
-        targetProperty: 'beat'
-      },
-      {
-        eventNames: 'color:a',
-        targetProperty: 'barColor'
-      },
-      {
-        eventNames: 'color:b',
-        targetProperty: 'borderColor'
-      }
-    ]
   },
 
   // {
@@ -258,54 +229,114 @@ var canvasLayers = [
       arbitraryA: ['number', true, 10],
       arbitraryB: ['number', true, 10]
     },
-    mappings: [
-      {
-        eventNames: 'beat:a',
-        targetProperty: 'opacity'
-      },
-      {
-        eventNames: 'color:a',
-        targetProperty: 'barColor'
-      },
-      {
-        eventNames: 'color:b',
-        targetProperty: 'borderColor'
-      },
-      {
-        eventNames: 'mic:12',
-        targetProperty: 'arbitraryA'
-      },
-      {
-        eventNames: 'mic:15',
-        targetProperty: 'arbitraryB'
-      }
-    ]
   },
 
   {
-    name: 'soundbars',
+    name: 'frametime',
     active: false,
     weight: 60,
     drawFunction: function(ctx) {
-      var cw = ctx.canvas.width;
-      var ch = ctx.canvas.height;
-      var screenState = this.screenState;
-      var mic = screenState.signals.mic;
-      var keys = Object.keys(mic);
-      var barWidth = (cw / keys.length);
-      var barHeight;
-      var x = 0;
-      keys.forEach(function(key) {
-        barHeight = mic[key];
-        ctx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
-        ctx.fillRect(x, ch - barHeight, barWidth, barHeight);
-        x += barWidth + 1;
-      });
+      var cx = ctx.canvas.width * 0.5;
+      var cy = ctx.canvas.height * 0.5;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = (cy * 0.25) + 'px monospace';
+      var ft = Math.round(this.screenState.frametime) + 'ms';
+      ctx.fillStyle = '#000';
+      ctx.strokeStyle = '#fff';
+      ctx.fillText(ft, cx, cy);
+      ctx.strokeText(ft, cx, cy);
+    }
+  },
+
+  {
+    name: 'audio',
+    active: true,
+    weight: 30,
+    drawFunction: function(ctx) {
+      var audio = this.screenState.audio || {};
+      var bufferLength = audio.bufferLength;
+      var freqArray = audio.frequency;
+      var timeDomainArray = audio.timeDomain;
+
+      if (!bufferLength || !freqArray || !timeDomainArray) return;
+
+      var x = ctx.canvas.width * 0.5;
+      var y = ctx.canvas.height * 0.5;
+      var r = Math.min(x, y) - 20;
+      // var first;
+      var rad = Math.PI * 2;
+
+      var i = 0, a, f, td, lx, ly;
+      ctx.strokeStyle = 'red';
+      ctx.beginPath();
+      for (i = 0; i < bufferLength; i++) {
+        a = ((rad / bufferLength) * i) - Math.PI;
+        f = (r / 100) * (freqArray[i] / 2);
+        lx = Math.round(x + Math.cos(a) * f);
+        ly = Math.round(y + Math.sin(a) * f);
+        ctx.lineTo(lx, ly);
+      }
+      ctx.stroke();
+
+      ctx.strokeStyle = 'azure';
+      ctx.beginPath();
+      for (i = 0; i < bufferLength; i++) {
+        a = ((rad / bufferLength) * i) - Math.PI;
+        td = (r / 100) * (timeDomainArray[i] / 2);
+        lx = Math.round(x + Math.cos(a) * td);
+        ly = Math.round(y + Math.sin(a) * td);
+        ctx.lineTo(lx, ly);
+      }
+      ctx.stroke();
+    }
+  },
+
+  {
+    name: 'fps',
+    active: true,
+    weight: 60,
+    drawFunction: function(ctx) {
+      var cx = ctx.canvas.width * 0.5;
+      var cy = ctx.canvas.height * 0.5;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = (cy * 0.25) + 'px monospace';
+
+      var cache = this.cache;
+      var screen = this.screenState;
+
+      cache.previous = cache.previous || 0;
+      var fps = Math.round(1000 / (screen.frametime - cache.previous)) + 'fps';
+      ctx.lineWidth = 3;
+      ctx.fillStyle = '#000';
+      ctx.strokeStyle = '#fff';
+      ctx.fillText(fps, cx, cy);
+      ctx.strokeText(fps, cx, cy);
+      cache.previous = screen.frametime;
     }
   }
 ];
 
 window.VF._defaultSetup = {
+  mappings: [
+    {
+      source: 'frametime',
+      target: 'screenSignals.beat:a.frametime',
+      transform: 'function (v) { return v * 0.5; }'
+    },
+    {
+      source: 'frametime',
+      target: 'screenLayers.canvas.canvasLayers.background.opacity',
+      transform: 'function (v) { return v % 100; }'
+    },
+    {
+      source: 'screenSignals.beat:a.result',
+      target: 'screenSignals.color:a.hue'
+    }
+  ],
+
+
   screenSignals: [
     {
       type: 'hslaSignal',
@@ -315,24 +346,6 @@ window.VF._defaultSetup = {
       saturation: 100,
       lightness: 50,
       alpha: 100,
-      mappings: [
-        {
-          targetProperty: 'hue',
-          eventNames: 'padX*3.6'
-        },
-        {
-          targetProperty: 'saturation',
-          eventNames: ''
-        },
-        {
-          targetProperty: 'lightness',
-          eventNames: ''
-        },
-        {
-          targetProperty: 'alpha',
-          eventNames: ''
-        }
-      ]
     },
     {
       type: 'hslaSignal',
@@ -342,47 +355,11 @@ window.VF._defaultSetup = {
       saturation: 100,
       lightness: 30,
       alpha: 100,
-      mappings: [
-        {
-          targetProperty: 'hue',
-          eventNames: 'padX*3.6'
-        },
-        {
-          targetProperty: 'saturation',
-          eventNames: ''
-        },
-        {
-          targetProperty: 'lightness',
-          eventNames: ''
-        },
-        {
-          targetProperty: 'alpha',
-          eventNames: ''
-        }
-      ]
     },
     // {
     //   type: 'rgbaSignal',
     //   defaultValue: '122,122,122,0.5',
     //   name: 'color:b',
-    //   mappings: [
-    //     {
-    //       targetProperty: 'red',
-    //       eventNames: ''
-    //     },
-    //     {
-    //       targetProperty: 'green',
-    //       eventNames: ''
-    //     },
-    //     {
-    //       targetProperty: 'blue',
-    //       eventNames: ''
-    //     },
-    //     {
-    //       targetProperty: 'alpha',
-    //       eventNames: ''
-    //     }
-    //   ]
     // },
     {
       type: 'beatSignal',
@@ -398,12 +375,6 @@ window.VF._defaultSetup = {
           arguments: [3.6]
         }
       ],
-      mappings: [
-        {
-          targetProperty: 'input',
-          eventNames: 'kp3:padX:change'
-        }
-      ]
     },
     {
       type: 'default',
@@ -414,12 +385,6 @@ window.VF._defaultSetup = {
           arguments: [3.6]
         }
       ],
-      mappings: [
-        {
-          targetProperty: 'input',
-          eventNames: 'beat:a'
-        }
-      ]
     }
   ],
 
@@ -427,51 +392,48 @@ window.VF._defaultSetup = {
   screenLayers: [
     {
       type: 'img',
-      name: 'no signal',
+      name: 'no-signal',
       active: true,
       src: './assets/no-signal.jpg'
     },
     {
       type: 'img',
-      name: 'Sky 1 back',
+      name: 'Sky-1-back',
       active: false,
       src: './assets/sky1/sky1-back-grey.png'
     },
 
     {
-      // type: 'SVG',
-      type: 'img',
+      type: 'SVG',
       name: 'zeropaper',
       active: false,
       src: './assets/zeropaper-fat.svg'
     },
 
     {
-      // type: 'SVG',
-      type: 'img',
-      name: 'Visual Fiha',
+      type: 'SVG',
+      name: 'vf',
       active: false,
       src: './assets/visual-fiha.svg'
     },
 
     {
-      // type: 'SVG',
-      type: 'img',
+      type: 'SVG',
       name: 'KD',
-      active: true,
+      active: false,
       src: './assets/kd/kd_logo_final.svg'
     },
 
     {
       type: 'canvas',
-      name: 'Canvas layer',
+      name: 'canvas',
       active: true,
       canvasLayers: canvasLayers
     },
 
     {
       type: 'img',
-      name: 'Sky 1 front',
+      name: 'Sky-1-front',
       active: false,
       src: './assets/sky1/sky1-front-grey.png'
     }

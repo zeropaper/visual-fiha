@@ -4,22 +4,14 @@ var LayerControlView = require('./../control-view');
 var ControlCanvasLayerView = VFDeps.View.extend({
   template: '<section class="canvas-layer">' +
     '<header class="columns">' +
-      '<div class="column no-grow gutter-right"><button name="active"></button></div>' +
-      '<div class="column no-grow gutter-horizontal"><button class="edit-draw-function vfi-cog-alt"></button></div>' +
+      '<div class="column no-grow"><button name="active"></button></div>' +
+      '<div class="column no-grow"><button class="edit-draw-function vfi-cog-alt"></button></div>' +
       '<h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>' +
-      '<div class="column no-grow text-right gutter-left"><button class="vfi-trash-empty remove-canvas-layer"></button></div>' +
+      '<div class="column no-grow text-right"><button class="vfi-trash-empty remove-canvas-layer"></button></div>' +
     '</header>' +
     '</section>',
 
   derived: {
-    rootView: {
-      deps: ['parent'],
-      fn: function () {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (!inst.parent) { return inst; }
-        }
-      }
-    },
     codeEditor: {
       deps: ['rootView'],
       fn: function () {
@@ -72,17 +64,18 @@ var ControlCanvasLayerView = VFDeps.View.extend({
   }
 });
 
-module.exports = LayerControlView.canvas = LayerControlView.extend({
+module.exports = LayerControlView.types.canvas = LayerControlView.extend({
   template: '<section class="row canvas-control">' +
       '<header class="rows">' +
         '<div class="row columns">' +
           '<div class="column no-grow"><button class="active prop-toggle"></button></div>' +
           '<h3 class="column layer-name" data-hook="name"></h3>' +
         '</div>' +
-        '<div class="row columns">' +
-          '<input type="text" class="column gutter-right" placeholder="new-layer-name" data-hook="new-layer-name" />' +
-          '<input type="text" class="column gutter-horizontal" placeholder="propA, propB" data-hook="new-layer-props" />' +
-          '<div class="column no-grow gutter-left">' +
+
+        '<div class="row columns gutter-left">' +
+          '<div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>' +
+          '<div class="column"><input type="text" placeholder="propA, propB" data-hook="new-layer-props" /></div>' +
+          '<div class="column no-grow">' +
             '<button name="add-layer" class="vfi-plus"></button>' +
           '</div>' +
         '</div>' +

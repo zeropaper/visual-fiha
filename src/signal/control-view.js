@@ -26,14 +26,6 @@ var SignalControlView = View.extend({
   },
 
   derived: {
-    rootView: {
-      deps: ['parent'],
-      fn: function () {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (!inst.parent) { return inst; }
-        }
-      }
-    },
     result: {
       deps: ['input', 'model', 'model.transformations'],
       fn: function() {
@@ -74,4 +66,7 @@ var SignalControlView = View.extend({
     return this;
   }
 });
+
+SignalControlView.types = {};
+
 module.exports = SignalControlView;

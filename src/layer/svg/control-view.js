@@ -1,7 +1,7 @@
 'use strict';
 
 var ScreenLayerControlView = require('./../control-view');
-module.exports = ScreenLayerControlView.SVG = ScreenLayerControlView.extend({
+module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
   template: '<section class="default-layer-control">' +
     '<header class="columns">' +
       '<div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>' +

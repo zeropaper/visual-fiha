@@ -2,7 +2,9 @@
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
-  template: function() { return '<canvas layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></canvas>'; },
+  template: function() {
+    return '<canvas layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></canvas>';
+  },
 
   derived: {
     offCanvas: {
@@ -32,9 +34,8 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     return ScreenLayerView.prototype.remove.apply(this, arguments);
   },
 
-  update: function(options) {
-    options = options || {};
-    this.model.frametime = options.frametime || 0;
+  update: function() {
+    this.model.frametime = this.parent.model.frametime;
 
     var cw = this.width = this.parent.el.clientWidth;
     var ch = this.height = this.parent.el.clientHeight;
@@ -64,5 +65,13 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
 
 
   bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    }
   }, ScreenLayerView.prototype.bindings)
 });

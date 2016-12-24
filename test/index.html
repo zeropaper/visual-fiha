@@ -24,7 +24,7 @@ body > h1 a {
 
 #mocha,
 #holder {
-  max-height: 45vh;
+  /*max-height: 45vh;*/
   overflow: auto;
   padding: 20px;
   margin: 0;
@@ -45,23 +45,12 @@ body > h1 a {
     <script>mocha.setup('bdd');</script>
     <script src="./test-utils.js"></script>
     <script src="./../deps-build.js"></script>
-    <!--
-    <script src="./../controller/view-build.js"></script>
-    <script src="./../screen/view-build.js"></script>
-    <script src="./../screen/state-build.js"></script>
-    <script src="./../layer/view-build.js"></script>
-    <script src="./../layer/state-build.js"></script>
-    -->
-    <!-- <script src="layer/control-view-spec.js"></script>
-    <script src="mappable/state-spec.js"></script>
-    <script src="mappable/control-view-spec.js"></script> -->
-    <script src="controller/view-spec.js"></script>
-    <script src="screen/view-spec.js"></script>
+    <script src="mapping/state-spec.js"></script>
+    <!-- <script src="controller/view-spec.js"></script> -->
+    <!-- <script src="screen/view-spec.js"></script> -->
     <script src="screen/state-spec.js"></script>
     <script src="layer/state-spec.js"></script>
-    <script src="layer/view-spec.js"></script>
-    <!-- <script src="signal/view-spec.js"></script>
-    <script src="transformation/view-spec.js"></script> -->
+    <!-- <script src="layer/view-spec.js"></script> -->
     <script>
       mocha.run();
     </script>

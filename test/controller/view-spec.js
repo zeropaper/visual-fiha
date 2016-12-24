@@ -1,5 +1,5 @@
 'use strict';
-describe('Controller View', function () {
+describe.skip('Controller View', function () {
   var holder, ControllerView, ScreenView, ScreenState;
 
   before(function (done) {

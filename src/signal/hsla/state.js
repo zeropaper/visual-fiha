@@ -16,7 +16,7 @@ var _100 = {
   max: 100
 };
 
-var HSLASignalState = SignalState.hslaSignal = SignalState.extend({
+var HSLASignalState = SignalState.types.hslaSignal = SignalState.extend({
   session: {
     hue: _360,
     saturation: _100,
