@@ -1,30 +1,24 @@
 'use strict';
 var assign = window.VFDeps.assign;
 var SignalControlView = require('./../control-view');
-var BeatSignalControlView = SignalControlView.beatSignal = SignalControlView.extend({
-  template: [
-    '<section class="rows signal signal-beat">',
-    '<header class="row">',
-    '<h3 class="name"></h3>',
-    '</header>',
+var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlView.extend({
+  template: '<section class="rows signal signal-beat">' +
+    '<header class="row">' +
+      '<h3 class="name"></h3>' +
+    '</header>' +
 
-    '<div class="row columns gutter-horizontal gutter-bottom">',
-    '<div class="column result-dot no-grow gutter-right"></div>',
-    '<div class="column result gutter-left">',
-    '<div class="column input" data-placeholder="BPM" data-hook="input" contenteditable="true"></div>',
-    '</div>',
-    '</div>',
+    '<div class="row columns gutter-horizontal gutter-bottom">' +
+      '<div class="column result-dot no-grow gutter-right"></div>' +
+      '<div class="column result gutter-left">' +
+        '<input class="column input" placeholder="BPM" data-hook="input" />' +
+      '</div>' +
+    '</div>' +
 
-    '<div class="row mappings props"></div>',
-    '</section>'
-  ].join(''),
+    '<div class="row mappings props"></div>' +
+  '</section>',
 
   bindings: assign({}, SignalControlView.prototype.bindings, {
     'model.result': [
-      // {
-      //   selector: '.result',
-      //   type: 'text'
-      // },
       {
         selector: '.result-dot',
         type: function(el, val) {
@@ -35,19 +29,18 @@ var BeatSignalControlView = SignalControlView.beatSignal = SignalControlView.ext
   }),
 
   events: assign({}, SignalControlView.prototype.events, {
-    'input [data-hook=input]': '_updateBPM'
+    'change [data-hook=input]': '_updateBPM'
   }),
 
   _updateBPM: function() {
-    this.model.input = parseInt(this.queryByHook('input').textContent.trim(), 10);
-    console.info('Changing BPM', this.model.input);
+    this.model.input = parseInt(this.queryByHook('input').value.trim(), 10);
   },
 
   render: function () {
     this.renderWithTemplate();
     var inputEl = this.queryByHook('input');
-    if (inputEl && !inputEl.textContent) {
-      inputEl.textContent = this.model.input;
+    if (inputEl && !inputEl.value) {
+      inputEl.value = this.model.input;
     }
     return this;
   }

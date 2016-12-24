@@ -1,4 +1,6 @@
 'use strict';
+/* global Uint8Array*/
+
 var State = VFDeps.State;
 var Collection = VFDeps.Collection;
 var LayerState = require('./../layer/state');
@@ -6,41 +8,38 @@ require('./../layer/canvas/state');
 require('./../layer/video/state');
 require('./../layer/svg/state');
 require('./../layer/img/state');
-var SignalState = require('./../signal/state');
-require('./../signal/beat/state');
-require('./../signal/hsla/state');
-require('./../signal/rgba/state');
 
 var ScreenState = State.extend({
-  collections: {
-    screenLayers: Collection.extend({
-      mainIndex: 'name',
-      model: function(attrs, opts) {
-        var Constructor = LayerState[attrs.type] || LayerState;
-        return new Constructor(attrs, opts);
-      }
-    }),
-
-    screenSignals: Collection.extend({
-      mainIndex: 'name',
-      model: function(attrs, opts) {
-        var Constructor = SignalState[attrs.type] || SignalState;
-        return new Constructor(attrs, opts);
-      }
-    })
+  props: {
+    frametime: ['number', true, 0],
+    firstframetime: ['any', true, function () {
+      return performance.now();
+    }],
+    audio: ['object', true, function() { return {
+      bufferLength: 128,
+      frequency: new Uint8Array(128),
+      timeDomain: new Uint8Array(128)
+    }; }]
   },
 
   session: {
-    latency: ['number', true, 0],
-    width: ['number', true, 400],
-    height: ['number', true, 300],
+    latency: ['number', true, 0]
   },
 
-  toJSON: function() {
-    var obj = State.prototype.toJSON.apply(this, arguments);
-    obj.screenLayers = this.screenLayers.toJSON.apply(this.screenLayers, arguments);
-    obj.screenSignals = this.screenSignals.toJSON.apply(this.screenSignals, arguments);
-    return obj;
+  collections: {
+    screenLayers: Collection.extend({
+      comparator: 'zIndex',
+      mainIndex: 'name',
+      model: function(attrs, opts) {
+        var Constructor = LayerState[attrs.type] || LayerState;
+        var state = new Constructor(attrs, opts);
+        state.on('change', function() {
+          opts.collection.trigger('change:layer', state);
+        });
+        return state;
+      }
+    }),
+    screenSignals: require('./../signal/collection')
   }
 });
 module.exports = ScreenState;

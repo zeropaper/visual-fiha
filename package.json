@@ -4,45 +4,44 @@
   "version": "0.0.1",
   "description": "Zeropaper's web based VJing tool",
   "main": "index.js",
+  "engines": {
+    "npm": "^3"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/zeropaper/visual-fiha.git"
   },
   "scripts": {
-    "lint": "eslint",
-    "postinstall": "npm run deps-build && npm run screen-build && npm run controller-build",
-    "deps-add-ace": "cp ./node_modules/ace-builds/src/worker-javascript.js ./docs/ && cat ./node_modules/ace-builds/src/ace.js >> ./docs/deps-build.js && cat ./node_modules/ace-builds/src/ext-language_tools.js >> ./docs/deps-build.js && cat ./node_modules/ace-builds/src/mode-javascript.js >> ./docs/deps-build.js && cat ./node_modules/ace-builds/src/theme-monokai.js >> ./docs/deps-build.js",
-    "deps-build": "browserify ./src/deps.js -s VFDeps -o ./docs/deps-build.js && npm run deps-add-ace",
-    "screen-build": "browserify ./src/screen-app.js -o ./screen-build.js && mv ./screen-build.js ./docs/",
-    "controller-build": "browserify ./src/controller-app.js -o ./controller-build.js && mv ./controller-build.js ./docs/",
-    "dev-screen-build": "browserify ./src/screen-app.js -d | exorcist ./screen-build.js.map > ./screen-build.js && mv ./screen-build.js.map ./docs/ && mv ./screen-build.js ./docs/",
-    "dev-controller-build": "browserify ./src/controller-app.js -d | exorcist ./controller-build.js.map > ./controller-build.js && mv ./controller-build.js.map ./docs/ && mv ./controller-build.js ./docs/",
-    "dev": "nodemon -w \"./src\" -x \"eslint ./src && npm run dev-screen-build && npm run dev-controller-build\"",
-    "dev-controller": "nodemon -w \"./src\" -x \"eslint ./src && npm run dev-controller-build\"",
-    "dev-screen": "nodemon -w \"./src\" -x \"eslint ./src && npm run dev-screen-build\"",
-    "pretest": "cp ./node_modules/expect.js/index.js ./test/expect.js",
-    "test": "mocha -u bdd --check-leaks --full-trace test/**/state-spec.js",
-    "prebuild-gh-page": "npm run postinstall && npm run pretest && mkdir -p docs",
-    "build-gh-page": "cp ./styles.css ./docs/ && cp ./index.html ./docs/ && cp ./screen.html ./docs/ && cp ./controller.html ./docs/ && npm run pretest && cp -r ./test ./docs/ && cp -r ./font ./docs/ && cp -r ./assets ./docs/"
+    "dev": "npm run build-deps && npm run build-worker && webpack-dev-server --port=8081 --inline",
+    "build": "npm run build-deps && npm run build-worker && webpack",
+    "build-deps": "browserify ./src/deps.js -s VFDeps -o ./deps-build.js && npm run build-deps-add-ace",
+    "build-worker": "browserify ./src/web-worker.js -o ./web-worker-build.js",
+    "build-deps-add-ace": "cp ./node_modules/ace-builds/src/worker-javascript.js ./ && cat ./node_modules/ace-builds/src/ace.js >> ./deps-build.js && cat ./node_modules/ace-builds/src/ext-language_tools.js >> ./deps-build.js && cat ./node_modules/ace-builds/src/mode-javascript.js >> ./deps-build.js && cat ./node_modules/ace-builds/src/theme-monokai.js >> ./deps-build.js",
+    "postinstall": "npm run build",
+    "make-index": "node ./.markitdown.js",
+    "prepare-push-master": "npm run make-index && npm run build && git add index.html ./worker-javascript.js ./test/expect.js ./*-build.js && git commit --allow-empty -m \"update builds\""
   },
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "marked": "^0.3.6",
+    "mocha": "^3.1.2",
+    "webpack-dev-server": "^1.16.2"
+  },
   "dependencies": {
     "ace-builds": "^1.2.5",
     "ampersand-collection": "^2.0.0",
     "ampersand-state": "^5.0.2",
     "ampersand-view": "^10.0.1",
     "ampersand-view-switcher": "^2.1.0",
-    "browserify": "^13.1.0",
-    "css-element-queries": "^0.3.2",
-    "exorcist": "^0.4.0",
-    "expect.js": "^0.3.1",
+    "browserify": "^13.1.1",
+    "localforage": "^1.4.3",
     "lodash.assign": "^4.2.0",
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.0.0",
-    "mocha": "^3.1.2"
-  },
-  "devDependencies": {
-    "eslint": "^3.9.1"
+    "txml": "^1.0.17",
+    "webpack": "^2.2.0-rc.1",
+    "webpack-validator": "^2.3.0"
   }
 }

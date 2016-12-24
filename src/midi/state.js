@@ -30,6 +30,8 @@ var KP3LetterButoons = [
 ];
 
 var KP3Mappings = {
+  prefix: 'kp3',
+
   type: {
     128: 'noteOn',
     144: 'noteOff',
@@ -98,40 +100,196 @@ var KP3Mappings = {
   },
 
   signalNames: [
-    'kp3:buttonA:noteOn',
-    'kp3:buttonA:noteOff',
-    'kp3:buttonB:noteOn',
-    'kp3:buttonB:noteOff',
-    'kp3:buttonC:noteOn',
-    'kp3:buttonC:noteOff',
-    'kp3:buttonD:noteOn',
-    'kp3:buttonD:noteOff',
+    'buttonA:noteOn',
+    'buttonA:noteOff',
+    'buttonB:noteOn',
+    'buttonB:noteOff',
+    'buttonC:noteOn',
+    'buttonC:noteOff',
+    'buttonD:noteOn',
+    'buttonD:noteOff',
 
-    'kp3:num1:noteOn',
-    'kp3:num1:noteOff',
-    'kp3:num2:noteOn',
-    'kp3:num2:noteOff',
-    'kp3:num3:noteOn',
-    'kp3:num3:noteOff',
-    'kp3:num4:noteOn',
-    'kp3:num4:noteOff',
-    'kp3:num5:noteOn',
-    'kp3:num5:noteOff',
-    'kp3:num6:noteOn',
-    'kp3:num6:noteOff',
-    'kp3:num7:noteOn',
-    'kp3:num7:noteOff',
-    'kp3:num8:noteOn',
-    'kp3:num8:noteOff',
+    'num1:noteOn',
+    'num1:noteOff',
+    'num2:noteOn',
+    'num2:noteOff',
+    'num3:noteOn',
+    'num3:noteOff',
+    'num4:noteOn',
+    'num4:noteOff',
+    'num5:noteOn',
+    'num5:noteOff',
+    'num6:noteOn',
+    'num6:noteOff',
+    'num7:noteOn',
+    'num7:noteOff',
+    'num8:noteOn',
+    'num8:noteOff',
 
-    'kp3:effectKnob:change',
-    'kp3:effectSlider:change'
+    'pad:noteOn',
+    'pad:noteOff',
+
+    'padX:change',
+    'padY:change',
+    'pad72:change',
+    'pad73:change',
+    'pad74:change',
+    'pad75:change',
+    'pad76:change',
+
+    'effectKnob:change',
+    'effectSlider:change'
+  ]
+};
+
+var nanoKONTROL2Mappings = {
+  prefix: 'nk2',
+
+  type: {
+    176: 'change'
+  },
+
+  note: {
+    0: 'slider1',
+    1: 'slider2',
+    2: 'slider3',
+    3: 'slider4',
+    4: 'slider5',
+    5: 'slider6',
+    6: 'slider7',
+    7: 'slider8',
+
+    16: 'knob1',
+    17: 'knob2',
+    18: 'knob3',
+    19: 'knob4',
+    20: 'knob5',
+    21: 'knob6',
+    22: 'knob7',
+    23: 'knob8',
+
+    32: 's1',
+    33: 's2',
+    34: 's3',
+    35: 's4',
+    36: 's5',
+    37: 's6',
+    38: 's7',
+    39: 's8',
+
+    41: 'play',
+    42: 'stop',
+    43: 'rewind',
+    44: 'forward',
+    45: 'record',
+    46: 'cycle',
+
+    48: 'm1',
+    49: 'm2',
+    50: 'm3',
+    51: 'm4',
+    52: 'm5',
+    53: 'm6',
+    54: 'm7',
+    55: 'm8',
+
+    58: 'trackprevious',
+    59: 'tracknext',
+    60: 'markerset',
+    61: 'markerprevious',
+    62: 'markernext',
+
+    64: 'r1',
+    65: 'r2',
+    66: 'r3',
+    67: 'r4',
+    68: 'r5',
+    69: 'r6',
+    70: 'r7',
+    71: 'r8'
+  },
+
+  velocity: {
+    0: function(type, note, velocity) {
+      if (note > 23) {
+        return false;
+      }
+      return velocity;
+    },
+
+    127: function(type, note, velocity) {
+      if (note > 23) {
+        return true;
+      }
+      return toPrct(velocity);
+    }
+  },
+
+  signalNames: [
+    'slider1:change',
+    'slider2:change',
+    'slider3:change',
+    'slider4:change',
+    'slider5:change',
+    'slider6:change',
+    'slider7:change',
+    'slider8:change',
+
+    'knob1:change',
+    'knob2:change',
+    'knob3:change',
+    'knob4:change',
+    'knob5:change',
+    'knob6:change',
+    'knob7:change',
+    'knob8:change',
+
+    's1:change',
+    's2:change',
+    's3:change',
+    's4:change',
+    's5:change',
+    's6:change',
+    's7:change',
+    's8:change',
+
+    'play:change',
+    'stop:change',
+    'rewind:change',
+    'forward:change',
+    'record:change',
+    'cycle:change',
+
+    'm1:change',
+    'm2:change',
+    'm3:change',
+    'm4:change',
+    'm5:change',
+    'm6:change',
+    'm7:change',
+    'm8:change',
+
+    'trackprevious:change',
+    'tracknext:change',
+    'markerset:change',
+    'markerprevious:change',
+    'markernext:change',
+
+    'r1:change',
+    'r2:change',
+    'r3:change',
+    'r4:change',
+    'r5:change',
+    'r6:change',
+    'r7:change',
+    'r8:change'
   ]
 };
 
 var midiMappings = {
-  'KP3 MIDI 1': {
-    'ALSA library version 1.0.25' : KP3Mappings
+  'KORG INC.': {
+    'KP3 MIDI 1': KP3Mappings,
+    'nanoKONTROL2 MIDI 1': nanoKONTROL2Mappings
   }
 };
 
@@ -153,19 +311,22 @@ var MIDIState = State.extend({
 
   derived: {
     midiMapping: {
-      deps: ['name', 'type', 'version'],
+      deps: ['name', 'name'],
       fn: function() {
         var m = midiMappings || {};
-        if (!m[this.name] || !m[this.name][this.version]) {
+        if (!m[this.manufacturer] || !m[this.manufacturer][this.name]) {
           return;
         }
-        return m[this.name][this.version];
+        return m[this.manufacturer][this.name];
       }
     },
     signalNames: {
       deps: ['midiMappings'],
       fn: function() {
-        return this.midiMapping.signalNames;
+        var prefix = this.midiMapping.prefix;
+        return this.midiMapping.signalNames.map(function(str) {
+          return prefix + ':' + str;
+        });
       }
     }
   }
@@ -184,7 +345,9 @@ function _result(mapping, scope, value, data) {
 
   var val = mapping[scope][''+value];
 
-  if (!val) { return scope === 'velocity' ? toPrct(value) : value; }
+  if (!val) {
+    return scope === 'velocity' ? toPrct(value) : value;
+  }
 
 
   if (typeof val === 'function') {
@@ -195,34 +358,35 @@ function _result(mapping, scope, value, data) {
 }
 
 function handleMIDIMessage(accessState, model) {
-  function clear() {
-    model.set({
-      signalType: '',
-      signalNote: '',
-      signalVelocity: ''
-    });
-  }
+  // function clear() {
+  //   model.set({
+  //     signalType: '',
+  //     signalNote: '',
+  //     signalVelocity: ''
+  //   });
+  // }
 
   return function(MIDIMessageEvent) {
-    if (!model.active) { return clear(); }
+    // if (!model.active) { return clear(); }
 
     var data = MIDIMessageEvent.data;
     var type = data[0] || 0;
-    if (type === 248) { return clear(); }
+    if (type === 248) { return; }
 
     var note = data[1] || 0;
     var velocity = data[2] || 0;
-
 
     var obj = {
       signalType:     _result(model.midiMapping, 'type', type, data),
       signalNote:     _result(model.midiMapping, 'note', note, data),
       signalVelocity: _result(model.midiMapping, 'velocity', velocity, data)
     };
-    var eventName = 'kp3:' + obj.signalNote + ':' + obj.signalType;
-    accessState.trigger(eventName, obj.signalVelocity/*, model, eventName*/);
+    console.info('midi type: %s, note %s, velocity: %s', type, note, velocity, obj);
 
-    model.set(obj);
+    var eventName = model.midiMapping.prefix + ':' + obj.signalNote + ':' + obj.signalType;
+    accessState.trigger('midi', eventName, obj.signalVelocity/*, model, eventName*/);
+
+    // model.set(obj);
   };
 }
 
@@ -250,44 +414,42 @@ var MIDIAccessState = State.extend({
 
       var inputs = [];
       var outputs = [];
-      var entry;
       var model;
 
-      for (entry in accessState.MIDIAccess.inputs) {
+      accessState.MIDIAccess.inputs.forEach(function(info) {
         model = new MIDIState({
-          connection: entry[1].connection,
-          state: entry[1].state,
-          type: entry[1].type,
-          id: entry[1].id,
-          manufacturer: entry[1].manufacturer,
-          name: entry[1].name,
-          version: entry[1].version
+          connection: info.connection,
+          state: info.state,
+          type: info.type,
+          id: info.id,
+          manufacturer: info.manufacturer,
+          name: info.name,
+          version: info.version
         });
-
         if (model.midiMapping) {
-          if (typeof entry[1].onmidimessage !== 'undefined') {
-            entry[1].onmidimessage = handleMIDIMessage(accessState, model);
+          if (typeof info.onmidimessage !== 'undefined') {
+            info.onmidimessage = handleMIDIMessage(accessState, model);
           }
 
           inputs.push(model);
         }
-      }
+      });
 
-      for (entry in accessState.MIDIAccess.outputs) {
+      accessState.MIDIAccess.outputs.forEach(function(info) {
         model = new MIDIState({
-          connection: entry[1].connection,
-          state: entry[1].state,
-          type: entry[1].type,
-          id: entry[1].id,
-          manufacturer: entry[1].manufacturer,
-          name: entry[1].name,
-          version: entry[1].version
+          connection: info.connection,
+          state: info.state,
+          type: info.type,
+          id: info.id,
+          manufacturer: info.manufacturer,
+          name: info.name,
+          version: info.version
         });
 
         if (model.midiMapping) {
           outputs.push(model);
         }
-      }
+      });
 
       accessState.inputs.reset(inputs);
       accessState.outputs.reset(outputs);
@@ -296,6 +458,12 @@ var MIDIAccessState = State.extend({
     accessState.on('change:MIDIAccess', MIDIAccessChanged);
 
     if (typeof options.MIDIAccess === 'undefined') {
+      if (!navigator.requestMIDIAccess) {
+        console.warn('No WebMIDI API support');
+        accessState.MIDIAccess = false;
+        return;
+      }
+
       navigator.requestMIDIAccess()
         .then(function(MIDIAccess) {
           accessState.MIDIAccess = MIDIAccess;

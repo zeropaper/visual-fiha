@@ -3,25 +3,21 @@ function warn(e) {console.warn(e);}
 describe('Layer State', function () {
   var defaultLayerProperties = [
     'active',
-    'backfaceVisibility',
-    'mappings',
+    // 'mappings',
+    'mixBlendMode',
     'name',
     'opacity',
-    'perspective',
-    'originX',
-    'originY',
     'rotateX',
     'rotateY',
     'rotateZ',
     'scaleX',
     'scaleY',
-    // 'scaleZ',
     'skewX',
     'skewY',
     'translateX',
     'translateY',
-    // 'translateZ',
-    'type'
+    'type',
+    'zIndex'
   ];
   var LayerState, instance;
 
@@ -62,21 +58,21 @@ describe('Layer State', function () {
       describe('methods', function() {
 
         describe('toJSON', function() {
+          var obj;
+
+          before(function() {
+            obj = instance.toJSON();
+          });
+
           it('can be used to prepare data to send or store', function() {
-            var obj = instance.toJSON();
-            expect(JSON.stringify).withArgs(obj).not.to.throwException(warn);
+            expect(function() {
+              JSON.stringify(obj);
+            }).not.to.throwException(warn);
+          });
+
+          it('has the ' + defaultLayerProperties.join(', '), function() {
             expect(obj).to.be.an('object');
-            expect(obj).to.only.have.keys(defaultLayerProperties);
-            expect(obj.type).to.be('default');
-            expect(obj.mappings).to.be.an('array');
-            expect(obj.opacity).to.be(1);
-            expect(obj.rotateX).to.be(0);
-            expect(obj.rotateY).to.be(0);
-            expect(obj.rotateZ).to.be(0);
-            expect(obj.translateX).to.be(0);
-            expect(obj.translateY).to.be(0);
-            expect(obj.scaleX).to.be(100);
-            expect(obj.scaleY).to.be(100);
+            expect(obj).to.have.keys(defaultLayerProperties);
           });
         });
       });
@@ -94,31 +90,30 @@ describe('Layer State', function () {
       });
 
       describe('instance', function () {
+        var canvasLayerProps = [
+          'canvasLayers'
+        ].concat(defaultLayerProperties);
+
         describe('options', function() {});
 
         describe('methods', function() {
 
           describe('toJSON', function() {
+            var obj;
+
+            before(function() {
+              obj = instance.toJSON();
+            });
+
             it('can be used to prepare data to send or store', function() {
-              var obj = instance.toJSON();
               expect(function() {
                 JSON.stringify(obj);
               }).not.to.throwException(warn);
+            });
+
+            it('has the ' + canvasLayerProps.join(', ') + ' keys', function() {
               expect(obj).to.be.an('object');
-              expect(obj).to.only.have.keys([
-                'canvasLayers'
-              ].concat(defaultLayerProperties));
-              expect(obj.type).to.be('canvas');
-              expect(obj.name).to.be('canvas layer');
-              expect(obj.mappings).to.be.an('array');
-              expect(obj.opacity).to.be(1);
-              expect(obj.rotateX).to.be(0);
-              expect(obj.rotateY).to.be(0);
-              expect(obj.rotateZ).to.be(0);
-              expect(obj.translateX).to.be(0);
-              expect(obj.translateY).to.be(0);
-              expect(obj.scaleX).to.be(100);
-              expect(obj.scaleY).to.be(100);
+              expect(obj).to.only.have.keys(canvasLayerProps);
             });
           });
         });

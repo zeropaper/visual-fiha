@@ -1,27 +1,30 @@
 'use strict';
+var State = VFDeps.State;
 var ScreenLayerState = require('./../state');
-// var CanvasLayer = ScreenLayerState.extend({
-var MappableState = require('./../../mappable/state');
-var CanvasLayer = MappableState.extend({
+
+
+var CanvasLayer = State.extend({
   idAttribute: 'name',
 
   initialize: function() {
-    var mappings = this.mappings;
-    var propNames = Object.keys(this.constructor.prototype._definition).filter(function (propName) {
-      return ['drawFunction', 'name'].indexOf(propName) < 0;
-    });
+    State.prototype.initialize.apply(this, arguments);
+    var canvasLayer = this;
+    var screenLayer = canvasLayer.collection.parent;
 
-    propNames.forEach(function (propName) {
-      if (!mappings.get(propName)) {
-        mappings.add({
-          targetProperty: propName
-        });
-      }
+    canvasLayer.on('change', function() {
+      // trigger change on the screen layer
+      screenLayer._changed = {
+        canvasLayers: screenLayer.canvasLayers.serialize()
+      };
+      screenLayer.trigger('change');
     });
-    return this;
   },
 
+  cache: {},
+
   props: {
+    duration: ['number', true, 1000],
+    fps: ['number', true, 16],
     weight: ['number', true, 0],
     name: ['string', true, null],
     active: ['boolean', true, true],
@@ -51,32 +54,99 @@ var CanvasLayer = MappableState.extend({
     drawFunction: 'any'
   },
 
-
   serialize: function() {
-    var obj = ScreenLayerState.prototype.serialize.apply(this, arguments);
+    var obj = State.prototype.serialize.apply(this, arguments);
+    var returned = {};
+    var propName;
 
+
+    var props = this.serializationProps.props || [];
+    /*
+    if (props.length) {
+      returned.props = {};
+      props.forEach(function(propName) {
+        returned.props[propName] = obj[propName];
+      });
+    }
+
+    for (propName in obj) {
+      if (props.indexOf(propName) < 0) {
+        returned[propName] = obj[propName];
+      }
+    }
+    */
+
+    // better like that??
+    if (props.length) {
+      returned.props = {};
+    }
+
+    // var propName;
+    var def = this.constructor.prototype._definition;
+    for (propName in obj) {
+      // if (props.indexOf(propName) < 0) {
+      returned[propName] = obj[propName];
+      // }
+      // else {
+      //   returned.props[propName] = obj[propName];
+      // }
+      if (props.indexOf(propName) > -1) {
+        returned.props[propName] = def[propName];
+      }
+    }
+    // returned.props = def;
     var type = typeof this.drawFunction;
     if (type === 'function') {
-      obj.drawFunction = this.drawFunction.toString();
+      returned.drawFunction = this.drawFunction.toString();
     }
     else if (type === 'string') {
-      obj.drawFunction = this.drawFunction;
+      returned.drawFunction = this.drawFunction;
     }
-
-    return obj;
+    returned.name = this.name;
+    return returned;
   },
 
   derived: {
-    width: {
-      deps: ['collection', 'collection.parent', 'collection.parent.width'],
+    // frames: {
+    //   deps: ['duration', 'fps'],
+    //   fn: function() {
+    //     return Math.round(this.duration / 1000 * this.fps);
+    //   }
+    // },
+    // frame: {
+    //   deps: ['frametime', 'fps'],
+    //   fn: function() {
+    //     return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
+    //   }
+    // },
+    // direction: {
+    //   deps: ['frametime', 'duration'],
+    //   fn: function() {
+    //     return this.frame < this.frames * 0.5 ? 1 : -1;
+    //   }
+    // },
+    // frametime: {
+    //   cache: false,
+    //   fn: function() {
+    //     return this.screenState.frametime;
+    //   }
+    // },
+    screenState: {
+      deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
       fn: function() {
-        return this.collection.parent.width || 400;
+        return this.collection.parent.collection.parent;
+      }
+    },
+    width: {
+      deps: ['screenState', 'screenState.width'],
+      fn: function() {
+        return this.screenState.width || 400;
       }
     },
     height: {
-      deps: ['collection', 'collection.parent', 'collection.parent.height'],
+      deps: ['screenState', 'screenState.height'],
       fn: function() {
-        return this.collection.parent.height || 300;
+        return this.screenState.height || 300;
       }
     },
     draw: {
@@ -94,6 +164,16 @@ var CanvasLayer = MappableState.extend({
         return (typeof fn === 'function' ? fn : function() {}).bind(this);
       }
     }
+  // },
+
+  // collections: {
+  //   mappings: State.Collection.extend({
+  //     model: function (attrs, options) {
+  //       var model = new CanvasLayerMapState(attrs, options);
+  //       if (options.init === false) model.initialize();
+  //       return model;
+  //     }
+  //   })
   }
 });
 
@@ -106,8 +186,21 @@ var CanvasLayers = VFDeps.Collection.extend({
   model: function (attrs, options) {
     var def = {
       props: attrs.props || {},
-      session: attrs.session || {},
-      derived: attrs.derived || {}
+      // session: attrs.session || {},
+      // derived: attrs.derived || {},
+      serializationProps: {
+        props: [].concat([
+          'active',
+          'blending',
+          'opacity',
+          'shadowBlur',
+          'shadowColor',
+          'shadowOffsetX',
+          'shadowOffsetY'
+        ], Object.keys(attrs.props || {})),
+        // session: Object.keys(attrs.session),
+        // derived: Object.keys(attrs.prderived)
+      }
     };
     var Constructor = _CanvasLayersCache[attrs.name] || CanvasLayer.extend(def);
     _CanvasLayersCache[attrs.name] = Constructor;

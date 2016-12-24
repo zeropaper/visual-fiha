@@ -1,16 +1,8 @@
 'use strict';
 var SignalState = require('./../state');
 
-var BeatState = SignalState.extend({
-  initialize: function() {
-    SignalState.prototype.initialize.apply(this, arguments);
-    if (this.observedModel) this.listenTo(this.observedModel, 'frametime', function (value) {
-      if (isNaN(value)) { return; }
-      this.frametime = value;
-    });
-  },
-
-  props: {
+var BeatState = SignalState.types.beatSignal = SignalState.extend({
+  session: {
     frametime: ['number', true, 0]
   },
 
@@ -30,8 +22,11 @@ var BeatState = SignalState.extend({
   },
 
   computeSignal: function() {
-    var preTransform = !this.frametime ? 0 : (100 - (((this.frametime % this.timeBetweenBeats) / this.timeBetweenBeats) * 100));
-    return SignalState.prototype.computeSignal.apply(this, [preTransform]);
+    var frametime = this.frametime;
+    var preTransform = !frametime ? 0 : (100 - (((frametime % this.timeBetweenBeats) / this.timeBetweenBeats) * 100));
+    var result = SignalState.prototype.computeSignal.apply(this, [preTransform]);
+    // this.collection.parent.signals[this.name] = result;
+    return result;
   }
 });
 

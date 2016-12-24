@@ -2,7 +2,7 @@
 function warn(err) {
   if (err) console.warn(err);
 }
-describe('Screen View', function () {
+describe.skip('Screen View', function () {
   var holder, ScreenView, ScreenState;
 
   before(function (done) {

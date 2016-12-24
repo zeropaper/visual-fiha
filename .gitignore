@@ -1,8 +1,7 @@
-node_modules
 *.log
+*.map
 worker-javascript.js
 ignore
+wiki
 test/expect.js
-docs/*.map
-docs/src
-.idea
+node_modules

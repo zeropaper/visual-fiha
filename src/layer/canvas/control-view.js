@@ -1,32 +1,17 @@
 'use strict';
 var LayerControlView = require('./../control-view');
-var DetailsView = require('./../../controller/details-view');
 
 var ControlCanvasLayerView = VFDeps.View.extend({
-  template: [
-    '<section class="canvas-layer">',
-    '<header class="columns">',
-    '<div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>',
-    '<div class="column no-grow gutter-horizontal"><button class="edit-draw-function vfi-cog-alt"></button></div>',
-    '<h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>',
-    '<div class="column no-grow text-right gutter-left"><button class="vfi-trash-empty remove-layer"></button></div>',
-    '</header>',
-    '</section>'
-  ].join(''),
-
-  session: {
-    showMappings: ['boolean', true, false]
-  },
+  template: '<section class="canvas-layer">' +
+    '<header class="columns">' +
+      '<div class="column no-grow"><button name="active"></button></div>' +
+      '<div class="column no-grow"><button class="edit-draw-function vfi-cog-alt"></button></div>' +
+      '<h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>' +
+      '<div class="column no-grow text-right"><button class="vfi-trash-empty remove-canvas-layer"></button></div>' +
+    '</header>' +
+    '</section>',
 
   derived: {
-    rootView: {
-      deps: ['parent'],
-      fn: function () {
-        for (var inst = this; inst; inst = inst.parent) {
-          if (!inst.parent) { return inst; }
-        }
-      }
-    },
     codeEditor: {
       deps: ['rootView'],
       fn: function () {
@@ -36,15 +21,15 @@ var ControlCanvasLayerView = VFDeps.View.extend({
   },
 
   events: {
-    'click .remove-layer': '_removeLayer',
+    'click .remove-canvas-layer': '_removeLayer',
     'click .edit-draw-function': '_editDrawFunction',
-    'click .active.prop-toggle': '_toggleActive',
-    'click header [data-hook=name]': '_showMappings'
+    'click [name="active"]': '_toggleActive',
+    'click .canvas-layer-name': '_showMappings'
   },
 
-  _removeLayer: function() {
-    this.model.collection.remove(this.model);
-  },
+  _showMappings: LayerControlView.prototype._showMappings,
+  _toggleActive: LayerControlView.prototype._toggleActive,
+
   _editDrawFunction: function () {
     var editor = this.codeEditor;
     if (!editor.changed) {
@@ -53,16 +38,6 @@ var ControlCanvasLayerView = VFDeps.View.extend({
     else {
       console.warn('A function is already being edited');
     }
-  },
-  _toggleActive: function () {
-    this.model.toggle('active');
-  },
-
-  _showMappings: function () {
-    this.rootView.showDetails(new DetailsView({
-      parent: this,
-      model: this.model,
-    }));
   },
 
   bindings: {
@@ -75,7 +50,7 @@ var ControlCanvasLayerView = VFDeps.View.extend({
 
       {
         type: 'booleanClass',
-        selector: '.active.prop-toggle',
+        selector: '[name="active"]',
         yes: 'vfi-toggle-on',
         no: 'vfi-toggle-off'
       }
@@ -89,41 +64,43 @@ var ControlCanvasLayerView = VFDeps.View.extend({
   }
 });
 
-module.exports = LayerControlView.canvas = LayerControlView.extend({
-  template: [
-    '<section class="row canvas-control">',
-    '<header>',
-    '<h3>Canvas</h3>',
-    '<div class="columns">',
-    '<div class="column gutter-right" contenteditable="true" data-placeholder="new-layer-name" data-hook="new-layer-name"></div>',
-    '<div class="column gutter-horizontal" contenteditable="true" data-placeholder="propA, propB" data-hook="new-layer-props"></div>',
-    '<div class="column no-grow gutter-left">',
-    '<button name="add-layer" class="vfi-plus"></button>',
-    '</div>',
-    '</div>',
-    '</header>',
+module.exports = LayerControlView.types.canvas = LayerControlView.extend({
+  template: '<section class="row canvas-control">' +
+      '<header class="rows">' +
+        '<div class="row columns">' +
+          '<div class="column no-grow"><button class="active prop-toggle"></button></div>' +
+          '<h3 class="column layer-name" data-hook="name"></h3>' +
+        '</div>' +
 
-    '<div class="layers">',
-    '<div class="items"></div>',
-    '</div>',
-    '</section>'
-  ].join(''),
+        '<div class="row columns gutter-left">' +
+          '<div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>' +
+          '<div class="column"><input type="text" placeholder="propA, propB" data-hook="new-layer-props" /></div>' +
+          '<div class="column no-grow">' +
+            '<button name="add-layer" class="vfi-plus"></button>' +
+          '</div>' +
+        '</div>' +
+      '</header>' +
 
-  events: {
-    'input [data-hook=new-layer-name]': '_inputLayerName',
+      '<div class="layers">' +
+        '<div class="items"></div>' +
+      '</div>' +
+    '</section>',
+
+  events: VFDeps.assign({
+    'change [data-hook=new-layer-name]': '_inputLayerName',
     'click [name=add-layer]': '_addLayer'
-  },
+  }, LayerControlView.prototype.events),
 
   _inputLayerName: function() {
-    this.query('[name=add-layer]').disabled = !this.queryByHook('new-layer-name').textContent.trim();
+    this.query('[name=add-layer]').disabled = !this.queryByHook('new-layer-name').value.trim();
   },
 
   _addLayer: function(evt) {
     evt.preventDefault();
     var nameEl = this.queryByHook('new-layer-name');
-    var name = nameEl.textContent.trim();
+    var name = nameEl.value.trim();
     var propsEl = this.queryByHook('new-layer-props');
-    var propsVal = propsEl ? propsEl.textContent.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; }) : [];
+    var propsVal = propsEl ? propsEl.value.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; }) : [];
 
     var props = {};
     propsVal.forEach(function(prop) {
@@ -139,7 +116,7 @@ module.exports = LayerControlView.canvas = LayerControlView.extend({
       console.warn('new layer?', res);
       return;
     }
-    nameEl.textContent = '';
+    nameEl.value = '';
     var layerControlView = this.model.canvasLayersView.views.find(function(v) {
       return v.model === res;
     });

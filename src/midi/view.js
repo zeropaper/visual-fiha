@@ -25,25 +25,29 @@ var MIDIView = View.extend({
 });
 
 var MIDIAccessView = View.extend({
-  template: [
-    '<div class="midi-access">',
-    '<div class="midi-inputs">',
-    '<div class="gutter">Inputs</div>',
-    '<ul>',
-    '</ul>',
+  template:
+    '<div class="midi-access">' +
+      '<div class="midi-inputs">' +
+        '<div class="gutter">Inputs</div>' +
+        '<ul></ul>' +
+      '</div>' +
+    //   '<div class="midi-outputs">' +
+    //     '<div class="gutter">Outputs</div>' +
+    //     '<ul></ul>' +
+    //   '</div>' +
     '</div>',
-    '<div class="midi-outputs">',
-    '<div class="gutter">Outputs</div>',
-    '<ul>',
-    '</ul>',
-    '</div>',
-    '</div>'
-  ].join(''),
 
   render: function() {
+    var originalClass;
+    if (this.el) {
+      originalClass = this.el.className;
+    }
     this.renderWithTemplate();
+    if (originalClass) {
+      this.el.className = originalClass;
+    }
     this.inputsView = this.renderCollection(this.model.inputs, MIDIView, '.midi-inputs ul');
-    this.outputsView = this.renderCollection(this.model.outputs, MIDIView, '.midi-outputs ul');
+    // this.outputsView = this.renderCollection(this.model.outputs, MIDIView, '.midi-outputs ul');
     return this;
   }
 });

@@ -2,54 +2,13 @@
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
-  template: [
-    '<canvas></canvas>'
-  ].join(''),
-
-  session: {
-    duration: ['number', true, 1000],
-    fps: ['number', true, 16],
-    frametime: ['number', true, 0],
-    width: ['number', true, 400],
-    height: ['number', true, 300]
-  },
-
-  bindings: {
-    width: {
-      name: 'width',
-      type: 'attribute'
-    },
-    height: {
-      name: 'height',
-      type: 'attribute'
-    }
+  template: function() {
+    return '<canvas layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></canvas>';
   },
 
   derived: {
-    frames: {
-      deps: ['duration', 'fps'],
-      fn: function() {
-        return Math.round(this.duration / 1000 * this.fps);
-      }
-    },
-    frame: {
-      deps: ['frametime', 'fps'],
-      fn: function() {
-        return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
-      }
-    },
-
-
-    direction: {
-      deps: ['frametime', 'duration'],
-      fn: function() {
-        return this.frame < this.frames * 0.5 ? 1 : -1;
-      }
-    },
-
-
     offCanvas: {
-      deps: ['width', 'height'],
+      deps: ['width', 'height', 'el'],
       fn: function() {
         var canvas = document.createElement('canvas');
         canvas.width = this.width;
@@ -62,23 +21,27 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       fn: function() {
         return this.offCanvas.getContext('2d');
       }
+    },
+    destCtx: {
+      deps: ['el', 'width', 'height'],
+      fn: function() {
+        return this.el.getContext('2d');
+      }
     }
   },
 
   remove: function() {
-    return VFDeps.View.prototype.remove.apply(this, arguments);
+    return ScreenLayerView.prototype.remove.apply(this, arguments);
   },
 
-  update: function(options) {
-    options = options || {};
-    this.frametime = options.frametime || 0;
+  update: function() {
+    this.model.frametime = this.parent.model.frametime;
 
+    var cw = this.width = this.parent.el.clientWidth;
+    var ch = this.height = this.parent.el.clientHeight;
     var ctx = this.ctx;
-    var cw = this.width;
-    var ch = this.height;
     ctx.clearRect(0, 0, cw, ch);
-    // ctx.fillStyle = '#a66';
-    // ctx.fillRect(0, 0, cw, ch);
+    if (!this.model.active) { return this; }
 
     this.model.canvasLayers.filter(function (layer) {
       return layer.active;
@@ -89,23 +52,26 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
       ctx.shadowColor = layer.shadowColor;
 
       ctx.globalAlpha = layer.opacity / 100;
-      ctx.globalCompositionOperation = layer.blending;
+      ctx.globalCompositeOperation = layer.blending;
 
       layer.draw(ctx);
     });
 
-    var destCtx = this.el.getContext('2d');
-    destCtx.clearRect(0, 0, cw, ch);
-    destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
+    this.destCtx.clearRect(0, 0, cw, ch);
+    this.destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
   },
 
-  render: function() {
-    if (!this.el) {
-      this.renderWithTemplate();
-    }
 
-    return this.update();
-  }
+  bindings: VFDeps.assign({
+    width: {
+      name: 'width',
+      type: 'attribute'
+    },
+    height: {
+      name: 'height',
+      type: 'attribute'
+    }
+  }, ScreenLayerView.prototype.bindings)
 });

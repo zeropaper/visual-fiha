@@ -1,123 +1,101 @@
 'use strict';
-var MappableState = require('./../mappable/state');
-var LayerState = MappableState.extend({
+var State = VFDeps.State;
+var LayerState = State.extend({
   idAttribute: 'name',
   typeAttribute: 'type',
 
   props: {
     active: ['boolean', true, true],
-    backfaceVisibility: ['boolean', true, false],
+    // backfaceVisibility: ['boolean', true, false],
+    mixBlendMode: {
+      type: 'string',
+      default: 'normal',
+      required: true,
+      values: [
+        'normal',
+        'multiply',
+        'screen',
+        'overlay',
+        'darken',
+        'lighten',
+        'color-dodge',
+        'color-burn',
+        'hard-light',
+        'soft-light',
+        'difference',
+        'exclusion',
+        'hue',
+        'saturation',
+        'color',
+      ]
+    },
     name: ['string', true, null],
     opacity: {
       type: 'number',
-      default: 1,
-      min: 0,
-      max: 1
+      default: 100
     },
-    perspective: {
-      type: 'number',
-      default: 0,
-      min: -100,
-      max: 100
-    },
+    // perspective: {
+    //   type: 'number',
+    //   default: 0
+    // },
     rotateX: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     rotateY: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     rotateZ: {
       type: 'number',
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     translateX: {
       type: 'number',
-      default: 0,
-      min: -100,
-      max: 100
+      default: 0
     },
     translateY: {
       type: 'number',
-      default: 0,
-      min: -100,
-      max: 100
+      default: 0
     },
-    // translateZ: {
-    //   type: 'number',
-    //   default: 0,
-    //   min: -100,
-    //   max: 100
-    // },
+    // // translateZ: {
+    // //   type: 'number',
+    // //   default: 0
+    // // },
     scaleX: {
       type: 'number',
-      default: 100,
-      min: -1000,
-      max: 1000
+      default: 100
     },
     scaleY: {
       type: 'number',
-      default: 100,
-      min: -1000,
-      max: 1000
+      default: 100
     },
-    // scaleZ: {
+    // // scaleZ: {
+    // //   type: 'number',
+    // //   default: 1
+    // // },
+    // originX: {
     //   type: 'number',
-    //   default: 100,
-    //   min: -1000,
-    //   max: 1000
+    //   required: false,
+    //   default: 0
     // },
-    originX: {
-      type: 'number',
-      required: false,
-      default: 0
-    },
-    originY: {
-      type: 'number',
-      required: false,
-      default: 0
-    },
+    // originY: {
+    //   type: 'number',
+    //   required: false,
+    //   default: 0
+    // },
     skewX: {
       type: 'number',
       required: false,
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
     skewY: {
       type: 'number',
       required: false,
-      default: 0,
-      min: -360,
-      max: 360
+      default: 0
     },
-    type: ['string', true, 'default']
-  },
-
-  derived: {
-    width: {
-      deps: ['collection', 'collection.parent', 'collection.parent.width'],
-      fn: function() {
-        if (!this.screenView) { return 400; }
-        return this.screenView.width || this.screenView.el.clientWidth;
-      }
-    },
-    height: {
-      deps: ['collection', 'collection.parent', 'collection.parent.height'],
-      fn: function() {
-        if (!this.screenView) { return 300; }
-        return this.screenView.height || this.screenView.el.clientHeight;
-      }
-    }
-  },
-
-  collections: MappableState.prototype.collections
+    type: ['string', true, 'default'],
+    zIndex: ['number', true, 0]
+  }
 });
 module.exports = LayerState;
