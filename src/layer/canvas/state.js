@@ -2,7 +2,6 @@
 var State = VFDeps.State;
 var ScreenLayerState = require('./../state');
 
-
 var CanvasLayer = State.extend({
   idAttribute: 'name',
 
@@ -107,30 +106,25 @@ var CanvasLayer = State.extend({
   },
 
   derived: {
-    // frames: {
-    //   deps: ['duration', 'fps'],
-    //   fn: function() {
-    //     return Math.round(this.duration / 1000 * this.fps);
-    //   }
-    // },
-    // frame: {
-    //   deps: ['frametime', 'fps'],
-    //   fn: function() {
-    //     return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
-    //   }
-    // },
-    // direction: {
-    //   deps: ['frametime', 'duration'],
-    //   fn: function() {
-    //     return this.frame < this.frames * 0.5 ? 1 : -1;
-    //   }
-    // },
-    // frametime: {
-    //   cache: false,
-    //   fn: function() {
-    //     return this.screenState.frametime;
-    //   }
-    // },
+    mappable: {
+      deps: ScreenLayerState.prototype._derived.mappable.deps,
+      fn: function() {
+        var mappable = ScreenLayerState.prototype._derived.mappable.fn.apply(this, arguments);
+        var targets = mappable.target.filter(function(key) {
+          return [
+            'drawFunction',
+            'screenState', // would make a circular reference if not excluded!
+            'draw'
+          ].indexOf(key) < 0;
+        });
+
+        return {
+          source: [],
+          target: targets
+        };
+      }
+    },
+
     screenState: {
       deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
       fn: function() {
@@ -164,16 +158,6 @@ var CanvasLayer = State.extend({
         return (typeof fn === 'function' ? fn : function() {}).bind(this);
       }
     }
-  // },
-
-  // collections: {
-  //   mappings: State.Collection.extend({
-  //     model: function (attrs, options) {
-  //       var model = new CanvasLayerMapState(attrs, options);
-  //       if (options.init === false) model.initialize();
-  //       return model;
-  //     }
-  //   })
   }
 });
 

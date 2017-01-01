@@ -27,6 +27,11 @@
       }
     },
 
+    mappable: {
+      source: ['result'],
+      target: ['input']
+    },
+
     props: {
       name: ['string', true, null],
       type: ['string', true, 'default'],

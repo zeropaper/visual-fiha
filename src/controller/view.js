@@ -403,6 +403,7 @@ var ControllerView = View.extend(controllerMixin, {
         var view = new MappingsControlView({
           collection: mappings,
           parent: this,
+          model: this.model,
           el: el
         });
         return view;

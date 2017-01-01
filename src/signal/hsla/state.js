@@ -23,6 +23,12 @@ var HSLASignalState = SignalState.types.hslaSignal = SignalState.extend({
     lightness: _100,
     alpha: _100
   },
+
+  mappable: {
+    source: ['result', 'hue', 'saturation', 'lightness', 'alpha'],
+    target: ['hue', 'saturation', 'lightness', 'alpha']
+  },
+
   derived: {
     result: {
       deps: ['hue', 'saturation', 'lightness', 'alpha'],

@@ -21,6 +21,12 @@ var RGBASignalState = SignalState.types.rgbaSignal = SignalState.extend({
     blue: _255,
     alpha: _100
   },
+
+  mappable: {
+    source: ['result', 'red', 'green', 'blue', 'alpha'],
+    target: ['red', 'green', 'blue', 'alpha']
+  },
+
   derived: {
     result: {
       deps: ['red', 'green', 'blue', 'alpha'],

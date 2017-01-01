@@ -6,6 +6,11 @@ var BeatState = SignalState.types.beatSignal = SignalState.extend({
     frametime: ['number', true, 0]
   },
 
+  mappable: {
+    source: ['result', 'timeBetweenBeats'],
+    target: ['input']
+  },
+
   derived: {
     result: {
       deps: ['timeBetweenBeats', 'frametime'],

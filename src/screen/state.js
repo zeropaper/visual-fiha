@@ -10,6 +10,11 @@ require('./../layer/svg/state');
 require('./../layer/img/state');
 
 var ScreenState = State.extend({
+  mappable: {
+    source: ['frametime', 'firstframetime', 'screenSignals'],
+    target: ['screenLayers']
+  },
+
   props: {
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {

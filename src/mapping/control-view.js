@@ -4,7 +4,10 @@ var View = VFDeps.View;
 var ItemView = View.extend({
   template: '<div class="columns">' +
       '<div class="column no-grow"><button class="remove vfi-trash-empty"></button></div>'+
-      '<div class="column no-grow gutter source-path"></div>' +
+
+      '<div class="column source-path">' +
+        '<input type="text" name="source-path" />' +
+      '</div>' +
 
       '<div class="column gutter-vertical no-grow">&raquo;</div>'+
       '<div class="column no-grow"><button class="edit-transform-function vfi-cog-alt"></button></div>'+
@@ -22,13 +25,19 @@ var ItemView = View.extend({
       fn: function () {
         return this.rootView.codeEditor;
       }
+    },
+    suggestionHelper: {
+      deps: ['rootView'],
+      fn: function () {
+        return this.rootView.suggestionHelper;
+      }
     }
   },
 
   bindings: {
     'model.sourcePath': {
-      type: 'text',
-      selector: '.source-path'
+      type: 'value',
+      selector: '[name=source-path]'
     },
     'model.targetPath': {
       type: 'value',
@@ -37,9 +46,33 @@ var ItemView = View.extend({
   },
 
   events: {
+    'focus [name=source-path]': '_handleSourcePathFocus',
+    'focus [name=target-path]': '_handleTargetPathFocus',
+    'blur [name=source-path]': '_handlePathBlur',
+    'blur [name=target-path]': '_handlePathBlur',
+
     'click .remove': '_handleRemove',
     'click .edit-transform-function': '_handleEditTransformFunction',
     'change [name=target-path]': '_handleTargetPathChange'
+  },
+
+  _handleSourcePathFocus: function(evt) {
+    var helper = this.suggestionHelper;
+    helper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(this.collection.sourceSuggestions(this.parent.model));
+  },
+  _handleTargetPathFocus: function(evt) {
+    var helper = this.suggestionHelper;
+    helper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(this.collection.targetSuggestions(this.parent.model));
+  },
+
+  _handlePathBlur: function(evt) {
+    evt.preventDefault();
   },
 
   _handleRemove: function() {
@@ -67,7 +100,7 @@ var ItemView = View.extend({
 
 
 
-var ControlView = View.extend({
+var MappingsControlView = View.extend({
   template: '<section class="mappings-view">' +
       '<header>' +
         '<h3 class="section-name">Mappings</h3>' +
@@ -77,7 +110,7 @@ var ControlView = View.extend({
             '<input placeholder="Source" name="new-source-path" />' +
           '</div>' +
 
-          '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
+          '<div class="column gutter no-grow">&raquo;</div>' +
 
           '<div class="column add-form--target-path">' +
             '<input placeholder="Target" name="new-target-path" />' +
@@ -94,14 +127,8 @@ var ControlView = View.extend({
 
 
   validatePath: function(pathValue) {
-    return !!this.collection.resolve(pathValue, this.context);
+    return typeof this.collection.resolve(pathValue, this.model) !== 'undefined';
   },
-
-
-  session: {
-    context: ['any', true, function() { return {}; }]
-  },
-
 
   subviews: {
     mappingsList: {
@@ -144,7 +171,7 @@ var ControlView = View.extend({
     this.collection.import([{
       source: source.value,
       target: target.value
-    }], this.context);
+    }], this.model);
 
     source.value = '';
     target.value = '';
@@ -152,4 +179,4 @@ var ControlView = View.extend({
 });
 
 
-module.exports = ControlView;
+module.exports = MappingsControlView;

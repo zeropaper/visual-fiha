@@ -36,22 +36,41 @@ describe('Mapping Service', function() {
           id: ['any', false, true],
           propName: ['any', false, null],
           altPropName: ['any', false, null]
+        },
+
+        mappable: {
+          source: ['propName'],
+          target: ['altPropName']
         }
       });
 
+
       TestState = State.extend({
+        mappable: {
+          source: ['propA', 'propB', 'childA', 'collectionA'],
+          target: ['propA', 'propB', 'childB', 'collectionB']
+        },
+
         children: {
           childA: PropState,
           childB: PropState
         },
+
         props: {
-          'propA': ['state', false, null],
-          'propB': ['state', false, null]
+          propA: ['state', false, null],
+          number1: 'number'
         },
+
+        session: {
+          propB: ['state', false, null],
+          number2: 'number'
+        },
+
         collections: {
           collectionA: Collection.extend({
             model: PropState
           }),
+
           collectionB: Collection.extend({
             model: PropState
           })
@@ -353,6 +372,40 @@ describe('Mapping Service', function() {
     it('transforms the targetValue', function () {
       instance.transformation = function(v) { return v + ' ' + v; };
       expect(instance.targetValue).to.be('child a child a');
+    });
+  });
+
+
+
+  describe('service.sourceSuggestions()', function() {
+    var suggestions;
+    before(function () {
+      structure = newStructure();
+    });
+
+
+    it('lists the possible signal sources of an object', function() {
+      expect(function() {
+        suggestions = mappings.sourceSuggestions(structure);
+      }).not.to.throwException(warn);
+      console.info('suggestions', suggestions);
+    });
+  });
+
+
+
+  describe('target.targetSuggestions()', function() {
+    var suggestions;
+    before(function () {
+      structure = newStructure();
+    });
+
+
+    it('lists the possible signal targets of an object', function() {
+      expect(function() {
+        suggestions = mappings.targetSuggestions(structure);
+      }).not.to.throwException(warn);
+      console.info('suggestions', suggestions);
     });
   });
 });

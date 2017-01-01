@@ -101,6 +101,8 @@
 
 
   var MappingState = State.extend({
+    mappable: {source: [], target: []},
+
     props: {
       sourceObject: ['state', true, null],
       sourceProperty: ['string', true, null],
@@ -250,6 +252,129 @@
       return this.models.find(function(mapping) {
         return mapping.sourcePath === p;
       });
+    },
+
+    _suggestProp: function(origin, names) {
+      var results = [];
+      return results;
+    },
+
+    _suggestItem: function(origin, names) {
+      var results = [];
+      return results;
+    },
+
+    sourceSuggestions: function(origin) {
+      var results = [];
+      if (!origin || typeof origin !== 'object') return results;
+
+      var kepts = [];
+      if (origin.mappable && origin.mappable.source) {
+        kepts = (origin.mappable.source || []);
+      }
+
+      function filterKeys(key) {
+        var excluded = [
+          'mappable',
+          'parent',
+          'collection',
+          origin.idAttribute,
+          origin.typeAttribute
+        ];
+        return excluded.indexOf(key) < 0 && kepts.indexOf(key) > -1;
+      }
+
+      var proto = origin.constructor && origin.constructor.prototype ? origin.constructor.prototype : {};
+      var propNames = Object.keys(proto._definition || {});
+      var derivedNames = Object.keys(proto._derived || {});
+      var childNames = Object.keys(proto._children || {});
+      var collectionNames = Object.keys(proto._collections || {});
+
+      propNames.concat(derivedNames, childNames)
+        .filter(filterKeys)
+        .forEach(function(key) {
+          var sub = this.sourceSuggestions(origin[key]);
+          if (!sub.length) {
+            if (childNames.indexOf(key) < 0) {
+              results.push(key);
+            }
+            return;
+          }
+
+          results = results.concat(sub.map(function(name) {
+            return key + '.' + name;
+          }));
+        }, this);
+
+      collectionNames
+        .filter(filterKeys)
+        .forEach(function(collectionName) {
+          origin[collectionName].forEach(function(model) {
+            var id = model.getId();
+            var suggestions = this.sourceSuggestions(model);
+            results = results.concat(suggestions.filter(function(v) { return !!v; }).map(function(name) {
+              return collectionName + '.' + id + '.' + name;
+            }));
+          }, this);
+        }, this);
+
+      return results;
+    },
+
+    targetSuggestions: function(origin) {
+      var results = [];
+      if (!origin || typeof origin !== 'object') return results;
+
+      var kepts = [];
+      if (origin.mappable && origin.mappable.target) {
+        kepts = (origin.mappable.target || []);
+      }
+
+      function filterKeys(key) {
+        var excluded = [
+          'mappable',
+          'parent',
+          'collection',
+          origin.idAttribute,
+          origin.typeAttribute
+        ];
+        return excluded.indexOf(key) < 0 && kepts.indexOf(key) > -1;
+      }
+
+      var proto = origin.constructor && origin.constructor.prototype ? origin.constructor.prototype : {};
+      var propNames = Object.keys(proto._definition || {});
+      var childNames = Object.keys(proto._children || {});
+      var collectionNames = Object.keys(proto._collections || {});
+
+      propNames.concat(childNames)
+        .filter(filterKeys)
+        .forEach(function(key) {
+          var sub = this.targetSuggestions(origin[key]);
+          if (!sub.length) {
+            if (childNames.indexOf(key) < 0) {
+              results.push(key);
+            }
+            return;
+          }
+
+          results = results.concat(sub.map(function(name) {
+            return key + '.' + name;
+          }));
+        }, this);
+
+      collectionNames
+        .filter(filterKeys)
+        .forEach(function(collectionName) {
+          origin[collectionName].forEach(function(model) {
+            var id = model.getId();
+            var suggestions = this.targetSuggestions(model);
+            results = results.concat(suggestions.filter(function(v) { return !!v; }).map(function(name) {
+              return collectionName + '.' + id + '.' + name;
+            }));
+          }, this);
+        }, this);
+
+      return results;
     },
 
     import: function(data, context) {
