@@ -1,6 +1,15 @@
 'use strict';
-var SuggestionItem = VFDeps.View.extend({
+var View = VFDeps.View;
+var Collection = VFDeps.Collection;
+var State = VFDeps.State;
+
+var SuggestionItem = View.extend({
   template: '<li></li>',
+  derived: {
+    shortText: {
+      deps: ['text', 'collection']
+    }
+  },
   bindings: {
     'model.text': {type: 'text'}
   },
@@ -13,7 +22,7 @@ var SuggestionItem = VFDeps.View.extend({
   }
 });
 
-var SuggestionView = VFDeps.View.extend({
+var SuggestionView = View.extend({
   autoRender: true,
 
   attach: function (el, selectCb, newCollection) {
@@ -49,13 +58,13 @@ var SuggestionView = VFDeps.View.extend({
   filterCollection: function () {
     var update = [];
     if (!this.inputEl) {
-      update = this.collection.serialize();
+      update = this.collection.models;
     }
     else {
       var inputElVal = this.inputEl.value || this.inputEl.value;
 
       if (!inputElVal) {
-        update = this.collection.serialize();
+        update = this.collection.models;
       }
       else {
         update = this.collection.filter(function (suggestion) {
@@ -97,8 +106,9 @@ var SuggestionView = VFDeps.View.extend({
       }
 
       var s = window.getComputedStyle(view.inputEl);
+      var exceed = view.el.parentNode && (bpos.left + bpos.width) > view.el.parentNode.clientWidth;
       view.el.style.textAlign = s.textAlign;
-      if (s.textAlign === 'right') {
+      if (s.textAlign === 'right' || exceed) {
         view.el.style.left = (ipos.left - (bpos.width - ipos.width)) + 'px';
       }
       else {
@@ -114,7 +124,7 @@ var SuggestionView = VFDeps.View.extend({
   initialize: function () {
     if (!this.parent) { throw new Error('Suggestion view need a parent view'); }
 
-    this.collection = this.collection || new VFDeps.Collection([], {parent: this});
+    this.collection = this.collection || new Collection([], {parent: this});
 
     this.on('change:collection', function () {
       this.listenToAndRun(this.collection, 'add remove reset', this.filterCollection);
@@ -175,8 +185,8 @@ var SuggestionView = VFDeps.View.extend({
   },
 
   collections: {
-    suggestions: VFDeps.Collection.extend({
-      model: VFDeps.State.extend({
+    suggestions: Collection.extend({
+      model: State.extend({
         props: {
           text: ['string', true, ''],
           value: ['any', false, null]
