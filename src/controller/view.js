@@ -3,13 +3,8 @@ var View = VFDeps.View;
 var ScreenState = require('./../screen/state');
 var MIDIAccessState = require('./../midi/state');
 var MIDIAccessView = require('./../midi/view');
-var LayerControlView = require('./../layer/control-view');
-require('./../layer/canvas/control-view');
-var SignalControlView = require('./../signal/control-view');
-require('./../signal/beat/control-view');
-require('./../signal/hsla/control-view');
-require('./../signal/rgba/control-view');
-
+var SignalsView = require('./signals-view');
+var LayersView = require('./layers-view');
 var SuggestionView = require('./suggestion-view');
 var SparklineView = require('./sparkline-view');
 var AudioMonitor = require('./audio-monitor-view');
@@ -374,25 +369,27 @@ var ControllerView = View.extend(controllerMixin, {
 
     screenLayersView: {
       waitFor: 'el',
-      selector: '.layers .items',
+      selector: '.layers',
       prepareView: function(el) {
-        return this.renderCollection(this.model.screenLayers, function (opts) {
-          var type = opts.model.getType();
-          var Constructor = LayerControlView.types[type] || LayerControlView;
-          return new Constructor(opts);
-        }, el);
+        var view = new LayersView({
+          collection: this.model.screenLayers,
+          parent: this,
+          el: el
+        });
+        return view;
       }
     },
 
     screenSignalsView: {
       waitFor: 'el',
-      selector: '.signals .items',
+      selector: '.signals',
       prepareView: function(el) {
-        return this.renderCollection(this.model.screenSignals, function (opts) {
-          var type = opts.model.getType();
-          var Constructor = SignalControlView.types[type]|| SignalControlView;
-          return new Constructor(opts);
-        }, el);
+        var view = new SignalsView({
+          collection: this.model.screenSignals,
+          parent: this,
+          el: el
+        });
+        return view;
       }
     },
 
@@ -471,41 +468,11 @@ var ControllerView = View.extend(controllerMixin, {
     'click [name="screen"]': '_openScreen',
     'click [name="add-layer"]': '_addLayer',
     'click [name="add-signal"]': '_addSignal',
-    'focus [data-hook="layer-type"]': '_suggestLayerType',
-    'focus [data-hook="signal-type"]': '_suggestSignalType',
     'change .audio-source [name]': '_changeAudioParams'
   },
 
   _openScreen: function() {
     window.open('./screen.html#' + this.broadcastId, 'screen', 'width=800,height=600,location=no');
-  },
-
-  _suggestLayerType: function() {
-    var helper = this.suggestionHelper;
-    var el = this.queryByHook('layer-type');
-    helper.attach(el, function(selected) {
-      el.value = selected;
-      helper.detach();
-    }).fill([
-      'default',
-      'img',
-      'SVG',
-      'canvas'
-    ]);
-  },
-
-  _suggestSignalType: function() {
-    var helper = this.suggestionHelper;
-    var el = this.queryByHook('signal-type');
-    helper.attach(this.queryByHook('signal-type'), function(selected) {
-      el.value = selected;
-      helper.detach();
-    }).fill([
-      'default',
-      'beatSignal',
-      'hslaSignal',
-      'rgbaSignal'
-    ]);
   },
 
   _changeAudioParams: function(evt) {
@@ -615,37 +582,11 @@ var ControllerView = View.extend(controllerMixin, {
         '<div class="region-right-top row columns">'+
           '<div class="column rows">'+
             '<div class="row layers">'+
-              '<div class="section-name gutter-vertical">Layers</div>'+
-              '<div class="columns">'+
-                '<div class="column">' +
-                  '<input data-hook="layer-name" placeholder="Name" type="text"/>'+
-                '</div>' +
-                '<div class="column">' +
-                  '<input data-hook="layer-type" placeholder="Type" type="text"/>'+
-                '</div>' +
-                '<div class="column no-grow">'+
-                  '<button name="add-layer" class="vfi-plus"></button>'+
-                '</div>'+
-              '</div>'+
-              '<div class="items"></div>'+
             '</div>'+
           '</div>'+
 
           '<div class="column rows">'+
             '<div class="row signals">'+
-              '<div class="section-name gutter-vertical">Signals</div>'+
-              '<div class="columns">'+
-                '<div class="column">' +
-                  '<input data-hook="signal-name" placeholder="Name" type="text"/>'+
-                '</div>' +
-                '<div class="column">' +
-                  '<input data-hook="signal-type" placeholder="Type" type="text"/>'+
-                '</div>' +
-                '<div class="column no-grow">'+
-                  '<button name="add-signal" class="vfi-plus"></button>'+
-                '</div>'+
-              '</div>'+
-              '<div class="items"></div>'+
             '</div>'+
 
             '<div class="column rows">'+
