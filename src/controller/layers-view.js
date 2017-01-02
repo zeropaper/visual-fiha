@@ -1,4 +1,5 @@
 'use strict';
+/* global require, VFDeps*/
 var View = VFDeps.View;
 
 var LayerControlView = require('./../layer/control-view');
@@ -8,6 +9,7 @@ var LayersView = View.extend({
   autoRender: true,
 
   events: {
+    'click [name="add-layer"]': '_addLayer',
     'focus [data-hook="layer-type"]': '_suggestLayerType'
   },
 
@@ -23,6 +25,19 @@ var LayersView = View.extend({
       'SVG',
       'canvas'
     ]);
+  },
+
+  _addLayer: function() {
+    var typeEl = this.queryByHook('signal-type');
+    var nameEl = this.queryByHook('signal-name');
+    var type = typeEl.value;
+    var name = nameEl.value;
+    if (!type || !name) { return; }
+    this.model.screenLayers.add({
+      name: name,
+      type: type
+    });
+    typeEl.value = nameEl.value = '';
   },
 
   subviews: {

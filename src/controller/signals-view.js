@@ -1,4 +1,5 @@
 'use strict';
+/* global require, VFDeps*/
 var View = VFDeps.View;
 
 var SignalControlView = require('./../signal/control-view');
@@ -10,6 +11,7 @@ var SignalsView = View.extend({
   autoRender: true,
 
   events: {
+    'click [name="add-signal"]': '_addSignal',
     'focus [data-hook="signal-type"]': '_suggestSignalType'
   },
 
@@ -25,6 +27,19 @@ var SignalsView = View.extend({
       'hslaSignal',
       'rgbaSignal'
     ]);
+  },
+
+  _addSignal: function() {
+    var typeEl = this.queryByHook('signal-type');
+    var nameEl = this.queryByHook('signal-name');
+    var type = typeEl.value;
+    var name = nameEl.value;
+    if (!type || !name) { return; }
+    this.model.screenSignals.add({
+      name: name,
+      type: type
+    });
+    typeEl.value = nameEl.value = '';
   },
 
   subviews: {
