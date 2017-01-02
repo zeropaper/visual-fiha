@@ -35,7 +35,7 @@ var SignalsView = View.extend({
     var type = typeEl.value;
     var name = nameEl.value;
     if (!type || !name) { return; }
-    this.model.screenSignals.add({
+    this.model.signals.add({
       name: name,
       type: type
     });

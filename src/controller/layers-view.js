@@ -33,7 +33,7 @@ var LayersView = View.extend({
     var type = typeEl.value;
     var name = nameEl.value;
     if (!type || !name) { return; }
-    this.model.screenLayers.add({
+    this.model.layers.add({
       name: name,
       type: type
     });

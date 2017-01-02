@@ -14,12 +14,12 @@ describe('Screen State', function () {
 
   describe('instance', function () {
     describe('options', function () {
-      describe('screenLayers', function () {
+      describe('layers', function () {
         var instance;
 
         before(function () {
           instance = new ScreenState({
-            screenLayers: [
+            layers: [
               {
                 name: 'Layer A'
               },
@@ -31,9 +31,9 @@ describe('Screen State', function () {
         });
 
         it('defines the screen layers', function () {
-          expect(instance.screenLayers.models).to.be.ok();
-          expect(instance.screenLayers.length).to.be(2);
-          expect(instance.screenLayers.at(0).name).to.be('Layer A');
+          expect(instance.layers.models).to.be.ok();
+          expect(instance.layers.length).to.be(2);
+          expect(instance.layers.at(0).name).to.be('Layer A');
         });
       });
     });
@@ -42,7 +42,7 @@ describe('Screen State', function () {
       var instance;
       before(function () {
         instance = new ScreenState({
-          screenLayers: [
+          layers: [
             {
               type: 'canvas'
             }
@@ -57,8 +57,8 @@ describe('Screen State', function () {
             JSON.stringify(obj);
           }).not.to.throwException();
           expect(obj).to.be.an('object');
-          expect(obj).to.have.keys(['screenLayers']);
-          expect(obj.screenLayers).to.have.length(1);
+          expect(obj).to.have.keys(['layers']);
+          expect(obj.layers).to.have.length(1);
         });
       });
     });

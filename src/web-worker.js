@@ -129,7 +129,7 @@ channel.addEventListener('message', function(evt) {
 
   screens[payload.id] = payload.id;
   broadcastCommand('resetLayers', {
-    layers: workerScreen.screenLayers.serialize()
+    layers: workerScreen.layers.serialize()
   });
 }, false);
 
@@ -182,10 +182,10 @@ var commands = {
     broadcastCommand('resetLayers', {
       layers: layers
     });
-    workerScreen.screenLayers.reset(layers);
+    workerScreen.layers.reset(layers);
   },
   addLayer: function(layer) {
-    var collection = workerScreen.screenLayers;
+    var collection = workerScreen.layers;
     broadcastCommand('addLayer', {
       layer: layer
     });
@@ -212,14 +212,14 @@ var commands = {
     collection.add(layer);
   },
   removeLayer: function(layerName) {
-    var collection = workerScreen.screenLayers;
+    var collection = workerScreen.layers;
     broadcastCommand('removeLayer', {
       layerName: layerName
     });
     collection.remove(collection.get(layerName));
   },
   updateLayer: function(layer, layerName) {
-    var state = workerScreen.screenLayers.get(layerName);
+    var state = workerScreen.layers.get(layerName);
     state.set(layer);
   }
 };

@@ -32,8 +32,8 @@ describe.skip('Controller View', function () {
 
         viewSetup = viewSetup || {};
         viewSetup.model = viewSetup.model || (new ScreenState(modelSetup || {
-          screenLayers: [],
-          screenSignals: []
+          layers: [],
+          signals: []
         }));
 
         instance = new ControllerView(viewSetup);
@@ -51,7 +51,7 @@ describe.skip('Controller View', function () {
     }
 
     before(makeInstance({}, {
-      screenLayers: [
+      layers: [
         {
           active: true,
           name: 'Layer 1'
@@ -61,7 +61,7 @@ describe.skip('Controller View', function () {
           name: 'Layer 2'
         }
       ],
-      screenSignals: [
+      signals: [
         {
           type: 'beat',
           name: 'beat:a',
@@ -87,15 +87,15 @@ describe.skip('Controller View', function () {
             screenUpdate.call(standaloneScreen, data);
           };
 
-          var layers = instance.model.screenLayers;
+          var layers = instance.model.layers;
           layers.remove(layers.at(0));
 
           expect(layers.length).to.be(1);
 
-          standaloneScreen.on('change:screenLayers', function() {
+          standaloneScreen.on('change:layers', function() {
             expect(called).to.be(1);
             expect(latency).to.be.below(15);
-            expect(standaloneScreen.model.screenLayers.length).to.be(1);
+            expect(standaloneScreen.model.layers.length).to.be(1);
             expect(standaloneScreen.queryAll('.missing-layer-view')).to.have.length(1);
             done();
           });
@@ -108,7 +108,7 @@ describe.skip('Controller View', function () {
     describe('values', function() {
       describe('screenView', function() {
         before(makeInstance({}, {
-          screenLayers: [
+          layers: [
             {
               active: true,
               name: 'Layer 1'
@@ -118,7 +118,7 @@ describe.skip('Controller View', function () {
               name: 'Layer 2'
             }
           ],
-          screenSignals: [
+          signals: [
             {
               type: 'beat',
               name: 'beat:a',

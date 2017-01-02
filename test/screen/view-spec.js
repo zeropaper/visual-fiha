@@ -29,8 +29,8 @@ describe.skip('Screen View', function () {
 
         viewSetup = viewSetup || {};
         viewSetup.model = viewSetup.model || (new ScreenState(modelSetup || {
-          screenLayers: [],
-          screenSignals: []
+          layers: [],
+          signals: []
         }));
 
         instance = new ScreenView(viewSetup);
@@ -54,8 +54,8 @@ describe.skip('Screen View', function () {
 
         // describe('control', function () {
         //   before(makeInstance({
-        //     screenLayers: [],
-        //     screenSignals: [],
+        //     layers: [],
+        //     signals: [],
         //     mode: 'control'
         //   }));
 

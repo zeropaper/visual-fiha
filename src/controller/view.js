@@ -67,11 +67,11 @@ var ControllerView = View.extend(controllerMixin, {
       controllerView._workerInit = true;
 
       controllerView.sendCommand('resetLayers', {
-        layers: controllerView.model.screenLayers.serialize()
+        layers: controllerView.model.layers.serialize()
       });
 
       controllerView.sendCommand('resetSignals', {
-        signals: controllerView.model.screenSignals.serialize()
+        signals: controllerView.model.signals.serialize()
       });
     }, false);
 
@@ -80,8 +80,8 @@ var ControllerView = View.extend(controllerMixin, {
 
     controllerView._bindLayerEvents();
     controllerView.model.set({
-      screenSignals: options.screenSignals,
-      screenLayers: options.screenLayers
+      signals: options.signals,
+      layers: options.layers
     });
 
 
@@ -116,19 +116,19 @@ var ControllerView = View.extend(controllerMixin, {
   _bindLayerEvents: function() {
     var controllerView = this;
 
-    controllerView.listenTo(controllerView.model.screenLayers, 'add', function(state) {
+    controllerView.listenTo(controllerView.model.layers, 'add', function(state) {
       controllerView.sendCommand('addLayer', {
         layer: state.serialize()
       });
     });
 
-    controllerView.listenTo(controllerView.model.screenLayers, 'remove', function(state) {
+    controllerView.listenTo(controllerView.model.layers, 'remove', function(state) {
       controllerView.sendCommand('addLayer', {
         layerName: state.name
       });
     });
 
-    controllerView.listenTo(controllerView.model.screenLayers, 'change:layer', function(state) {
+    controllerView.listenTo(controllerView.model.layers, 'change:layer', function(state) {
       if (!state) return;
 
       var changed = state.changedAttributes();
@@ -290,12 +290,12 @@ var ControllerView = View.extend(controllerMixin, {
       }
     },
 
-    screenLayersView: {
+    layersView: {
       waitFor: 'el',
       selector: '.layers',
       prepareView: function(el) {
         var view = new LayersView({
-          collection: this.model.screenLayers,
+          collection: this.model.layers,
           parent: this,
           el: el
         });
@@ -303,12 +303,12 @@ var ControllerView = View.extend(controllerMixin, {
       }
     },
 
-    screenSignalsView: {
+    signalsView: {
       waitFor: 'el',
       selector: '.signals',
       prepareView: function(el) {
         var view = new SignalsView({
-          collection: this.model.screenSignals,
+          collection: this.model.signals,
           parent: this,
           el: el
         });

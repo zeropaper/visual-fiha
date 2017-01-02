@@ -343,22 +343,22 @@ window.VF._defaultSetup = {
   mappings: [
     {
       source: 'frametime',
-      target: 'screenSignals.beat:a.frametime',
+      target: 'signals.beat:a.frametime',
       transform: 'function (v) { return v * 0.5; }'
     },
     {
       source: 'frametime',
-      target: 'screenLayers.canvas.canvasLayers.background.opacity',
+      target: 'layers.canvas.canvasLayers.background.opacity',
       transform: 'function (v) { return v % 100; }'
     },
     {
-      source: 'screenSignals.beat:a.result',
-      target: 'screenSignals.color:a.hue'
+      source: 'signals.beat:a.result',
+      target: 'signals.color:a.hue'
     }
   ],
 
 
-  screenSignals: [
+  signals: [
     {
       type: 'hslaSignal',
       defaultValue: '180,50%,50%,1',
@@ -410,7 +410,7 @@ window.VF._defaultSetup = {
   ],
 
 
-  screenLayers: [
+  layers: [
     {
       type: 'img',
       name: 'no-signal',

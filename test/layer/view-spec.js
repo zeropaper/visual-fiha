@@ -28,13 +28,13 @@ describe.skip('Layer View', function () {
     return function() {
       var screen = new ScreenView({
         model: new ScreenState({
-          screenLayers: [
+          layers: [
             setup
           ]
         })
       });
 
-      instance = screen.model.screenLayers.at(0);
+      instance = screen.model.layers.at(0);
       screen.render();
       holder.appendChild(screen.el);
     };

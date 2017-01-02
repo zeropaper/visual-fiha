@@ -11,8 +11,8 @@ require('./../layer/img/state');
 
 var ScreenState = State.extend({
   mappable: {
-    source: ['frametime', 'firstframetime', 'screenSignals'],
-    target: ['screenLayers']
+    source: ['frametime', 'firstframetime', 'signals'],
+    target: ['layers']
   },
 
   props: {
@@ -32,7 +32,7 @@ var ScreenState = State.extend({
   },
 
   collections: {
-    screenLayers: Collection.extend({
+    layers: Collection.extend({
       comparator: 'zIndex',
       mainIndex: 'name',
       model: function(attrs, opts) {
@@ -44,7 +44,7 @@ var ScreenState = State.extend({
         return state;
       }
     }),
-    screenSignals: require('./../signal/collection')
+    signals: require('./../signal/collection')
   }
 });
 module.exports = ScreenState;

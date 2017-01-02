@@ -40,7 +40,7 @@ commands.setup = function setup(state) {
 };
 commands.resetLayers = function resetLayers(layers) {
   var triggerChange;
-  var collection = this.model.screenLayers;
+  var collection = this.model.layers;
 
   function findLayer(name) {
     return layers.find(function () {
@@ -70,21 +70,21 @@ commands.resetLayers = function resetLayers(layers) {
   });
 
   if (triggerChange) {
-    this.trigger('change:screenLayers', collection);
+    this.trigger('change:layers', collection);
   }
 
   this.resize();
 };
 commands.addLayer = function addLayer(layer) {
-  var collection = this.model.screenLayers;
+  var collection = this.model.layers;
   collection.add(layer);
 };
 commands.removeLayer = function removeLayer(layerName) {
-  var collection = this.model.screenLayers;
+  var collection = this.model.layers;
   collection.remove(collection.get(layerName));
 };
 commands.updateLayer = function updateLayer(layer, layerName) {
-  this.model.screenLayers.get(layerName).set(layer);
+  this.model.layers.get(layerName).set(layer);
 };
 
 commands.heartbeat = function heartbeat(frametime, audio) {
@@ -201,7 +201,7 @@ var ScreenView = View.extend(clientMixin, {
     }
 
     if (!this.layersView) {
-      this.layersView = this.renderCollection(this.model.screenLayers, function(opts) {
+      this.layersView = this.renderCollection(this.model.layers, function(opts) {
         var type = opts.model.getType();
         var ScreenLayerConstructor = LayerView[type] || LayerView;
         return new ScreenLayerConstructor(opts);
@@ -230,9 +230,9 @@ var ScreenView = View.extend(clientMixin, {
     }
 
     var triggerChange;
-    var collection = this.model.screenLayers;
-    if (options.screenLayers) {
-      options.screenLayers.forEach(function(layer) {
+    var collection = this.model.layers;
+    if (options.layers) {
+      options.layers.forEach(function(layer) {
         triggerChange = true;
         var state = collection.get(layer.name);
         if (state) {
@@ -248,7 +248,7 @@ var ScreenView = View.extend(clientMixin, {
       });
 
       collection.forEach(function(layer) {
-        var found = options.screenLayers.find(findLayer(layer.name));
+        var found = options.layers.find(findLayer(layer.name));
         if (!found) {
           triggerChange = true;
           collection.remove(layer, {
@@ -258,7 +258,7 @@ var ScreenView = View.extend(clientMixin, {
       });
 
       if (triggerChange) {
-        this.trigger('change:screenLayers', collection);
+        this.trigger('change:layers', collection);
       }
     }
 

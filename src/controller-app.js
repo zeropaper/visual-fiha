@@ -26,8 +26,8 @@ controllerSetup.el = document.querySelector('.controller');
 
 VFDeps.localForage.getItem('snapshot').then(function(/*value*/) {
   // if (value && confirm('Load previous state?')) {
-  //   controllerSetup.screenLayers = value.screen.screenLayers;
-  //   controllerSetup.screenSignals = value.signals;
+  //   controllerSetup.layers = value.screen.layers;
+  //   controllerSetup.signals = value.signals;
   // }
   // console.info('snapshot found', value);
   window.visualFiha = new ControllerView(controllerSetup);
