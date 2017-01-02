@@ -1,5 +1,6 @@
 'use strict';
 var View = VFDeps.View;
+var ViewSwitcher = VFDeps.ViewSwitcher;
 var ScreenState = require('./../screen/state');
 var MIDIAccessState = require('./../midi/state');
 var MIDIAccessView = require('./../midi/view');
@@ -7,8 +8,9 @@ var SignalsView = require('./signals-view');
 var LayersView = require('./layers-view');
 var SuggestionView = require('./suggestion-view');
 var SparklineView = require('./sparkline-view');
-var AudioMonitor = require('./audio-monitor-view');
+var AudioSource = require('./audio-source-view');
 var AceEditor = require('./ace-view');
+var RegionView = require('./region-view');
 
 var mappings = require('./../mapping/state');
 var MappingsControlView = require('./../mapping/control-view');
@@ -84,9 +86,6 @@ var ControllerView = View.extend(controllerMixin, {
 
 
 
-
-    controllerView.listenToAndRun(controllerView, 'change:audioContext change:audioAnalyser', controllerView.connectAudioSource);
-
     controllerView.listenToAndRun(controllerView.midiAccess, 'midi', function(evtName, value) {
       if (!evtName) return;
 
@@ -147,41 +146,13 @@ var ControllerView = View.extend(controllerMixin, {
     return this;
   },
 
-  connectAudioSource: function() {
-    var controllerView = this;
-    var capture = {
-      audio: true
-    };
-
-    function success(stream) {
-      var source = controllerView.audioContext.createMediaStreamSource(stream);
-      source.connect(controllerView.audioAnalyser);
-    }
-    function error(err) {
-      console.warn(err);
-    }
-
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia(capture).then(success).catch(error);
-    }
-    else if (navigator.getUserMedia) {
-      navigator.getUserMedia(capture, success, error);
-    }
-
-    return this;
-  },
-
   _animate: function(timestamp) {
     if (this.controllerSparkline) {
       this.controllerSparkline.update(1000 / ((timestamp - this.model.frametime) - this.model.firstframetime));
     }
 
-    if (this.latencySparkline) {
-      // this.latencySparkline.update(this.screenView.model.latency);
-    }
-
-    if (this.audioMonitor) {
-      this.audioMonitor.update();
+    if (this.audioSource) {
+      this.audioSource.update();
     }
 
     if (this.playing) {
@@ -194,12 +165,12 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   update: function() {
-    var analyser = this.audioAnalyser;
+    var analyser = this.audioSource.audioAnalyser;
 
-    var freqArray = this.audioFrequencyDataArray;
+    var freqArray = this.audioSource.audioFrequencyDataArray;
     analyser.getByteFrequencyData(freqArray);
 
-    var timeDomainArray = this.audioTimeDomainDataArray;
+    var timeDomainArray = this.audioSource.audioTimeDomainDataArray;
     analyser.getByteTimeDomainData(timeDomainArray);
 
     var command = {
@@ -220,48 +191,6 @@ var ControllerView = View.extend(controllerMixin, {
       fn: function() {
         return window.getComputedStyle(this.el);
       }
-    },
-    signalNames: {
-      fn: function () {
-        var mic = [];
-        var analyser = this.audioAnalyser;
-        var bufferLength = analyser.frequencyBinCount;
-        for(var i = 0; i < bufferLength; i++) {
-          mic.push('freq:' + i);
-          mic.push('atd:' + i);
-        }
-        return mic.concat(this.screenView ? this.screenView.signalNames : [], this.midiAccess.signalNames);
-      }
-    },
-
-    audioContext: {
-      deps: [],
-      fn: function() {
-        return new window.AudioContext();
-      }
-    },
-    audioAnalyser: {
-      deps: ['audioContext', 'model', 'audioMinDb', 'audioMaxDb', 'audioSmoothing', 'audioFftSize'],
-      fn: function() {
-        var analyser = this.audioContext.createAnalyser();
-        analyser.minDecibels = this.audioMinDb;
-        analyser.maxDecibels = this.audioMaxDb;
-        analyser.smoothingTimeConstant = this.audioSmoothing;
-        analyser.fftSize = this.audioFftSize;
-        return analyser;
-      }
-    },
-    audioFrequencyDataArray: {
-      deps: ['audioAnalyser'],
-      fn: function () {
-        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
-      }
-    },
-    audioTimeDomainDataArray: {
-      deps: ['audioAnalyser'],
-      fn: function () {
-        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
-      }
     }
   },
 
@@ -270,10 +199,6 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   session: {
-    audioMinDb: ['number', true, -90],
-    audioMaxDb: ['number', true, -10],
-    audioSmoothing: ['number', true, 0.85],
-    audioFftSize: ['number', true, 256],
     playing: ['boolean', true, false],
     broadcastId: ['string', true, 'vfBus'],
     _arId: 'number',
@@ -311,28 +236,41 @@ var ControllerView = View.extend(controllerMixin, {
       }
     },
 
-    codeEditor: {
+    leftBottom: {
       waitFor: 'el',
-      selector: '.debug',
-      prepareView: function(el) {
-        return new AceEditor({
-          el: el,
-          parent: this
-        });
-      }
-    },
-
-    audioMonitor: {
-      waitFor: 'el',
-      selector: '.audio-monitor',
+      selector: '.region-left-bottom',
       prepareView: function(el) {
         var styles = window.getComputedStyle(el);
-        var view = new AudioMonitor({
+
+        this.codeEditor = new AceEditor({
+          parent: this
+        });
+
+        this.audioSource = new AudioSource({
           audioAnalyser: this.audioAnalyser,
           parent: this,
           color: styles.color
         });
-        el.appendChild(view.el);
+
+        this.mappingsView = new MappingsControlView({
+          collection: mappings,
+          parent: this,
+          model: this.model
+        });
+
+        var view = new RegionView({
+          parent: this,
+          el: el,
+          tabs: [
+            {text: 'Mappings', view: this.mappingsView, active: true},
+            {text: 'Editor', view: this.codeEditor},
+            {text: 'Audio', view: this.audioSource}
+          ],
+          currentView: this.mappingsView
+        });
+
+        view.el.classList.add('row');
+
         return view;
       }
     },
@@ -340,21 +278,6 @@ var ControllerView = View.extend(controllerMixin, {
     controllerSparkline: {
       waitFor: 'el',
       selector: '.sparkline-controller',
-      prepareView: function(el) {
-        var styles = window.getComputedStyle(el);
-        var view = new SparklineView({
-          parent: this,
-          color: styles.color,
-          font: styles.fontSize + ' ' + styles.fontFamily.split(' ').pop()
-        });
-        el.appendChild(view.el);
-        return view;
-      }
-    },
-
-    latencySparkline: {
-      waitFor: 'el',
-      selector: '.sparkline-latency',
       prepareView: function(el) {
         var styles = window.getComputedStyle(el);
         var view = new SparklineView({
@@ -391,20 +314,6 @@ var ControllerView = View.extend(controllerMixin, {
         });
         return view;
       }
-    },
-
-    mappingsView: {
-      waitFor: 'el',
-      selector: '.mappings-view',
-      prepareView: function(el) {
-        var view = new MappingsControlView({
-          collection: mappings,
-          parent: this,
-          model: this.model,
-          el: el
-        });
-        return view;
-      }
     }
   },
 
@@ -419,18 +328,14 @@ var ControllerView = View.extend(controllerMixin, {
     View.prototype.remove.apply(this, arguments);
   },
 
-  toJSON: function () {
-    return this.screenView.toJSON();
-  },
-
   bindings: {
-    broadcastId: {
-      selector: '.control-screen',
-      type: function(el, val) {
-        if (!val) return;
-        el.src = './screen.html#' + val;
-      }
-    },
+    // broadcastId: {
+    //   selector: '.control-screen',
+    //   type: function(el, val) {
+    //     if (!val) return;
+    //     el.src = './screen.html#' + val;
+    //   }
+    // },
     playing: [
       {
         type: 'toggle',
@@ -441,23 +346,7 @@ var ControllerView = View.extend(controllerMixin, {
         type: 'toggle',
         selector: '[name="pause"]'
       }
-    ],
-    audioMinDb: {
-      selector: '[name="audioMinDb"]',
-      type: 'value'
-    },
-    audioMaxDb: {
-      selector: '[name="audioMaxDb"]',
-      type: 'value'
-    },
-    audioSmoothing: {
-      selector: '[name="audioSmoothing"]',
-      type: 'value'
-    },
-    audioFftSize: {
-      selector: '[name="audioFftSize"]',
-      type: 'value'
-    }
+    ]
   },
 
   events: {
@@ -465,19 +354,11 @@ var ControllerView = View.extend(controllerMixin, {
     'click [name="pause"]': 'pause',
     'click [name="stop"]': 'stop',
     'click [name="resize"]': 'resizeScreen',
-    'click [name="screen"]': '_openScreen',
-    'click [name="add-layer"]': '_addLayer',
-    'click [name="add-signal"]': '_addSignal',
-    'change .audio-source [name]': '_changeAudioParams'
+    'click [name="screen"]': '_openScreen'
   },
 
   _openScreen: function() {
     window.open('./screen.html#' + this.broadcastId, 'screen', 'width=800,height=600,location=no');
-  },
-
-  _changeAudioParams: function(evt) {
-    this.model.set(evt.target.name, Number(evt.target.value));
-    this.audioMonitor.set('audioAnalyser', this.audioAnalyser);
   },
 
   addMultiMapping: function(mappingModel) {
@@ -488,38 +369,20 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   showDetails: function (view) {
-    if (view === this.currentDetails) { return this; }
-    this.detailsSwitcher.set(view);
+    if (view === this.currentDetails) return this;
+    var tabs = this.leftBottom.tabs;
+    var found = tabs.find(function(tab) {
+      return tab.view === view;
+    });
+    if (!found) {
+      tabs.add({text: 'Details', view: view});
+    }
+    tabs.forEach(function(tab) {
+      tab.active = tab.view === view;
+    });
+    this.leftBottom.currentView = view;
     return this;
   },
-
-  _addSignal: function() {
-    var typeEl = this.queryByHook('signal-type');
-    var nameEl = this.queryByHook('signal-name');
-    var type = typeEl.value;
-    var name = nameEl.value;
-    if (!type || !name) { return; }
-    this.model.screenSignals.add({
-      name: name,
-      type: type
-    });
-    typeEl.value = nameEl.value = '';
-  },
-
-  _addLayer: function() {
-    var typeEl = this.queryByHook('signal-type');
-    var nameEl = this.queryByHook('signal-name');
-    var type = typeEl.value;
-    var name = nameEl.value;
-    if (!type || !name) { return; }
-    this.model.screenLayers.add({
-      name: name,
-      type: type
-    });
-    typeEl.value = nameEl.value = '';
-  },
-
-
 
   render: function () {
     var controllerView = this;
@@ -532,7 +395,7 @@ var ControllerView = View.extend(controllerMixin, {
       detailsEl: '.details'
     });
 
-    this.detailsSwitcher = new VFDeps.ViewSwitcher(this.detailsEl, {
+    this.detailsSwitcher = new ViewSwitcher(this.detailsEl, {
       show: function (view) {
         controllerView.currentDetails = view;
       }
@@ -572,58 +435,22 @@ var ControllerView = View.extend(controllerMixin, {
       '<div class="region-left column no-grow rows">'+
         '<iframe class="region-left-top row grow-l control-screen"></iframe>'+
 
-        '<div class="region-left-bottom row rows">' +
-          '<div class="row debug"></div>'+
-          '<div class="row details"></div>'+
-        '</div>'+
+        '<div class="region-left-bottom row rows"></div>'+
       '</div>'+
 
       '<div class="region-right column rows settings">'+
         '<div class="region-right-top row columns">'+
           '<div class="column rows">'+
-            '<div class="row layers">'+
-            '</div>'+
+            '<div class="row layers"></div>'+
           '</div>'+
 
           '<div class="column rows">'+
-            '<div class="row signals">'+
-            '</div>'+
-
-            '<div class="column rows">'+
-              '<div class="row mappings-view"></div>' +
-            '</div>'+
+            '<div class="row signals"></div>'+
           '</div>'+
         '</div>'+
 
-
-        // '<div class="row no-grow columns">'+
-        //   '<div class="mappings-view"></div>' +
-        // '</div>'+
-
-
         '<div class="region-right-bottom row no-grow columns">'+
           '<div class="column midi-access"></div>'+
-
-
-          '<div class="column rows audio-source">'+
-            // '<audio class="row" src="http://localhost:8080/stream" controls autoplay></audio>'+
-            '<div class="row columns">'+
-              '<div class="column audio-monitor"></div>'+
-              '<div class="column audio-controls">' +
-                '<label>MinDb: <input type="number" name="audioMinDb" value="-90" step="1" /></label>' +
-                '<label>MaxDb: <input type="number" name="audioMaxDb" value="-10" min="-70" step="1" /></label>' +
-                '<label>Smoothing: <input type="number" name="audioSmoothing" value="0.85" step="0.01" /></label>' +
-                '<label>FftSize: <select type="number" name="audioFftSize" value="32" step="2">' +
-                  '<option value="32">32</option>' +
-                  '<option value="64">64</option>' +
-                  '<option value="128">128</option>' +
-                  '<option value="256">256</option>' +
-                  '<option value="1024">1024</option>' +
-                  '<option value="2048">2048</option>' +
-                '</select></label>' +
-              '</div>'+
-            '</div>' +
-          '</div>'+
         '</div>'+
       '</div>'+
     '</div>'+

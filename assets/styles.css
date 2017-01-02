@@ -241,14 +241,14 @@ button[disabled] {
 }
 button.yes,
 button.no {
-  padding: 2px var(--spacing);
-  border: 1px solid var(--bg-color);/*var(--text-color);*/
   color: var(--bg-color);
 }
 button.yes {
+  border: 1px solid var(--yes);
   background-color: var(--yes);
 }
 button.no {
+  border: 1px solid var(--no);
   background-color: var(--no);
 }
 
@@ -470,6 +470,55 @@ Layout
 .region-left-bottom {
 
 }
+
+.region {
+  display: flex;
+  flex-direction: column;
+}
+.region > .region-tabs {
+  flex-grow: 0;
+  flex-wrap: wrap;
+}
+.region > .region-content {
+  flex-grow: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.code-editor > header {
+  flex-grow: 0;
+}
+
+.tabs {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid currentColor;
+  background-color: var(--bg-color-alt);
+}
+.tabs > li {
+  cursor: pointer;
+  display: block;
+  margin: 1px var(--spacing) -1px 0;
+  padding: var(--spacing);
+  flex-grow: 0;
+  border-bottom: 1px solid currentColor;
+  background-color: var(--bg-color);
+}
+.tabs > li:last-child {
+  margin-right: 0;
+}
+.tabs > li:hover {
+  border-bottom-color: var(--editable);
+}
+.tabs > li.active {
+  cursor: default;
+  border-bottom-color: var(--yes);
+}
+
+
 
 .default-layer-control {
   border-bottom: 1px solid var(--text-color-disabled);
