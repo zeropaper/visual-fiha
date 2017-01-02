@@ -1,6 +1,7 @@
 var resolve = require('path').resolve;
 var validate = require('webpack-validator');
-module.exports = function() {
+module.exports = function(env) {
+  env = env || {};
   return validate({
     context: resolve(__dirname, 'src'),
     entry: {
@@ -10,7 +11,10 @@ module.exports = function() {
     output: {
       filename: '[name]-build.js'
     },
-    devtool: 'cheap-module-source-map',
+    // http://cheng.logdown.com/posts/2016/03/25/679045
+    // devtool: env.prod ? 'cheap-module-source-map' : 'cheap-module-eval-source-map',
+    devtool: 'source-map',
+
     devServer: {
       host: 'localhost',
       inline: true,
