@@ -15,9 +15,15 @@ var LayerControlView = View.extend({
   '</section>',
 
   events: {
+    'mouseenter': '_highlight',
+    'mouseleave': '_highlight',
     'click .remove-layer': '_removeLayer',
     'click .active.prop-toggle': '_toggleActive',
     'click .layer-name': '_showMappings'
+  },
+
+  _highlight: function(evt) {
+    this.model.uiState = evt.type === 'mouseenter' ? 'highlighted' : '';
   },
 
   _removeLayer: function() {
@@ -36,6 +42,9 @@ var LayerControlView = View.extend({
   },
 
   bindings: {
+    'model.uiState': {
+      type: 'class'
+    },
     'model.active': [
       {
         type: 'booleanClass',

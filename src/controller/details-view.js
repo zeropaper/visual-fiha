@@ -307,6 +307,7 @@ var DetailsView = View.extend({
             return [
               'drawFunction',
 
+              'uiState',
               'name',
               'type',
               'zIndex'
@@ -368,6 +369,7 @@ var DetailsView = View.extend({
   },
 
   bindings: {
+    'model.uiState': {selector: 'header', type: 'class'},
     'model.name': '[data-hook=name]',
     objectPath: '[data-hook="object-path"]'
   }

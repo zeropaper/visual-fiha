@@ -53,6 +53,15 @@ var CanvasLayer = State.extend({
     drawFunction: 'any'
   },
 
+  session: {
+    uiState: {
+      type: 'string',
+      values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
+      default: '',
+      required: true
+    }
+  },
+
   serialize: function() {
     var obj = State.prototype.serialize.apply(this, arguments);
     var returned = {};
@@ -102,6 +111,7 @@ var CanvasLayer = State.extend({
       returned.drawFunction = this.drawFunction;
     }
     returned.name = this.name;
+    delete returned.uiState;
     return returned;
   },
 

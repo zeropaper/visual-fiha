@@ -97,6 +97,22 @@ var LayerState = State.extend({
     type: ['string', true, 'default'],
     zIndex: ['number', true, 0]
   },
+
+  session: {
+    uiState: {
+      type: 'string',
+      values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
+      default: '',
+      required: true
+    }
+  },
+
+  serialize: function() {
+    var returned = State.prototype.serialize.apply(this, arguments);
+    delete returned.uiState;
+    return returned;
+  },
+
   derived: {
     mappable: {
       deps: [],

@@ -761,6 +761,28 @@ header h3 {
 }
 
 
+
+
+
+
+/*
+UI state
+*/
+
+.focused {
+
+}
+.highlighted {
+  background-color: var(--editable);
+}
+.dependency {
+
+}
+.dependent {
+
+}
+
+
 /*
 .mappings-view
 */

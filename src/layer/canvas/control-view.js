@@ -21,6 +21,8 @@ var ControlCanvasLayerView = VFDeps.View.extend({
   },
 
   events: {
+    'mouseenter': '_highlight',
+    'mouseleave': '_highlight',
     'click .remove-canvas-layer': '_removeLayer',
     'click .edit-draw-function': '_editDrawFunction',
     'click [name="active"]': '_toggleActive',
@@ -41,6 +43,9 @@ var ControlCanvasLayerView = VFDeps.View.extend({
   },
 
   bindings: {
+    'model.uiState': {
+      type: 'class'
+    },
     'model.active': [
       {
         type: 'booleanClass',

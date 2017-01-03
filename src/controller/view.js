@@ -135,10 +135,11 @@ var ControllerView = View.extend(controllerMixin, {
       if (!Object.keys(changed).length) {
         changed = state.serialize();
       }
-
+      delete changed.uiState;
+      if (!Object.keys(changed).length) return;
 
       controllerView.sendCommand('updateLayer', {
-        layer: state.changedAttributes(),
+        layer: changed,
         layerName: state.name
       });
     });
