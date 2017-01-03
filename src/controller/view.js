@@ -334,13 +334,13 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   bindings: {
-    // broadcastId: {
-    //   selector: '.control-screen',
-    //   type: function(el, val) {
-    //     if (!val) return;
-    //     el.src = './screen.html#' + val;
-    //   }
-    // },
+    broadcastId: {
+      selector: '.control-screen',
+      type: function(el, val) {
+        if (!val) return;
+        el.src = './screen.html#' + val;
+      }
+    },
     playing: [
       {
         type: 'toggle',
