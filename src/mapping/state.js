@@ -27,7 +27,7 @@
 
   function objectPath(state) {
     if (!state) return null;
-    var str = '';
+    var parts = [];
 
 
     var f = function(instance) {
@@ -36,20 +36,20 @@
                         isCollectionOfParent(instance, instance.collection.parent) :
                         null;
       if (collectionName) {
-        str = collectionName + '.' + str;
+        parts.unshift(collectionName);
         return f(instance.collection.parent);
       }
 
       var childName = isChildOfParent(instance, instance.parent);
       if (childName) {
-        str = childName + '.' + str;
+        parts.unshift(childName);
         return f(instance.parent);
       }
 
 
       var propName = isPropOfParent(instance, instance.parent);
       if (propName) {
-        str = propName + '.' + str;
+        parts.unshift(propName);
         return f(instance.parent);
       }
 
@@ -58,7 +58,7 @@
 
     f(state);
 
-    return str;
+    return parts.join('.');
   }
 
 
@@ -126,7 +126,8 @@
       sourcePath: {
         deps: ['sourceObject', 'sourceProperty'],
         fn: function() {
-          return objectPath(this.sourceObject) + this.sourceProperty;
+          var objPath = objectPath(this.sourceObject);
+          return (objPath ? objPath + '.' : '') + this.sourceProperty;
         }
       },
       sourceValue: {
@@ -173,7 +174,8 @@
         deps: ['targetObject', 'targetProperty'],
         fn: function() {
           if (!this.targetObject || !this.targetProperty) return null;
-          return objectPath(this.targetObject) + this.targetProperty;
+          var objPath = objectPath(this.targetObject);
+          return (objPath ? objPath + '.' : '') + this.targetProperty;
         }
       },
       targetValue: {
@@ -250,7 +252,8 @@
     },
 
     isTarget: function(state, propName) {
-      var p = objectPath(state) + propName;
+      var p = objectPath(state);
+      p = (p ? p + '.' : '') + propName;
       return this.models.find(function(mapping) {
         return mapping.targetPath === p;
       });
@@ -261,16 +264,6 @@
       return this.models.find(function(mapping) {
         return mapping.sourcePath === p;
       });
-    },
-
-    _suggestProp: function(origin, names) {
-      var results = [];
-      return results;
-    },
-
-    _suggestItem: function(origin, names) {
-      var results = [];
-      return results;
     },
 
     sourceSuggestions: function(origin) {
