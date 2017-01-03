@@ -493,30 +493,42 @@ Layout
 
 .tabs {
   padding: 0;
-  margin: 0;
+  margin: 0 0 var(--tabs-border-width) 0;
   display: flex;
   flex-direction: row;
-  border-bottom: 1px solid currentColor;
-  background-color: var(--bg-color-alt);
+  box-shadow: 0 var(--tabs-border-width) 0 0 var(--border-color),
+              0 0 var(--spacing) 0 rgba(200,200,200,0.2) inset;
+  border-top: 1px solid var(--border-color);
+  background-color: rgba(122,122,122,0.1);
 }
 .tabs > li {
   cursor: pointer;
-  display: block;
-  margin: 1px var(--spacing) -1px 0;
-  padding: var(--spacing);
+  margin: var(--tabs-border-width) var(--spacing) 0 var(--spacing);
   flex-grow: 0;
-  border-bottom: 1px solid currentColor;
+  box-shadow: 0 0 0 0 var(--border-color),
+              0 0 var(--spacing) 0 rgba(0,0,0,1) inset;
   background-color: var(--bg-color);
+  transition: box-shadow 0.218s ease;
+}
+
+.tabs > li div {
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
 }
 .tabs > li:last-child {
   margin-right: 0;
 }
 .tabs > li:hover {
-  border-bottom-color: var(--editable);
+  box-shadow: 0 var(--tabs-border-width) 0 0 var(--editable),
+              0 0 var(--spacing) 0 rgba(0,0,0,1) inset;
 }
 .tabs > li.active {
   cursor: default;
-  border-bottom-color: var(--yes);
+  box-shadow: 0 var(--tabs-border-width) 0 0 var(--yes),
+              0 0 var(--spacing) 0 rgba(0,0,0,1) inset;
 }
 
 
