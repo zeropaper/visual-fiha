@@ -106,9 +106,7 @@ var ItemView = View.extend({
 var MappingsControlView = View.extend({
   template: '<section class="mappings-view">' +
       '<header>' +
-        '<h3 class="section-name">Mappings</h3>' +
-
-        '<div class="add-form gutter-horizontal gutter-top columns">' +
+        '<div class="add-form columns">' +
           '<div class="column add-form--source-path">' +
             '<input placeholder="Source" name="new-source-path" />' +
           '</div>' +
@@ -143,12 +141,37 @@ var MappingsControlView = View.extend({
     }
   },
 
+  derived: {
+    suggestionHelper: {
+      deps: ['rootView'],
+      fn: function () {
+        return this.rootView.suggestionHelper;
+      }
+    }
+  },
 
   events: {
-    'keyup [name="-path"]': '_handlePathUpdate',
+    'focus [name=new-source-path]': '_handleSourceFocus',
+    'focus [name=new-target-path]': '_handleTargetFocus',
+    'keyup [name$="-path"]': '_handlePathUpdate',
     'click [name="add-mapping"]': '_handleAddMapping'
   },
 
+  _handleSourceFocus: function(evt) {
+    var helper = this.suggestionHelper;
+    helper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(this.collection.sourceSuggestions(this.model));
+  },
+
+  _handleTargetFocus: function(evt) {
+    var helper = this.suggestionHelper;
+    helper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(this.collection.targetSuggestions(this.model));
+  },
 
   _handlePathUpdate: function() {
     //
