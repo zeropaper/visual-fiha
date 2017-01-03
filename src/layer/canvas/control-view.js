@@ -1,7 +1,10 @@
 'use strict';
 var LayerControlView = require('./../control-view');
+var DetailsView = require('./../../controller/details-view');
+var View = VFDeps.View;
+var assign = VFDeps.assign;
 
-var ControlCanvasLayerView = VFDeps.View.extend({
+var CanvasControlLayerView = LayerControlView.extend({
   template: '<section class="canvas-layer">' +
     '<header class="columns">' +
       '<div class="column no-grow"><button name="active"></button></div>' +
@@ -74,7 +77,7 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
           '<h3 class="column layer-name" data-hook="name"></h3>' +
         '</div>' +
 
-        '<div class="row columns gutter-left">' +
+        '<div class="row columns new-layer">' +
           '<div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>' +
           '<div class="column"><input type="text" placeholder="propA, propB" data-hook="new-layer-props" /></div>' +
           '<div class="column no-grow">' +
@@ -88,7 +91,7 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
       '</div>' +
     '</section>',
 
-  events: VFDeps.assign({
+  events: assign({
     'change [data-hook=new-layer-name]': '_inputLayerName',
     'click [name=add-layer]': '_addLayer'
   }, LayerControlView.prototype.events),
@@ -137,7 +140,7 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
       waitFor: 'el',
       selector: '.layers .items',
       prepareView: function (el) {
-        return this.renderCollection(this.model.canvasLayers, ControlCanvasLayerView, el);
+        return this.renderCollection(this.model.canvasLayers, CanvasControlLayerView, el);
       }
     }
   }

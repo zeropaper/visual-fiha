@@ -1,5 +1,6 @@
 'use strict';
 var State = VFDeps.State;
+var Collection = VFDeps.Collection;
 var ScreenLayerState = require('./../state');
 
 var CanvasLayer = State.extend({
@@ -172,7 +173,7 @@ var CanvasLayer = State.extend({
 });
 
 var _CanvasLayersCache = {};
-var CanvasLayers = VFDeps.Collection.extend({
+var CanvasLayers = Collection.extend({
   mainIndex: CanvasLayer.prototype.idAttribute,
 
   comparator: 'weight',
