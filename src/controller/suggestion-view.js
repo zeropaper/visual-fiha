@@ -3,15 +3,28 @@ var View = VFDeps.View;
 var Collection = VFDeps.Collection;
 var State = VFDeps.State;
 
+function sharedStart(array) {
+  var A = array.concat().sort(),
+      a1 = A[0],
+      a2 = A[A.length-1],
+      L = a1.length,
+      i = 0;
+  while(i < L && a1.charAt(i) === a2.charAt(i)) i++;
+  return a1.substring(0, i);
+}
+
 var SuggestionItem = View.extend({
   template: '<li></li>',
   derived: {
     shortText: {
-      deps: ['text', 'collection']
+      deps: ['model.text', 'model.collection.parent'],
+      fn: function() {
+        return this.model.text.substring(this.model.collection.parent.commonStart.length);
+      }
     }
   },
   bindings: {
-    'model.text': {type: 'text'}
+    shortText: {type: 'text'}
   },
   events: {
     click: '_handleClick'
@@ -31,6 +44,8 @@ var SuggestionView = View.extend({
     this.off('selected');
     this.once('selected', selectCb);
 
+    this._makeHintEl();
+
     if (newCollection) {
       if (newCollection.isCollection) {
         this.collection = newCollection;
@@ -39,6 +54,8 @@ var SuggestionView = View.extend({
         this.collection.reset(newCollection);
       }
     }
+
+    this.filterCollection();
 
     return this;
   },
@@ -49,6 +66,7 @@ var SuggestionView = View.extend({
   },
 
   detach: function () {
+    this._removeHintEl();
     this.off('selected');
     this.unset('inputEl');
     this.collection.reset([]);
@@ -73,17 +91,127 @@ var SuggestionView = View.extend({
       }
     }
 
+    if (update.length > 1) {
+      this.commonStart = sharedStart(update.map(function(state) { return state.text; }));
+    }
+    else if (update.length/* === 1*/) {
+      this.commonStart = update[0].text;
+    }
+    else {
+      this.commonStart = '';
+    }
     this.suggestions.reset(update);
 
     return this;
   },
 
+  derived: {
+    // creates an event listener with correct scope (ideal for add/removeEventListener)
+    _handleHintClick: {
+      deps: [],
+      fn: function() {
+        var view = this;
+        return function() {
+          if (!view.inputEl || !view.commonStart) return;
+          view.inputEl.value = view.commonStart;
+        };
+      }
+    },
+    styles: {
+      deps:['inputEl'],
+      fn: function() {
+        if (!this.inputEl) return {};
+        return window.getComputedStyle(this.inputEl);
+      }
+    }
+  },
+
   session: {
+    commonStart: 'string',
     inputEl: 'element'
   },
 
-  _handleInput: function() {
-    this.filterCollection();
+  bindings: {
+    commonStart: {
+      type: function() {
+        var el = this.suggestionHint;
+        if (!el) return;
+        el.textContent = this.commonStart;
+      }
+    }
+  },
+
+  _handleInput: function(evt) {
+    // that way, autocomplete can be done using the Tab keyu
+    if (evt.type === 'keydown' && evt.key === 'Tab' && this.commonStart !== this.inputEl.value) {
+      evt.preventDefault();
+    }
+
+    if (evt.type !== 'keyup') return this.filterCollection();
+
+    switch (evt.key) {
+      case 'ArrowRight':
+      case 'Tab':
+        this._handleHintClick();
+        break;
+      case 'ArrowUp':
+      case 'ArrowDown':
+        console.info('suggestion input %s %s', evt.type, evt.key);
+        break;
+      default:
+        this.filterCollection();
+    }
+  },
+
+  _makeHintEl: function() {
+    var parentNode = this.inputEl.parentNode;
+    if (!parentNode) return this;
+    this._removeHintEl();
+
+    var div = this.suggestionHint = document.createElement('div');
+    div.className = 'suggestion--hint';
+    [
+      'display',
+      'paddingTop',
+      'paddingBottom',
+      'paddingLeft',
+      'paddingRight',
+      'marginTop',
+      'marginBottom',
+      'marginLeft',
+      'marginRight',
+      'top',
+      'bottom',
+      'left',
+      'right',
+      'borderWidth',
+      'borderStyle',
+      'fontSize',
+      'fontFamily',
+      'textAlign',
+      'color'
+    ].forEach(function(copy) {
+      div.style[copy] = this.styles[copy];
+    }, this);
+
+    div.style.cursor = 'pointer';
+    div.style.pointerEvents = 'none';
+    div.style.borderColor = 'transparent';
+    div.style.position = 'absolute';
+    div.style.zIndex = this.styles.zIndex + 1;
+    div.style.opacity = 0.5;
+
+    parentNode.appendChild(div);
+    this.inputEl.addEventListener('click', this._handleHintClick);
+  },
+
+  _removeHintEl: function() {
+    if (!this.suggestionHint || !this.suggestionHint.parentNode) return this;
+
+    this.inputEl.removeEventListener('click', this._handleHintClick);
+    this.suggestionHint.parentNode.removeChild(this.suggestionHint);
+    this.suggestionHint = null;
+    return this;
   },
 
   resetPosition: function() {
@@ -137,6 +265,7 @@ var SuggestionView = View.extend({
     this.on('change:inputEl', function() {
       var previous = this.previousAttributes();
       if (previous.inputEl) {
+        previous.inputEl.removeEventListener('keydown', _handleInput);
         previous.inputEl.removeEventListener('keyup', _handleInput);
       }
 
@@ -163,6 +292,7 @@ var SuggestionView = View.extend({
       }
 
       this.resetPosition();
+      inputEl.addEventListener('keydown', _handleInput, false);
       inputEl.addEventListener('keyup', _handleInput, false);
     });
 
