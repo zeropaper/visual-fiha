@@ -2,6 +2,7 @@
 var View = window.VFDeps.View;
 var AceEditor = View.extend({
   edit: function(target, propName, defaultValue, targetName) {
+    if (!this.editor) this.render();
     this.set({
       model: target,
       targetProperty: propName,

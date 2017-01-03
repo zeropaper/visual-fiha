@@ -272,6 +272,10 @@ var ControllerView = View.extend(controllerMixin, {
 
         view.el.classList.add('row');
 
+        this.listenTo(this.codeEditor, 'change:original', function() {
+          view.focusTabIndex(1);
+        });
+
         return view;
       }
     },
