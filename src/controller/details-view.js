@@ -79,7 +79,7 @@ var PropertyView = View.extend({
     },
 
     mappingObject: {
-      deps: ['mappingPath'],
+      deps: ['value'],
       fn: function() {
         return mappings.isTarget(this.parent.model, this.model.name);
       }
@@ -100,7 +100,7 @@ var PropertyView = View.extend({
       selector: 'input[name=value]',
     },
 
-    mappingPath: {
+    mappingObject: {
       type: 'booleanAttribute',
       selector: '.prop-mapping-clear button',
       name: 'disabled',
@@ -182,7 +182,6 @@ PropertyView.types.boolean = PropertyView.extend({
 
   _handleToggle: function () {
     this.parent.model.toggle(this.model.name);
-    console.info('set', this.model.name, this.parent.model.get(this.model.name), this.value);
   }
 });
 
@@ -278,7 +277,7 @@ PropertyView.names.rotateZ = PropertyView.types.number.extend({
 
 var DetailsView = View.extend({
   template:  '<section class="row rows">' +
-    '<header class="row">' +
+    '<header class="row no-grow">' +
       '<h3>Details for <span data-hook="name"></span></h3>' +
       '<h5 data-hook="object-path"></h5>' +
     '</header>' +
@@ -357,6 +356,7 @@ var DetailsView = View.extend({
 
   subviews: {
     propertiesView: {
+      waitFor: 'el',
       selector: '.items',
       prepareView: function (el) {
         return this.renderCollection(this.properties, function (opts) {
@@ -372,6 +372,17 @@ var DetailsView = View.extend({
     'model.uiState': {selector: 'header', type: 'class'},
     'model.name': '[data-hook=name]',
     objectPath: '[data-hook="object-path"]'
+  },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+
+    // This should fix some issues with the region-view
+    Object.keys(this.constructor.prototype.bindings).forEach(function(key) {
+      this.trigger('change:' + key);
+    }, this);
+
+    return this;
   }
 });
 module.exports = DetailsView;

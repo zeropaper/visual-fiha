@@ -262,12 +262,12 @@ var ControllerView = View.extend(controllerMixin, {
         var view = new RegionView({
           parent: this,
           el: el,
+          currentView: this.mappingsView,
           tabs: [
-            {text: 'Mappings', view: this.mappingsView, active: true},
-            {text: 'Editor', view: this.codeEditor},
-            {text: 'Audio', view: this.audioSource}
-          ],
-          currentView: this.mappingsView
+            {name: 'Mappings', view: this.mappingsView, pinned: true, active: true},
+            {name: 'Editor', view: this.codeEditor, pinned: true},
+            {name: 'Audio', view: this.audioSource, pinned: true}
+          ]
         });
 
         view.el.classList.add('row');
@@ -372,16 +372,17 @@ var ControllerView = View.extend(controllerMixin, {
   showDetails: function (view) {
     if (view === this.currentDetails) return this;
     var tabs = this.leftBottom.tabs;
-    var found = tabs.find(function(tab) {
-      return tab.view === view;
-    });
+    var tabName = this.mappingsView.collection.objectPath(view.model);
+    var found = tabs.get(tabName);
     if (!found) {
-      tabs.add({text: 'Details', view: view});
+      found = tabs.add({name: tabName, view: view});
     }
-    tabs.forEach(function(tab) {
-      tab.active = tab.view === view;
-    });
-    this.leftBottom.currentView = view;
+    else {
+      found.view = view;
+    }
+
+    this.leftBottom.focusTab(tabName);
+
     return this;
   },
 

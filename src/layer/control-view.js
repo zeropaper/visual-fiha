@@ -19,7 +19,7 @@ var LayerControlView = View.extend({
     'mouseleave': '_highlight',
     'click .remove-layer': '_removeLayer',
     'click .active.prop-toggle': '_toggleActive',
-    'click .layer-name': '_showMappings'
+    'click .layer-name': '_showDetails'
   },
 
   _highlight: function(evt) {
@@ -34,7 +34,7 @@ var LayerControlView = View.extend({
     this.model.toggle('active');
   },
 
-  _showMappings: function () {
+  _showDetails: function () {
     this.rootView.showDetails(new DetailsView({
       parent: this,
       model: this.model

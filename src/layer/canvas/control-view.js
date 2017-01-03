@@ -26,11 +26,8 @@ var ControlCanvasLayerView = VFDeps.View.extend({
     'click .remove-canvas-layer': '_removeLayer',
     'click .edit-draw-function': '_editDrawFunction',
     'click [name="active"]': '_toggleActive',
-    'click .canvas-layer-name': '_showMappings'
+    'click .canvas-layer-name': '_showDetails'
   },
-
-  _showMappings: LayerControlView.prototype._showMappings,
-  _toggleActive: LayerControlView.prototype._toggleActive,
 
   _editDrawFunction: function () {
     var editor = this.codeEditor;
