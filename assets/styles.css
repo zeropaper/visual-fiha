@@ -10,6 +10,9 @@
   --editable: #66D9EF;
   --border-color: #666;
   --spacing: .5rem;
+  --spacing-neg: -0.5rem;
+
+  --tabs-border-width: 2px;
 }
 
 
@@ -20,6 +23,7 @@
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     vertical-align: baseline;
+    position: relative;
 }
 html,
 body {
@@ -99,8 +103,6 @@ Icons
 
   display: inline-block;
   text-decoration: inherit;
-  width: 1em;
-  margin-right: .2em;
   text-align: center;
   /* opacity: .8; */
 
@@ -109,11 +111,9 @@ Icons
   text-transform: none;
 
   /* fix buttons height, for twitter bootstrap */
-  line-height: 1em;
 
   /* Animation center compensation - margins should be symmetric */
   /* remove if not needed */
-  margin-left: .2em;
 
   /* you can be more comfortable with increased icons size */
   /* font-size: 120%; */
@@ -124,6 +124,7 @@ Icons
 
   /* Uncomment for 3D effect */
   /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
+  vertical-align: inherit;
 }
 
 .vfi-play:before { content: '\e800'; } /* '' */
@@ -176,7 +177,6 @@ input:not([type=radio]) {
   display: inline-block;
   line-height: 1;
   font-size: inherit;
-  background: transparent;
   position: relative;
   color: currentColor;
   border: 1px solid transparent;
@@ -198,7 +198,7 @@ input:not([type=checkbox])[disabled],
 input:not([type=radio])[disabled] {
   color: currentColor;
 }
-
+/*
 button:hover,
 select:hover,
 textarea:hover,
@@ -225,12 +225,13 @@ input:not([type=checkbox]):error,
 input:not([type=radio]):error {
 
 }
-
+*/
 button {
   cursor: pointer;
 }
 button[disabled] {
   cursor: not-allowed;
+  color: var(--text-color-disabled);
 }
 
 .yes {
@@ -523,8 +524,15 @@ Layout
 .default-layer-control {
   border-bottom: 1px solid var(--text-color-disabled);
 }
+.canvas-control .new-layer,
+.canvas-control .layers > .items {
+  background-color: var(--bg-color);
+}
+.canvas-control .new-layer,
 .canvas-control .layers > .items {
   margin-left: var(--spacing);
+}
+.canvas-control .layers > .items {
   border-left: 1px solid var(--text-color-disabled);
 }
 .canvas-control .layers {
@@ -634,7 +642,6 @@ Canvas layer controls
 
 .signal:hover,
 .canvas-layer:hover {
-  background-color: var(--bg-color-alt);
 }
 
 
@@ -667,7 +674,6 @@ header button {
   font-weight: 400;
   font-size: 1.1rem;
   line-height: 1.25rem;
-  vertical-align: middle;
   cursor: pointer;
 }
 header > .column.no-grow {
