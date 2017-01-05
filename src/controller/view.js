@@ -81,14 +81,13 @@ var ControllerView = View.extend(controllerMixin, {
     controllerView._bindLayerEvents();
     controllerView.model.set({
       signals: options.signals,
-      layers: options.layers
+      layers: options.layers,
+      midi: controllerView.midiAccess
     });
 
 
 
-    controllerView.listenToAndRun(controllerView.midiAccess, 'midi', function(evtName, value) {
-      if (!evtName) return;
-
+    controllerView.listenTo(controllerView.midiAccess, 'midi', function(evtName, value) {
       controllerView.sendCommand({
         type: 'midi',
         name: evtName,

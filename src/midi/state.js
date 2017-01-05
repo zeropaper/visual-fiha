@@ -309,27 +309,6 @@ var MIDIState = State.extend({
     active: ['boolean', true, true]
   },
 
-  derived: {
-    midiMapping: {
-      deps: ['name', 'name'],
-      fn: function() {
-        var m = midiMappings || {};
-        if (!m[this.manufacturer] || !m[this.manufacturer][this.name]) {
-          return;
-        }
-        return m[this.manufacturer][this.name];
-      }
-    },
-    signalNames: {
-      deps: ['midiMappings'],
-      fn: function() {
-        var prefix = this.midiMapping.prefix;
-        return this.midiMapping.signalNames.map(function(str) {
-          return prefix + ':' + str;
-        });
-      }
-    }
-  }
 });
 
 function _result(mapping, scope, value, data) {
@@ -357,15 +336,15 @@ function _result(mapping, scope, value, data) {
   return scope === 'velocity' ? toPrct(value) : val;
 }
 
-function handleMIDIMessage(accessState, model) {
-  // function clear() {
-  //   model.set({
-  //     signalType: '',
-  //     signalNote: '',
-  //     signalVelocity: ''
-  //   });
-  // }
+function getMappings(manufacturer, name) {
+  var m = midiMappings || {};
+  if (!m[manufacturer] || !m[manufacturer][name]) {
+    return;
+  }
+  return m[manufacturer][name] || {};
+}
 
+function handleMIDIMessage(accessState, model) {
   return function(MIDIMessageEvent) {
     // if (!model.active) { return clear(); }
 
@@ -376,83 +355,69 @@ function handleMIDIMessage(accessState, model) {
     var note = data[1] || 0;
     var velocity = data[2] || 0;
 
-    var obj = {
-      signalType:     _result(model.midiMapping, 'type', type, data),
-      signalNote:     _result(model.midiMapping, 'note', note, data),
-      signalVelocity: _result(model.midiMapping, 'velocity', velocity, data)
-    };
-    console.info('midi type: %s, note %s, velocity: %s', type, note, velocity, obj);
+    var _mappings = getMappings(model.manufacturer, model.name);
+    model.set(_result(_mappings, 'note', note, data), velocity);
 
-    var eventName = model.midiMapping.prefix + ':' + obj.signalNote + ':' + obj.signalType;
-    accessState.trigger('midi', eventName, obj.signalVelocity/*, model, eventName*/);
-
-    // model.set(obj);
   };
 }
 
 
-function collectionSignalNames() {
-  var sn = [];
-  this.forEach(function (m) { //jshint ignore: line
-    sn = sn.concat(m.signalNames);
-  });
-  return sn;
-}
 var MIDIAccessState = State.extend({
+  mappable: {
+    source: ['inputs'],
+    target: []
+  },
+
   initialize: function(options) {
     options = options || {};
     var accessState = this;
 
-    // window.midiAccessView = this;
 
     function MIDIAccessChanged() {
       if (!accessState.MIDIAccess) {
         accessState.inputs.reset([]);
-        accessState.outputs.reset([]);
         return;
       }
 
       var inputs = [];
-      var outputs = [];
       var model;
 
       accessState.MIDIAccess.inputs.forEach(function(info) {
-        model = new MIDIState({
+        var _mappings = getMappings(info.manufacturer, info.name);
+        if (!_mappings) return;
+
+        var props = {};
+        var sources = [];
+        Object.keys(_mappings.note || {}).forEach(function(key) {
+          sources.push(_mappings.note[key]);
+          props[_mappings.note[key]] = ['number', true, 0];
+        });
+        var Constructor = MIDIState.extend({
+          mappable: {
+            source: sources,
+            target: []
+          },
+          props: props
+        });
+
+        model = new Constructor({
           connection: info.connection,
           state: info.state,
           type: info.type,
-          id: info.id,
+          id: _mappings.prefix,//info.id,
           manufacturer: info.manufacturer,
           name: info.name,
           version: info.version
         });
-        if (model.midiMapping) {
-          if (typeof info.onmidimessage !== 'undefined') {
-            info.onmidimessage = handleMIDIMessage(accessState, model);
-          }
 
-          inputs.push(model);
+        if (typeof info.onmidimessage !== 'undefined') {
+          info.onmidimessage = handleMIDIMessage(accessState, model);
         }
-      });
 
-      accessState.MIDIAccess.outputs.forEach(function(info) {
-        model = new MIDIState({
-          connection: info.connection,
-          state: info.state,
-          type: info.type,
-          id: info.id,
-          manufacturer: info.manufacturer,
-          name: info.name,
-          version: info.version
-        });
-
-        if (model.midiMapping) {
-          outputs.push(model);
-        }
+        inputs.push(model);
       });
 
       accessState.inputs.reset(inputs);
-      accessState.outputs.reset(outputs);
     }
 
     accessState.on('change:MIDIAccess', MIDIAccessChanged);
@@ -486,29 +451,14 @@ var MIDIAccessState = State.extend({
 
   collections: {
     inputs: Collection.extend({
-      signalNames: collectionSignalNames,
-      model: MIDIState
-    }),
-    outputs: Collection.extend({
-      //signalNames: collectionSignalNames,
-      model: MIDIState
     })
   },
 
   toJSON: function() {
     var obj = {};
     obj.inputs = this.inputs.toJSON();
-    obj.outputs = this.outputs.toJSON();
     return obj;
-  },
 
-  derived: {
-    signalNames: {
-      deps: ['inputs'/*, 'outputs'*/],
-      fn: function () {
-        return this.inputs.signalNames();//.concat(this.outputs.signalNames());
-      }
-    }
   }
 });
 

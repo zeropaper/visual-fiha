@@ -11,11 +11,12 @@ require('./../layer/img/state');
 
 var ScreenState = State.extend({
   mappable: {
-    source: ['frametime', 'firstframetime', 'signals'],
+    source: ['frametime', 'midi', 'firstframetime', 'signals'],
     target: ['layers', 'signals']
   },
 
   props: {
+    midi: 'state',
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();
