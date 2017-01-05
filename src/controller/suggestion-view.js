@@ -186,6 +186,7 @@ var SuggestionView = View.extend({
       'right',
       'borderWidth',
       'borderStyle',
+      'lineHeight',
       'fontSize',
       'fontFamily',
       'textAlign',
