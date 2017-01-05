@@ -10,10 +10,7 @@ describe.skip('Layer View', function () {
     document.getElementById('holder').appendChild(holder);
 
     if (typeof R === 'undefined') {
-      ScreenView = require('./../../src/screen/view');
-      ScreenState = require('./../../src/screen/state');
-      LayerView = require('./../../src/layer/view');
-      require('./../../src/layer/canvas/view');
+      this.skip();
       return done();
     }
     R(function (require) {

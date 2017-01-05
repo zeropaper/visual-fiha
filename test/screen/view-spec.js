@@ -7,8 +7,7 @@ describe.skip('Screen View', function () {
 
   before(function (done) {
     if (typeof R === 'undefined') {
-      ScreenView = require('./../../src/screen/view');
-      ScreenState = require('./../../src/screen/state');
+      this.skip();
       return done();
     }
     holder = document.createElement('div');
