@@ -98,7 +98,15 @@ var AceEditor = View.extend({
     var view = this;
     view.renderWithTemplate();
 
-    var editor = view.editor = window.ace.edit(view.query('.ace-editor'));
+    var ace = window.ace;
+    var editor = view.editor = ace.edit(view.query('.ace-editor'));
+    ace.require('ace/ext/language_tools');
+    editor.setOptions({
+      enableBasicAutocompletion: true,
+      enableSnippets: true,
+      enableLiveAutocompletion: false
+    });
+    console.info('editor', editor);
     editor.$blockScrolling = Infinity;
     editor.on('change', function() {
       view.set('script', editor.getValue());//, {silent: true});
