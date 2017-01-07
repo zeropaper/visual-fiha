@@ -10733,8 +10733,8 @@ module.exports = lodash;
 },{"./_LazyWrapper":11,"./_LodashWrapper":13,"./_baseLodash":60,"./_wrapperClone":184,"./isArray":198,"./isObjectLike":208}],230:[function(require,module,exports){
 'use strict';
 var State = VFDeps.State;
+var Collection = VFDeps.Collection;
 var ScreenLayerState = require('./../state');
-
 
 var CanvasLayer = State.extend({
   idAttribute: 'name',
@@ -10762,10 +10762,12 @@ var CanvasLayer = State.extend({
     name: ['string', true, null],
     active: ['boolean', true, true],
     opacity: ['number', true, 100],
+    /*
     shadowOffsetX: ['number', true, 0],
     shadowOffsetY: ['number', true, 0],
     shadowBlur: ['number', true, 0],
     shadowColor: ['string', true, 'rgba(0,0,0,0.5)'],
+    */
     blending: {
       type: 'string',
       required: true,
@@ -10785,6 +10787,15 @@ var CanvasLayer = State.extend({
       ]
     },
     drawFunction: 'any'
+  },
+
+  session: {
+    uiState: {
+      type: 'string',
+      values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
+      default: '',
+      required: true
+    }
   },
 
   serialize: function() {
@@ -10836,36 +10847,32 @@ var CanvasLayer = State.extend({
       returned.drawFunction = this.drawFunction;
     }
     returned.name = this.name;
+    delete returned.uiState;
     return returned;
   },
 
   derived: {
-    // frames: {
-    //   deps: ['duration', 'fps'],
-    //   fn: function() {
-    //     return Math.round(this.duration / 1000 * this.fps);
-    //   }
-    // },
-    // frame: {
-    //   deps: ['frametime', 'fps'],
-    //   fn: function() {
-    //     return Math.round(((this.frametime % this.duration) / 1000) * this.fps);
-    //   }
-    // },
-    // direction: {
-    //   deps: ['frametime', 'duration'],
-    //   fn: function() {
-    //     return this.frame < this.frames * 0.5 ? 1 : -1;
-    //   }
-    // },
-    // frametime: {
-    //   cache: false,
-    //   fn: function() {
-    //     return this.screenState.frametime;
-    //   }
-    // },
+    mappable: {
+      deps: ScreenLayerState.prototype._derived.mappable.deps,
+      fn: function() {
+        var mappable = ScreenLayerState.prototype._derived.mappable.fn.apply(this, arguments);
+        var targets = mappable.target.filter(function(key) {
+          return [
+            'drawFunction',
+            'screenState', // would make a circular reference if not excluded!
+            'draw'
+          ].indexOf(key) < 0;
+        });
+
+        return {
+          source: [],
+          target: targets
+        };
+      }
+    },
+
     screenState: {
-      deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
+      deps: [],
       fn: function() {
         return this.collection.parent.collection.parent;
       }
@@ -10897,21 +10904,11 @@ var CanvasLayer = State.extend({
         return (typeof fn === 'function' ? fn : function() {}).bind(this);
       }
     }
-  // },
-
-  // collections: {
-  //   mappings: State.Collection.extend({
-  //     model: function (attrs, options) {
-  //       var model = new CanvasLayerMapState(attrs, options);
-  //       if (options.init === false) model.initialize();
-  //       return model;
-  //     }
-  //   })
   }
 });
 
 var _CanvasLayersCache = {};
-var CanvasLayers = VFDeps.Collection.extend({
+var CanvasLayers = Collection.extend({
   mainIndex: CanvasLayer.prototype.idAttribute,
 
   comparator: 'weight',
@@ -11069,6 +11066,41 @@ var LayerState = State.extend({
     },
     type: ['string', true, 'default'],
     zIndex: ['number', true, 0]
+  },
+
+  session: {
+    uiState: {
+      type: 'string',
+      values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
+      default: '',
+      required: true
+    }
+  },
+
+  serialize: function() {
+    var returned = State.prototype.serialize.apply(this, arguments);
+    delete returned.uiState;
+    return returned;
+  },
+
+  derived: {
+    mappable: {
+      deps: [],
+      fn: function() {
+        var proto = this.constructor.prototype;
+        var keys = Object.keys(proto._definition || {}).concat(
+          Object.keys(proto._children || {}),
+          Object.keys(proto._collections || {})
+        ).filter(function(key) {
+          return key !== this.idAttribute && key !== this.typeAttribute;
+        }, this);
+
+        return {
+          source: [],
+          target: keys
+        };
+      }
+    }
   }
 });
 module.exports = LayerState;
@@ -11133,7 +11165,7 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
 
   function objectPath(state) {
     if (!state) return null;
-    var str = '';
+    var parts = [];
 
 
     var f = function(instance) {
@@ -11142,20 +11174,20 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
                         isCollectionOfParent(instance, instance.collection.parent) :
                         null;
       if (collectionName) {
-        str = collectionName + '.' + str;
+        parts.unshift(collectionName);
         return f(instance.collection.parent);
       }
 
       var childName = isChildOfParent(instance, instance.parent);
       if (childName) {
-        str = childName + '.' + str;
+        parts.unshift(childName);
         return f(instance.parent);
       }
 
 
       var propName = isPropOfParent(instance, instance.parent);
       if (propName) {
-        str = propName + '.' + str;
+        parts.unshift(propName);
         return f(instance.parent);
       }
 
@@ -11164,7 +11196,7 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
 
     f(state);
 
-    return str;
+    return parts.join('.');
   }
 
 
@@ -11207,6 +11239,8 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
 
 
   var MappingState = State.extend({
+    mappable: {source: [], target: []},
+
     props: {
       sourceObject: ['state', true, null],
       sourceProperty: ['string', true, null],
@@ -11217,11 +11251,21 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
       transformation: ['any', false, null]
     },
 
+    session: {
+      uiState: {
+        type: 'string',
+        values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
+        default: '',
+        required: true
+      }
+    },
+
     derived: {
       sourcePath: {
         deps: ['sourceObject', 'sourceProperty'],
         fn: function() {
-          return objectPath(this.sourceObject) + this.sourceProperty;
+          var objPath = objectPath(this.sourceObject);
+          return (objPath ? objPath + '.' : '') + this.sourceProperty;
         }
       },
       sourceValue: {
@@ -11268,7 +11312,8 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
         deps: ['targetObject', 'targetProperty'],
         fn: function() {
           if (!this.targetObject || !this.targetProperty) return null;
-          return objectPath(this.targetObject) + this.targetProperty;
+          var objPath = objectPath(this.targetObject);
+          return (objPath ? objPath + '.' : '') + this.targetProperty;
         }
       },
       targetValue: {
@@ -11296,6 +11341,16 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
           this.trigger('change:sourceProperty');
         }
       });
+    },
+
+    updateInfo: function(scope, fullPath, context) {
+      var parts = fullPath.split('.');
+      var prop = parts.pop();
+      var obj = this.resolve(parts.join('.'), context || this.collection.context);
+      var update = {};
+      update[scope +'Object'] = obj;
+      update[scope +'Property'] = prop;
+      this.set(update);
     },
 
     sourceValueChange: function() {
@@ -11345,7 +11400,8 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
     },
 
     isTarget: function(state, propName) {
-      var p = objectPath(state) + propName;
+      var p = objectPath(state);
+      p = (p ? p + '.' : '') + propName;
       return this.models.find(function(mapping) {
         return mapping.targetPath === p;
       });
@@ -11356,6 +11412,119 @@ module.exports = ScreenLayerState.video = ScreenLayerState.extend({
       return this.models.find(function(mapping) {
         return mapping.sourcePath === p;
       });
+    },
+
+    sourceSuggestions: function(origin) {
+      var results = [];
+      if (!origin || typeof origin !== 'object') return results;
+
+      var kepts = [];
+      if (origin.mappable && origin.mappable.source) {
+        kepts = (origin.mappable.source || []);
+      }
+
+      function filterKeys(key) {
+        var excluded = [
+          'mappable',
+          'parent',
+          'collection',
+          origin.idAttribute,
+          origin.typeAttribute
+        ];
+        return excluded.indexOf(key) < 0 && kepts.indexOf(key) > -1;
+      }
+
+      var proto = origin.constructor && origin.constructor.prototype ? origin.constructor.prototype : {};
+      var propNames = Object.keys(proto._definition || {});
+      var derivedNames = Object.keys(proto._derived || {});
+      var childNames = Object.keys(proto._children || {});
+      var collectionNames = Object.keys(proto._collections || {});
+
+      propNames.concat(derivedNames, childNames)
+        .filter(filterKeys)
+        .forEach(function(key) {
+          var sub = this.sourceSuggestions(origin[key]);
+          if (!sub.length) {
+            if (childNames.indexOf(key) < 0) {
+              results.push(key);
+            }
+            return;
+          }
+
+          results = results.concat(sub.map(function(name) {
+            return key + '.' + name;
+          }));
+        }, this);
+
+      collectionNames
+        .filter(filterKeys)
+        .forEach(function(collectionName) {
+          origin[collectionName].forEach(function(model) {
+            var id = model.getId();
+            var suggestions = this.sourceSuggestions(model);
+            results = results.concat(suggestions.filter(function(v) { return !!v; }).map(function(name) {
+              return collectionName + '.' + id + '.' + name;
+            }));
+          }, this);
+        }, this);
+
+      return results;
+    },
+
+    targetSuggestions: function(origin) {
+      var results = [];
+      if (!origin || typeof origin !== 'object') return results;
+
+      var kepts = [];
+      if (origin.mappable && origin.mappable.target) {
+        kepts = (origin.mappable.target || []);
+      }
+
+      function filterKeys(key) {
+        var excluded = [
+          'mappable',
+          'parent',
+          'collection',
+          origin.idAttribute,
+          origin.typeAttribute
+        ];
+        return excluded.indexOf(key) < 0 && kepts.indexOf(key) > -1;
+      }
+
+      var proto = origin.constructor && origin.constructor.prototype ? origin.constructor.prototype : {};
+      var propNames = Object.keys(proto._definition || {});
+      var childNames = Object.keys(proto._children || {});
+      var collectionNames = Object.keys(proto._collections || {});
+
+      propNames.concat(childNames)
+        .filter(filterKeys)
+        .forEach(function(key) {
+          var sub = this.targetSuggestions(origin[key]);
+          if (!sub.length) {
+            if (childNames.indexOf(key) < 0) {
+              results.push(key);
+            }
+            return;
+          }
+
+          results = results.concat(sub.map(function(name) {
+            return key + '.' + name;
+          }));
+        }, this);
+
+      collectionNames
+        .filter(filterKeys)
+        .forEach(function(collectionName) {
+          origin[collectionName].forEach(function(model) {
+            var id = model.getId();
+            var suggestions = this.targetSuggestions(model);
+            results = results.concat(suggestions.filter(function(v) { return !!v; }).map(function(name) {
+              return collectionName + '.' + id + '.' + name;
+            }));
+          }, this);
+        }, this);
+
+      return results;
     },
 
     import: function(data, context) {
@@ -11417,7 +11586,13 @@ require('./../layer/svg/state');
 require('./../layer/img/state');
 
 var ScreenState = State.extend({
+  mappable: {
+    source: ['frametime', 'midi', 'firstframetime', 'signals'],
+    target: ['layers', 'signals']
+  },
+
   props: {
+    midi: 'state',
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();
@@ -11434,7 +11609,7 @@ var ScreenState = State.extend({
   },
 
   collections: {
-    screenLayers: Collection.extend({
+    layers: Collection.extend({
       comparator: 'zIndex',
       mainIndex: 'name',
       model: function(attrs, opts) {
@@ -11446,7 +11621,7 @@ var ScreenState = State.extend({
         return state;
       }
     }),
-    screenSignals: require('./../signal/collection')
+    signals: require('./../signal/collection')
   }
 });
 module.exports = ScreenState;
@@ -11457,6 +11632,11 @@ var SignalState = require('./../state');
 var BeatState = SignalState.types.beatSignal = SignalState.extend({
   session: {
     frametime: ['number', true, 0]
+  },
+
+  mappable: {
+    source: ['result', 'timeBetweenBeats'],
+    target: ['input']
   },
 
   derived: {
@@ -11527,6 +11707,12 @@ var HSLASignalState = SignalState.types.hslaSignal = SignalState.extend({
     lightness: _100,
     alpha: _100
   },
+
+  mappable: {
+    source: ['result', 'hue', 'saturation', 'lightness', 'alpha'],
+    target: ['hue', 'saturation', 'lightness', 'alpha']
+  },
+
   derived: {
     result: {
       deps: ['hue', 'saturation', 'lightness', 'alpha'],
@@ -11574,6 +11760,12 @@ var RGBASignalState = SignalState.types.rgbaSignal = SignalState.extend({
     blue: _255,
     alpha: _100
   },
+
+  mappable: {
+    source: ['result', 'red', 'green', 'blue', 'alpha'],
+    target: ['red', 'green', 'blue', 'alpha']
+  },
+
   derived: {
     result: {
       deps: ['red', 'green', 'blue', 'alpha'],
@@ -11626,11 +11818,25 @@ module.exports = RGBASignalState;
       }
     },
 
+    mappable: {
+      source: ['result'],
+      target: ['input']
+    },
+
     props: {
       name: ['string', true, null],
       type: ['string', true, 'default'],
       defaultValue: ['any', true, function () { return 1; }],
       input: ['any', false, null]
+    },
+
+    session: {
+      uiState: {
+        type: 'string',
+        values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
+        default: '',
+        required: true
+      }
     },
 
     collections: {
@@ -11857,7 +12063,7 @@ channel.addEventListener('message', function(evt) {
 
   screens[payload.id] = payload.id;
   broadcastCommand('resetLayers', {
-    layers: workerScreen.screenLayers.serialize()
+    layers: workerScreen.layers.serialize()
   });
 }, false);
 
@@ -11910,10 +12116,10 @@ var commands = {
     broadcastCommand('resetLayers', {
       layers: layers
     });
-    workerScreen.screenLayers.reset(layers);
+    workerScreen.layers.reset(layers);
   },
   addLayer: function(layer) {
-    var collection = workerScreen.screenLayers;
+    var collection = workerScreen.layers;
     broadcastCommand('addLayer', {
       layer: layer
     });
@@ -11940,14 +12146,14 @@ var commands = {
     collection.add(layer);
   },
   removeLayer: function(layerName) {
-    var collection = workerScreen.screenLayers;
+    var collection = workerScreen.layers;
     broadcastCommand('removeLayer', {
       layerName: layerName
     });
     collection.remove(collection.get(layerName));
   },
   updateLayer: function(layer, layerName) {
-    var state = workerScreen.screenLayers.get(layerName);
+    var state = workerScreen.layers.get(layerName);
     state.set(layer);
   }
 };
