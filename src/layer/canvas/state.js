@@ -29,10 +29,12 @@ var CanvasLayer = State.extend({
     name: ['string', true, null],
     active: ['boolean', true, true],
     opacity: ['number', true, 100],
+    /*
     shadowOffsetX: ['number', true, 0],
     shadowOffsetY: ['number', true, 0],
     shadowBlur: ['number', true, 0],
     shadowColor: ['string', true, 'rgba(0,0,0,0.5)'],
+    */
     blending: {
       type: 'string',
       required: true,
@@ -137,7 +139,7 @@ var CanvasLayer = State.extend({
     },
 
     screenState: {
-      deps: ['collection', 'collection.parent', 'collection.parent.collection', 'collection.parent.collection.parent'],
+      deps: [],
       fn: function() {
         return this.collection.parent.collection.parent;
       }

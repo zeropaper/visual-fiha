@@ -46,11 +46,12 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
     this.model.canvasLayers.filter(function (layer) {
       return layer.active;
     }).forEach(function(layer) {
+      /*
       ctx.shadowOffsetX = layer.shadowOffsetX;
       ctx.shadowOffsetY = layer.shadowOffsetY;
       ctx.shadowBlur = layer.shadowBlur;
       ctx.shadowColor = layer.shadowColor;
-
+      */
       ctx.globalAlpha = layer.opacity / 100;
       ctx.globalCompositeOperation = layer.blending;
 
