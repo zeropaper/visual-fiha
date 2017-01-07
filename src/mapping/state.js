@@ -205,6 +205,16 @@
       });
     },
 
+    updateInfo: function(scope, fullPath, context) {
+      var parts = fullPath.split('.');
+      var prop = parts.pop();
+      var obj = this.resolve(parts.join('.'), context || this.collection.context);
+      var update = {};
+      update[scope +'Object'] = obj;
+      update[scope +'Property'] = prop;
+      this.set(update);
+    },
+
     sourceValueChange: function() {
       if (!this.targetObject || !this.targetProperty) return;
       // console.info('%c%s => %s changed %s => %s', 'color:purple;', this.sourcePath, this.targetPath, this.sourceValue, this.targetValue, this.targetObject);

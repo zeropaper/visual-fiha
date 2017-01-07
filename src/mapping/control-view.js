@@ -61,17 +61,25 @@ var ItemView = View.extend({
 
   _handleSourcePathFocus: function(evt) {
     var helper = this.suggestionHelper;
+    var screenState = this.parent.model;
+    var mappingState = this.model;
+
     helper.attach(evt.target, function(selected) {
+      mappingState.updateInfo('source', selected, screenState);
       evt.target.value = selected;
       helper.detach();
-    }).fill(this.collection.sourceSuggestions(this.parent.model));
+    }).fill(this.collection.sourceSuggestions(screenState));
   },
   _handleTargetPathFocus: function(evt) {
     var helper = this.suggestionHelper;
+    var screenState = this.parent.model;
+    var mappingState = this.model;
+
     helper.attach(evt.target, function(selected) {
+      mappingState.updateInfo('target', selected, screenState);
       evt.target.value = selected;
       helper.detach();
-    }).fill(this.collection.targetSuggestions(this.parent.model));
+    }).fill(this.collection.targetSuggestions(screenState));
   },
 
   _handlePathBlur: function(evt) {
@@ -153,7 +161,6 @@ var MappingsControlView = View.extend({
   events: {
     'focus [name=new-source-path]': '_handleSourceFocus',
     'focus [name=new-target-path]': '_handleTargetFocus',
-    'keyup [name$="-path"]': '_handlePathUpdate',
     'click [name="add-mapping"]': '_handleAddMapping'
   },
 
@@ -173,9 +180,6 @@ var MappingsControlView = View.extend({
     }).fill(this.collection.targetSuggestions(this.model));
   },
 
-  _handlePathUpdate: function() {
-    //
-  },
 
 
   _handleAddMapping: function(evt) {
