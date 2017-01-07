@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/controller/view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/controller/view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">68.87</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">465</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">28.10</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">4.03</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var View = VFDeps.View;
+var ViewSwitcher = VFDeps.ViewSwitcher;
+var ScreenState = require(&#039;./../screen/state&#039;);
+var MIDIAccessState = require(&#039;./../midi/state&#039;);
+var MIDIAccessView = require(&#039;./../midi/view&#039;);
+var SignalsView = require(&#039;./signals-view&#039;);
+var LayersView = require(&#039;./layers-view&#039;);
+var SuggestionView = require(&#039;./suggestion-view&#039;);
+var SparklineView = require(&#039;./sparkline-view&#039;);
+var AudioSource = require(&#039;./audio-source-view&#039;);
+var AceEditor = require(&#039;./ace-view&#039;);
+var RegionView = require(&#039;./region-view&#039;);
+
+var mappings = require(&#039;./../mapping/state&#039;);
+var MappingsControlView = require(&#039;./../mapping/control-view&#039;);
+
+var controllerMixin = {};
+controllerMixin.initializeController = function initializeController() {
+  this.worker = new Worker(&#039;web-worker-build.js&#039;);
+};
+
+// almost unique id
+function auid() {
+  return parseInt((Math.random() + &#039;.&#039; + performance.now()).replace(/\./g, &#039;&#039;), 10);
+}
+controllerMixin.sendCommand = function sendCommand(name, payload, callback) {
+  // console.info(&#039;%ccontroller send command &quot;%s&quot;&#039;, &#039;color:green&#039;, name);
+  var worker = this.worker;
+  var message = {
+    command: name,
+    payload: payload
+  };
+
+  function makeListener(id, done) {
+    function eventListener(evt) {
+      if (evt.data.eventId !== id) return;
+      done(null, evt.data.payload);
+      worker.removeEventListener(&#039;message&#039;, eventListener);
+    }
+    return eventListener;
+  }
+
+  if (callback) {
+    message.eventId = auid();
+    worker.addEventListener(&#039;message&#039;, makeListener(message.eventId, callback), false);
+  }
+  worker.postMessage(message);
+};
+
+
+var ControllerView = View.extend(controllerMixin, {
+  _workerInit: false,
+  initialize: function(options) {
+    var controllerView = this;
+    controllerView.initializeController();
+
+    controllerView.model = controllerView.model || new ScreenState({}, {
+      parent: controllerView
+    });
+    if (controllerView.model.parent !== controllerView) {
+      controllerView.model.parent = controllerView;
+    }
+
+    controllerView.worker.addEventListener(&#039;message&#039;, function() {
+      if (controllerView._workerInit) return;
+      controllerView._workerInit = true;
+
+      controllerView.sendCommand(&#039;resetLayers&#039;, {
+        layers: controllerView.model.layers.serialize()
+      });
+
+      controllerView.sendCommand(&#039;resetSignals&#039;, {
+        signals: controllerView.model.signals.serialize()
+      });
+    }, false);
+
+
+
+
+    controllerView._bindLayerEvents();
+    controllerView.model.set({
+      signals: options.signals,
+      layers: options.layers,
+      midi: controllerView.midiAccess
+    });
+
+
+
+    controllerView.listenTo(controllerView.midiAccess, &#039;midi&#039;, function(evtName, value) {
+      console.info(controllerView.midiAccess);
+      controllerView.sendCommand({
+        type: &#039;midi&#039;,
+        name: evtName,
+        value: value
+      });
+    });
+
+    controllerView._animate();
+
+    if (options.autoStart) {
+      controllerView.play();
+    }
+
+    var mappingContext = controllerView.model;
+    mappings.import(options.mappings, mappingContext);
+
+    if (controllerView.el) {
+      controllerView._attachSuggestionHelper();
+    }
+    else {
+      controllerView.once(&#039;change:el&#039;, controllerView._attachSuggestionHelper);
+    }
+  },
+
+  _bindLayerEvents: function() {
+    var controllerView = this;
+
+    controllerView.listenTo(controllerView.model.layers, &#039;add&#039;, function(state) {
+      controllerView.sendCommand(&#039;addLayer&#039;, {
+        layer: state.serialize()
+      });
+    });
+
+    controllerView.listenTo(controllerView.model.layers, &#039;remove&#039;, function(state) {
+      controllerView.sendCommand(&#039;addLayer&#039;, {
+        layerName: state.name
+      });
+    });
+
+    controllerView.listenTo(controllerView.model.layers, &#039;change:layer&#039;, function(state) {
+      if (!state) return;
+
+      var changed = state.changedAttributes();
+      if (!Object.keys(changed).length) {
+        changed = state.serialize();
+      }
+      delete changed.uiState;
+      if (!Object.keys(changed).length) return;
+
+      controllerView.sendCommand(&#039;updateLayer&#039;, {
+        layer: changed,
+        layerName: state.name
+      });
+    });
+
+    return this;
+  },
+
+  _animate: function(timestamp) {
+    if (this.controllerSparkline) {
+      this.controllerSparkline.update(1000 / ((timestamp - this.model.frametime) - this.model.firstframetime));
+    }
+
+    if (this.audioSource) {
+      this.audioSource.update();
+    }
+
+    if (this.playing) {
+      this.model.frametime = timestamp - this.model.firstframetime;
+
+      this.update();
+    }
+
+    this._arId = window.requestAnimationFrame(this._animate.bind(this));
+  },
+
+  update: function() {
+    var analyser = this.audioSource.audioAnalyser;
+
+    var freqArray = this.audioSource.audioFrequencyDataArray;
+    analyser.getByteFrequencyData(freqArray);
+
+    var timeDomainArray = this.audioSource.audioTimeDomainDataArray;
+    analyser.getByteTimeDomainData(timeDomainArray);
+
+    var command = {
+      frametime: this.model.frametime,
+      audio: {
+        bufferLength: analyser.frequencyBinCount,
+        frequency: freqArray,
+        timeDomain: timeDomainArray
+      }
+    };
+
+    this.sendCommand(&#039;heartbeat&#039;, command);
+  },
+
+  derived: {
+    computedStyle: {
+      deps: [&#039;el&#039;],
+      fn: function() {
+        return window.getComputedStyle(this.el);
+      }
+    }
+  },
+
+  children: {
+    midiAccess: MIDIAccessState
+  },
+
+  session: {
+    playing: [&#039;boolean&#039;, true, false],
+    broadcastId: [&#039;string&#039;, true, &#039;vfBus&#039;],
+    _arId: &#039;number&#039;,
+    currentDetails: &#039;state&#039;
+  },
+
+  play: function() {
+    this.playing = true;
+    if (!this.model.firstframetime) {
+      this.model.firstframetime = performance.now();
+    }
+    return this;
+  },
+  pause: function() {
+    this.playing = false;
+    return this;
+  },
+  stop: function() {
+    this.playing = false;
+    this.model.firstframetime = this.model.frametime = 0;
+    return this;
+  },
+
+  subviews: {
+    MIDIAccess: {
+      waitFor: &#039;el&#039;,
+      selector: &#039;.midi-access&#039;,
+      prepareView: function(el) {
+        var subview = new MIDIAccessView({
+          parent: this,
+          el: el,
+          model: this.midiAccess
+        });
+        return subview;
+      }
+    },
+
+    leftBottom: {
+      waitFor: &#039;el&#039;,
+      selector: &#039;.region-left-bottom&#039;,
+      prepareView: function(el) {
+        var styles = window.getComputedStyle(el);
+
+        this.codeEditor = new AceEditor({
+          parent: this
+        });
+
+        this.audioSource = new AudioSource({
+          audioAnalyser: this.audioAnalyser,
+          parent: this,
+          color: styles.color
+        });
+
+        this.mappingsView = new MappingsControlView({
+          collection: mappings,
+          parent: this,
+          model: this.model
+        });
+
+        var view = new RegionView({
+          parent: this,
+          el: el,
+          currentView: this.mappingsView,
+          tabs: [
+            {name: &#039;Mappings&#039;, view: this.mappingsView, pinned: true, active: true},
+            {name: &#039;Editor&#039;, view: this.codeEditor, pinned: true},
+            {name: &#039;Audio&#039;, view: this.audioSource, pinned: true}
+          ]
+        });
+
+        view.el.classList.add(&#039;row&#039;);
+
+        this.listenTo(this.codeEditor, &#039;change:original&#039;, function() {
+          view.focusTabIndex(1);
+        });
+
+        return view;
+      }
+    },
+
+    controllerSparkline: {
+      waitFor: &#039;el&#039;,
+      selector: &#039;.sparkline-controller&#039;,
+      prepareView: function(el) {
+        var styles = window.getComputedStyle(el);
+        var view = new SparklineView({
+          parent: this,
+          color: styles.color,
+          font: styles.fontSize + &#039; &#039; + styles.fontFamily.split(&#039; &#039;).pop()
+        });
+        el.appendChild(view.el);
+        return view;
+      }
+    },
+
+    layersView: {
+      waitFor: &#039;el&#039;,
+      selector: &#039;.layers&#039;,
+      prepareView: function(el) {
+        var view = new LayersView({
+          collection: this.model.layers,
+          parent: this,
+          el: el
+        });
+        return view;
+      }
+    },
+
+    signalsView: {
+      waitFor: &#039;el&#039;,
+      selector: &#039;.signals&#039;,
+      prepareView: function(el) {
+        var view = new SignalsView({
+          collection: this.model.signals,
+          parent: this,
+          el: el
+        });
+        return view;
+      }
+    }
+  },
+
+  _attachSuggestionHelper: function() {
+    if (this.suggestionHelper) { return; }
+    this.suggestionHelper = this.registerSubview(new SuggestionView({
+      parent: this
+    }));
+  },
+
+  remove: function() {
+    View.prototype.remove.apply(this, arguments);
+  },
+
+  bindings: {
+    broadcastId: {
+      selector: &#039;.control-screen&#039;,
+      type: function(el, val) {
+        if (!val) return;
+        el.src = &#039;./screen.html#&#039; + val;
+      }
+    },
+    playing: [
+      {
+        type: &#039;toggle&#039;,
+        selector: &#039;[name=&quot;play&quot;]&#039;,
+        invert: true
+      },
+      {
+        type: &#039;toggle&#039;,
+        selector: &#039;[name=&quot;pause&quot;]&#039;
+      }
+    ]
+  },
+
+  events: {
+    &#039;click [name=&quot;play&quot;]&#039;: &#039;play&#039;,
+    &#039;click [name=&quot;pause&quot;]&#039;: &#039;pause&#039;,
+    &#039;click [name=&quot;stop&quot;]&#039;: &#039;stop&#039;,
+    &#039;click [name=&quot;resize&quot;]&#039;: &#039;resizeScreen&#039;,
+    &#039;click [name=&quot;screen&quot;]&#039;: &#039;_openScreen&#039;
+  },
+
+  _openScreen: function() {
+    window.open(&#039;./screen.html#&#039; + this.broadcastId, &#039;screen&#039;, &#039;width=800,height=600,location=no&#039;);
+  },
+
+  addMultiMapping: function(mappingModel) {
+    this.mappingsView.mappings.add({
+      targetModel: mappingModel.targetModel,
+      targetProperty: mappingModel.targetProperty
+    });
+  },
+
+  showDetails: function (view) {
+    if (view === this.currentDetails) return this;
+    var tabs = this.leftBottom.tabs;
+    var tabName = this.mappingsView.collection.objectPath(view.model);
+    var found = tabs.get(tabName);
+    if (!found) {
+      found = tabs.add({name: tabName, view: view});
+    }
+    else {
+      found.view = view;
+    }
+
+    this.leftBottom.focusTab(tabName);
+
+    return this;
+  },
+
+  render: function () {
+    var controllerView = this;
+    this.renderWithTemplate();
+
+    this.cacheElements({
+      jsHeapLimit: &#039;.heap-limit span&#039;,
+      jsHeapTotal: &#039;.heap-total span&#039;,
+      jsHeapUsed: &#039;.heap-used span&#039;,
+      detailsEl: &#039;.details&#039;
+    });
+
+    this.detailsSwitcher = new ViewSwitcher(this.detailsEl, {
+      show: function (view) {
+        controllerView.currentDetails = view;
+      }
+    });
+
+    return this;
+  },
+
+  autoRender: true,
+
+  /*
+  :sout=#http{dst=:8080/stream} :sout-keep
+  */
+  template: &#039;&lt;div class=&quot;controller rows&quot;&gt;&#039;+
+    &#039;&lt;div class=&quot;row columns gutter-horizontal header&quot;&gt;&#039;+
+      &#039;&lt;div class=&quot;column no-grow gutter-right&quot;&gt;Visual Fiha&lt;/div&gt;&#039;+
+
+      &#039;&lt;div class=&quot;column columns&quot;&gt;&#039;+
+        &#039;&lt;span class=&quot;column columns no-grow button-group&quot;&gt;&#039;+
+          &#039;&lt;button class=&quot;column gutter-horizontal&quot; name=&quot;play&quot;&gt;&lt;span class=&quot;vfi-play&quot;&gt;&lt;/span&gt;&lt;/button&gt;&#039;+
+          &#039;&lt;button class=&quot;column gutter-horizontal&quot; name=&quot;pause&quot;&gt;&lt;span class=&quot;vfi-pause&quot;&gt;&lt;/span&gt;&lt;/button&gt;&#039;+
+          &#039;&lt;button class=&quot;column gutter-horizontal&quot; name=&quot;stop&quot;&gt;&lt;span class=&quot;vfi-stop&quot;&gt;&lt;/span&gt;&lt;/button&gt;&#039;+
+        &#039;&lt;/span&gt;&#039;+
+
+        &#039;&lt;div class=&quot;column columns gutter-horizontal no-grow&quot;&gt;&#039;+
+          &#039;&lt;button name=&quot;screen&quot;&gt;Open screen&lt;/button&gt;&#039;+
+        &#039;&lt;/div&gt;&#039;+
+
+        &#039;&lt;div class=&quot;column gutter-horizontal no-grow columns performance&quot;&gt;&#039;+
+          // &#039;SCL &lt;span title=&quot;Screen Communication Latency&quot; class=&quot;column sparkline-latency&quot;&gt;&lt;/span&gt;&#039;+
+          &#039;Controller &lt;span class=&quot;column sparkline-controller&quot;&gt;&lt;/span&gt;&#039;+
+        &#039;&lt;/div&gt;&#039;+
+      &#039;&lt;/div&gt;&#039;+
+    &#039;&lt;/div&gt;&#039;+
+
+    &#039;&lt;div class=&quot;row columns body&quot;&gt;&#039;+
+      &#039;&lt;div class=&quot;region-left column no-grow rows&quot;&gt;&#039;+
+        &#039;&lt;iframe class=&quot;region-left-top row grow-l control-screen&quot;&gt;&lt;/iframe&gt;&#039;+
+
+        &#039;&lt;div class=&quot;region-left-bottom row rows&quot;&gt;&lt;/div&gt;&#039;+
+      &#039;&lt;/div&gt;&#039;+
+
+      &#039;&lt;div class=&quot;region-right column rows settings&quot;&gt;&#039;+
+        &#039;&lt;div class=&quot;region-right-top row columns&quot;&gt;&#039;+
+          &#039;&lt;div class=&quot;column rows&quot;&gt;&#039;+
+            &#039;&lt;div class=&quot;row layers&quot;&gt;&lt;/div&gt;&#039;+
+          &#039;&lt;/div&gt;&#039;+
+
+          &#039;&lt;div class=&quot;column rows&quot;&gt;&#039;+
+            &#039;&lt;div class=&quot;row signals&quot;&gt;&lt;/div&gt;&#039;+
+          &#039;&lt;/div&gt;&#039;+
+        &#039;&lt;/div&gt;&#039;+
+
+        &#039;&lt;div class=&quot;region-right-bottom row no-grow columns&quot;&gt;&#039;+
+          &#039;&lt;div class=&quot;column midi-access&quot;&gt;&lt;/div&gt;&#039;+
+        &#039;&lt;/div&gt;&#039;+
+      &#039;&lt;/div&gt;&#039;+
+    &#039;&lt;/div&gt;&#039;+
+  &#039;&lt;/div&gt;&#039;
+});
+module.exports = ControllerView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

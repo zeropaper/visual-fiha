@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/mapping/control-view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/mapping/control-view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">77.85</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">218</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">20.90</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.51</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var View = VFDeps.View;
+
+var ItemView = View.extend({
+  template: &#039;&lt;div class=&quot;columns&quot;&gt;&#039; +
+      &#039;&lt;div class=&quot;column no-grow&quot;&gt;&lt;button class=&quot;remove vfi-trash-empty&quot;&gt;&lt;/button&gt;&lt;/div&gt;&#039;+
+
+      &#039;&lt;div class=&quot;column source-path&quot;&gt;&#039; +
+        &#039;&lt;input type=&quot;text&quot; name=&quot;source-path&quot; /&gt;&#039; +
+      &#039;&lt;/div&gt;&#039; +
+
+      &#039;&lt;div class=&quot;column gutter-vertical no-grow&quot;&gt;&amp;raquo;&lt;/div&gt;&#039;+
+      &#039;&lt;div class=&quot;column no-grow&quot;&gt;&lt;button class=&quot;edit-transform-function vfi-cog-alt&quot;&gt;&lt;/button&gt;&lt;/div&gt;&#039;+
+      &#039;&lt;div class=&quot;column gutter-vertical no-grow&quot;&gt;&amp;raquo;&lt;/div&gt;&#039;+
+
+      &#039;&lt;div class=&quot;column target-path&quot;&gt;&#039; +
+        &#039;&lt;input type=&quot;text&quot; name=&quot;target-path&quot; /&gt;&#039; +
+      &#039;&lt;/div&gt;&#039; +
+    &#039;&lt;/div&gt;&#039;,
+
+
+  derived: {
+    codeEditor: {
+      deps: [&#039;rootView&#039;],
+      fn: function () {
+        return this.rootView.codeEditor;
+      }
+    },
+    suggestionHelper: {
+      deps: [&#039;rootView&#039;],
+      fn: function () {
+        return this.rootView.suggestionHelper;
+      }
+    }
+  },
+
+  bindings: {
+    &#039;model.uiState&#039;: {
+      type: &#039;class&#039;
+    },
+    &#039;model.sourcePath&#039;: {
+      type: &#039;value&#039;,
+      selector: &#039;[name=source-path]&#039;
+    },
+    &#039;model.targetPath&#039;: {
+      type: &#039;value&#039;,
+      selector: &#039;[name=target-path]&#039;
+    }
+  },
+
+  events: {
+    &#039;focus [name=source-path]&#039;: &#039;_handleSourcePathFocus&#039;,
+    &#039;focus [name=target-path]&#039;: &#039;_handleTargetPathFocus&#039;,
+    &#039;blur [name=source-path]&#039;: &#039;_handlePathBlur&#039;,
+    &#039;blur [name=target-path]&#039;: &#039;_handlePathBlur&#039;,
+
+    &#039;click .remove&#039;: &#039;_handleRemove&#039;,
+    &#039;click .edit-transform-function&#039;: &#039;_handleEditTransformFunction&#039;,
+    &#039;change [name=target-path]&#039;: &#039;_handleTargetPathChange&#039;
+  },
+
+  _handleSourcePathFocus: function(evt) {
+    var helper = this.suggestionHelper;
+    var screenState = this.parent.model;
+    var mappingState = this.model;
+
+    helper.attach(evt.target, function(selected) {
+      mappingState.updateInfo(&#039;source&#039;, selected, screenState);
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(this.collection.sourceSuggestions(screenState));
+  },
+  _handleTargetPathFocus: function(evt) {
+    var helper = this.suggestionHelper;
+    var screenState = this.parent.model;
+    var mappingState = this.model;
+
+    helper.attach(evt.target, function(selected) {
+      mappingState.updateInfo(&#039;target&#039;, selected, screenState);
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(this.collection.targetSuggestions(screenState));
+  },
+
+  _handlePathBlur: function(evt) {
+    evt.preventDefault();
+  },
+
+  _handleRemove: function() {
+    this.model.collection.remove(this.model);
+  },
+
+  _handleEditTransformFunction: function() {
+    var editor = this.codeEditor;
+    if (!editor.changed) {
+      editor.edit(this.model, &#039;transformation&#039;, &#039;function transform(val) {\n  return val;\n}&#039;, this.model.targetPath);
+    }
+    else {
+      console.warn(&#039;A function is already being edited&#039;);
+    }
+  },
+
+  _handleTargetPathChange: function(evt) {
+    console.info(evt);
+  }
+});
+
+
+
+
+
+
+
+var MappingsControlView = View.extend({
+  template: &#039;&lt;section class=&quot;mappings-view&quot;&gt;&#039; +
+      &#039;&lt;header&gt;&#039; +
+        &#039;&lt;div class=&quot;add-form columns&quot;&gt;&#039; +
+          &#039;&lt;div class=&quot;column add-form--source-path&quot;&gt;&#039; +
+            &#039;&lt;input placeholder=&quot;Source&quot; name=&quot;new-source-path&quot; /&gt;&#039; +
+          &#039;&lt;/div&gt;&#039; +
+
+          &#039;&lt;div class=&quot;column gutter no-grow&quot;&gt;&amp;raquo;&lt;/div&gt;&#039; +
+
+          &#039;&lt;div class=&quot;column add-form--target-path&quot;&gt;&#039; +
+            &#039;&lt;input placeholder=&quot;Target&quot; name=&quot;new-target-path&quot; /&gt;&#039; +
+          &#039;&lt;/div&gt;&#039; +
+
+          &#039;&lt;div class=&quot;column no-grow&quot;&gt;&#039; +
+            &#039;&lt;button name=&quot;add-mapping&quot;&gt;Add&lt;/button&gt;&#039; +
+          &#039;&lt;/div&gt;&#039; +
+        &#039;&lt;/div&gt;&#039; +
+      &#039;&lt;/header&gt;&#039; +
+
+      &#039;&lt;div class=&quot;items&quot;&gt;&lt;/div&gt;&#039; +
+    &#039;&lt;/section&gt;&#039;,
+
+
+  validatePath: function(pathValue) {
+    return typeof this.collection.resolve(pathValue, this.model) !== &#039;undefined&#039;;
+  },
+
+  subviews: {
+    mappingsList: {
+      waitFor: &#039;collection&#039;,
+      selector: &#039;.items&#039;,
+      prepareView: function(el) {
+        return this.renderCollection(this.collection, ItemView, el);
+      }
+    }
+  },
+
+  derived: {
+    suggestionHelper: {
+      deps: [&#039;rootView&#039;],
+      fn: function () {
+        return this.rootView.suggestionHelper;
+      }
+    }
+  },
+
+  events: {
+    &#039;focus [name=new-source-path]&#039;: &#039;_handleSourceFocus&#039;,
+    &#039;focus [name=new-target-path]&#039;: &#039;_handleTargetFocus&#039;,
+    // &#039;keyup [name$=&quot;-path&quot;]&#039;: &#039;_handlePathUpdate&#039;,
+    &#039;click [name=&quot;add-mapping&quot;]&#039;: &#039;_handleAddMapping&#039;
+  },
+
+  _handleSourceFocus: function(evt) {
+    var helper = this.suggestionHelper;
+    helper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(this.collection.sourceSuggestions(this.model));
+  },
+
+  _handleTargetFocus: function(evt) {
+    var helper = this.suggestionHelper;
+    helper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(this.collection.targetSuggestions(this.model));
+  },
+
+  // _handlePathUpdate: function(evt) {
+  //   var scope = evt.target.name.split(&#039;-path&#039;).shift();
+  //   var selected = evt.target.value;
+  //   this.model.updateInfo(scope, selected, this.parent.model);
+  // },
+
+
+  _handleAddMapping: function(evt) {
+    evt.preventDefault();
+
+    var source = this.query(&#039;[name=&quot;new-source-path&quot;]&#039;);
+    var target = this.query(&#039;[name=&quot;new-target-path&quot;]&#039;);
+
+    if (!this.validatePath(source.value)) {
+      console.warn(&#039;&quot;%s&quot; cannot be used as source path&#039;, source.value);
+      return;
+    }
+
+    if(target.value &amp;&amp; !this.validatePath(target.value)) {
+      console.warn(&#039;&quot;%s&quot; cannot be used as target path&#039;, target.value);
+      return;
+    }
+
+    this.collection.import([{
+      source: source.value,
+      target: target.value
+    }], this.model);
+
+    source.value = &#039;&#039;;
+    target.value = &#039;&#039;;
+  }
+});
+
+
+module.exports = MappingsControlView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

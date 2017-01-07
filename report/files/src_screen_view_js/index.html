@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/screen/view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/screen/view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">73.57</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">281</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">33.32</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">2.36</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var View = window.VFDeps.View;
+var LayerView = require(&#039;./../layer/view&#039;);
+require(&#039;./../layer/canvas/view&#039;);
+require(&#039;./../layer/svg/view&#039;);
+require(&#039;./../layer/video/view&#039;);
+require(&#039;./../layer/img/view&#039;);
+
+
+
+function signature(fn) {
+  var args = fn.toString().match(&#039;function[^(]*\\(([^)]*)\\)&#039;);
+  if (!args || !args[1].trim()) { return []; }
+  return args[1].split(&#039;,&#039;).map(function(a){ return a.trim(); });
+}
+
+var signatures = {};
+function registerCommand(commandName, command) {
+  if (arguments.length === 1) {
+    if (typeof arguments[0] === &#039;function&#039;) {
+      command = arguments[0];
+      commandName = command.name;
+    }
+    else {
+      command = commands[arguments[0]];
+    }
+  }
+  else if (typeof command !== &#039;function&#039;) {
+    command = commands[commandName];
+  }
+  signatures[commandName] = signature(command);
+}
+
+
+
+
+var commands = {};
+commands.setup = function setup(state) {
+  this.update(state);
+};
+commands.resetLayers = function resetLayers(layers) {
+  var triggerChange;
+  var collection = this.model.layers;
+
+  function findLayer(name) {
+    return layers.find(function () {
+      return function(lo) {
+        return lo.name === name;
+      };
+    });
+  }
+
+  layers.forEach(function(layer) {
+    triggerChange = true;
+    var state = collection.get(layer.name);
+    if (state) {
+      state.set(layer);
+    }
+    else {
+      collection.add(layer);
+    }
+  });
+
+  collection.forEach(function(layer) {
+    var found = findLayer(layer.name);
+    if (!found) {
+      triggerChange = true;
+      collection.remove(layer);
+    }
+  });
+
+  if (triggerChange) {
+    this.trigger(&#039;change:layers&#039;, collection);
+  }
+
+  this.resize();
+};
+commands.addLayer = function addLayer(layer) {
+  var collection = this.model.layers;
+  collection.add(layer);
+};
+commands.removeLayer = function removeLayer(layerName) {
+  var collection = this.model.layers;
+  collection.remove(collection.get(layerName));
+};
+commands.updateLayer = function updateLayer(layer, layerName) {
+  this.model.layers.get(layerName).set(layer);
+};
+
+commands.heartbeat = function heartbeat(frametime, audio) {
+  this.model.frametime = frametime;
+  this.model.audio = audio;
+};
+
+Object.keys(commands).forEach(registerCommand);
+
+
+var clientMixin = {};
+clientMixin.initializeClient = function initializeClient() {
+  var channel = new window.BroadcastChannel(&#039;spike&#039;);
+  var follower = this;
+  var commandArgs;
+
+  channel.addEventListener(&#039;message&#039;, function(evt) {
+    var commandName = evt.data.command;
+    var command = commands[commandName];
+
+    if (typeof command !== &#039;function&#039;) {
+      return;
+    }
+
+    if (!signatures[commandName]) {
+      return;
+    }
+
+    // console.info(&#039;%cscreen command &quot;%s&quot;&#039;, &#039;color:blue&#039;, commandName);
+
+    commandArgs = signatures[commandName].map(function(argName) {
+      if (argName === &#039;timeStamp&#039;) return evt.timeStamp;
+      return evt.data.payload[argName];
+    });
+
+    command.apply(follower, commandArgs);
+  }, false);
+
+  channel.postMessage({
+    command: &#039;register&#039;,
+    payload: {
+      id: &#039;screen&#039; + performance.now()
+    }
+  });
+
+  this.channel = channel;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+var ScreenView = View.extend(clientMixin, {
+  autoRender: true,
+
+  template: &#039;&lt;div class=&quot;screen&quot;&gt;&lt;/div&gt;&#039;,
+
+  session: {
+    width: [&#039;number&#039;, true, 400],
+    height: [&#039;number&#039;, true, 300],
+    captureMouse: [&#039;boolean&#039;, true, false],
+    captureDebug: [&#039;boolean&#039;, true, false]
+  },
+
+  initialize: function () {
+    if (!this.model) {
+      throw new Error(&#039;Missing model option for ScreenView&#039;);
+    }
+    this.initializeClient();
+  },
+
+  remove: function() {
+    if (this.channel) {
+      this.channel.close();
+    }
+    return View.prototype.remove.apply(this, arguments);
+  },
+
+  resize: function () {
+    if (!this.el) { return this; }
+    this.el.style.position = &#039;fixed&#039;;
+    this.el.top = 0;
+    this.el.left = 0;
+    this.el.style.width = &#039;100%&#039;;
+    this.el.style.height = &#039;100%&#039;;
+    this.width = this.el.parentNode.clientWidth;
+    this.height = this.el.parentNode.clientHeight;
+    return this._resizeLayers();
+  },
+
+  _resizeLayers: function() {
+    if (!this.layersView || !this.layersView.views) { return this; }
+    var w = this.width;
+    var h = this.height;
+
+    this.layersView.views.forEach(function(view) {
+      view.width = w;
+      view.height = h;
+    });
+    return this;
+  },
+
+  render: function() {
+    if (!this.el) {
+      this.renderWithTemplate();
+    }
+
+    if (!this.layersView) {
+      this.layersView = this.renderCollection(this.model.layers, function(opts) {
+        var type = opts.model.getType();
+        var ScreenLayerConstructor = LayerView[type] || LayerView;
+        return new ScreenLayerConstructor(opts);
+      }, this.el, {parent: this});
+      this._updateLayers();
+    }
+
+    if (!this._ar) {
+      this._animate();
+    }
+
+    return this.resize();
+  },
+
+  update: function(options) {
+    if (!this.layersView) {
+      return this.render().update(options);
+    }
+
+    this.model.set(options);
+
+    function findLayer(name) {
+      return function(lo) {
+        return lo.name === name;
+      };
+    }
+
+    var triggerChange;
+    var collection = this.model.layers;
+    if (options.layers) {
+      options.layers.forEach(function(layer) {
+        triggerChange = true;
+        var state = collection.get(layer.name);
+        if (state) {
+          state.set(layer, {
+            silent: true
+          });
+        }
+        else {
+          collection.add(layer, {
+            silent: true
+          });
+        }
+      });
+
+      collection.forEach(function(layer) {
+        var found = options.layers.find(findLayer(layer.name));
+        if (!found) {
+          triggerChange = true;
+          collection.remove(layer, {
+            silent: true
+          });
+        }
+      });
+
+      if (triggerChange) {
+        this.trigger(&#039;change:layers&#039;, collection);
+      }
+    }
+
+    return this;
+  },
+
+  _ar: null,
+  _animate: function(timestamp) {
+    this.model.frametime = timestamp || 0;
+    this._updateLayers();
+    this._ar = window.requestAnimationFrame(this._animate.bind(this));
+  },
+
+  _updateLayers: function() {
+    this.layersView.views.forEach(function(subview) {
+      subview.update();
+    });
+  }
+});
+module.exports = ScreenView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

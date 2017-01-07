@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/controller/details-view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/controller/details-view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">81.67</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">388</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">32.30</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">2.98</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var mappings = require(&#039;./../mapping/state&#039;);
+var assign = VFDeps.assign;
+var Collection = VFDeps.Collection;
+var State = VFDeps.State;
+var View = VFDeps.View;
+
+var PropertyView = View.extend({
+  template: &#039;&lt;div class=&quot;columns object-prop prop-type-default&quot;&gt;&#039; +
+    &#039;&lt;div class=&quot;column gutter text-right prop-name&quot;&gt;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column no-grow prop-value-reset&quot;&gt;&#039; +
+      &#039;&lt;button class=&quot;vfi-cancel&quot;&gt;&lt;/button&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column prop-value&quot;&gt;&#039; +
+      &#039;&lt;input name=&quot;value&quot; type=&quot;text&quot; /&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+    // &#039;&lt;div class=&quot;column prop-mapping-path&quot;&gt;&#039; +
+    //   &#039;&lt;input name=&quot;mapping&quot; /&gt;&#039; +
+    // &#039;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column prop-mapping-clear&quot;&gt;&#039; +
+      &#039;&lt;button class=&quot;vfi-unlink&quot;&gt;&lt;/button&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+  &#039;&lt;/div&gt;&#039;,
+
+  initialize: function() {
+    // should improve the performances by using the passive option
+    var change = this._handleChange.bind(this);
+    this.on(&#039;change:el&#039;, function() {
+      if (this.previousAttributes.el) {
+        this.previousAttributes.el.removeEventListener(&#039;change&#039;, change, {passive: true});
+      }
+
+      if (!this.el) return;
+
+      this.el.addEventListener(&#039;change&#039;, change, {passive: true});
+    });
+
+    // triggers an event which will clear the derived cache for .value
+    this.listenTo(this.parent.model, &#039;all&#039;, function(evtName) {
+      if (evtName === &#039;change:&#039; + this.model.name) this.trigger(&#039;change:parent.model&#039;);
+    });
+
+    /*
+    this.listenToAndRun(mappings, &#039;all&#039;, function(evtName) {
+      console.info(&#039;mappings %s in %s property view&#039;, evtName, this.model.name, this.mappingObject);
+    });
+    */
+  },
+
+  derived: {
+    suggestionHelper: {
+      cache: false,
+      fn: function() {
+        var view = this.parent;
+        while (view) {
+          if (view.suggestionHelper) return view.suggestionHelper;
+          view = view.parent;
+        }
+        return false;
+      }
+    },
+
+    value: {
+      deps: [
+        &#039;model&#039;,
+        &#039;model.name&#039;,
+        &#039;parent.model&#039;
+      ],
+      fn: function() {
+        return this.parent.model.get(this.model.name);
+      }
+    },
+
+    mappingPath: {
+      deps: [&#039;value&#039;],
+      fn: function() {
+        return mappings.objectPath(this.parent.model) + this.model.name;
+      }
+    },
+
+    mappingObject: {
+      deps: [&#039;value&#039;],
+      fn: function() {
+        return mappings.isTarget(this.parent.model, this.model.name);
+      }
+    }
+  },
+
+  bindings: {
+    &#039;model.name&#039;: {
+      type: &#039;text&#039;,
+      selector: &#039;.prop-name&#039;
+    },
+
+    value: {
+      type: function(el, val) {
+        if (el === document.activeElement) return;
+        el.value = val;
+      },
+      selector: &#039;input[name=value]&#039;,
+    },
+
+    mappingObject: {
+      type: &#039;booleanAttribute&#039;,
+      selector: &#039;.prop-mapping-clear button&#039;,
+      name: &#039;disabled&#039;,
+      invert: true
+    }
+  },
+
+  events: {
+    &#039;click .prop-value-reset button&#039;: &#039;_handleReset&#039;,
+    &#039;change [name=mapping]&#039;: &#039;_handleMappingChange&#039;,
+    &#039;focus [type=text][name=value]&#039;: &#039;_suggestValues&#039;,
+    &#039;focus [name=mapping]&#039;: &#039;_suggestMappings&#039;
+  },
+
+  _handleReset: function() {
+    this.parent.model.unset(this.model.name);
+  },
+
+  _handleMappingChange: function() {
+    console.info(&#039;_handleMappingChange&#039;);
+  },
+
+  _suggestValues: function(evt) {
+    var helper = this.suggestionHelper;
+    if (!helper || !this.model.values || !this.model.values.length) return;
+
+    var el = evt.target;
+    helper.attach(el, function(selected) {
+      el.value = selected;
+      helper.detach();
+    }).fill(this.model.values);
+  },
+
+  _suggestMappings: function(evt) {
+    console.info(&#039;_suggestMappings&#039;, this.model.values, evt.target, evt.delegatedTarget);
+  },
+
+  // can not / don&#039;t want to use evt.preventDefault() here
+  _handleChange: function(evt) {
+    this.parent.model.set(this.model.name, evt.target.value);
+  }
+});
+
+
+
+PropertyView.types = {};
+
+PropertyView.types.boolean = PropertyView.extend({
+  template: &#039;&lt;div class=&quot;columns object-prop prop-type-boolean&quot;&gt;&#039; +
+    &#039;&lt;div class=&quot;column gutter text-right prop-name&quot;&gt;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column no-grow&quot;&gt;&#039; +
+      &#039;&lt;button class=&quot;vfi-cancel&quot;&gt;&lt;/button&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column prop-value&quot;&gt;&#039; +
+      &#039;&lt;button class=&quot;prop-toggle-btn&quot;&gt;&lt;/button&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+    // &#039;&lt;div class=&quot;column prop-mapping-path&quot;&gt;&#039; +
+    //   &#039;&lt;input name=&quot;mapping&quot; /&gt;&#039; +
+    // &#039;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column prop-mapping-clear&quot;&gt;&#039; +
+      &#039;&lt;button class=&quot;vfi-unlink&quot;&gt;&lt;/button&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+  &#039;&lt;/div&gt;&#039;,
+
+  bindings: assign({}, PropertyView.prototype.bindings, {
+    value: {
+      selector: &#039;button.prop-toggle-btn&#039;,
+      type: &#039;booleanClass&#039;,
+      yes: &#039;vfi-toggle-on&#039;,
+      no: &#039;vfi-toggle-off&#039;
+    }
+  }),
+
+  events: {
+    &#039;click button.prop-toggle-btn&#039;: &#039;_handleToggle&#039;
+  },
+
+  _handleChange: function() {},
+
+  _handleToggle: function () {
+    this.parent.model.toggle(this.model.name);
+  }
+});
+
+PropertyView.types.number = PropertyView.extend({
+  template: &#039;&lt;div class=&quot;columns object-prop prop-type-number&quot;&gt;&#039; +
+    &#039;&lt;div class=&quot;column gutter text-right prop-name&quot;&gt;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column no-grow&quot;&gt;&#039; +
+      &#039;&lt;button class=&quot;vfi-cancel&quot;&gt;&lt;/button&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column prop-value&quot;&gt;&#039; +
+      &#039;&lt;input name=&quot;value&quot; type=&quot;number&quot; /&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+    // &#039;&lt;div class=&quot;column prop-mapping-path&quot;&gt;&#039; +
+    //   &#039;&lt;input name=&quot;mapping&quot; /&gt;&#039; +
+    // &#039;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column prop-mapping-clear&quot;&gt;&#039; +
+      &#039;&lt;button class=&quot;vfi-unlink&quot;&gt;&lt;/button&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+  &#039;&lt;/div&gt;&#039;,
+
+  bindings: assign({}, PropertyView.prototype.bindings, {
+    min: [
+      {
+        selector: &#039;[name=value]&#039;,
+        type: function(el, val) {
+          if (val !== null &amp;&amp; typeof val !== &#039;undefined&#039;) {
+            el.setAttribute(&#039;min&#039;, val);
+          }
+          else {
+            el.removeAttribute(&#039;min&#039;);
+          }
+        }
+      }
+    ],
+    max: [
+      {
+        selector: &#039;[name=value]&#039;,
+        type: function(el, val) {
+          if (val !== null &amp;&amp; typeof val !== &#039;undefined&#039;) {
+            el.setAttribute(&#039;max&#039;, val);
+          }
+          else {
+            el.removeAttribute(&#039;max&#039;);
+          }
+        }
+      }
+    ],
+  }),
+
+  session: {
+    min: [&#039;number&#039;, false, null],
+    max: [&#039;number&#039;, false, null]
+  },
+
+  _handleChange: function(evt) {
+    this.parent.model.set(this.model.name, Number(evt.target.value));
+  }
+});
+
+
+
+
+
+
+
+
+
+PropertyView.names = {};
+
+PropertyView.names.active = PropertyView.types.boolean.extend({});
+
+PropertyView.names.opacity = PropertyView.types.number.extend({
+  session: {
+    min: [&#039;number&#039;, false, 0],
+    max: [&#039;number&#039;, false, 100]
+  }
+});
+
+PropertyView.names.skewX =
+PropertyView.names.skewY =
+PropertyView.names.rotateX =
+PropertyView.names.rotateY =
+PropertyView.names.rotateZ = PropertyView.types.number.extend({
+  session: {
+    min: [&#039;number&#039;, false, -360],
+    max: [&#039;number&#039;, false, 360]
+  }
+});
+
+
+
+
+
+var DetailsView = View.extend({
+  template:  &#039;&lt;section class=&quot;row rows&quot;&gt;&#039; +
+    &#039;&lt;header class=&quot;row no-grow&quot;&gt;&#039; +
+      &#039;&lt;h3&gt;Details for &lt;span data-hook=&quot;name&quot;&gt;&lt;/span&gt;&lt;/h3&gt;&#039; +
+      &#039;&lt;h5 data-hook=&quot;object-path&quot;&gt;&lt;/h5&gt;&#039; +
+    &#039;&lt;/header&gt;&#039; +
+
+    &#039;&lt;div class=&quot;row items&quot;&gt;&lt;/div&gt;&#039; +
+  &#039;&lt;/section&gt;&#039;,
+
+  initialize: function() {
+    this.listenToAndRun(this, &#039;change:definition&#039;, function() {
+      this.properties.reset(this.definition);
+    });
+    /*
+    this.listenToAndRun(mappings, &#039;all&#039;, function(evtName) {
+      console.info(&#039;mappings evt in details view %s%s&#039;, evtName, this.objectPath, );
+    });
+    */
+  },
+
+  derived: {
+    propNames: {
+      deps: [&#039;model&#039;],
+      fn: function() {
+        var def = this.model.constructor.prototype._definition;
+        return Object.keys(def)
+          .filter(function(key) {
+            return [
+              &#039;drawFunction&#039;,
+
+              &#039;uiState&#039;,
+              &#039;name&#039;,
+              &#039;type&#039;,
+              &#039;zIndex&#039;
+            ].indexOf(key) &lt; 0;
+          });
+      }
+    },
+
+    definition: {
+      deps: [&#039;propNames&#039;],
+      fn: function() {
+        var def = this.model.constructor.prototype._definition;
+        return this.propNames
+          .map(function(name) {
+            return assign({name: name}, def[name]);
+          });
+      }
+    },
+
+    objectPath: {
+      deps: [&#039;model&#039;],
+      fn: function() {
+        return mappings.objectPath(this.model);
+      }
+    }
+  },
+
+  collections: {
+    properties: Collection.extend({
+      mainIndex: &#039;name&#039;,
+
+      model: State.extend({
+        idAttribute: &#039;name&#039;,
+
+        session: {
+          name: &#039;string&#039;,
+          allowNull: &#039;boolean&#039;,
+          default: &#039;any&#039;,
+          required: &#039;boolean&#039;,
+          test: &#039;any&#039;,
+          type: &#039;string&#039;,
+          values: &#039;array&#039;
+        }
+      })
+    })
+  },
+
+  subviews: {
+    propertiesView: {
+      waitFor: &#039;el&#039;,
+      selector: &#039;.items&#039;,
+      prepareView: function (el) {
+        return this.renderCollection(this.properties, function (opts) {
+          var Constructor = (PropertyView.names[opts.model.name] || PropertyView.types[opts.model.type] || PropertyView);
+          // console.info(&#039;property name: %s (%s), type: %s (%s)&#039;, opts.model.name, !!PropertyView.names[opts.model.name], opts.model.type, !!PropertyView.types[opts.model.type]);
+          return new Constructor(opts);
+        }, el);
+      }
+    }
+  },
+
+  bindings: {
+    &#039;model.uiState&#039;: {selector: &#039;header&#039;, type: &#039;class&#039;},
+    &#039;model.name&#039;: &#039;[data-hook=name]&#039;,
+    objectPath: &#039;[data-hook=&quot;object-path&quot;]&#039;
+  },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+
+    // This should fix some issues with the region-view
+    Object.keys(this.constructor.prototype.bindings).forEach(function(key) {
+      this.trigger(&#039;change:&#039; + key);
+    }, this);
+
+    return this;
+  }
+});
+module.exports = DetailsView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>
