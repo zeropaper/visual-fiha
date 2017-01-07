@@ -7,6 +7,10 @@ var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlVi
       '<h3 class="name"></h3>' +
     '</header>' +
 
+    '<div class="detector">' +
+      '<button class="avg">Tap</button>' +
+    '</div>' +
+
     '<div class="row columns gutter-horizontal gutter-bottom">' +
       '<div class="column result-dot no-grow gutter-right"></div>' +
       '<div class="column result gutter-left">' +
@@ -18,6 +22,14 @@ var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlVi
   '</section>',
 
   bindings: assign({}, SignalControlView.prototype.bindings, {
+    avg: {
+      type: 'text',
+      selector: '.avg'
+    },
+    'model.input': {
+      type: 'value',
+      hook: 'input'
+    },
     'model.result': [
       {
         selector: '.result-dot',
@@ -29,6 +41,7 @@ var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlVi
   }),
 
   events: assign({}, SignalControlView.prototype.events, {
+    'click .detector > button': 'tap',
     'change [data-hook=input]': '_updateBPM'
   }),
 
@@ -36,13 +49,43 @@ var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlVi
     this.model.input = parseInt(this.queryByHook('input').value.trim(), 10);
   },
 
-  render: function () {
-    this.renderWithTemplate();
-    var inputEl = this.queryByHook('input');
-    if (inputEl && !inputEl.value) {
-      inputEl.value = this.model.input;
+  session: {
+    wait: ['number', true, 2],
+    avg: ['number', true, 0],
+    count: ['number', true, 0],
+    first: ['number', true, 0],
+    previous: ['number', true, 0]
+  },
+
+  _resetDetector: function() {
+    this.set({
+      count: 0,
+      first: 0,
+      previous: 0
+    });
+  },
+
+  tap: function() {
+    var timeSeconds = new Date();
+    var msecs = timeSeconds.getTime();
+    var wait = 2;
+
+    if ((msecs - this.previous) > 1000 * wait) {
+      this.count = 0;
     }
-    return this;
+
+    if (!this.count) {
+      this.first = msecs;
+      this.count = 1;
+    }
+    else {
+      this.avg = Math.round((60000 * this.count / (msecs - this.first)) * 100) / 100;
+      this.count++;
+    }
+
+    this.model.input = this.avg;
+
+    this.previous = msecs;
   }
 });
 module.exports = BeatSignalControlView;

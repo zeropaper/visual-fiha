@@ -739,6 +739,19 @@ header h3 {
   border-radius: 1em;
 }
 
+.signal-beat .detector {
+  padding: var(--spacing);
+}
+.signal-beat .detector button {
+  padding: 1rem;
+  min-width: 100px;
+  max-width: 200px;
+  margin: var(--spacing) auto;
+  display: block;
+  text-align: center;
+  border-radius: var(--spacing);
+  background-color: var(--yes);
+}
 
 .control-screen {
   border: none;
