@@ -24,7 +24,7 @@ var canvasLayers = [
       // var frametime = (this.frametime || 0) * 0.001;
       var url = this.src;
       // var cache = this.cache;
-      window.VF.canvasTools.loadVideo(url, function(err, video) {
+      window.VF.canvas.loaders.video(url, function(err, video) {
         if (!video) return;
 
         // var is = Math.min(video.videoWidth, video.videoHeight);
@@ -53,7 +53,7 @@ var canvasLayers = [
   //   active: false,
   //   drawFunction: function(ctx) {
   //     var url = './assets/kd/kd_logo_final.svg';
-  //     window.VF.canvasTools.loadImg(url, function(err, img) {
+  //     window.VF.canvas.loaders.img(url, function(err, img) {
   //       if (!img) return;
   //       var is = Math.min(img.width, img.height);
   //       var cs = Math.min(ctx.canvas.width, ctx.canvas.height);
@@ -76,7 +76,7 @@ var canvasLayers = [
       var url = this.src;
       var shift = this.shift;
       var frametime = this.screenState.frametime || 0;
-      window.VF.canvasTools.loadImg(url, function(err, img) {
+      window.VF.canvas.loaders.img(url, function(err, img) {
         if (!img) return;
         var iw = img.width;
         var ih = img.height;
@@ -235,107 +235,21 @@ var canvasLayers = [
     name: 'frametime',
     active: false,
     weight: 60,
-    drawFunction: function(ctx) {
-      var cx = ctx.canvas.width * 0.5;
-      var cy = ctx.canvas.height * 0.5;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = (cy * 0.25) + 'px monospace';
-      var ft = Math.round(this.screenState.frametime) + 'ms';
-      ctx.fillStyle = '#000';
-      ctx.strokeStyle = '#fff';
-      ctx.fillText(ft, cx, cy);
-      ctx.strokeText(ft, cx, cy);
-    }
+    drawFunction: window.VF.canvas.utils.frametime
   },
 
   {
     name: 'audio',
     active: true,
     weight: 30,
-    drawFunction: function(ctx) {
-      var audio = this.screenState.audio || {};
-      var bufferLength = audio.bufferLength;
-      var freqArray = audio.frequency;
-      var timeDomainArray = audio.timeDomain;
-
-      if (!bufferLength || !freqArray || !timeDomainArray) return;
-
-      var x = ctx.canvas.width * 0.5;
-      var y = ctx.canvas.height * 0.5;
-      var r = Math.min(x, y) - 20;
-      // var first;
-      var rad = Math.PI * 2;
-
-      var i = 0, a, f, td, lx, ly;
-      var original = {
-        lineWidth: ctx.lineWidth,
-        lineCap: ctx.lineCap,
-        lineJoin: ctx.lineJoin,
-        strokeStyle: ctx.strokeStyle,
-      };
-
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-
-      ctx.strokeStyle = 'red';
-      var col;
-      for (var lw = y*2; lw >= y*0.2; lw-=y*0.2) {
-        col = col === 'white' ? 'black' : 'white';
-        ctx.strokeStyle = col;
-        ctx.lineWidth = lw;
-
-        // ctx.beginPath();
-        // for (i = 0; i < bufferLength; i++) {
-        //   a = ((rad / bufferLength) * i) - Math.PI;
-        //   f = (r / 100) * (freqArray[i] / 2);
-        //   lx = Math.round(x + Math.cos(a) * f);
-        //   ly = Math.round(y + Math.sin(a) * f);
-        //   ctx.lineTo(lx, ly);
-        // }
-        // ctx.stroke();
-
-        ctx.beginPath();
-        for (i = 0; i < bufferLength; i++) {
-          a = ((rad / bufferLength) * i) - Math.PI;
-          td = (r / 100) * (timeDomainArray[i] / 2);
-          lx = Math.round(x + Math.cos(a) * td);
-          ly = Math.round(y + Math.sin(a) * td);
-          ctx.lineTo(lx, ly);
-        }
-        ctx.stroke();
-      }
-
-      ctx.lineWidth = original.lineWidth;
-      ctx.lineCap = original.lineCap;
-      ctx.lineJoin = original.lineJoin;
-      ctx.strokeStyle = original.strokeStyle;
-    }
+    drawFunction: window.VF.canvas.lines.roundFrequencies
   },
 
   {
     name: 'fps',
     active: true,
     weight: 60,
-    drawFunction: function(ctx) {
-      var cx = ctx.canvas.width * 0.5;
-      var cy = ctx.canvas.height * 0.5;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = (cy * 0.25) + 'px monospace';
-
-      var cache = this.cache;
-      var screen = this.screenState;
-
-      cache.previous = cache.previous || 0;
-      var fps = Math.round(1000 / (screen.frametime - cache.previous)) + 'fps';
-      ctx.lineWidth = 3;
-      ctx.fillStyle = '#000';
-      ctx.strokeStyle = '#fff';
-      ctx.fillText(fps, cx, cy);
-      ctx.strokeText(fps, cx, cy);
-      cache.previous = screen.frametime;
-    }
+    drawFunction: window.VF.canvas.utils.fps
   }
 ];
 

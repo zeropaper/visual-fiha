@@ -5,6 +5,7 @@ module.exports = function(env) {
   return validate({
     context: resolve(__dirname, 'src'),
     entry: {
+      'canvas-scripts':'./layer/canvas/scripts/index.js',
       'controller':'./controller-app.js',
       'screen':'./screen-app.js'
     },
