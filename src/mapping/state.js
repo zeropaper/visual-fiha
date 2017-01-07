@@ -218,7 +218,12 @@
     sourceValueChange: function() {
       if (!this.targetObject || !this.targetProperty) return;
       // console.info('%c%s => %s changed %s => %s', 'color:purple;', this.sourcePath, this.targetPath, this.sourceValue, this.targetValue, this.targetObject);
-      this.targetObject.set(this.targetProperty, this.targetValue);
+      try {
+        this.targetObject.set(this.targetProperty, this.targetValue);
+      }
+      catch (e) {
+        console.warn(e);
+      }
     }
   });
 
