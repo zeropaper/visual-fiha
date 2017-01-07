@@ -10,9 +10,11 @@ var AudioSource = View.extend({
     '<div class="row columns">'+
       '<div class="column audio-monitor"></div>'+
       '<div class="column audio-controls">' +
-        '<label>MinDb: <input type="number" name="minDecibels" value="-90" max="-31" step="1" /></label>' +
-        '<label>MaxDb: <input type="number" name="maxDecibels" value="-10" min="-70" step="1" /></label>' +
-        '<label>Smoothing: <input type="number" name="smoothingTimeConstant" min="0" max="1" value="0.85" step="0.01" /></label>' +
+        // need to investigate min/max value for decibels:
+        // https://webaudio.github.io/web-audio-api/#widl-AnalyserNode-maxDecibels
+        '<label>MinDb: <input type="range" name="minDecibels" value="-90" min="-200" max="-11" step="1" /></label>' +
+        '<label>MaxDb: <input type="range" name="maxDecibels" value="-10" min="-70" max="120" step="1" /></label>' +
+        '<label>Smoothing: <input type="range" name="smoothingTimeConstant" min="0" max="1" value="0.85" step="0.01" /></label>' +
         '<label>FftSize: <select type="number" name="fftSize" value="32" step="2">' +
           '<option value="32">32</option>' +
           '<option value="64">64</option>' +
@@ -66,14 +68,14 @@ var AudioSource = View.extend({
         return analyser;
       }
     },
-    audioFrequencyDataArray: {
-      deps: ['audioAnalyser'],
+    audioFrequencyArray: {
+      deps: ['audioAnalyser', 'fftSize'],
       fn: function () {
         return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
       }
     },
-    audioTimeDomainDataArray: {
-      deps: ['audioAnalyser'],
+    audioTimeDomainArray: {
+      deps: ['audioAnalyser', 'fftSize'],
       fn: function () {
         return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
       }
@@ -145,7 +147,6 @@ var AudioSource = View.extend({
 
   _changeAudioParams: function(evt) {
     this.set(evt.target.name, Number(evt.target.value));
-    this.monitor.set('audioAnalyser', this.audioAnalyser);
   },
 
   update: function() {

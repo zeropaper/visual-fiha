@@ -167,10 +167,10 @@ var ControllerView = View.extend(controllerMixin, {
   update: function() {
     var analyser = this.audioSource.audioAnalyser;
 
-    var freqArray = this.audioSource.audioFrequencyDataArray;
+    var freqArray = this.audioSource.audioFrequencyArray;
     analyser.getByteFrequencyData(freqArray);
 
-    var timeDomainArray = this.audioSource.audioTimeDomainDataArray;
+    var timeDomainArray = this.audioSource.audioTimeDomainArray;
     analyser.getByteTimeDomainData(timeDomainArray);
 
     var command = {

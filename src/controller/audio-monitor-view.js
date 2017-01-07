@@ -2,14 +2,15 @@
 module.exports = VFDeps.View.extend({
   autoRender: true,
   template: '<canvas width="200" height="200"></canvas>',
+
   session: {
-    audioAnalyser: ['any', true, null],
     lineWidth: ['number', true, 1],
     width: ['number', true, 200],
     height: ['number', true, 200],
     padding: ['number', true, 2],
     color: ['string', true, '#000']
   },
+
   bindings: {
     width: {
       type: 'attribute',
@@ -20,23 +21,12 @@ module.exports = VFDeps.View.extend({
       name: 'height'
     }
   },
+
   derived: {
     ctx: {
       deps: ['el', 'width', 'height'],
       fn: function() {
         return this.el.getContext('2d');
-      }
-    },
-    audioFrequencyArray: {
-      deps: ['audioAnalyser'],
-      fn: function () {
-        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
-      }
-    },
-    audioTimeDomainArray: {
-      deps: ['audioAnalyser'],
-      fn: function () {
-        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
       }
     }
   },
@@ -97,22 +87,23 @@ module.exports = VFDeps.View.extend({
       return this;
     }
 
+    var source = this.parent;
+
     var ctx = this.ctx;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.fillStyle = ctx.strokeStyle = this.color;
 
-    var analyser = this.audioAnalyser;
+    var analyser = source.audioAnalyser;
     var bufferLength = analyser.frequencyBinCount;
     this.drawScales(bufferLength);
 
     ctx.fillStyle = ctx.strokeStyle = this.color;
 
-    var freqArray = this.audioFrequencyArray;
+    var freqArray = source.audioFrequencyArray;
     analyser.getByteFrequencyData(freqArray);
 
-    var timeDomainArray = this.audioTimeDomainArray;
+    var timeDomainArray = source.audioTimeDomainArray;
     analyser.getByteTimeDomainData(timeDomainArray);
-
 
     var x = ctx.canvas.width * 0.5;
     var y = ctx.canvas.height * 0.5;
