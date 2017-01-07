@@ -86,10 +86,11 @@ var AceEditor = View.extend({
 
     this.model.set(this.targetProperty, this.script);
 
-    this._cache.changed = false;
-    this.trigger('original:changed');
-    this.trigger('change:changed');
+    delete this._cache.changed;
+    delete this._cache.original;
     this.model.trigger('change:' + this.targetProperty);
+    this.trigger('change:changed');
+    this.trigger('change:original');
   },
 
   render: function() {
@@ -103,11 +104,13 @@ var AceEditor = View.extend({
       view.set('script', editor.getValue());//, {silent: true});
     });
     editor.setTheme('ace/theme/monokai');
-    editor.getSession().setMode('ace/mode/javascript');
     editor.setShowInvisibles();
-    editor.getSession().setUseSoftTabs(true);
-    editor.getSession().setTabSize(2);
-    editor.getSession().setUseWrapMode(true);
+
+    var session = editor.getSession();
+    session.setMode('ace/mode/javascript');
+    session.setUseSoftTabs(true);
+    session.setTabSize(2);
+    session.setUseWrapMode(true);
 
     if (view.original) {
       editor.setValue(view.original);
