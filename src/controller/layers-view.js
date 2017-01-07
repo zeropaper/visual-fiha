@@ -6,7 +6,7 @@ var LayerControlView = require('./../layer/control-view');
 require('./../layer/canvas/control-view');
 
 var LayersView = View.extend({
-  autoRender: true,
+  // autoRender: true,
 
   events: {
     'click [name="add-layer"]': '_addLayer',
@@ -68,13 +68,6 @@ var LayersView = View.extend({
                 '</div>'+
               '</div>'+
               '<div class="items"></div>'+
-            '</div>',
-
-  render: function() {
-    if (!this.rendered) {
-      this.renderWithTemplate();
-    }
-    return this;
-  }
+            '</div>'
 });
 module.exports = LayersView;

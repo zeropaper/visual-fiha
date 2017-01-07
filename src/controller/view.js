@@ -223,33 +223,62 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   subviews: {
-    MIDIAccess: {
+    regionRight: {
       waitFor: 'el',
-      selector: '.midi-access',
+      selector: '.region-right',
       prepareView: function(el) {
-        var subview = new MIDIAccessView({
-          parent: this,
-          el: el,
-          model: this.midiAccess
+        this.layersView = new LayersView({
+          collection: this.model.layers,
+          parent: this
         });
-        return subview;
-      }
-    },
 
-    leftBottom: {
-      waitFor: 'el',
-      selector: '.region-left-bottom',
-      prepareView: function(el) {
-        var styles = window.getComputedStyle(el);
+        this.signalsView = new SignalsView({
+          collection: this.model.signals,
+          parent: this
+        });
 
         this.codeEditor = new AceEditor({
           parent: this
         });
 
+        var view = new RegionView({
+          parent: this,
+          el: el,
+          currentView: this.layersView,
+          tabs: [
+            {name: 'Layers', view: this.layersView, pinned: true, active: true},
+            {name: 'Signals', view: this.signalsView, pinned: true},
+            {name: 'Editor', view: this.codeEditor, pinned: true}
+          ]
+        });
+
+        view.el.classList.add('region-right');
+        view.el.classList.add('column');
+        view.el.classList.add('rows');
+
+        this.listenTo(this.codeEditor, 'change:original', function() {
+          view.focusTabIndex(1);
+        });
+
+        return view;
+      }
+    },
+
+    regionLeftBottom: {
+      waitFor: 'el',
+      selector: '.region-left-bottom',
+      prepareView: function(el) {
+        var styles = window.getComputedStyle(el);
+
         this.audioSource = new AudioSource({
           audioAnalyser: this.audioAnalyser,
           parent: this,
           color: styles.color
+        });
+
+        this.MIDIAccess = new MIDIAccessView({
+          parent: this,
+          model: this.midiAccess
         });
 
         this.mappingsView = new MappingsControlView({
@@ -264,16 +293,12 @@ var ControllerView = View.extend(controllerMixin, {
           currentView: this.mappingsView,
           tabs: [
             {name: 'Mappings', view: this.mappingsView, pinned: true, active: true},
-            {name: 'Editor', view: this.codeEditor, pinned: true},
+            {name: 'MIDI', view: this.MIDIAccess, pinned: true},
             {name: 'Audio', view: this.audioSource, pinned: true}
           ]
         });
 
         view.el.classList.add('row');
-
-        this.listenTo(this.codeEditor, 'change:original', function() {
-          view.focusTabIndex(1);
-        });
 
         return view;
       }
@@ -290,32 +315,6 @@ var ControllerView = View.extend(controllerMixin, {
           font: styles.fontSize + ' ' + styles.fontFamily.split(' ').pop()
         });
         el.appendChild(view.el);
-        return view;
-      }
-    },
-
-    layersView: {
-      waitFor: 'el',
-      selector: '.layers',
-      prepareView: function(el) {
-        var view = new LayersView({
-          collection: this.model.layers,
-          parent: this,
-          el: el
-        });
-        return view;
-      }
-    },
-
-    signalsView: {
-      waitFor: 'el',
-      selector: '.signals',
-      prepareView: function(el) {
-        var view = new SignalsView({
-          collection: this.model.signals,
-          parent: this,
-          el: el
-        });
         return view;
       }
     }
@@ -374,7 +373,7 @@ var ControllerView = View.extend(controllerMixin, {
 
   showDetails: function (view) {
     if (view === this.currentDetails) return this;
-    var tabs = this.leftBottom.tabs;
+    var tabs = this.regionLeftBottom.tabs;
     var tabName = this.mappingsView.collection.objectPath(view.model);
     var found = tabs.get(tabName);
     if (!found) {
@@ -384,7 +383,7 @@ var ControllerView = View.extend(controllerMixin, {
       found.view = view;
     }
 
-    this.leftBottom.focusTab(tabName);
+    this.regionLeftBottom.focusTab(tabName);
 
     return this;
   },
@@ -444,19 +443,8 @@ var ControllerView = View.extend(controllerMixin, {
       '</div>'+
 
       '<div class="region-right column rows settings">'+
-        '<div class="region-right-top row columns">'+
-          '<div class="column rows">'+
-            '<div class="row layers"></div>'+
-          '</div>'+
 
-          '<div class="column rows">'+
-            '<div class="row signals"></div>'+
-          '</div>'+
-        '</div>'+
 
-        '<div class="region-right-bottom row no-grow columns">'+
-          '<div class="column midi-access"></div>'+
-        '</div>'+
       '</div>'+
     '</div>'+
   '</div>'

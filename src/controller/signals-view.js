@@ -8,7 +8,7 @@ require('./../signal/hsla/control-view');
 require('./../signal/rgba/control-view');
 
 var SignalsView = View.extend({
-  autoRender: true,
+  // autoRender: true,
 
   events: {
     'click [name="add-signal"]': '_addSignal',
@@ -70,13 +70,6 @@ var SignalsView = View.extend({
                 '</div>'+
               '</div>'+
               '<div class="items"></div>'+
-            '</div>',
-
-  render: function() {
-    if (!this.rendered) {
-      this.renderWithTemplate();
-    }
-    return this;
-  }
+            '</div>'
 });
 module.exports = SignalsView;
