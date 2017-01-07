@@ -372,17 +372,6 @@ var DetailsView = View.extend({
     'model.uiState': {selector: 'header', type: 'class'},
     'model.name': '[data-hook=name]',
     objectPath: '[data-hook="object-path"]'
-  },
-
-  render: function() {
-    View.prototype.render.apply(this, arguments);
-
-    // This should fix some issues with the region-view
-    Object.keys(this.constructor.prototype.bindings).forEach(function(key) {
-      this.trigger('change:' + key);
-    }, this);
-
-    return this;
   }
 });
 module.exports = DetailsView;

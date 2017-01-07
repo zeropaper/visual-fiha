@@ -99,10 +99,13 @@ var RegionView = View.extend({
       //   console.info('empty region');
       // },
 
-      // show: function(newView) {
-      //   // if (!newView.rendered) newView.render();
-      //   console.info('show', newView.el, newView._rendered, newView.rendered, newView.autoRender);
-      // }
+      show: function(newView) {
+        // This should fix some rendering issues with the region-view
+        var bindings = newView.constructor.prototype.bindings || {};
+        Object.keys(bindings).forEach(function(key) {
+          newView.trigger('change:' + key);
+        }, newView);
+      }
     };
     if (this.currentView) {
       options.view = this.currentView;
