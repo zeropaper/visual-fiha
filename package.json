@@ -12,7 +12,8 @@
     "url": "git://github.com/zeropaper/visual-fiha.git"
   },
   "scripts": {
-    "dev": "npm run build-deps && npm run build-worker && npm run dev-server",
+    "clean": "rm *-build.js && rm *-build.js.map",
+    "dev": "npm run build-deps && npm run build-canvas-scripts && npm run build-worker && npm run dev-server",
     "dev-server": "webpack-dev-server --env.dev --port=8081",
     "build": "npm run build-deps && npm run build-canvas-scripts && npm run build-worker && webpack -p --env.prod",
     "build-deps": "browserify ./src/deps.js -s VFDeps -o ./deps-build.js",
@@ -21,7 +22,8 @@
     "build-worker": "browserify ./src/web-worker.js -o ./web-worker-build.js",
     "postinstall": "npm run build",
     "make-index": "node ./.markitdown.js",
-    "prepare-push-master": "npm run make-index && npm run plato -r -d report src && npm run build && git add index.html report/ ./worker-javascript.js ./test/expect.js ./*-build.js && git commit --allow-empty -m \"update builds\""
+    "update-report": "plato -r -q -d report src",
+    "prepare-push-master": "npm run make-index && update-report && npm run build && git add index.html report/ ./worker-javascript.js ./test/expect.js ./*-build.js && git commit --allow-empty -m \"update builds\""
   },
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",
