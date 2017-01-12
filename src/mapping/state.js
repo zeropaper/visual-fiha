@@ -155,7 +155,7 @@
           else if (typeof this.transformation === 'string') {
             try {
               // not pretty
-              eval('fn = ' + this.transformation + ';');
+              eval('fn = ' + this.transformation + ';');// jshint ignore:line
             }
             catch (e) {
               // not pretty
@@ -394,10 +394,10 @@
       return results;
     },
 
-    import: function(data, context) {
+    import: function(data, context, reset) {
       context = context || this.context;
       if (!context) throw new Error('mappings.import() requires a context');
-
+      if (reset) this.reset([]);
       this.add(data.map(function(item) {
         var source = item.source.split('.');
         var target = item.target.split('.');
@@ -419,6 +419,12 @@
           target: item.targetPath,
           transform: (item.transformation || '').toString()
         };
+      });
+    },
+
+    resetObjects: function() {
+      this.forEach(function(mapping) {
+        delete mapping._cache.sourceObject;
       });
     },
 
