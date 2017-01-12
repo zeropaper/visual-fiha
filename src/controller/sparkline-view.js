@@ -127,7 +127,7 @@ module.exports = VFDeps.View.extend({
     ctx.lineTo(padding + innerW, toPx(avg));
     ctx.stroke();
 
-    current = Math.round(avg * 100) / 100;
+    current = avg.toFixed(2);
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     ctx.clearRect(0, padding, ctx.measureText(current).width + (padding * 2), ctx.canvas.height - padding);
