@@ -201,6 +201,7 @@ var ControllerView = View.extend(controllerMixin, {
   session: {
     playing: ['boolean', true, false],
     broadcastId: ['string', true, 'vfBus'],
+    showControlScreen: ['boolean', true, false],
     _arId: 'number',
     currentDetails: 'state'
   },
@@ -332,13 +333,20 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   bindings: {
-    broadcastId: {
-      selector: '.control-screen',
-      type: function(el, val) {
-        if (!val) return;
-        el.src = './screen.html#' + val;
+    showControlScreen: [
+      {
+        selector: '.control-screen',
+        type: function(el, val) {
+          el.src = !val ? '' : './screen.html#' + this.broadcastId;
+        }
+      },
+      {
+        selector: 'button[name=control-screen]',
+        type: 'booleanClass',
+        yes: 'yes',
+        no: 'no'
       }
-    },
+    ],
     playing: [
       {
         type: 'toggle',
@@ -357,13 +365,17 @@ var ControllerView = View.extend(controllerMixin, {
     'click [name="pause"]': 'pause',
     'click [name="stop"]': 'stop',
     'click [name="resize"]': 'resizeScreen',
-    'click [name="screen"]': '_openScreen'
+    'click [name="screen"]': '_openScreen',
+    'click [name="control-screen"]': '_toggleControlScreen',
   },
 
   _openScreen: function() {
     window.open('./screen.html#' + this.broadcastId, 'screen', 'width=800,height=600,location=no');
   },
 
+  _toggleControlScreen: function() {
+    this.toggle('showControlScreen');
+  },
   addMultiMapping: function(mappingModel) {
     this.mappingsView.mappings.add({
       targetModel: mappingModel.targetModel,
@@ -424,8 +436,12 @@ var ControllerView = View.extend(controllerMixin, {
           '<button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>'+
         '</span>'+
 
-        '<div class="column columns gutter-horizontal no-grow">'+
+        '<div class="column no-grow">'+
           '<button name="screen">Open screen</button>'+
+        '</div>'+
+
+        '<div class="column no-grow">'+
+          '<button name="control-screen">Control screen</button>'+
         '</div>'+
 
         '<div class="column gutter-horizontal no-grow columns performance">'+
