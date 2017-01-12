@@ -1,15 +1,23 @@
 'use strict';
 var View = window.VFDeps.View;
 var AceEditor = View.extend({
-  edit: function(target, propName, defaultValue, targetName) {
+  edit: function(target, propName, targetName) {
     if (!this.editor) this.render();
+    this.unset('done');
     this.set({
       model: target,
       targetProperty: propName,
       targetName: targetName || ((target.name || '') + propName)
     });
     this.script = this.original;
-    this.editor.setValue(this.original || defaultValue);
+    this.editor.setValue(this.original);
+  },
+
+  editCode: function(str, done) {
+    if (!this.editor) this.render();
+    this.unset(['model', 'targetProperty', 'targetName']);
+    this.editor.setValue(str);
+    this.done = done;
   },
 
   template:
@@ -33,7 +41,8 @@ var AceEditor = View.extend({
     editor: 'any',
     script: ['string', true, ''],
     targetName: 'string',
-    targetProperty: 'string'
+    targetProperty: 'string',
+    done: 'any'
   },
 
   derived: {
@@ -64,8 +73,23 @@ var AceEditor = View.extend({
     'click [name=apply]': '_handleApply'
   },
 
+  _cleanup: function(trigger) {
+    delete this._cache.changed;
+    delete this._cache.original;
+    if (trigger) {
+      this.trigger('change:changed');
+      this.trigger('change:original');
+    }
+  },
+
   _handleCancel: function(evt) {
     evt.preventDefault();
+    if (this.done) {
+      this.editor.setValue('');
+      this._cleanup();
+      this.script = '';
+      return this.unset('done');
+    }
     if (!this.model || !this.targetProperty || !this.editor) return;
 
     this.editor.setValue(this.original);
@@ -73,6 +97,10 @@ var AceEditor = View.extend({
 
   _handleApply: function(evt) {
     evt.preventDefault();
+    if (this.done) {
+      this._cleanup(true);
+      return this.done(this.script);
+    }
     if (!this.model || !this.targetProperty || !this.editor) return;
 
 
@@ -86,11 +114,19 @@ var AceEditor = View.extend({
 
     this.model.set(this.targetProperty, this.script);
 
-    delete this._cache.changed;
-    delete this._cache.original;
+    this._cleanup();
     this.model.trigger('change:' + this.targetProperty);
     this.trigger('change:changed');
     this.trigger('change:original');
+  },
+
+  getErrors: function() {
+    return this.editor
+      .getSession()
+      .getAnnotations()
+      .filter(function (annotation) {
+        return annotation.type === 'error';
+      });
   },
 
   render: function() {
@@ -106,10 +142,16 @@ var AceEditor = View.extend({
       enableSnippets: true,
       enableLiveAutocompletion: false
     });
-    console.info('editor', editor);
+
     editor.$blockScrolling = Infinity;
     editor.on('change', function() {
-      view.set('script', editor.getValue());//, {silent: true});
+      var errors = view.getErrors();
+      if (errors.length) {
+        console.info('errors in the code', errors);
+        return;
+      }
+      var str = editor.getValue();
+      view.set('script', str);
     });
     editor.setTheme('ace/theme/monokai');
     editor.setShowInvisibles();
