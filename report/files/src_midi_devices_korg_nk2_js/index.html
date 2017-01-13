@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/midi/devices/korg/nk2.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/midi/devices/korg/nk2.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">72.05</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">111</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">9.95</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.75</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+
+function toPrct(val) {
+  return (100 / 127) * (val || 0);
+}
+
+var mappings = {
+  prefix: &#039;nk2&#039;,
+
+  type: {
+    128: &#039;noteOn&#039;,
+    144: &#039;noteOff&#039;,
+    176: &#039;change&#039;,
+    192: &#039;search&#039;,
+    248: &#039;idle&#039;
+  },
+
+  note: {
+    0: &#039;slider1&#039;,
+    1: &#039;slider2&#039;,
+    2: &#039;slider3&#039;,
+    3: &#039;slider4&#039;,
+    4: &#039;slider5&#039;,
+    5: &#039;slider6&#039;,
+    6: &#039;slider7&#039;,
+    7: &#039;slider8&#039;,
+
+    16: &#039;knob1&#039;,
+    17: &#039;knob2&#039;,
+    18: &#039;knob3&#039;,
+    19: &#039;knob4&#039;,
+    20: &#039;knob5&#039;,
+    21: &#039;knob6&#039;,
+    22: &#039;knob7&#039;,
+    23: &#039;knob8&#039;,
+
+    32: &#039;s1&#039;,
+    33: &#039;s2&#039;,
+    34: &#039;s3&#039;,
+    35: &#039;s4&#039;,
+    36: &#039;s5&#039;,
+    37: &#039;s6&#039;,
+    38: &#039;s7&#039;,
+    39: &#039;s8&#039;,
+
+    41: &#039;play&#039;,
+    42: &#039;stop&#039;,
+    43: &#039;rewind&#039;,
+    44: &#039;forward&#039;,
+    45: &#039;record&#039;,
+    46: &#039;cycle&#039;,
+
+    48: &#039;m1&#039;,
+    49: &#039;m2&#039;,
+    50: &#039;m3&#039;,
+    51: &#039;m4&#039;,
+    52: &#039;m5&#039;,
+    53: &#039;m6&#039;,
+    54: &#039;m7&#039;,
+    55: &#039;m8&#039;,
+
+    58: &#039;trackprevious&#039;,
+    59: &#039;tracknext&#039;,
+    60: &#039;markerset&#039;,
+    61: &#039;markerprevious&#039;,
+    62: &#039;markernext&#039;,
+
+    64: &#039;r1&#039;,
+    65: &#039;r2&#039;,
+    66: &#039;r3&#039;,
+    67: &#039;r4&#039;,
+    68: &#039;r5&#039;,
+    69: &#039;r6&#039;,
+    70: &#039;r7&#039;,
+    71: &#039;r8&#039;
+  },
+
+  velocity: {
+    0: function(type, note, velocity) {
+      if (note &gt; 23) {
+        return false;
+      }
+      return velocity;
+    },
+
+    127: function(type, note, velocity) {
+      if (note &gt; 23) {
+        return true;
+      }
+      return toPrct(velocity);
+    }
+  }
+};
+
+module.exports = function(data) {
+  var type = data[0] || 0;
+  if (type === 248) { return {}; }
+
+  var note = data[1] || 0;
+  var velocity = data[2] || 0;
+
+  var name = mappings.note[note];
+  console.info(&#039;nk2 MIDI evt on %s (%s) =&gt; %s&#039;, name, note, velocity, type);
+  return {
+    name: name,
+    velocity: velocity,
+    type: type
+  };
+};
+module.exports.note = mappings.note;
+module.exports.prefix = mappings.prefix;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

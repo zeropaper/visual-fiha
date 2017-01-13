@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">85.42</p>
+      <p class="stat">72.01</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">41</p>
+      <p class="stat">91</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">9.16</p>
+      <p class="stat">10.45</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.18</p>
+      <p class="stat">0.41</p>
     </div>
   </div>
 </div>
@@ -91,44 +91,94 @@
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
 
+
+
 require.ensure([
   &#039;./screen/state&#039;,
-], function(require) {
-require.ensure([
+// ], function(require) {
+// require.ensure([
   &#039;./midi/state&#039;,
-  &#039;./midi/view&#039;
-], function(require) {
-require.ensure([
+  &#039;./midi/view&#039;,
+// ], function(require) {
+// require.ensure([
   &#039;./signal/control-view&#039;,
   &#039;./signal/beat/control-view&#039;,
   &#039;./signal/hsla/control-view&#039;,
   &#039;./signal/rgba/control-view&#039;
 ], function(require) {
 
-require.ensure([&#039;./screen/state&#039;], function () {
-require.ensure([&#039;./screen/view&#039;], function () {
 require.ensure([&#039;./controller/view&#039;], function (require) {
+// ---------------------------------------------------------------
+
+
+
 var ControllerView = require(&#039;./controller/view&#039;);
 
 var VF = window.VF || {};
-var controllerSetup = VF._defaultSetup;
+VF.setups = VF.setups || {};
 
-controllerSetup.el = document.querySelector(&#039;.controller&#039;);
 
-VFDeps.localForage.getItem(&#039;snapshot&#039;).then(function(/*value*/) {
+var AppRouter = VFDeps.Router.extend({
+  initialize: function(options) {
+    this.view = options.view;
+    console.info(&#039;app router initialize&#039;, options);
+  },
+
+  routes: {
+    &#039;&#039;: &#039;loadSetup&#039;,
+    &#039;setup/:setupId&#039;: &#039;loadSetup&#039;,
+    &#039;gist/:gistId&#039;: &#039;loadGist&#039;
+  },
+
+  loadSetup: function(setupId) {
+    console.info(&#039;use setup?&#039;, setupId, VF);
+    // window.VF._defaultSetup
+
+    // var gistView = this.view.gistView;
+    // var same = gistView.gistId = gistId;
+    // gistView.gistId = gistId;
+    // if (!same) gistView._loadGist();
+
+  },
+
+  loadGist: function(gistId) {
+    var gistView = this.view.gistView;
+    var same = gistView.gistId = gistId;
+    gistView.gistId = gistId;
+    if (!same) gistView._loadGist();
+  }
+});
+
+
+
+VFDeps.localForage.getItem(&#039;snapshot&#039;).then(function(value) {
+  console.info(&#039;snapshot found&#039;, value);
+
+  var controllerSetup = VF._defaultSetup;
+  controllerSetup.el = document.querySelector(&#039;.controller&#039;);
+
   // if (value &amp;&amp; confirm(&#039;Load previous state?&#039;)) {
   //   controllerSetup.layers = value.screen.layers;
   //   controllerSetup.signals = value.signals;
   // }
-  // console.info(&#039;snapshot found&#039;, value);
-  window.visualFiha = new ControllerView(controllerSetup);
-});
-});
-});
+
+  var vf = window.visualFiha = new AppRouter({
+    view: new ControllerView(controllerSetup)
+  });
+  vf.history.start({
+    root: location.pathname,
+    pushState: false
+  });
 });
 
+
+
+
+// ---------------------------------------------------------------
 });
-});
+
+// });
+// });
 });</textarea>
   </div>
 </div>

@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">52.81</p>
+      <p class="stat">47.01</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">147</p>
+      <p class="stat">138</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">41.20</p>
+      <p class="stat">38.33</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.67</p>
+      <p class="stat">1.56</p>
     </div>
   </div>
 </div>
@@ -93,14 +93,15 @@
 module.exports = VFDeps.View.extend({
   autoRender: true,
   template: &#039;&lt;canvas width=&quot;200&quot; height=&quot;200&quot;&gt;&lt;/canvas&gt;&#039;,
+
   session: {
-    audioAnalyser: [&#039;any&#039;, true, null],
     lineWidth: [&#039;number&#039;, true, 1],
     width: [&#039;number&#039;, true, 200],
     height: [&#039;number&#039;, true, 200],
     padding: [&#039;number&#039;, true, 2],
     color: [&#039;string&#039;, true, &#039;#000&#039;]
   },
+
   bindings: {
     width: {
       type: &#039;attribute&#039;,
@@ -111,23 +112,12 @@ module.exports = VFDeps.View.extend({
       name: &#039;height&#039;
     }
   },
+
   derived: {
     ctx: {
       deps: [&#039;el&#039;, &#039;width&#039;, &#039;height&#039;],
       fn: function() {
         return this.el.getContext(&#039;2d&#039;);
-      }
-    },
-    audioFrequencyArray: {
-      deps: [&#039;audioAnalyser&#039;],
-      fn: function () {
-        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
-      }
-    },
-    audioTimeDomainArray: {
-      deps: [&#039;audioAnalyser&#039;],
-      fn: function () {
-        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
       }
     }
   },
@@ -188,22 +178,23 @@ module.exports = VFDeps.View.extend({
       return this;
     }
 
+    var source = this.parent;
+
     var ctx = this.ctx;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.fillStyle = ctx.strokeStyle = this.color;
 
-    var analyser = this.audioAnalyser;
+    var analyser = source.audioAnalyser;
     var bufferLength = analyser.frequencyBinCount;
     this.drawScales(bufferLength);
 
     ctx.fillStyle = ctx.strokeStyle = this.color;
 
-    var freqArray = this.audioFrequencyArray;
+    var freqArray = source.audioFrequencyArray;
     analyser.getByteFrequencyData(freqArray);
 
-    var timeDomainArray = this.audioTimeDomainArray;
+    var timeDomainArray = source.audioTimeDomainArray;
     analyser.getByteTimeDomainData(timeDomainArray);
-
 
     var x = ctx.canvas.width * 0.5;
     var y = ctx.canvas.height * 0.5;

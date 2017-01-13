@@ -48,7 +48,7 @@
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">218</p>
+      <p class="stat">219</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">27.87</p>
+      <p class="stat">27.97</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.62</p>
+      <p class="stat">1.52</p>
     </div>
   </div>
 </div>
@@ -94,8 +94,6 @@ var State = VFDeps.State;
 var Collection = VFDeps.Collection;
 var ScreenLayerState = require(&#039;./../state&#039;);
 
-var scripts = require(&#039;./scripts&#039;);
-
 var CanvasLayer = State.extend({
   idAttribute: &#039;name&#039;,
 
@@ -122,10 +120,12 @@ var CanvasLayer = State.extend({
     name: [&#039;string&#039;, true, null],
     active: [&#039;boolean&#039;, true, true],
     opacity: [&#039;number&#039;, true, 100],
+    /*
     shadowOffsetX: [&#039;number&#039;, true, 0],
     shadowOffsetY: [&#039;number&#039;, true, 0],
     shadowBlur: [&#039;number&#039;, true, 0],
     shadowColor: [&#039;string&#039;, true, &#039;rgba(0,0,0,0.5)&#039;],
+    */
     blending: {
       type: &#039;string&#039;,
       required: true,
@@ -216,6 +216,7 @@ var CanvasLayer = State.extend({
         var mappable = ScreenLayerState.prototype._derived.mappable.fn.apply(this, arguments);
         var targets = mappable.target.filter(function(key) {
           return [
+            &#039;uiState&#039;,
             &#039;drawFunction&#039;,
             &#039;screenState&#039;, // would make a circular reference if not excluded!
             &#039;draw&#039;
@@ -230,7 +231,7 @@ var CanvasLayer = State.extend({
     },
 
     screenState: {
-      deps: [&#039;collection&#039;, &#039;collection.parent&#039;, &#039;collection.parent.collection&#039;, &#039;collection.parent.collection.parent&#039;],
+      deps: [],
       fn: function() {
         return this.collection.parent.collection.parent;
       }

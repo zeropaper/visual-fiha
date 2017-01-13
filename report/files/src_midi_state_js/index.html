@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">70.13</p>
+      <p class="stat">70.46</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">540</p>
+      <p class="stat">168</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">22.34</p>
+      <p class="stat">23.85</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">3.10</p>
+      <p class="stat">1.23</p>
     </div>
   </div>
 </div>
@@ -89,402 +89,68 @@
 
 <div class="container">
   <div class="row">
-    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var VFDeps = window.VFDeps;
+    <textarea id="file-source" class="col-md-12">/* global VFDeps, require, console, module */
+&#039;use strict&#039;;
 
+var throttle = VFDeps.throttle;
 var State = VFDeps.State;
 var Collection = VFDeps.Collection;
 
-function toPrct(val) {
-  return (100 / 127) * (val || 0);
-}
-
-var KP3ToggleButoons = [
-  49,
-  50,
-  51,
-  52,
-  53,
-  54,
-  55,
-  56,
-
-  92,
-  95
-];
-
-var KP3LetterButoons = [
-  36,
-  37,
-  38,
-  39
-];
-
-var KP3Mappings = {
-  prefix: &#039;kp3&#039;,
-
-  type: {
-    128: &#039;noteOn&#039;,
-    144: &#039;noteOff&#039;,
-    176: &#039;change&#039;,
-    192: &#039;search&#039;,
-    248: &#039;idle&#039;
-  },
-
-  note: {
-    36: &#039;buttonA&#039;,
-    37: &#039;buttonB&#039;,
-    38: &#039;buttonC&#039;,
-    39: &#039;buttonD&#039;,
-
-    49: &#039;num1&#039;,
-    50: &#039;num2&#039;,
-    51: &#039;num3&#039;,
-    52: &#039;num4&#039;,
-    53: &#039;num5&#039;,
-    54: &#039;num6&#039;,
-    55: &#039;num7&#039;,
-    56: &#039;num8&#039;,
-
-    70: &#039;padX&#039;,
-    71: &#039;padY&#039;,
-    72: &#039;pad72&#039;,
-    73: &#039;pad73&#039;,
-    74: &#039;pad74&#039;,
-    75: &#039;pad75&#039;,
-    76: &#039;pad76&#039;,
-
-    92: &#039;pad&#039;,
-    93: &#039;effectSlider&#039;,
-    94: &#039;effectKnob&#039;,
-    95: &#039;hold&#039;
-  },
-
-  velocity: {
-    0: function(type, note, velocity) {
-      if (KP3ToggleButoons.indexOf(note) &gt; -1) {
-        return false;
-      }
-      return velocity;
-    },
-
-    64: function(type, note, velocity) {
-      if (KP3LetterButoons.indexOf(note) &gt; -1) {
-        return false;
-      }
-      return toPrct(velocity);
-    },
-
-    100: function(type, note, velocity) {
-      if (KP3LetterButoons.indexOf(note) &gt; -1) {
-        return true;
-      }
-      return toPrct(velocity);
-    },
-
-    127: function(type, note, velocity) {
-      if (KP3ToggleButoons.indexOf(note) &gt; -1) {
-        return true;
-      }
-      return toPrct(velocity);
-    }
-  },
-
-  signalNames: [
-    &#039;buttonA:noteOn&#039;,
-    &#039;buttonA:noteOff&#039;,
-    &#039;buttonB:noteOn&#039;,
-    &#039;buttonB:noteOff&#039;,
-    &#039;buttonC:noteOn&#039;,
-    &#039;buttonC:noteOff&#039;,
-    &#039;buttonD:noteOn&#039;,
-    &#039;buttonD:noteOff&#039;,
-
-    &#039;num1:noteOn&#039;,
-    &#039;num1:noteOff&#039;,
-    &#039;num2:noteOn&#039;,
-    &#039;num2:noteOff&#039;,
-    &#039;num3:noteOn&#039;,
-    &#039;num3:noteOff&#039;,
-    &#039;num4:noteOn&#039;,
-    &#039;num4:noteOff&#039;,
-    &#039;num5:noteOn&#039;,
-    &#039;num5:noteOff&#039;,
-    &#039;num6:noteOn&#039;,
-    &#039;num6:noteOff&#039;,
-    &#039;num7:noteOn&#039;,
-    &#039;num7:noteOff&#039;,
-    &#039;num8:noteOn&#039;,
-    &#039;num8:noteOff&#039;,
-
-    &#039;pad:noteOn&#039;,
-    &#039;pad:noteOff&#039;,
-
-    &#039;padX:change&#039;,
-    &#039;padY:change&#039;,
-    &#039;pad72:change&#039;,
-    &#039;pad73:change&#039;,
-    &#039;pad74:change&#039;,
-    &#039;pad75:change&#039;,
-    &#039;pad76:change&#039;,
-
-    &#039;effectKnob:change&#039;,
-    &#039;effectSlider:change&#039;
-  ]
-};
-
-var nanoKONTROL2Mappings = {
-  prefix: &#039;nk2&#039;,
-
-  type: {
-    176: &#039;change&#039;
-  },
-
-  note: {
-    0: &#039;slider1&#039;,
-    1: &#039;slider2&#039;,
-    2: &#039;slider3&#039;,
-    3: &#039;slider4&#039;,
-    4: &#039;slider5&#039;,
-    5: &#039;slider6&#039;,
-    6: &#039;slider7&#039;,
-    7: &#039;slider8&#039;,
-
-    16: &#039;knob1&#039;,
-    17: &#039;knob2&#039;,
-    18: &#039;knob3&#039;,
-    19: &#039;knob4&#039;,
-    20: &#039;knob5&#039;,
-    21: &#039;knob6&#039;,
-    22: &#039;knob7&#039;,
-    23: &#039;knob8&#039;,
-
-    32: &#039;s1&#039;,
-    33: &#039;s2&#039;,
-    34: &#039;s3&#039;,
-    35: &#039;s4&#039;,
-    36: &#039;s5&#039;,
-    37: &#039;s6&#039;,
-    38: &#039;s7&#039;,
-    39: &#039;s8&#039;,
-
-    41: &#039;play&#039;,
-    42: &#039;stop&#039;,
-    43: &#039;rewind&#039;,
-    44: &#039;forward&#039;,
-    45: &#039;record&#039;,
-    46: &#039;cycle&#039;,
-
-    48: &#039;m1&#039;,
-    49: &#039;m2&#039;,
-    50: &#039;m3&#039;,
-    51: &#039;m4&#039;,
-    52: &#039;m5&#039;,
-    53: &#039;m6&#039;,
-    54: &#039;m7&#039;,
-    55: &#039;m8&#039;,
-
-    58: &#039;trackprevious&#039;,
-    59: &#039;tracknext&#039;,
-    60: &#039;markerset&#039;,
-    61: &#039;markerprevious&#039;,
-    62: &#039;markernext&#039;,
-
-    64: &#039;r1&#039;,
-    65: &#039;r2&#039;,
-    66: &#039;r3&#039;,
-    67: &#039;r4&#039;,
-    68: &#039;r5&#039;,
-    69: &#039;r6&#039;,
-    70: &#039;r7&#039;,
-    71: &#039;r8&#039;
-  },
-
-  velocity: {
-    0: function(type, note, velocity) {
-      if (note &gt; 23) {
-        return false;
-      }
-      return velocity;
-    },
-
-    127: function(type, note, velocity) {
-      if (note &gt; 23) {
-        return true;
-      }
-      return toPrct(velocity);
-    }
-  },
-
-  signalNames: [
-    &#039;slider1:change&#039;,
-    &#039;slider2:change&#039;,
-    &#039;slider3:change&#039;,
-    &#039;slider4:change&#039;,
-    &#039;slider5:change&#039;,
-    &#039;slider6:change&#039;,
-    &#039;slider7:change&#039;,
-    &#039;slider8:change&#039;,
-
-    &#039;knob1:change&#039;,
-    &#039;knob2:change&#039;,
-    &#039;knob3:change&#039;,
-    &#039;knob4:change&#039;,
-    &#039;knob5:change&#039;,
-    &#039;knob6:change&#039;,
-    &#039;knob7:change&#039;,
-    &#039;knob8:change&#039;,
-
-    &#039;s1:change&#039;,
-    &#039;s2:change&#039;,
-    &#039;s3:change&#039;,
-    &#039;s4:change&#039;,
-    &#039;s5:change&#039;,
-    &#039;s6:change&#039;,
-    &#039;s7:change&#039;,
-    &#039;s8:change&#039;,
-
-    &#039;play:change&#039;,
-    &#039;stop:change&#039;,
-    &#039;rewind:change&#039;,
-    &#039;forward:change&#039;,
-    &#039;record:change&#039;,
-    &#039;cycle:change&#039;,
-
-    &#039;m1:change&#039;,
-    &#039;m2:change&#039;,
-    &#039;m3:change&#039;,
-    &#039;m4:change&#039;,
-    &#039;m5:change&#039;,
-    &#039;m6:change&#039;,
-    &#039;m7:change&#039;,
-    &#039;m8:change&#039;,
-
-    &#039;trackprevious:change&#039;,
-    &#039;tracknext:change&#039;,
-    &#039;markerset:change&#039;,
-    &#039;markerprevious:change&#039;,
-    &#039;markernext:change&#039;,
-
-    &#039;r1:change&#039;,
-    &#039;r2:change&#039;,
-    &#039;r3:change&#039;,
-    &#039;r4:change&#039;,
-    &#039;r5:change&#039;,
-    &#039;r6:change&#039;,
-    &#039;r7:change&#039;,
-    &#039;r8:change&#039;
-  ]
-};
-
 var midiMappings = {
   &#039;KORG INC.&#039;: {
-    &#039;KP3 MIDI 1&#039;: KP3Mappings,
-    &#039;nanoKONTROL2 MIDI 1&#039;: nanoKONTROL2Mappings
+    &#039;KP3 MIDI 1&#039;: require(&#039;./devices/korg/kp3&#039;),
+    &#039;nanoKONTROL2 MIDI 1&#039;: require(&#039;./devices/korg/nk2&#039;)
+  },
+  &#039;AKAI professional LLC&#039;: {
+    &#039;LPD8 MIDI 1&#039;: require(&#039;./devices/akai/lpd8&#039;)
+  },
+  &#039;Focusrite A.E. Ltd&#039;: {
+    &#039;Launchpad Mini MIDI 1&#039;: require(&#039;./devices/novation/lpm&#039;)
   }
 };
 
 
 var MIDIState = State.extend({
   props: {
+    manufacturer: &#039;string&#039;,
+    name: &#039;string&#039;
+  },
+
+  session: {
+    active: [&#039;boolean&#039;, true, true],
     connection: &#039;string&#039;,
     state: &#039;string&#039;,
     type: &#039;string&#039;,
     id: &#039;string&#039;,
-    manufacturer: &#039;string&#039;,
-    name: &#039;string&#039;,
     version: &#039;string&#039;
-  },
-
-  session: {
-    active: [&#039;boolean&#039;, true, true]
-  },
-
-  // derived: {
-  //   // midiMapping: {
-  //   //   deps: [&#039;manufacturer&#039;, &#039;name&#039;],
-  //   //   fn: function() {
-  //   //     return getMappings(this.manufacturer, this.name);
-  //   //   }
-  //   // },
-  //   // signalNames: {
-  //   //   deps: [&#039;midiMappings&#039;],
-  //   //   fn: function() {
-  //   //     var prefix = this.midiMapping.prefix;
-  //   //     return this.midiMapping.signalNames.map(function(str) {
-  //   //       return prefix + &#039;:&#039; + str;
-  //   //     });
-  //   //   }
-  //   // }
-  // }
+  }
 });
 
-function _result(mapping, scope, value, data) {
-  if (!mapping[scope]) { return value; }
-  if (data[0] === 192) {
-    if (scope === &#039;velocity&#039;) {
-      return toPrct(data[1]);
-    }
-    else if (scope === &#039;note&#039;) {
-      return &#039;bpmKnob&#039;;
-    }
-  }
 
-  var val = mapping[scope][&#039;&#039;+value];
-
-  if (!val) {
-    return scope === &#039;velocity&#039; ? toPrct(value) : value;
-  }
-
-
-  if (typeof val === &#039;function&#039;) {
-    return val(data[0], data[1], data[2]);
-  }
-
-  return scope === &#039;velocity&#039; ? toPrct(value) : val;
-}
 
 function getMappings(manufacturer, name) {
   var m = midiMappings || {};
   if (!m[manufacturer] || !m[manufacturer][name]) {
     return;
   }
-  return m[manufacturer][name] || {};
+  return m[manufacturer][name] || function(){};
 }
 
+
 function handleMIDIMessage(accessState, model) {
+  var setThrottled = throttle(function(name, velocity) {
+    model.set(name, velocity);
+  }, 1000 / 16);
+  var _mappings = getMappings(model.manufacturer, model.name);
+
   return function(MIDIMessageEvent) {
-    // if (!model.active) { return clear(); }
+    if (!model.active) { return; }
 
-    var data = MIDIMessageEvent.data;
-    var type = data[0] || 0;
-    if (type === 248) { return; }
-
-    var note = data[1] || 0;
-    var velocity = data[2] || 0;
-
-    var _mappings = getMappings(model.manufacturer, model.name);
-    model.set(_result(_mappings, &#039;note&#039;, note, data), velocity);
-    // var obj = {
-    //   type:     _result(_mappings, &#039;type&#039;, type, data),
-    //   note:     _result(_mappings, &#039;note&#039;, note, data),
-    //   velocity: _result(_mappings, &#039;velocity&#039;, velocity, data)
-    // };
-    // console.info(&#039;midi type: %s, note %s, velocity: %s&#039;, type, note, velocity, obj);
-
-    // var eventName = _mappings.prefix + &#039;:&#039; + obj.note + &#039;:&#039; + obj.type;
-    // accessState.trigger(&#039;midi&#039;, eventName, obj.velocity/*, model, eventName*/);
+    var info = _mappings(MIDIMessageEvent.data);
+    if (info.name) setThrottled(info.name, info.velocity);
   };
 }
 
-
-// function collectionSignalNames() {
-//   var sn = [];
-//   this.forEach(function (m) { //jshint ignore: line
-//     sn = sn.concat(m.signalNames);
-//   });
-//   return sn;
-// }
 
 var MIDIAccessState = State.extend({
   mappable: {
@@ -492,84 +158,61 @@ var MIDIAccessState = State.extend({
     target: []
   },
 
+  registerInput: function(info) {
+    var _mappings = getMappings(info.manufacturer, info.name);
+    if (!_mappings) {
+      if (info.name !== &#039;Midi Through Port-0&#039;) {
+        console.warn(&#039;Unrecognized MIDI controller %s from %s&#039;, info.name, info.manufacturer);
+      }
+      return;
+    }
+
+    var props = {};
+    var sources = [];
+
+    Object.keys(_mappings.note || {}).forEach(function(key) {
+      sources.push(_mappings.note[key]);
+      props[_mappings.note[key]] = [&#039;number&#039;, true, 0];
+    });
+
+    var Constructor = MIDIState.extend({
+      mappable: {
+        source: sources,
+        target: []
+      },
+      props: props
+    });
+
+    var model = new Constructor({
+      connection: info.connection,
+      state: info.state,
+      type: info.type,
+      id: _mappings.prefix,//info.id,
+      manufacturer: info.manufacturer,
+      name: info.name,
+      version: info.version
+    });
+
+    if (typeof info.onmidimessage !== &#039;undefined&#039;) {
+      info.onmidimessage = handleMIDIMessage(this, model);
+    }
+
+    this.inputs.add(model);
+  },
+
   initialize: function(options) {
     options = options || {};
     var accessState = this;
 
-    window.midiAccessView = this;
 
     function MIDIAccessChanged() {
       if (!accessState.MIDIAccess) {
         accessState.inputs.reset([]);
-        // accessState.outputs.reset([]);
         return;
       }
-
-      var inputs = [];
-      // var outputs = [];
-      var model;
-
-      accessState.MIDIAccess.inputs.forEach(function(info) {
-        var _mappings = getMappings(info.manufacturer, info.name);
-        if (!_mappings) return;
-
-        var props = {};
-        var sources = [];
-        Object.keys(_mappings.note || {}).forEach(function(key) {
-          sources.push(_mappings.note[key]);
-          props[_mappings.note[key]] = [&#039;number&#039;, true, 0];
-        });
-        var Constructor = MIDIState.extend({
-          mappable: {
-            source: sources,
-            target: []
-          },
-          props: props
-        });
-
-        model = new Constructor({
-          connection: info.connection,
-          state: info.state,
-          type: info.type,
-          id: _mappings.prefix,//info.id,
-          manufacturer: info.manufacturer,
-          name: info.name,
-          version: info.version
-        });
-
-        if (typeof info.onmidimessage !== &#039;undefined&#039;) {
-          info.onmidimessage = handleMIDIMessage(accessState, model);
-        }
-
-        inputs.push(model);
-
-        // if (model.midiMapping) {
-        //   if (typeof info.onmidimessage !== &#039;undefined&#039;) {
-        //     info.onmidimessage = handleMIDIMessage(accessState, model);
-        //   }
-
-        //   inputs.push(model);
-        // }
-      });
-
-      // accessState.MIDIAccess.outputs.forEach(function(info) {
-      //   model = new MIDIState({
-      //     connection: info.connection,
-      //     state: info.state,
-      //     type: info.type,
-      //     id: info.id,
-      //     manufacturer: info.manufacturer,
-      //     name: info.name,
-      //     version: info.version
-      //   });
-
-      //   if (model.midiMapping) {
-      //     outputs.push(model);
-      //   }
-      // });
-
-      accessState.inputs.reset(inputs);
-      // accessState.outputs.reset(outputs);
+      accessState.inputs.reset();
+      accessState.MIDIAccess.inputs.forEach(accessState.registerInput, accessState);
+      accessState.trigger(&#039;change:inputs&#039;);
     }
 
     accessState.on(&#039;change:MIDIAccess&#039;, MIDIAccessChanged);
@@ -603,28 +246,13 @@ var MIDIAccessState = State.extend({
 
   collections: {
     inputs: Collection.extend({
-      // signalNames: collectionSignalNames
-    // }),
-    // outputs: Collection.extend({
-    //   //signalNames: collectionSignalNames,
-    //   model: MIDIState
     })
   },
 
   toJSON: function() {
     var obj = {};
     obj.inputs = this.inputs.toJSON();
-    // obj.outputs = this.outputs.toJSON();
     return obj;
-  // },
-
-  // derived: {
-  //   signalNames: {
-  //     deps: [&#039;inputs&#039;/*, &#039;outputs&#039;*/],
-  //     fn: function () {
-  //       return this.inputs.signalNames();//.concat(this.outputs.signalNames());
-  //     }
-  //   }
   }
 });
 

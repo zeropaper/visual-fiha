@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">56.78</p>
+      <p class="stat">70.81</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">463</p>
+      <p class="stat">356</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">53.16</p>
+      <p class="stat">23.52</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">3.77</p>
+      <p class="stat">1.66</p>
     </div>
   </div>
 </div>
@@ -111,31 +111,15 @@ var canvasLayers = [
     weight: 10,
     active: false,
     drawFunction: function(ctx) {
-      // var reverse = this.reverse;
-      // var frametime = (this.frametime || 0) * 0.001;
       var url = this.src;
-      // var cache = this.cache;
       window.VF.canvas.loaders.video(url, function(err, video) {
-      // window.VF.canvasTools.loadVideo(url, function(err, video) {
         if (!video) return;
-
-        // var is = Math.min(video.videoWidth, video.videoHeight);
-        // var cs = Math.min(ctx.canvas.width, ctx.canvas.height);
-        // var s = Math.min(is, cs);
-        // var x = (ctx.canvas.width - s) * 0.5;
-        // var y = (ctx.canvas.height - s) * 0.5;
-
-
-        // var ct = frametime % video.duration;
-        // ct = reverse ? video.duration - ct : ct;
-        // video.currentTime = ct;
         ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, ctx.canvas.width, ctx.canvas.height);
       });
     },
     props: {
       reverse: [&#039;boolean&#039;, true, false],
       src: [&#039;string&#039;, true, &#039;./assets/kd/fire.mp4&#039;]
-      // src: [&#039;string&#039;, true, &#039;./assets/kd/DJ Fresh ft. Rita Ora - Hot Right Now (Official Video).mp4&#039;;]
     }
   },
 
@@ -145,7 +129,7 @@ var canvasLayers = [
   //   active: false,
   //   drawFunction: function(ctx) {
   //     var url = &#039;./assets/kd/kd_logo_final.svg&#039;;
-  //     window.VF.canvasTools.loadImg(url, function(err, img) {
+  //     window.VF.canvas.loaders.img(url, function(err, img) {
   //       if (!img) return;
   //       var is = Math.min(img.width, img.height);
   //       var cs = Math.min(ctx.canvas.width, ctx.canvas.height);
@@ -168,7 +152,7 @@ var canvasLayers = [
       var url = this.src;
       var shift = this.shift;
       var frametime = this.screenState.frametime || 0;
-      window.VF.canvasTools.loadImg(url, function(err, img) {
+      window.VF.canvas.loaders.img(url, function(err, img) {
         if (!img) return;
         var iw = img.width;
         var ih = img.height;
@@ -190,244 +174,127 @@ var canvasLayers = [
   },
 
   {
-    name: &#039;loungeA&#039;,
-    active: false,
+    name: &#039;grid&#039;,
+    active: true,
     weight: 40,
-    drawFunction: function(ctx) {
-      var cw = ctx.canvas.width;
-      var ch = ctx.canvas.height;
-      var bw = Math.max(1, this.barWidth);
-      var bbw = this.borderWidth;
-      var sh = (bw - (ch % bw)) * 0.5;
-      var c = (ch / Math.max(2, bw)) + bw;
-      var s = this.frametime % cw;
-      var dl = window.VF.canvasTools.drawLine;
-      var b, l, r, y;
-
-      ctx.fillStyle = this.barColor;
-      ctx.strokeStyle = this.borderColor;
-
-
-      for (b = 0; b &lt; c; b++) {
-        if (b % 2) {
-          l = s - cw;
-          r = l + cw;
-          y = (b * bw) - sh;
-          dl(ctx, l, y, r, y, bw, bbw);
-        }
-        else {
-          l = s + cw;
-          r = l - cw;
-          y = (b * bw) - sh;
-          dl(ctx, r, y, l, y, bw, bbw);
-        }
-      }
-    },
+    drawFunction: window.VF.canvas.lines.grid,
     props: {
-      borderWidth: [&#039;number&#039;, true, 0],
-      barWidth: [&#039;number&#039;, true, 50],
-      barColor: [&#039;string&#039;, true, &#039;rgb(234, 105, 41)&#039;],
-      borderColor: [&#039;string&#039;, true, &#039;rgb(236, 183, 156)&#039;],
-      beat: [&#039;number&#039;, true, 100]
+      lineColor: [&#039;string&#039;, true, &#039;#fff&#039;],
+      lineWidth: [&#039;number&#039;, true, 1],
+      randFactor: [&#039;number&#039;, true, 0],
+      pointRows: [&#039;number&#039;, true, 8],
+      pointRadius: [&#039;number&#039;, true, 1],
+      pointsCount: [&#039;number&#039;, true, 40]
     },
   },
 
   // {
-  //   name: &#039;circles&#039;,
+  //   name: &#039;loungeA&#039;,
   //   active: false,
-  //   weight: 51,
+  //   weight: 40,
   //   drawFunction: function(ctx) {
+  //     var cw = ctx.canvas.width;
+  //     var ch = ctx.canvas.height;
   //     var bw = Math.max(1, this.barWidth);
-  //     var ch = ctx.canvas.height * 0.5;
-  //     var cw = ctx.canvas.width * 0.5;
-  //     var fs = this.frames;
-  //     var f = this.frame;
-  //     var r = Math.sqrt(Math.pow(cw, 2) + Math.pow(ch, 2));
-  //     var dbw = bw * 2;
-  //     var _ca = Math.round((this.arbitraryA -50) / 10);
-  //     var _cb = Math.round((this.arbitraryB -50) / 10);
-  //     var d = this.direction;
-  //     var a = (Math.PI * 2) / (fs / f);
-  //     var af = -1 * d * a;
-  //     var at = d * a;
+  //     var bbw = this.borderWidth;
+  //     var sh = (bw - (ch % bw)) * 0.5;
+  //     var c = (ch / Math.max(2, bw)) + bw;
+  //     var s = this.frametime % cw;
+  //     var dl = window.VF.canvasTools.drawLine;
+  //     var b, l, r, y;
 
-  //     ctx.strokeStyle = this.strokeStyle;
-  //     ctx.lineWidth = bw;
+  //     ctx.fillStyle = this.barColor;
+  //     ctx.strokeStyle = this.borderColor;
 
-  //     var i;
-  //     for (i = 0; i &lt; r / dbw; i++) {
-  //       ctx.beginPath();
-  //       ctx.arc(cw, ch, (1 + i) * dbw, af + (Math.PI * (i % _ca) / _cb), at - (Math.PI * (i % _ca) / _cb));
-  //       ctx.stroke();
-  //       ctx.closePath();
+
+  //     for (b = 0; b &lt; c; b++) {
+  //       if (b % 2) {
+  //         l = s - cw;
+  //         r = l + cw;
+  //         y = (b * bw) - sh;
+  //         dl(ctx, l, y, r, y, bw, bbw);
+  //       }
+  //       else {
+  //         l = s + cw;
+  //         r = l - cw;
+  //         y = (b * bw) - sh;
+  //         dl(ctx, r, y, l, y, bw, bbw);
+  //       }
   //     }
   //   },
   //   props: {
-  //     barWidth: {
-  //       type: &#039;number&#039;,
-  //       required: true,
-  //       default: 10
-  //     },
-  //     strokeStyle: {
-  //       type: &#039;string&#039;,
-  //       required: true,
-  //       default: &#039;#000&#039;
-  //     },
-  //     arbitraryA: [&#039;number&#039;, true, 10],
-  //     arbitraryB: [&#039;number&#039;, true, 10]
-  //   }
+  //     borderWidth: [&#039;number&#039;, true, 0],
+  //     barWidth: [&#039;number&#039;, true, 50],
+  //     barColor: [&#039;string&#039;, true, &#039;rgb(234, 105, 41)&#039;],
+  //     borderColor: [&#039;string&#039;, true, &#039;rgb(236, 183, 156)&#039;],
+  //     beat: [&#039;number&#039;, true, 100]
+  //   },
   // },
 
-  {
-    name: &#039;lines&#039;,
-    active: false,
-    weight: 50,
-    drawFunction: function(ctx) {
-      var h;
-      var w;
-      var vh;
-      var vw;
-      var cw = ctx.canvas.width;
-      var ch = ctx.canvas.height;
-      var hcw = cw * 0.5;
-      var hch = ch * 0.5;
-      var bw = Math.max(1, this.barWidth || 0);
-      var bbw = bw * 0.25;
-      var dl = window.VF.canvasTools.drawLine;
-      // dl(ctx, 100, 100, 200, 100, 50, 2);
+  // {
+  //   name: &#039;lines&#039;,
+  //   active: false,
+  //   weight: 50,
+  //   drawFunction: function(ctx) {
+  //     var h;
+  //     var w;
+  //     var vh;
+  //     var vw;
+  //     var cw = ctx.canvas.width;
+  //     var ch = ctx.canvas.height;
+  //     var hcw = cw * 0.5;
+  //     var hch = ch * 0.5;
+  //     var bw = Math.max(1, this.barWidth || 0);
+  //     var bbw = bw * 0.25;
+  //     var dl = window.VF.canvasTools.drawLine;
+  //     // dl(ctx, 100, 100, 200, 100, 50, 2);
 
-      // dl(ctx, 100, 200, 200, 350, 50, 2);
+  //     // dl(ctx, 100, 200, 200, 350, 50, 2);
 
-      var _ca = 100 - this.arbitraryA;
-      var _cb = 100 - this.arbitraryB;
-      var dbw = bw * 2;
-      ctx.barColor = this.barColor;
-      // ctx.lineWidth = bw;
+  //     var _ca = 100 - this.arbitraryA;
+  //     var _cb = 100 - this.arbitraryB;
+  //     var dbw = bw * 2;
+  //     ctx.barColor = this.barColor;
+  //     // ctx.lineWidth = bw;
 
-      vh = (ch / 200) * _ca;
-      for (w = (hcw - (Math.floor(hcw / dbw) * dbw)); w &lt;= cw; w += dbw) {
-        dl(ctx, w, vh, w, ch - vh, bw, bbw);
-      }
+  //     vh = (ch / 200) * _ca;
+  //     for (w = (hcw - (Math.floor(hcw / dbw) * dbw)); w &lt;= cw; w += dbw) {
+  //       dl(ctx, w, vh, w, ch - vh, bw, bbw);
+  //     }
 
-      vw = (cw / 200) * _cb;
-      for (h = (hch - (Math.floor(hcw / dbw) * dbw)); h &lt;= ch; h += dbw) {
-        dl(ctx, vw, h, cw - vw, h, bw, bbw, true);
-      }
-    },
-    props: {
-      barWidth: [&#039;number&#039;, true, 50],
-      barColor: [&#039;string&#039;, true, &#039;#fff&#039;],
-      borderColor: [&#039;string&#039;, true, &#039;#fff&#039;],
-      arbitraryA: [&#039;number&#039;, true, 10],
-      arbitraryB: [&#039;number&#039;, true, 10]
-    },
-  },
+  //     vw = (cw / 200) * _cb;
+  //     for (h = (hch - (Math.floor(hcw / dbw) * dbw)); h &lt;= ch; h += dbw) {
+  //       dl(ctx, vw, h, cw - vw, h, bw, bbw, true);
+  //     }
+  //   },
+  //   props: {
+  //     barWidth: [&#039;number&#039;, true, 50],
+  //     barColor: [&#039;string&#039;, true, &#039;#fff&#039;],
+  //     borderColor: [&#039;string&#039;, true, &#039;#fff&#039;],
+  //     arbitraryA: [&#039;number&#039;, true, 10],
+  //     arbitraryB: [&#039;number&#039;, true, 10]
+  //   },
+  // },
 
   {
     name: &#039;frametime&#039;,
     active: false,
     weight: 60,
-    drawFunction: function(ctx) {
-      var cx = ctx.canvas.width * 0.5;
-      var cy = ctx.canvas.height * 0.5;
-      ctx.textAlign = &#039;center&#039;;
-      ctx.textBaseline = &#039;middle&#039;;
-      ctx.font = (cy * 0.25) + &#039;px monospace&#039;;
-      var ft = Math.round(this.screenState.frametime) + &#039;ms&#039;;
-      ctx.fillStyle = &#039;#000&#039;;
-      ctx.strokeStyle = &#039;#fff&#039;;
-      ctx.fillText(ft, cx, cy);
-      ctx.strokeText(ft, cx, cy);
-    }
+    drawFunction: window.VF.canvas.utils.frametime
   },
 
   {
     name: &#039;audio&#039;,
-    active: true,
+    active: false,
     weight: 30,
-    drawFunction: function(ctx) {
-      var audio = this.screenState.audio || {};
-      var bufferLength = audio.bufferLength;
-      var freqArray = audio.frequency;
-      var timeDomainArray = audio.timeDomain;
-
-      if (!bufferLength || !freqArray || !timeDomainArray) return;
-
-      var x = ctx.canvas.width * 0.5;
-      var y = ctx.canvas.height * 0.5;
-      var r = Math.min(x, y) - 20;
-      // var first;
-      var rad = Math.PI * 2;
-
-      var i = 0, a, f, td, lx, ly;
-      var original = {
-        lineWidth: ctx.lineWidth,
-        lineCap: ctx.lineCap,
-        lineJoin: ctx.lineJoin,
-        strokeStyle: ctx.strokeStyle,
-      };
-
-      ctx.lineJoin = &#039;round&#039;;
-      ctx.lineCap = &#039;round&#039;;
-
-      ctx.strokeStyle = &#039;red&#039;;
-      var col;
-      for (var lw = y*2; lw &gt;= y*0.2; lw-=y*0.2) {
-        col = col === &#039;white&#039; ? &#039;black&#039; : &#039;white&#039;;
-        ctx.strokeStyle = col;
-        ctx.lineWidth = lw;
-
-        // ctx.beginPath();
-        // for (i = 0; i &lt; bufferLength; i++) {
-        //   a = ((rad / bufferLength) * i) - Math.PI;
-        //   f = (r / 100) * (freqArray[i] / 2);
-        //   lx = Math.round(x + Math.cos(a) * f);
-        //   ly = Math.round(y + Math.sin(a) * f);
-        //   ctx.lineTo(lx, ly);
-        // }
-        // ctx.stroke();
-
-        ctx.beginPath();
-        for (i = 0; i &lt; bufferLength; i++) {
-          a = ((rad / bufferLength) * i) - Math.PI;
-          td = (r / 100) * (timeDomainArray[i] / 2);
-          lx = Math.round(x + Math.cos(a) * td);
-          ly = Math.round(y + Math.sin(a) * td);
-          ctx.lineTo(lx, ly);
-        }
-        ctx.stroke();
-      }
-
-      ctx.lineWidth = original.lineWidth;
-      ctx.lineCap = original.lineCap;
-      ctx.lineJoin = original.lineJoin;
-      ctx.strokeStyle = original.strokeStyle;
-    }
+    drawFunction: window.VF.canvas.lines.roundFrequencies
   },
 
   {
     name: &#039;fps&#039;,
-    active: true,
+    active: false,
     weight: 60,
-    drawFunction: function(ctx) {
-      var cx = ctx.canvas.width * 0.5;
-      var cy = ctx.canvas.height * 0.5;
-      ctx.textAlign = &#039;center&#039;;
-      ctx.textBaseline = &#039;middle&#039;;
-      ctx.font = (cy * 0.25) + &#039;px monospace&#039;;
-
-      var cache = this.cache;
-      var screen = this.screenState;
-
-      cache.previous = cache.previous || 0;
-      var fps = Math.round(1000 / (screen.frametime - cache.previous)) + &#039;fps&#039;;
-      ctx.lineWidth = 3;
-      ctx.fillStyle = &#039;#000&#039;;
-      ctx.strokeStyle = &#039;#fff&#039;;
-      ctx.fillText(fps, cx, cy);
-      ctx.strokeText(fps, cx, cy);
-      cache.previous = screen.frametime;
-    }
+    drawFunction: window.VF.canvas.utils.fps
   }
 ];
 
@@ -436,16 +303,42 @@ window.VF._defaultSetup = {
     {
       source: &#039;frametime&#039;,
       target: &#039;signals.beat:a.frametime&#039;,
-      transform: &#039;function (v) { return v * 0.5; }&#039;
+      transform: &#039;function (v) {\n  return v * 0.5;\n}&#039;
     },
     {
-      source: &#039;frametime&#039;,
-      target: &#039;layers.canvas.canvasLayers.background.opacity&#039;,
-      transform: &#039;function (v) { return v % 100; }&#039;
+      source: &#039;midi.inputs.nk2.slider1&#039;,
+      target: &#039;signals.color:a.lightness&#039;,
+      transform: &#039;function (v) {\n  return (v /127) * 100;\n}&#039;
     },
     {
       source: &#039;signals.beat:a.result&#039;,
       target: &#039;signals.color:a.hue&#039;
+    },
+    {
+      source: &#039;frametime&#039;,
+      target: &#039;layers.canvas.canvasLayers.background.opacity&#039;,
+      transform: &#039;function (v) {\n  return v % 100;\n}&#039;
+    },
+    {
+      source: &#039;midi.inputs.nk2.r1&#039;,
+      target: &#039;layers.canvas.canvasLayers.background.active&#039;,
+      transform: &#039;function (v) {\n  return !!v;\n}&#039;
+    },
+    {
+      source: &#039;signals.color:a.result&#039;,
+      target: &#039;layers.canvas.canvasLayers.background.colorA&#039;
+    },
+    {
+      source: &#039;midi.inputs.nk2.slider2&#039;,
+      target: &#039;layers.canvas.canvasLayers.grid.lineWidth&#039;
+    },
+    {
+      source: &#039;midi.inputs.nk2.knob2&#039;,
+      target: &#039;layers.canvas.canvasLayers.grid.randFactor&#039;
+    },
+    {
+      source: &#039;midi.inputs.nk2.slider3&#039;,
+      target: &#039;layers.canvas.canvasLayers.grid.pointRadius&#039;
     }
   ],
 

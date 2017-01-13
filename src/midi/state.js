@@ -1,6 +1,7 @@
+/* global VFDeps, require, console, module */
 'use strict';
-var VFDeps = window.VFDeps;
 
+var throttle = VFDeps.throttle;
 var State = VFDeps.State;
 var Collection = VFDeps.Collection;
 
@@ -20,17 +21,17 @@ var midiMappings = {
 
 var MIDIState = State.extend({
   props: {
+    manufacturer: 'string',
+    name: 'string'
+  },
+
+  session: {
+    active: ['boolean', true, true],
     connection: 'string',
     state: 'string',
     type: 'string',
     id: 'string',
-    manufacturer: 'string',
-    name: 'string',
     version: 'string'
-  },
-
-  session: {
-    active: ['boolean', true, true]
   }
 });
 
@@ -46,13 +47,16 @@ function getMappings(manufacturer, name) {
 
 
 function handleMIDIMessage(accessState, model) {
+  var setThrottled = throttle(function(name, velocity) {
+    model.set(name, velocity);
+  }, 1000 / 16);
+  var _mappings = getMappings(model.manufacturer, model.name);
 
   return function(MIDIMessageEvent) {
     if (!model.active) { return; }
-    var _mappings = getMappings(model.manufacturer, model.name);
 
     var info = _mappings(MIDIMessageEvent.data);
-    if (info.name) model.set(info.name, info.velocity);
+    if (info.name) setThrottled(info.name, info.velocity);
   };
 }
 
@@ -116,7 +120,8 @@ var MIDIAccessState = State.extend({
         return;
       }
       accessState.inputs.reset();
-      accessState.MIDIAccess.inputs.forEach(accessState.registerInput.bind(accessState));
+      accessState.MIDIAccess.inputs.forEach(accessState.registerInput, accessState);
+      accessState.trigger('change:inputs');
     }
 
     accessState.on('change:MIDIAccess', MIDIAccessChanged);

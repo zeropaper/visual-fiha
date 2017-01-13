@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">77.06</p>
+      <p class="stat">77.08</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">156</p>
+      <p class="stat">158</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,7 +62,7 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">17.57</p>
+      <p class="stat">17.42</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
@@ -101,9 +101,11 @@ var AudioSource = View.extend({
     &#039;&lt;div class=&quot;row columns&quot;&gt;&#039;+
       &#039;&lt;div class=&quot;column audio-monitor&quot;&gt;&lt;/div&gt;&#039;+
       &#039;&lt;div class=&quot;column audio-controls&quot;&gt;&#039; +
-        &#039;&lt;label&gt;MinDb: &lt;input type=&quot;number&quot; name=&quot;minDecibels&quot; value=&quot;-90&quot; max=&quot;-31&quot; step=&quot;1&quot; /&gt;&lt;/label&gt;&#039; +
-        &#039;&lt;label&gt;MaxDb: &lt;input type=&quot;number&quot; name=&quot;maxDecibels&quot; value=&quot;-10&quot; min=&quot;-70&quot; step=&quot;1&quot; /&gt;&lt;/label&gt;&#039; +
-        &#039;&lt;label&gt;Smoothing: &lt;input type=&quot;number&quot; name=&quot;smoothingTimeConstant&quot; min=&quot;0&quot; max=&quot;1&quot; value=&quot;0.85&quot; step=&quot;0.01&quot; /&gt;&lt;/label&gt;&#039; +
+        // need to investigate min/max value for decibels:
+        // https://webaudio.github.io/web-audio-api/#widl-AnalyserNode-maxDecibels
+        &#039;&lt;label&gt;MinDb: &lt;input type=&quot;range&quot; name=&quot;minDecibels&quot; value=&quot;-90&quot; min=&quot;-200&quot; max=&quot;-11&quot; step=&quot;1&quot; /&gt;&lt;/label&gt;&#039; +
+        &#039;&lt;label&gt;MaxDb: &lt;input type=&quot;range&quot; name=&quot;maxDecibels&quot; value=&quot;-10&quot; min=&quot;-70&quot; max=&quot;120&quot; step=&quot;1&quot; /&gt;&lt;/label&gt;&#039; +
+        &#039;&lt;label&gt;Smoothing: &lt;input type=&quot;range&quot; name=&quot;smoothingTimeConstant&quot; min=&quot;0&quot; max=&quot;1&quot; value=&quot;0.85&quot; step=&quot;0.01&quot; /&gt;&lt;/label&gt;&#039; +
         &#039;&lt;label&gt;FftSize: &lt;select type=&quot;number&quot; name=&quot;fftSize&quot; value=&quot;32&quot; step=&quot;2&quot;&gt;&#039; +
           &#039;&lt;option value=&quot;32&quot;&gt;32&lt;/option&gt;&#039; +
           &#039;&lt;option value=&quot;64&quot;&gt;64&lt;/option&gt;&#039; +
@@ -157,14 +159,14 @@ var AudioSource = View.extend({
         return analyser;
       }
     },
-    audioFrequencyDataArray: {
-      deps: [&#039;audioAnalyser&#039;],
+    audioFrequencyArray: {
+      deps: [&#039;audioAnalyser&#039;, &#039;fftSize&#039;],
       fn: function () {
         return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
       }
     },
-    audioTimeDomainDataArray: {
-      deps: [&#039;audioAnalyser&#039;],
+    audioTimeDomainArray: {
+      deps: [&#039;audioAnalyser&#039;, &#039;fftSize&#039;],
       fn: function () {
         return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
       }
@@ -235,8 +237,8 @@ var AudioSource = View.extend({
   },
 
   _changeAudioParams: function(evt) {
+    console.info(&#039;_changeAudioParams&#039;, evt);
     this.set(evt.target.name, Number(evt.target.value));
-    this.monitor.set(&#039;audioAnalyser&#039;, this.audioAnalyser);
   },
 
   update: function() {

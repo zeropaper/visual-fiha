@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">80.23</p>
+      <p class="stat">79.84</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">51</p>
+      <p class="stat">58</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">8.47</p>
+      <p class="stat">9.48</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.36</p>
+      <p class="stat">0.42</p>
     </div>
   </div>
 </div>
@@ -107,19 +107,19 @@ var ScreenState = State.extend({
   },
 
   props: {
+  },
+
+  session: {
+    audio: [&#039;object&#039;, true, function() { return {
+      bufferLength: 128,
+      frequency: new Uint8Array(128),
+      timeDomain: new Uint8Array(128)
+    }; }],
     midi: &#039;state&#039;,
     frametime: [&#039;number&#039;, true, 0],
     firstframetime: [&#039;any&#039;, true, function () {
       return performance.now();
     }],
-    audio: [&#039;object&#039;, true, function() { return {
-      bufferLength: 128,
-      frequency: new Uint8Array(128),
-      timeDomain: new Uint8Array(128)
-    }; }]
-  },
-
-  session: {
     latency: [&#039;number&#039;, true, 0]
   },
 
@@ -137,8 +137,15 @@ var ScreenState = State.extend({
       }
     }),
     signals: require(&#039;./../signal/collection&#039;)
+  },
+
+  toJSON: function() {
+    var obj = State.prototype.toJSON.apply(this, arguments);
+    delete obj.audio;
+    return obj;
   }
 });
+
 module.exports = ScreenState;</textarea>
   </div>
 </div>

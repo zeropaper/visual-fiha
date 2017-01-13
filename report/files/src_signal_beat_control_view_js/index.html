@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">80.01</p>
+      <p class="stat">70.29</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">48</p>
+      <p class="stat">92</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">10.82</p>
+      <p class="stat">17.56</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.34</p>
+      <p class="stat">0.67</p>
     </div>
   </div>
 </div>
@@ -89,14 +89,19 @@
 
 <div class="container">
   <div class="row">
-    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var assign = window.VFDeps.assign;
+    <textarea id="file-source" class="col-md-12">/* global VFDeps, module, require */
+&#039;use strict&#039;;
+var assign = VFDeps.assign;
 var SignalControlView = require(&#039;./../control-view&#039;);
 var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlView.extend({
   template: &#039;&lt;section class=&quot;rows signal signal-beat&quot;&gt;&#039; +
     &#039;&lt;header class=&quot;row&quot;&gt;&#039; +
       &#039;&lt;h3 class=&quot;name&quot;&gt;&lt;/h3&gt;&#039; +
     &#039;&lt;/header&gt;&#039; +
+
+    &#039;&lt;div class=&quot;detector&quot;&gt;&#039; +
+      &#039;&lt;button class=&quot;avg&quot;&gt;Tap&lt;/button&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
 
     &#039;&lt;div class=&quot;row columns gutter-horizontal gutter-bottom&quot;&gt;&#039; +
       &#039;&lt;div class=&quot;column result-dot no-grow gutter-right&quot;&gt;&lt;/div&gt;&#039; +
@@ -109,6 +114,14 @@ var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlVi
   &#039;&lt;/section&gt;&#039;,
 
   bindings: assign({}, SignalControlView.prototype.bindings, {
+    avg: {
+      type: &#039;text&#039;,
+      selector: &#039;.avg&#039;
+    },
+    &#039;model.input&#039;: {
+      type: &#039;value&#039;,
+      hook: &#039;input&#039;
+    },
     &#039;model.result&#039;: [
       {
         selector: &#039;.result-dot&#039;,
@@ -120,6 +133,7 @@ var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlVi
   }),
 
   events: assign({}, SignalControlView.prototype.events, {
+    &#039;click .detector &gt; button&#039;: &#039;tap&#039;,
     &#039;change [data-hook=input]&#039;: &#039;_updateBPM&#039;
   }),
 
@@ -127,13 +141,43 @@ var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlVi
     this.model.input = parseInt(this.queryByHook(&#039;input&#039;).value.trim(), 10);
   },
 
-  render: function () {
-    this.renderWithTemplate();
-    var inputEl = this.queryByHook(&#039;input&#039;);
-    if (inputEl &amp;&amp; !inputEl.value) {
-      inputEl.value = this.model.input;
+  session: {
+    wait: [&#039;number&#039;, true, 2],
+    avg: [&#039;number&#039;, true, 0],
+    count: [&#039;number&#039;, true, 0],
+    first: [&#039;number&#039;, true, 0],
+    previous: [&#039;number&#039;, true, 0]
+  },
+
+  _resetDetector: function() {
+    this.set({
+      count: 0,
+      first: 0,
+      previous: 0
+    });
+  },
+
+  tap: function() {
+    var timeSeconds = new Date();
+    var msecs = timeSeconds.getTime();
+    var wait = 2;
+
+    if ((msecs - this.previous) &gt; 1000 * wait) {
+      this.count = 0;
     }
-    return this;
+
+    if (!this.count) {
+      this.first = msecs;
+      this.count = 1;
+    }
+    else {
+      this.avg = Math.round((60000 * this.count / (msecs - this.first)) * 100) / 100;
+      this.count++;
+    }
+
+    this.model.input = this.avg;
+
+    this.previous = msecs;
   }
 });
 module.exports = BeatSignalControlView;</textarea>

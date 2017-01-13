@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">81.67</p>
+      <p class="stat">81.48</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">388</p>
+      <p class="stat">380</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">32.30</p>
+      <p class="stat">31.02</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">2.98</p>
+      <p class="stat">2.81</p>
     </div>
   </div>
 </div>
@@ -218,8 +218,10 @@ var PropertyView = View.extend({
     var helper = this.suggestionHelper;
     if (!helper || !this.model.values || !this.model.values.length) return;
 
+    var model = this.model;
     var el = evt.target;
     helper.attach(el, function(selected) {
+      model.collection.parent.set(model.name, selected);
       el.value = selected;
       helper.detach();
     }).fill(this.model.values);
@@ -230,8 +232,9 @@ var PropertyView = View.extend({
   },
 
   // can not / don&#039;t want to use evt.preventDefault() here
-  _handleChange: function(evt) {
-    this.parent.model.set(this.model.name, evt.target.value);
+  _handleChange: function() {
+    // if (!evt.target.value) return;
+    // this.parent.model.set(this.model.name, evt.target.value);
   }
 });
 
@@ -328,7 +331,7 @@ PropertyView.types.number = PropertyView.extend({
   },
 
   _handleChange: function(evt) {
-    this.parent.model.set(this.model.name, Number(evt.target.value));
+    // this.parent.model.set(this.model.name, Number(evt.target.value));
   }
 });
 
@@ -463,17 +466,6 @@ var DetailsView = View.extend({
     &#039;model.uiState&#039;: {selector: &#039;header&#039;, type: &#039;class&#039;},
     &#039;model.name&#039;: &#039;[data-hook=name]&#039;,
     objectPath: &#039;[data-hook=&quot;object-path&quot;]&#039;
-  },
-
-  render: function() {
-    View.prototype.render.apply(this, arguments);
-
-    // This should fix some issues with the region-view
-    Object.keys(this.constructor.prototype.bindings).forEach(function(key) {
-      this.trigger(&#039;change:&#039; + key);
-    }, this);
-
-    return this;
   }
 });
 module.exports = DetailsView;</textarea>

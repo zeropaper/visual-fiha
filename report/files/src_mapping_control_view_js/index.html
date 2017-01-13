@@ -48,7 +48,7 @@
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">218</p>
+      <p class="stat">212</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,7 +62,7 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">20.90</p>
+      <p class="stat">21.00</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
@@ -184,7 +184,7 @@ var ItemView = View.extend({
   _handleEditTransformFunction: function() {
     var editor = this.codeEditor;
     if (!editor.changed) {
-      editor.edit(this.model, &#039;transformation&#039;, &#039;function transform(val) {\n  return val;\n}&#039;, this.model.targetPath);
+      editor.edit(this.model, &#039;transformation&#039;, this.model.targetPath);
     }
     else {
       console.warn(&#039;A function is already being edited&#039;);
@@ -252,7 +252,6 @@ var MappingsControlView = View.extend({
   events: {
     &#039;focus [name=new-source-path]&#039;: &#039;_handleSourceFocus&#039;,
     &#039;focus [name=new-target-path]&#039;: &#039;_handleTargetFocus&#039;,
-    // &#039;keyup [name$=&quot;-path&quot;]&#039;: &#039;_handlePathUpdate&#039;,
     &#039;click [name=&quot;add-mapping&quot;]&#039;: &#039;_handleAddMapping&#039;
   },
 
@@ -272,11 +271,6 @@ var MappingsControlView = View.extend({
     }).fill(this.collection.targetSuggestions(this.model));
   },
 
-  // _handlePathUpdate: function(evt) {
-  //   var scope = evt.target.name.split(&#039;-path&#039;).shift();
-  //   var selected = evt.target.value;
-  //   this.model.updateInfo(scope, selected, this.parent.model);
-  // },
 
 
   _handleAddMapping: function(evt) {

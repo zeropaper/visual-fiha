@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">82.34</p>
+      <p class="stat">42.84</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">8</p>
+      <p class="stat">60</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">3.39</p>
+      <p class="stat">31.71</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.04</p>
+      <p class="stat">0.56</p>
     </div>
   </div>
 </div>
@@ -90,13 +90,65 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-/* global module, console */
-function roundFrequencies(ctx) {
-  var layerId = this.getId();
-  console.info(&#039;%s (%sx%s)&#039;, layerId, ctx.canvas.width, ctx.canvas.height);
-}
+/* global module */
+module.exports = function roundFrequencies(ctx) {
+  var audio = this.screenState.audio || {};
+  var bufferLength = audio.bufferLength;
+  var freqArray = audio.frequency;
+  var timeDomainArray = audio.timeDomain;
 
-module.exports = roundFrequencies;</textarea>
+  if (!bufferLength || !freqArray || !timeDomainArray) return;
+
+  var x = ctx.canvas.width * 0.5;
+  var y = ctx.canvas.height * 0.5;
+  var r = Math.min(x, y) - 20;
+  // var first;
+  var rad = Math.PI * 2;
+
+  var i = 0, a, td, lx, ly;
+  var original = {
+    lineWidth: ctx.lineWidth,
+    lineCap: ctx.lineCap,
+    lineJoin: ctx.lineJoin,
+    strokeStyle: ctx.strokeStyle,
+  };
+
+  ctx.lineJoin = &#039;round&#039;;
+  ctx.lineCap = &#039;round&#039;;
+
+  ctx.strokeStyle = &#039;red&#039;;
+  var col;
+  for (var lw = y*2; lw &gt;= y*0.2; lw-=y*0.2) {
+    col = col === &#039;white&#039; ? &#039;black&#039; : &#039;white&#039;;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = lw;
+
+    // ctx.beginPath();
+    // for (i = 0; i &lt; bufferLength; i++) {
+    //   a = ((rad / bufferLength) * i) - Math.PI;
+    //   f = (r / 100) * (freqArray[i] / 2);
+    //   lx = Math.round(x + Math.cos(a) * f);
+    //   ly = Math.round(y + Math.sin(a) * f);
+    //   ctx.lineTo(lx, ly);
+    // }
+    // ctx.stroke();
+
+    ctx.beginPath();
+    for (i = 0; i &lt; bufferLength; i++) {
+      a = ((rad / bufferLength) * i) - Math.PI;
+      td = (r / 100) * (timeDomainArray[i] / 2);
+      lx = Math.round(x + Math.cos(a) * td);
+      ly = Math.round(y + Math.sin(a) * td);
+      ctx.lineTo(lx, ly);
+    }
+    ctx.stroke();
+  }
+
+  ctx.lineWidth = original.lineWidth;
+  ctx.lineCap = original.lineCap;
+  ctx.lineJoin = original.lineJoin;
+  ctx.strokeStyle = original.strokeStyle;
+};</textarea>
   </div>
 </div>
 

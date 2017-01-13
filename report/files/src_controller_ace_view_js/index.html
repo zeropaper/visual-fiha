@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">67.78</p>
+      <p class="stat">66.86</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">119</p>
+      <p class="stat">172</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">19.15</p>
+      <p class="stat">25.26</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.02</p>
+      <p class="stat">1.47</p>
     </div>
   </div>
 </div>
@@ -92,15 +92,23 @@
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
 var View = window.VFDeps.View;
 var AceEditor = View.extend({
-  edit: function(target, propName, defaultValue, targetName) {
+  edit: function(target, propName, targetName) {
     if (!this.editor) this.render();
+    this.unset(&#039;done&#039;);
     this.set({
       model: target,
       targetProperty: propName,
       targetName: targetName || ((target.name || &#039;&#039;) + propName)
     });
     this.script = this.original;
-    this.editor.setValue(this.original || defaultValue);
+    this.editor.setValue(this.original);
+  },
+
+  editCode: function(str, done) {
+    if (!this.editor) this.render();
+    this.unset([&#039;model&#039;, &#039;targetProperty&#039;, &#039;targetName&#039;]);
+    this.editor.setValue(str);
+    this.done = done;
   },
 
   template:
@@ -124,7 +132,8 @@ var AceEditor = View.extend({
     editor: &#039;any&#039;,
     script: [&#039;string&#039;, true, &#039;&#039;],
     targetName: &#039;string&#039;,
-    targetProperty: &#039;string&#039;
+    targetProperty: &#039;string&#039;,
+    done: &#039;any&#039;
   },
 
   derived: {
@@ -155,8 +164,23 @@ var AceEditor = View.extend({
     &#039;click [name=apply]&#039;: &#039;_handleApply&#039;
   },
 
+  _cleanup: function(trigger) {
+    delete this._cache.changed;
+    delete this._cache.original;
+    if (trigger) {
+      this.trigger(&#039;change:changed&#039;);
+      this.trigger(&#039;change:original&#039;);
+    }
+  },
+
   _handleCancel: function(evt) {
     evt.preventDefault();
+    if (this.done) {
+      this.editor.setValue(&#039;&#039;);
+      this._cleanup();
+      this.script = &#039;&#039;;
+      return this.unset(&#039;done&#039;);
+    }
     if (!this.model || !this.targetProperty || !this.editor) return;
 
     this.editor.setValue(this.original);
@@ -164,6 +188,10 @@ var AceEditor = View.extend({
 
   _handleApply: function(evt) {
     evt.preventDefault();
+    if (this.done) {
+      this._cleanup(true);
+      return this.done(this.script);
+    }
     if (!this.model || !this.targetProperty || !this.editor) return;
 
 
@@ -177,10 +205,19 @@ var AceEditor = View.extend({
 
     this.model.set(this.targetProperty, this.script);
 
-    this._cache.changed = false;
-    this.trigger(&#039;original:changed&#039;);
-    this.trigger(&#039;change:changed&#039;);
+    this._cleanup();
     this.model.trigger(&#039;change:&#039; + this.targetProperty);
+    this.trigger(&#039;change:changed&#039;);
+    this.trigger(&#039;change:original&#039;);
+  },
+
+  getErrors: function() {
+    return this.editor
+      .getSession()
+      .getAnnotations()
+      .filter(function (annotation) {
+        return annotation.type === &#039;error&#039;;
+      });
   },
 
   render: function() {
@@ -188,17 +225,33 @@ var AceEditor = View.extend({
     var view = this;
     view.renderWithTemplate();
 
-    var editor = view.editor = window.ace.edit(view.query(&#039;.ace-editor&#039;));
+    var ace = window.ace;
+    var editor = view.editor = ace.edit(view.query(&#039;.ace-editor&#039;));
+    ace.require(&#039;ace/ext/language_tools&#039;);
+    editor.setOptions({
+      enableBasicAutocompletion: true,
+      enableSnippets: true,
+      enableLiveAutocompletion: false
+    });
+
     editor.$blockScrolling = Infinity;
     editor.on(&#039;change&#039;, function() {
-      view.set(&#039;script&#039;, editor.getValue());//, {silent: true});
+      var errors = view.getErrors();
+      if (errors.length) {
+        console.info(&#039;errors in the code&#039;, errors);
+        return;
+      }
+      var str = editor.getValue();
+      view.set(&#039;script&#039;, str);
     });
     editor.setTheme(&#039;ace/theme/monokai&#039;);
-    editor.getSession().setMode(&#039;ace/mode/javascript&#039;);
     editor.setShowInvisibles();
-    editor.getSession().setUseSoftTabs(true);
-    editor.getSession().setTabSize(2);
-    editor.getSession().setUseWrapMode(true);
+
+    var session = editor.getSession();
+    session.setMode(&#039;ace/mode/javascript&#039;);
+    session.setUseSoftTabs(true);
+    session.setTabSize(2);
+    session.setUseWrapMode(true);
 
     if (view.original) {
       editor.setValue(view.original);
