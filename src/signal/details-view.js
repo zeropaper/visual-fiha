@@ -1,5 +1,5 @@
 'use strict';
-var assign = window.VFDeps.assign;
+var assign = require('lodash.assign');
 var DetailsView = require('./../controller/details-view');
 var TransformationControlView = require('./../transformation/control-view');
 var transformationFunctions = require('./../transformation/functions');

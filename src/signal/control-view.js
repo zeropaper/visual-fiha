@@ -1,5 +1,5 @@
 'use strict';
-var View = window.VFDeps.View;
+var View = require('./../controller/control-view');
 var SignalDetailsView = require('./details-view');
 var SignalControlView = View.extend({
   template: '<section class="rows signal">' +

@@ -1,7 +1,7 @@
 'use strict';
 
 var ScreenLayerView = require('./../view');
-module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
+module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
   template: function() {
     return '<canvas layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></canvas>';
   },
@@ -36,6 +36,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
 
   update: function() {
     this.model.frametime = this.parent.model.frametime;
+    if (!this.parent || !this.parent.el) return;
 
     var cw = this.width = this.parent.el.clientWidth;
     var ch = this.height = this.parent.el.clientHeight;
@@ -65,7 +66,7 @@ module.exports = ScreenLayerView.canvas = ScreenLayerView.extend({
   },
 
 
-  bindings: VFDeps.assign({
+  bindings: require('lodash.assign')({
     width: {
       name: 'width',
       type: 'attribute'

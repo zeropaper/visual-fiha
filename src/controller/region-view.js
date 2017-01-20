@@ -1,9 +1,9 @@
 'use strict';
-/* global VFDeps*/
-var State = VFDeps.State;
-var View = VFDeps.View;
-var Collection = VFDeps.Collection;
-var ViewSwitcher = VFDeps.ViewSwitcher;
+var State = require('ampersand-state');
+// var View = require('./control-view');
+var View = require('ampersand-view');
+var Collection = require('ampersand-collection');
+var ViewSwitcher = require('ampersand-view-switcher');
 
 var TabView = View.extend({
   template: '<li class="columns">' +
@@ -27,13 +27,7 @@ var TabView = View.extend({
   selectTab: function() {
     var itemView = this;
     var item = itemView.model;
-
-    if (item.active) return;
-    item.collection.forEach(function(state) {
-      state.active = item === state;
-    });
-
-    itemView.parent.currentView = item.view;
+    itemView.parent._focus(item);
   },
 
   closeTab: function() {
@@ -43,10 +37,6 @@ var TabView = View.extend({
 });
 
 var RegionView = View.extend({
-  session: {
-    currentView: 'state'
-  },
-
   collections: {
     tabs: Collection.extend({
       mainIndex: 'name',
@@ -64,17 +54,11 @@ var RegionView = View.extend({
           pinned: 'boolean',
           active: 'boolean',
           name: 'string',
-          view: 'state'
+          view: 'state',
+          rebuild: 'any'
         }
       })
     })
-  },
-
-  initialize: function() {
-    this.listenToAndRun(this, 'change:currentView', function() {
-      if (!this.currentView) return;
-      this.render().regionSwitcher.set(this.currentView);
-    });
   },
 
   autoRender: true,
@@ -84,47 +68,64 @@ var RegionView = View.extend({
               '<div class="region-content"></div>' +
             '</div>',
 
+  activeIndex: function() {
+    if (!this.tabs.models.length) return -2;
+    for (var i = 0; i < this.tabs.models.length; i++) {
+      if (this.tabs.models[i].active) return i;
+    }
+    return -1;
+  },
+
   render: function() {
     if (this.rendered) return this;
 
     this.renderWithTemplate();
-    var options = {
-      // waitForRemove: true,
-      // hide: function(oldView, done) {
-      //   console.info('hide', oldView, done);
-      //   done();
-      // },
 
-      // empty: function() {
-      //   console.info('empty region');
-      // },
+    this.regionSwitcher = new ViewSwitcher(this.query('.region-content'), {});
 
-      show: function(newView) {
-        // This should fix some rendering issues with the region-view
-        var bindings = newView.constructor.prototype.bindings || {};
-        Object.keys(bindings).forEach(function(key) {
-          newView.trigger('change:' + key);
-        }, newView);
-      }
-    };
-    if (this.currentView) {
-      options.view = this.currentView;
-    }
-    this.regionSwitcher = new ViewSwitcher(this.query('.region-content'), options);
     this.renderCollection(this.tabs, TabView, '.region-tabs');
+
+    this.listenToAndRun(this.tabs, 'reset add remove', function() {
+      var activeIndex = this.activeIndex();
+      if (activeIndex > -2) {
+        this.focusTabIndex(activeIndex > -1 ? activeIndex : 0);
+      }
+    });
+
     return this;
   },
 
-  _focus: function(tabState) {
-    if (!tabState || tabState.active) return;
+  _setView: function(view) {
+    if (!view) return;
+    this.regionSwitcher.set(view);
+    return view;
+  },
 
-    tabState.collection.forEach(function(state) {
+  _focus: function(tabState) {
+    if (!tabState) return;
+    this.tabs.forEach(function(state) {
       state.active = tabState === state;
     });
 
-    this.currentView = tabState.view;
+    var view = tabState.view;
+    if (typeof tabState.rebuild === 'function') {
+      view = tabState.rebuild();
+    }
+    if (typeof tabState.Constructor === 'function') {
+      view = new tabState.Constructor({
+        parent: this
+      });
 
-    tabState.view.trigger('change:model');
+    }
+    // else {
+    //   view.trigger('change:model', view, view.model, {});
+    //   view.trigger('change', view, view, {});
+    //   var bindings = view.constructor.prototype.bindings || {};
+    //   Object.keys(bindings).forEach(function(key) {
+    //     view.trigger('change:' + key);
+    //   }, view);
+    // }
+    this._setView(view);
   },
 
   focusTabIndex: function(index) {

@@ -1,5 +1,5 @@
-(function() {
 'use strict';
+/*jshint node: true*/
 // borrowed from
 // http://stackoverflow.com/questions/6157929/how-to-simulate-a-mouse-click-using-javascript
 function simulate(element, eventName) {
@@ -71,4 +71,54 @@ function logEvents(scope) {
   };
 }
 window.logEvents = logEvents;
-})();
+
+
+var _holders = {};
+function makeHolder(name) {
+  var holderHolder = (document.getElementById('holder') || document.body);
+  if (_holders[name]) {
+    if (!document.body.contains(_holders[name])) {
+      holderHolder.appendChild(_holders[name]);
+    }
+    return _holders[name];
+  }
+  _holders[name] = document.createElement('div');
+  _holders[name].style = 'max-width:max-100vw;height:100vh;position:relative;border:2px solid red;';
+  _holders[name].id = name + '-test-holder';
+  holderHolder.appendChild(_holders[name]);
+  return _holders[name];
+}
+
+
+module.exports = {
+  makeHolder: makeHolder,
+  simulate: simulate,
+  logEvents: logEvents
+};
+
+[
+  'load',
+  'unload',
+  'abort',
+  'error',
+  'select',
+  'change',
+  'submit',
+  'reset',
+  'focus',
+  'blur',
+  'resize',
+  'scroll',
+  //
+  'click',
+  'dblclick',
+  'mousedown',
+  'mouseup',
+  'mouseover',
+  'mousemove',
+  'mouseout',
+].forEach(function(name) {
+  module.exports['do' + name] = function(element, options) {
+    simulate(element, name, options || {});
+  };
+});

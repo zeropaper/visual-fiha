@@ -1,6 +1,6 @@
 'use strict';
 var ScreenLayerState = require('./../state');
-module.exports = ScreenLayerState.img = ScreenLayerState.extend({
+module.exports = ScreenLayerState.types.img = ScreenLayerState.extend({
   props: {
     src: ['string', true, null],
     backgroundSize: ['string', true, 'cover'],

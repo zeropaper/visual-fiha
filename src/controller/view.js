@@ -1,108 +1,43 @@
 'use strict';
-var View = VFDeps.View;
-var ViewSwitcher = VFDeps.ViewSwitcher;
-var ScreenState = require('./../screen/state');
-var MIDIAccessState = require('./../midi/state');
+var View = require('./control-view');
+var ViewSwitcher = require('ampersand-view-switcher');
 var MIDIAccessView = require('./../midi/view');
-var SignalsView = require('./signals-view');
-var LayersView = require('./layers-view');
+var SignalsView = require('./../signal/signals-view');
+var LayersView = require('./../layer/layers-view');
 var SuggestionView = require('./suggestion-view');
 var SparklineView = require('./sparkline-view');
 var AudioSource = require('./audio-source-view');
 var AceEditor = require('./ace-view');
 var RegionView = require('./region-view');
-
-var mappings = require('./../mapping/state');
+var GistView = require('./gist-view');
+var mappings = require('./../mapping/service');
 var MappingsControlView = require('./../mapping/control-view');
+var jsYAML = require('js-yaml');
 
-var controllerMixin = {};
-controllerMixin.initializeController = function initializeController() {
-  this.worker = new Worker('web-worker-build.js');
-};
-
-// almost unique id
-function auid() {
-  return parseInt((Math.random() + '.' + performance.now()).replace(/\./g, ''), 10);
-}
-controllerMixin.sendCommand = function sendCommand(name, payload, callback) {
-  // console.info('%ccontroller send command "%s"', 'color:green', name);
-  var worker = this.worker;
-  var message = {
-    command: name,
-    payload: payload
-  };
-
-  function makeListener(id, done) {
-    function eventListener(evt) {
-      if (evt.data.eventId !== id) return;
-      done(null, evt.data.payload);
-      worker.removeEventListener('message', eventListener);
-    }
-    return eventListener;
-  }
-
-  if (callback) {
-    message.eventId = auid();
-    worker.addEventListener('message', makeListener(message.eventId, callback), false);
-  }
-  worker.postMessage(message);
-};
-
-
-var ControllerView = View.extend(controllerMixin, {
-  _workerInit: false,
+var ControllerView = View.extend({
   initialize: function(options) {
     var controllerView = this;
-    controllerView.initializeController();
 
-    controllerView.model = controllerView.model || new ScreenState({}, {
-      parent: controllerView
-    });
-    if (controllerView.model.parent !== controllerView) {
-      controllerView.model.parent = controllerView;
-    }
-
-    controllerView.worker.addEventListener('message', function() {
-      if (controllerView._workerInit) return;
-      controllerView._workerInit = true;
-
-      controllerView.sendCommand('resetLayers', {
-        layers: controllerView.model.layers.serialize()
+    [
+      'minDecibels',
+      'maxDecibels',
+      'smoothingTimeConstant',
+      'fftSize'
+    ].forEach(function(name) {
+      controllerView.on('change:' + name, function () {
+        if (!controllerView.audioAnalyser) return;
+        controllerView.audioAnalyser[name] = controllerView[name];
       });
-
-      controllerView.sendCommand('resetSignals', {
-        signals: controllerView.model.signals.serialize()
-      });
-    }, false);
-
-
+    }, controllerView);
 
 
     controllerView._bindLayerEvents();
-    controllerView.model.set({
-      signals: options.signals,
-      layers: options.layers,
-      midi: controllerView.midiAccess
-    });
-
-
-
-    controllerView.listenTo(controllerView.midiAccess, 'midi', function(evtName, value) {
-      controllerView.sendCommand({
-        type: 'midi',
-        name: evtName,
-        value: value
-      });
-    });
 
     controllerView._animate();
 
     if (options.autoStart) {
       controllerView.play();
     }
-
-    var mappingContext = controllerView.model;
-    mappings.import(options.mappings, mappingContext);
 
     if (controllerView.el) {
       controllerView._attachSuggestionHelper();
@@ -112,36 +47,53 @@ var ControllerView = View.extend(controllerMixin, {
     }
   },
 
+  sendCommand: function(name, payload, callback) {
+    console.info('controller view send command', name, payload, callback);
+    if (!this.router || !this.router.worker) return;
+    this.router.sendCommand(name, payload, callback);
+    return this;
+  },
+
   _bindLayerEvents: function() {
-    var controllerView = this;
+    // var controllerView = this;
 
-    controllerView.listenTo(controllerView.model.layers, 'add', function(state) {
-      controllerView.sendCommand('addLayer', {
-        layer: state.serialize()
-      });
-    });
+    // controllerView.listenTo(controllerView.model.layers, 'add', function(state) {
+    //   var data = state.serialize();
+    //   delete data.uiState;
+    //   if (!data) {
+    //     console.warn('addLayer no layer data');
+    //   }
+    //   controllerView.sendCommand('addLayer', {
+    //     layer: data
+    //   });
+    // });
 
-    controllerView.listenTo(controllerView.model.layers, 'remove', function(state) {
-      controllerView.sendCommand('addLayer', {
-        layerName: state.name
-      });
-    });
+    // controllerView.listenTo(controllerView.model.layers, 'remove', function(state) {
+    //   var layerName = state.name;
+    //   if (!layerName) {
+    //     console.warn('removeLayer no layer data');
+    //   }
+    //   controllerView.sendCommand('removeLayer', {
+    //     layerName: layerName
+    //   });
+    // });
 
-    controllerView.listenTo(controllerView.model.layers, 'change:layer', function(state) {
-      if (!state) return;
+    // controllerView.listenTo(controllerView.model.layers, 'change:layer', function(state) {
+    //   if (!state) return;
 
-      var changed = state.changedAttributes();
-      if (!Object.keys(changed).length) {
-        changed = state.serialize();
-      }
-      delete changed.uiState;
-      if (!Object.keys(changed).length) return;
+    //   var changed = state.changedAttributes();
+    //   delete changed.uiState;
+    //   if (!Object.keys(changed).length) {
+    //     changed = state.serialize();
+    //   }
+    //   delete changed.uiState;
+    //   if (!Object.keys(changed).length) return;
 
-      controllerView.sendCommand('updateLayer', {
-        layer: changed,
-        layerName: state.name
-      });
-    });
+    //   controllerView.sendCommand('updateLayer', {
+    //     layer: changed,
+    //     layerName: state.name
+    //   });
+    // });
 
     return this;
   },
@@ -165,12 +117,12 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   update: function() {
-    var analyser = this.audioSource.audioAnalyser;
+    var analyser = this.audioAnalyser;
 
-    var freqArray = this.audioSource.audioFrequencyArray;
+    var freqArray = this.audioFrequencyArray;
     analyser.getByteFrequencyData(freqArray);
 
-    var timeDomainArray = this.audioSource.audioTimeDomainArray;
+    var timeDomainArray = this.audioTimeDomainArray;
     analyser.getByteTimeDomainData(timeDomainArray);
 
     var command = {
@@ -186,6 +138,35 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   derived: {
+    audioContext: {
+      deps: [],
+      fn: function() {
+        return new window.AudioContext();
+      }
+    },
+    audioAnalyser: {
+      deps: ['audioContext'],
+      fn: function() {
+        var analyser = this.audioContext.createAnalyser();
+        analyser.minDecibels = this.minDecibels;
+        analyser.maxDecibels = this.maxDecibels;
+        analyser.smoothingTimeConstant = this.smoothingTimeConstant;
+        analyser.fftSize = this.fftSize;
+        return analyser;
+      }
+    },
+    audioFrequencyArray: {
+      deps: ['audioAnalyser', 'fftSize'],
+      fn: function () {
+        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
+      }
+    },
+    audioTimeDomainArray: {
+      deps: ['audioAnalyser', 'fftSize'],
+      fn: function () {
+        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
+      }
+    },
     computedStyle: {
       deps: ['el'],
       fn: function() {
@@ -194,11 +175,12 @@ var ControllerView = View.extend(controllerMixin, {
     }
   },
 
-  children: {
-    midiAccess: MIDIAccessState
-  },
-
   session: {
+    router: 'any',
+    minDecibels: ['number', true, -90],
+    maxDecibels: ['number', true, -10],
+    smoothingTimeConstant: ['number', true, 0.85],
+    fftSize: ['number', true, 256],
     playing: ['boolean', true, false],
     broadcastId: ['string', true, 'vfBus'],
     showControlScreen: ['boolean', true, false],
@@ -228,38 +210,56 @@ var ControllerView = View.extend(controllerMixin, {
       waitFor: 'el',
       selector: '.region-right',
       prepareView: function(el) {
-        this.layersView = new LayersView({
-          collection: this.model.layers,
-          parent: this
-        });
+        var parent = this;
+        function buildLayers() {
+          if (parent.layersView && parent.layersView.remove) {
+            parent.layersView.remove();
+            parent.stopListening(parent.layersView);
+          }
+          parent.layersView = new LayersView({
+            collection: parent.model.layers,
+            parent: parent,
+            model: parent.model
+          });
+          return parent.layersView;
+        }
 
-        this.signalsView = new SignalsView({
-          collection: this.model.signals,
-          parent: this
-        });
+        function buildSignals() {
+          if (parent.signalsView && parent.signalsView.remove) {
+            parent.signalsView.remove();
+            parent.stopListening(parent.signalsView);
+          }
+          parent.signalsView = new SignalsView({
+            collection: parent.model.signals,
+            parent: parent,
+            model: parent.model
+          });
+          return parent.signalsView;
+        }
 
-        this.codeEditor = new AceEditor({
-          parent: this
-        });
+        function buildCodeEditor() {
+          if (parent.codeEditor) {
+            parent.stopListening(parent.codeEditor);
+          }
+          parent.codeEditor = new AceEditor({
+            parent: parent
+          });
+          return parent.codeEditor;
+        }
 
         var view = new RegionView({
-          parent: this,
+          parent: parent,
           el: el,
-          currentView: this.layersView,
           tabs: [
-            {name: 'Layers', view: this.layersView, pinned: true, active: true},
-            {name: 'Signals', view: this.signalsView, pinned: true},
-            {name: 'Editor', view: this.codeEditor, pinned: true}
+            {name: 'Layers', rebuild: buildLayers, pinned: true},
+            {name: 'Signals', rebuild: buildSignals, pinned: true, active: true},
+            {name: 'Editor', rebuild: buildCodeEditor, pinned: true}
           ]
         });
 
         view.el.classList.add('region-right');
         view.el.classList.add('column');
         view.el.classList.add('rows');
-
-        this.listenTo(this.codeEditor, 'change:original', function() {
-          view.focusTabIndex(1);
-        });
 
         return view;
       }
@@ -270,37 +270,53 @@ var ControllerView = View.extend(controllerMixin, {
       selector: '.region-left-bottom',
       prepareView: function(el) {
         var styles = window.getComputedStyle(el);
+        var parent = this;
 
-        this.audioSource = new AudioSource({
-          audioAnalyser: this.audioAnalyser,
-          parent: this,
-          color: styles.color
+        function buildAudioSource() {
+          parent.audioSource = new AudioSource({
+            audioAnalyser: parent.audioAnalyser,
+            parent: parent,
+            color: styles.color
+          });
+          return parent.audioSource;
+        }
+        buildAudioSource();
+
+        parent.MIDIAccess = new MIDIAccessView({
+          parent: parent,
+          model: parent.model.midi
         });
 
-        this.MIDIAccess = new MIDIAccessView({
-          parent: this,
-          model: this.midiAccess
-        });
-
-        this.mappingsView = new MappingsControlView({
+        parent.mappingsView = new MappingsControlView({
           collection: mappings,
-          parent: this,
-          model: this.model
+          parent: parent,
+          model: parent.model
         });
 
         var view = new RegionView({
-          parent: this,
+          parent: parent,
           el: el,
-          currentView: this.mappingsView,
+          currentView: parent.mappingsView,
           tabs: [
-            {name: 'Mappings', view: this.mappingsView, pinned: true, active: true},
-            {name: 'MIDI', view: this.MIDIAccess, pinned: true},
-            {name: 'Audio', view: this.audioSource, pinned: true}
+            {name: 'Mappings', view: parent.mappingsView, pinned: true},
+            {name: 'MIDI', view: parent.MIDIAccess, pinned: true},
+            {name: 'Audio', rebuild: buildAudioSource, pinned: true, active: true}
           ]
         });
 
         view.el.classList.add('row');
+        view.el.classList.add('region-left-bottom');
 
+        return view;
+      }
+    },
+
+    gistView: {
+      waitFor: 'el',
+      selector: '.controller > .header',
+      prepareView: function(el) {
+        var view = new GistView({parent: this, model: this.model});
+        el.appendChild(view.render().el);
         return view;
       }
     },
@@ -360,13 +376,17 @@ var ControllerView = View.extend(controllerMixin, {
     ]
   },
 
-  events: {
+  commands: {
     'click [name="play"]': 'play',
     'click [name="pause"]': 'pause',
-    'click [name="stop"]': 'stop',
+    'click [name="stop"]': 'stop'
+  },
+
+  events: {
     'click [name="resize"]': 'resizeScreen',
     'click [name="screen"]': '_openScreen',
     'click [name="control-screen"]': '_toggleControlScreen',
+    'click [name="setup-editor"]': '_setupEditor'
   },
 
   _openScreen: function() {
@@ -376,11 +396,51 @@ var ControllerView = View.extend(controllerMixin, {
   _toggleControlScreen: function() {
     this.toggle('showControlScreen');
   },
-  addMultiMapping: function(mappingModel) {
-    this.mappingsView.mappings.add({
-      targetModel: mappingModel.targetModel,
-      targetProperty: mappingModel.targetProperty
+
+  toJSON: function() {
+    var obj = this.model.toJSON();
+    obj.mappings = mappings.export();
+    return obj;
+  },
+
+  fromJSON: function(obj) {
+    this.model.set({
+      layers: obj.layers || [],
+      signals: obj.signals || []
     });
+    mappings.import(obj.mappings || [], this.model, true);
+
+    this.sendCommand('resetLayers', {
+      layers: obj.layers
+    });
+
+    this.sendCommand('resetSignals', {
+      signals: obj.signals
+    });
+  },
+
+  getEditor: function() {
+    this.regionRight.focusTab('Editor');
+    return this.codeEditor;
+  },
+
+  _setupEditor: function() {
+    var view = this;
+    var json = view.toJSON();
+    var editor = view.getEditor();
+    var str = JSON.parse(JSON.stringify(json));
+    str = jsYAML.safeDump(str);
+
+    editor.editCode(str, function updateSetup(newStr) {
+      var obj;
+      try {
+        obj = jsYAML.safeLoad(newStr);
+        view.fromJSON(obj);
+      }
+      catch(e) {
+        console.warn(e);
+      }
+    }, 'yaml');
   },
 
   showDetails: function (view) {
@@ -425,44 +485,49 @@ var ControllerView = View.extend(controllerMixin, {
   /*
   :sout=#http{dst=:8080/stream} :sout-keep
   */
-  template: '<div class="controller rows">'+
-    '<div class="row columns gutter-horizontal header">'+
-      '<div class="column no-grow gutter-right">Visual Fiha</div>'+
+  template: `
+    <div class="controller rows">
+      <div class="row columns gutter-horizontal header">
+        <div class="column no-grow gutter-right">Visual Fiha</div>
 
-      '<div class="column columns">'+
-        '<span class="column columns no-grow button-group">'+
-          '<button class="column gutter-horizontal" name="play"><span class="vfi-play"></span></button>'+
-          '<button class="column gutter-horizontal" name="pause"><span class="vfi-pause"></span></button>'+
-          '<button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>'+
-        '</span>'+
+        <div class="column columns">
+          <span class="column columns no-grow button-group">
+            <button class="column gutter-horizontal" name="play"><span class="vfi-play"></span></button>
+            <button class="column gutter-horizontal" name="pause"><span class="vfi-pause"></span></button>
+            <button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>
+          </span>
 
-        '<div class="column no-grow">'+
-          '<button name="screen">Open screen</button>'+
-        '</div>'+
+          <div class="column no-grow">
+            <button name="screen">Open screen</button>
+          </div>
 
-        '<div class="column no-grow">'+
-          '<button name="control-screen">Control screen</button>'+
-        '</div>'+
+          <div class="column no-grow">
+            <button name="control-screen">Control screen</button>
+          </div>
 
-        '<div class="column gutter-horizontal no-grow columns performance">'+
-          // 'SCL <span title="Screen Communication Latency" class="column sparkline-latency"></span>'+
-          'Controller <span class="column sparkline-controller"></span>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
+          <div class="column gutter-horizontal no-grow columns performance">
+            Controller <span class="column sparkline-controller"></span>
+          </div>
 
-    '<div class="row columns body">'+
-      '<div class="region-left column no-grow rows">'+
-        '<iframe class="region-left-top row grow-l control-screen"></iframe>'+
+          <div class="column"></div>
 
-        '<div class="region-left-bottom row rows"></div>'+
-      '</div>'+
+          <div class="column no-grow">
+            <button name="setup-editor">Setup editor</button>
+          </div>
+        </div>
+      </div>
 
-      '<div class="region-right column rows settings">'+
+      <div class="row columns body">
+        <div class="region-left column no-grow rows">
+          <iframe class="region-left-top row grow-l control-screen"></iframe>
 
+          <div class="region-left-bottom row rows"></div>
+        </div>
 
-      '</div>'+
-    '</div>'+
-  '</div>'
+        <div class="region-right column rows settings">
+        </div>
+      </div>
+    </div>
+  `
 });
 module.exports = ControllerView;

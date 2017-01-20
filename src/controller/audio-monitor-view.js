@@ -1,5 +1,5 @@
 'use strict';
-module.exports = VFDeps.View.extend({
+module.exports = require('ampersand-view').extend({
   autoRender: true,
   template: '<canvas width="200" height="200"></canvas>',
 
@@ -38,6 +38,7 @@ module.exports = VFDeps.View.extend({
     var r = Math.min(x, y) - 20;
     var rad = (Math.PI * 2);
 
+    ctx.fillStyle = ctx.strokeStyle = this.color;
     var i, a, ax, ay, bx, by, lx, ly, ca, sa;
     ctx.globalAlpha = 0.5;
     for (i = 0; i < 360; i += 15) {
@@ -93,16 +94,14 @@ module.exports = VFDeps.View.extend({
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.fillStyle = ctx.strokeStyle = this.color;
 
-    var analyser = source.audioAnalyser;
+    var analyser = source.parent.audioAnalyser;
     var bufferLength = analyser.frequencyBinCount;
     this.drawScales(bufferLength);
 
-    ctx.fillStyle = ctx.strokeStyle = this.color;
-
-    var freqArray = source.audioFrequencyArray;
+    var freqArray = source.parent.audioFrequencyArray;
     analyser.getByteFrequencyData(freqArray);
 
-    var timeDomainArray = source.audioTimeDomainArray;
+    var timeDomainArray = source.parent.audioTimeDomainArray;
     analyser.getByteTimeDomainData(timeDomainArray);
 
     var x = ctx.canvas.width * 0.5;
@@ -111,7 +110,7 @@ module.exports = VFDeps.View.extend({
     var rad = Math.PI * 2;
 
     var i, a, f, td, lx, ly;
-    ctx.strokeStyle = 'red';
+    ctx.strokeStyle = '#A581FF';
     ctx.beginPath();
     for (i = 0; i < bufferLength; i++) {
       a = ((rad / bufferLength) * i) - Math.PI;
@@ -122,7 +121,7 @@ module.exports = VFDeps.View.extend({
     }
     ctx.stroke();
 
-    ctx.strokeStyle = 'azure';
+    ctx.strokeStyle = '#66D9EF';
     ctx.beginPath();
     for (i = 0; i < bufferLength; i++) {
       a = ((rad / bufferLength) * i) - Math.PI;

@@ -1,7 +1,8 @@
 *.log
-*.map
 worker-javascript.js
+worker-css.js
 ignore
 wiki
 test/expect.js
 node_modules
+assets/kd

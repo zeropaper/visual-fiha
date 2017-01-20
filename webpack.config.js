@@ -13,7 +13,7 @@ module.exports = function(env) {
     },
     // http://cheng.logdown.com/posts/2016/03/25/679045
     // devtool: env.prod ? 'cheap-module-source-map' : 'cheap-module-eval-source-map',
-    devtool: 'source-map',
+    devtool: 'inline-source-map',
 
     devServer: {
       host: 'localhost',

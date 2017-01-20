@@ -1,5 +1,5 @@
 'use strict';
-var View = window.VFDeps.View;
+var View = require('./control-view');
 
 var TimelineView = View.extend({
   template: [

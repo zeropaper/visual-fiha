@@ -1,5 +1,6 @@
 'use strict';
-var View = window.VFDeps.View;
+// var View = require('./../controller/control-view');
+var View = require('ampersand-view');
 var LayerView = require('./../layer/view');
 require('./../layer/canvas/view');
 require('./../layer/svg/view');
@@ -35,7 +36,7 @@ function registerCommand(commandName, command) {
 
 
 var commands = {};
-commands.setup = function setup(state) {
+commands.bootstrap = function bootstrap(state) {
   this.update(state);
 };
 commands.resetLayers = function resetLayers(layers) {
@@ -178,6 +179,9 @@ var ScreenView = View.extend(clientMixin, {
     this.el.left = 0;
     this.el.style.width = '100%';
     this.el.style.height = '100%';
+    if (!this.el || !this.el.parentNode) {
+      return this;
+    }
     this.width = this.el.parentNode.clientWidth;
     this.height = this.el.parentNode.clientHeight;
     return this._resizeLayers();
@@ -203,7 +207,7 @@ var ScreenView = View.extend(clientMixin, {
     if (!this.layersView) {
       this.layersView = this.renderCollection(this.model.layers, function(opts) {
         var type = opts.model.getType();
-        var ScreenLayerConstructor = LayerView[type] || LayerView;
+        var ScreenLayerConstructor = LayerView.types[type] || LayerView;
         return new ScreenLayerConstructor(opts);
       }, this.el, {parent: this});
       this._updateLayers();

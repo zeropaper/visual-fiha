@@ -1,12 +1,12 @@
 'use strict';
 
 var ScreenLayerView = require('./../view');
-module.exports = ScreenLayerView.video = ScreenLayerView.extend({
+module.exports = ScreenLayerView.types.video = ScreenLayerView.extend({
   template: function() {
     return '<video layer-id="' + this.model.cid + '" view-id="' + this.cid + '" autoplay loop muted></video>';
   },
 
-  bindings: VFDeps.assign({
+  bindings: require('lodash.assign')({
     'model.src': {
       type: 'attribute',
       name: 'src'

@@ -1,12 +1,12 @@
 'use strict';
 
 var ScreenLayerView = require('./../view');
-module.exports = ScreenLayerView.img = ScreenLayerView.extend({
+module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
   template: function() {
     return '<div class="layer-image" layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></div>';
   },
 
-  bindings: VFDeps.assign({
+  bindings: require('lodash.assign')({
     'model.src': {
       type: function() {
         this.el.style.backgroundImage = 'url(' + this.model.src + ')';

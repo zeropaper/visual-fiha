@@ -1,9 +1,11 @@
 'use strict';
-var State = VFDeps.State;
-var Collection = VFDeps.Collection;
+var State = require('ampersand-state');
+var Collection = require('ampersand-collection');
 var ScreenLayerState = require('./../state');
 
 var CanvasLayer = State.extend({
+  scripts: require('./scripts'),
+
   idAttribute: 'name',
 
   initialize: function() {
@@ -125,6 +127,7 @@ var CanvasLayer = State.extend({
         var mappable = ScreenLayerState.prototype._derived.mappable.fn.apply(this, arguments);
         var targets = mappable.target.filter(function(key) {
           return [
+            'uiState',
             'drawFunction',
             'screenState', // would make a circular reference if not excluded!
             'draw'
@@ -211,7 +214,7 @@ var CanvasLayers = Collection.extend({
 });
 
 
-module.exports = ScreenLayerState.canvas = ScreenLayerState.extend({
+module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
   collections: {
     canvasLayers: CanvasLayers
   }

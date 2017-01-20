@@ -1,16 +1,7 @@
-'use strict';
 describe('Screen State', function () {
-  var ScreenState;
-
-  before(function (done) {
-    if (typeof R === 'undefined') {
-      ScreenState = require('./../../src/screen/state');
-      return done();
-    }
-    R(function (require) {
-      ScreenState = require('./../src/screen/state');
-    }, done);
-  });
+  'use strict';
+  var ScreenState = require('./../../src/screen/state');
+  var expect = require('expect.js');
 
   describe('instance', function () {
     describe('options', function () {

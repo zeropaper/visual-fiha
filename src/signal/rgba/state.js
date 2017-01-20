@@ -14,7 +14,7 @@ var _100 = {
   min: 0,
   max: 100
 };
-var RGBASignalState = SignalState.types.rgbaSignal = SignalState.extend({
+var RGBASignalState = SignalState.types.rgba = SignalState.extend({
   session: {
     red: _255,
     green: _255,

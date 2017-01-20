@@ -1,5 +1,5 @@
 'use strict';
-module.exports = VFDeps.View.extend({
+module.exports = require('ampersand-view').extend({
   autoRender: true,
   template: '<canvas width="120" height="29"></canvas>',
   session: {

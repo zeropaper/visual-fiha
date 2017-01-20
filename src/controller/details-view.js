@@ -1,26 +1,25 @@
 'use strict';
-var mappings = require('./../mapping/state');
-var assign = VFDeps.assign;
-var Collection = VFDeps.Collection;
-var State = VFDeps.State;
-var View = VFDeps.View;
+var mappings = require('./../mapping/service');
+var assign = require('lodash.assign');
+var Collection = require('ampersand-collection');
+var State = require('ampersand-state');
+var View = require('./control-view');
 
 var PropertyView = View.extend({
-  template: '<div class="columns object-prop prop-type-default">' +
-    '<div class="column gutter text-right prop-name"></div>' +
-    '<div class="column no-grow prop-value-reset">' +
-      '<button class="vfi-cancel"></button>' +
-    '</div>' +
-    '<div class="column prop-value">' +
-      '<input name="value" type="text" />' +
-    '</div>' +
-    // '<div class="column prop-mapping-path">' +
-    //   '<input name="mapping" />' +
-    // '</div>' +
-    '<div class="column prop-mapping-clear">' +
-      '<button class="vfi-unlink"></button>' +
-    '</div>' +
-  '</div>',
+  template: `
+    <div class="columns object-prop prop-type-default">
+      <div class="column gutter text-right prop-name"></div>
+      <div class="column no-grow prop-value-reset">
+        <button class="vfi-cancel"></button>
+      </div>
+      <div class="column prop-value">
+        <input name="value" type="text" />
+      </div>
+      <div class="column prop-mapping-clear">
+        <button class="vfi-unlink"></button>
+      </div>
+    </div>
+  `,
 
   initialize: function() {
     // should improve the performances by using the passive option
@@ -108,7 +107,7 @@ var PropertyView = View.extend({
     }
   },
 
-  events: {
+  commands: {
     'click .prop-value-reset button': '_handleReset',
     'change [name=mapping]': '_handleMappingChange',
     'focus [type=text][name=value]': '_suggestValues',
@@ -127,8 +126,10 @@ var PropertyView = View.extend({
     var helper = this.suggestionHelper;
     if (!helper || !this.model.values || !this.model.values.length) return;
 
+    var model = this.model;
     var el = evt.target;
     helper.attach(el, function(selected) {
+      model.collection.parent.set(model.name, selected);
       el.value = selected;
       helper.detach();
     }).fill(this.model.values);
@@ -139,8 +140,9 @@ var PropertyView = View.extend({
   },
 
   // can not / don't want to use evt.preventDefault() here
-  _handleChange: function(evt) {
-    this.parent.model.set(this.model.name, evt.target.value);
+  _handleChange: function() {
+    // if (!evt.target.value) return;
+    // this.parent.model.set(this.model.name, evt.target.value);
   }
 });
 
@@ -237,7 +239,7 @@ PropertyView.types.number = PropertyView.extend({
   },
 
   _handleChange: function(evt) {
-    this.parent.model.set(this.model.name, Number(evt.target.value));
+    // this.parent.model.set(this.model.name, Number(evt.target.value));
   }
 });
 

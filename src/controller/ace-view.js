@@ -1,5 +1,5 @@
 'use strict';
-var View = window.VFDeps.View;
+var View = require('ampersand-view');
 var AceEditor = View.extend({
   edit: function(target, propName, targetName) {
     if (!this.editor) this.render();
@@ -10,32 +10,37 @@ var AceEditor = View.extend({
       targetName: targetName || ((target.name || '') + propName)
     });
     this.script = this.original;
+    var session = this.editor.getSession();
+    session.setMode('ace/mode/javascript');
     this.editor.setValue(this.original);
   },
 
-  editCode: function(str, done) {
+  editCode: function(str, done, language) {
     if (!this.editor) this.render();
+    if (language) {
+      var session = this.editor.getSession();
+      session.setMode('ace/mode/' + language);
+    }
     this.unset(['model', 'targetProperty', 'targetName']);
     this.editor.setValue(str);
     this.done = done;
   },
 
-  template:
-    '<section class="row code-editor rows">' +
-      '<header>' +
-        '<h3></h3>' +
-      '</header>' +
-      '<div class="ace-editor row grow-xl"></div>' +
-      '<div class="ace-controls row no-grow gutter columns">' +
-        '<div class="column"></div>' +
-        '<div class="column no-grow gutter-right">' +
-          '<button class="no" name="cancel">Cancel</button>' +
-        '</div>' +
-        '<div class="column gutter-left text-right">' +
-          '<button class="yes" name="apply">Apply</button>' +
-        '</div>' +
-      '</div>' +
-    '</section>',
+  template: `
+    <section class="row code-editor rows">
+      <header>
+        <h3></h3>
+      </header>
+      <div class="ace-editor row grow-xl"></div>
+      <div class="ace-controls row no-grow gutter columns">
+        <div class="column"></div>
+        <div class="column no-grow gutter-right">
+          <button class="no" name="cancel">Cancel</button>
+          <button class="yes" name="apply">Apply</button>
+        </div>
+      </div>
+    </section>
+  `,
 
   session: {
     editor: 'any',
@@ -84,11 +89,10 @@ var AceEditor = View.extend({
 
   _handleCancel: function(evt) {
     evt.preventDefault();
-    if (this.done) {
-      this.editor.setValue('');
+    if (typeof this.done === 'function') {
       this._cleanup();
-      this.script = '';
-      return this.unset('done');
+      this.unset('done');
+      return;
     }
     if (!this.model || !this.targetProperty || !this.editor) return;
 
@@ -97,9 +101,10 @@ var AceEditor = View.extend({
 
   _handleApply: function(evt) {
     evt.preventDefault();
-    if (this.done) {
+    if (typeof this.done === 'function') {
+      this.done(this.script);
       this._cleanup(true);
-      return this.done(this.script);
+      return;
     }
     if (!this.model || !this.targetProperty || !this.editor) return;
 
@@ -167,6 +172,11 @@ var AceEditor = View.extend({
     }
 
     return this;
+  },
+
+  remove: function() {
+    this.editor.destroy();
+    return View.prototype.remove.apply(this, arguments);
   }
 });
 module.exports = AceEditor;

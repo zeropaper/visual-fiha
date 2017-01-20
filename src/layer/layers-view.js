@@ -1,15 +1,15 @@
 'use strict';
-/* global require, VFDeps*/
-var View = VFDeps.View;
+var View = require('./control-view');
 
 var LayerControlView = require('./../layer/control-view');
 require('./../layer/canvas/control-view');
 
 var LayersView = View.extend({
-  // autoRender: true,
+  commands: {
+    'click [name="add-layer"]': 'addLayer _addLayer'
+  },
 
-  events: {
-    'click [name="add-layer"]': '_addLayer',
+  events:{
     'focus [data-hook="layer-type"]': '_suggestLayerType'
   },
 
@@ -28,14 +28,18 @@ var LayersView = View.extend({
   },
 
   _addLayer: function() {
-    var typeEl = this.queryByHook('signal-type');
-    var nameEl = this.queryByHook('signal-name');
+    var typeEl = this.queryByHook('layer-type');
+    var nameEl = this.queryByHook('layer-name');
     var type = typeEl.value;
     var name = nameEl.value;
     if (!type || !name) { return; }
-    this.model.layers.add({
-      name: name,
-      type: type
+    this.sendCommand('addLayer', {
+      layer: {
+        name: name,
+        type: type
+      }
+    }, function(...args) {
+      console.info('added layer', ...args);
     });
     typeEl.value = nameEl.value = '';
   },
@@ -54,20 +58,21 @@ var LayersView = View.extend({
     }
   },
 
-  template: '<div class="row layers">'+
-              '<div class="section-name gutter-vertical">Layers</div>'+
-              '<div class="columns">'+
-                '<div class="column">' +
-                  '<input data-hook="layer-name" placeholder="Name" type="text"/>'+
-                '</div>' +
-                '<div class="column">' +
-                  '<input data-hook="layer-type" placeholder="Type" type="text"/>'+
-                '</div>' +
-                '<div class="column no-grow">'+
-                  '<button name="add-layer" class="vfi-plus"></button>'+
-                '</div>'+
-              '</div>'+
-              '<div class="items"></div>'+
-            '</div>'
+  template: `
+    <section class="row layers">
+      <header class="columns">
+        <div class="column">
+          <input data-hook="layer-name" placeholder="Name" type="text"/>
+        </div>
+        <div class="column">
+          <input data-hook="layer-type" placeholder="Type" type="text"/>
+        </div>
+        <div class="column no-grow">
+          <button name="add-layer" class="vfi-plus"></button>
+        </div>
+      </header>
+      <div class="items"></div>
+    </section>
+  `
 });
 module.exports = LayersView;

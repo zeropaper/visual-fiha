@@ -1,0 +1,9 @@
+{
+  "browser": true,
+  "browserify": true,
+  "strict": true,
+  "globals": {
+    "console": false,
+    "VF": true
+  }
+}

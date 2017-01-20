@@ -1,5 +1,5 @@
 'use strict';
-var View = window.VFDeps.View;
+var View = require('./../controller/control-view');
 var TransformationControlView = View.extend({
   template: '<div class="transformation gutter columns">' +
       '<div class="column gutter-right text-right" data-hook="name"></div>' +

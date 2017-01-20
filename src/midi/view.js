@@ -1,6 +1,5 @@
 'use strict';
-var VFDeps = window.VFDeps;
-var View = VFDeps.View;
+var View = require('./../controller/control-view');
 var MIDIView = View.extend({
   template: [
     '<li class="gutter">',
@@ -31,10 +30,6 @@ var MIDIAccessView = View.extend({
         '<div class="gutter">Inputs</div>' +
         '<ul></ul>' +
       '</div>' +
-    //   '<div class="midi-outputs">' +
-    //     '<div class="gutter">Outputs</div>' +
-    //     '<ul></ul>' +
-    //   '</div>' +
     '</div>',
 
   render: function() {

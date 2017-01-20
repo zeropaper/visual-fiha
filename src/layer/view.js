@@ -1,5 +1,6 @@
 'use strict';
-var View = window.VFDeps.View;
+// var View = require('./../controller/control-view');
+var View = require('ampersand-view');
 
 var LayerView = View.extend({
   template: function() {
@@ -133,10 +134,10 @@ var LayerView = View.extend({
     if (styleEl && styleEl.parentNode) {
       styleEl.parentNode.removeChild(styleEl);
     }
-    View.prototype.remove.apply(this, arguments);
+    return View.prototype.remove.apply(this, arguments);
   },
 
   update: function() {}
 });
-
+LayerView.types = {};
 module.exports = LayerView;

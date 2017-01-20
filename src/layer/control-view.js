@@ -1,5 +1,5 @@
 'use strict';
-var View = VFDeps.View;
+var View = require('./../controller/control-view');
 var DetailsView = require('./../controller/details-view');
 
 var LayerControlView = View.extend({
@@ -14,7 +14,15 @@ var LayerControlView = View.extend({
     '<div class="mappings props"></div>' +
   '</section>',
 
-  events: {
+  // events: {
+  //   'mouseenter': '_highlight',
+  //   'mouseleave': '_highlight',
+  //   'click .remove-layer': '_removeLayer',
+  //   'click .active.prop-toggle': '_toggleActive',
+  //   'click .layer-name': '_showDetails'
+  // },
+
+  commands: {
     'mouseenter': '_highlight',
     'mouseleave': '_highlight',
     'click .remove-layer': '_removeLayer',

@@ -1,3 +1,4 @@
+/* global module, console */
 'use strict';
 
 function toPrct(val) {

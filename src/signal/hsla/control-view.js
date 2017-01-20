@@ -1,5 +1,5 @@
 'use strict';
-var assign = window.VFDeps.assign;
+var assign = require('lodash.assign');
 var SignalControlView = require('./../control-view');
 var HSLASignalControlView = SignalControlView.types.hslaSignal = SignalControlView.extend({
   template: [

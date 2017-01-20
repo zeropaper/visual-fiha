@@ -1,24 +1,20 @@
-'use strict';
-function warn(e) {console.warn(e);}
+describe('Layer View', function () {
+  'use strict';
+  function warn(e) {console.warn(e);}
 
-describe.skip('Layer View', function () {
-  var ScreenView, ScreenState, LayerView, instance, holder;
+  var instance, holder;
+  var expect = require('expect.js');
+  var testUtils = require('./../test-utils');
+  var ScreenView = require('./../../src/screen/view');
+  var ScreenState = require('./../../src/screen/state');
+  var LayerView = require('./../../src/layer/view');
+  require('./../../src/layer/canvas/view');
+  require('./../../src/layer/video/view');
+  require('./../../src/layer/img/view');
+  require('./../../src/layer/svg/view');
 
-  before(function (done) {
-    holder = document.createElement('div');
-    holder.className = 'layers-test-holder';
-    document.getElementById('holder').appendChild(holder);
-
-    if (typeof R === 'undefined') {
-      this.skip();
-      return done();
-    }
-    R(function (require) {
-      ScreenView = require('./../src/screen/view');
-      ScreenState = require('./../src/screen/state');
-      LayerView = require('./../src/layer/view');
-      require('./../src/layer/canvas/view');
-    }, done);
+  before(function () {
+    holder = testUtils.makeHolder('layer-view');
   });
 
   function makeInstance(setup) {
@@ -77,8 +73,8 @@ describe.skip('Layer View', function () {
         ]
       }));
 
-      it('is available as LayerView.canvas', function() {
-        expect(LayerView.canvas).to.be.ok();
+      it('is available as LayerView.types.canvas', function() {
+        expect(LayerView.types.canvas).to.be.ok();
       });
 
       describe('instance', function () {
@@ -102,8 +98,8 @@ describe.skip('Layer View', function () {
 
     describe('video', function() {
 
-      it('is available as LayerView.video', function() {
-        expect(LayerView.video).to.be.ok();
+      it('is available as LayerView.types.video', function() {
+        expect(LayerView.types.video).to.be.ok();
       });
 
       describe('instance', function () {
@@ -133,8 +129,8 @@ describe.skip('Layer View', function () {
 
 
     describe('img', function() {
-      it('is available as LayerView.img', function() {
-        expect(LayerView.img).to.be.ok();
+      it('is available as LayerView.types.img', function() {
+        expect(LayerView.types.img).to.be.ok();
       });
 
       describe('instance', function () {
@@ -150,8 +146,8 @@ describe.skip('Layer View', function () {
     });
 
     describe('SVG', function() {
-      it('is available as LayerView.SVG', function() {
-        expect(LayerView.SVG).to.be.ok();
+      it('is available as LayerView.types.SVG', function() {
+        expect(LayerView.types.SVG).to.be.ok();
       });
 
       describe('instance', function () {

@@ -1,8 +1,6 @@
 'use strict';
 var LayerControlView = require('./../control-view');
-var DetailsView = require('./../../controller/details-view');
-var View = VFDeps.View;
-var assign = VFDeps.assign;
+var assign = require('lodash.assign');
 
 var CanvasControlLayerView = LayerControlView.extend({
   template: '<section class="canvas-layer">' +
@@ -14,14 +12,14 @@ var CanvasControlLayerView = LayerControlView.extend({
     '</header>' +
     '</section>',
 
-  derived: {
-    codeEditor: {
-      deps: ['rootView'],
-      fn: function () {
-        return this.rootView.codeEditor;
-      }
-    }
-  },
+  // derived: {
+  //   codeEditor: {
+  //     deps: ['rootView'],
+  //     fn: function () {
+  //       return this.rootView.codeEditor;
+  //     }
+  //   }
+  // },
 
   events: {
     'mouseenter': '_highlight',
@@ -33,7 +31,7 @@ var CanvasControlLayerView = LayerControlView.extend({
   },
 
   _editDrawFunction: function () {
-    var editor = this.codeEditor;
+    var editor = this.rootView.getEditor();
     if (!editor.changed) {
       editor.edit(this.model, 'drawFunction');
     }
@@ -122,11 +120,13 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
       return;
     }
     nameEl.value = '';
-    var layerControlView = this.model.canvasLayersView.views.find(function(v) {
+
+    this.canvasLayersView.views.find(function(v) {
       return v.model === res;
     });
-    if (!layerControlView.codeEditor.changed) {
-      layerControlView.codeEditor.edit(res, 'drawFunction');
+    var editor = this.rootView.getEditor();
+    if (!editor.changed) {
+      editor.edit(res, 'drawFunction');
     }
   },
 

@@ -1,7 +1,7 @@
 'use strict';
 var SignalState = require('./../state');
 
-var BeatState = SignalState.types.beatSignal = SignalState.extend({
+var BeatState = SignalState.types.beat = SignalState.extend({
   session: {
     frametime: ['number', true, 0]
   },

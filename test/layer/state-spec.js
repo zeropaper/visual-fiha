@@ -1,6 +1,13 @@
-'use strict';
-function warn(e) {console.warn(e);}
 describe('Layer State', function () {
+  'use strict';
+  function warn(e) {console.warn(e);}
+  var expect = require('expect.js');
+  var LayerState = require('./../../src/layer/state');
+  require('./../../src/layer/canvas/state');
+  require('./../../src/layer/video/state');
+  require('./../../src/layer/img/state');
+  require('./../../src/layer/svg/state');
+
   var defaultLayerProperties = [
     'active',
     // 'mappings',
@@ -19,25 +26,7 @@ describe('Layer State', function () {
     'type',
     'zIndex'
   ];
-  var LayerState, instance;
-
-  before(function (done) {
-    if (typeof R === 'undefined') {
-      LayerState = require('./../../src/layer/state');
-      require('./../../src/layer/canvas/state');
-      require('./../../src/layer/video/state');
-      require('./../../src/layer/img/state');
-      require('./../../src/layer/svg/state');
-      return done();
-    }
-    R(function (require) {
-      LayerState = require('./../src/layer/state');
-      require('./../src/layer/canvas/state');
-      require('./../src/layer/video/state');
-      require('./../src/layer/img/state');
-      require('./../src/layer/svg/state');
-    }, done);
-  });
+  var instance;
 
 
   function makeInstance(setup) {
@@ -83,7 +72,7 @@ describe('Layer State', function () {
     describe('canvas', function() {
       var instance;
       before(function () {
-        instance = new LayerState.canvas({
+        instance = new LayerState.types.canvas({
           type: 'canvas',
           name: 'canvas layer'
         });
@@ -123,15 +112,17 @@ describe('Layer State', function () {
 
 
     describe('video', function() {
-      it('is available as LayerState.video', function() {
-        expect(LayerState.video).to.be.ok();
+      it('is available as LayerState.types.video', function() {
+        expect(LayerState.types.video).to.be.ok();
       });
 
       describe('instance', function () {
         describe('options', function() {
-          expect(makeInstance({
-            type: 'video'
-          })).to.throwError();
+          it('musts have type set to video', function() {
+            expect(makeInstance({
+              type: 'video'
+            })).to.throwError();
+          });
         });
       });
     });
@@ -139,8 +130,8 @@ describe('Layer State', function () {
 
 
     describe('img', function() {
-      it('is available as LayerState.img', function() {
-        expect(LayerState.img).to.be.ok();
+      it('is available as LayerState.types.img', function() {
+        expect(LayerState.types.img).to.be.ok();
       });
 
       describe('instance', function () {
@@ -150,8 +141,8 @@ describe('Layer State', function () {
     });
 
     describe('SVG', function() {
-      it('is available as LayerState.SVG', function() {
-        expect(LayerState.SVG).to.be.ok();
+      it('is available as LayerState.types.SVG', function() {
+        expect(LayerState.types.SVG).to.be.ok();
       });
 
       describe('instance', function () {

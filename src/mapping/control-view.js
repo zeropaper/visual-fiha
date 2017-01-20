@@ -1,5 +1,5 @@
 'use strict';
-var View = VFDeps.View;
+var View = require('./../controller/control-view');
 
 var ItemView = View.extend({
   template: '<div class="columns">' +
@@ -9,9 +9,9 @@ var ItemView = View.extend({
         '<input type="text" name="source-path" />' +
       '</div>' +
 
-      '<div class="column gutter-vertical no-grow">&raquo;</div>'+
+      '<div class="column gutter-vertical no-grow change-source"><span class="result-dot">&raquo;</span></div>'+
       '<div class="column no-grow"><button class="edit-transform-function vfi-cog-alt"></button></div>'+
-      '<div class="column gutter-vertical no-grow">&raquo;</div>'+
+      '<div class="column gutter-vertical no-grow change-target"><span class="result-dot">&raquo;</span></div>'+
 
       '<div class="column target-path">' +
         '<input type="text" name="target-path" />' +
@@ -45,6 +45,26 @@ var ItemView = View.extend({
     'model.targetPath': {
       type: 'value',
       selector: '[name=target-path]'
+    // },
+    // 'model.sourceValue': {
+    //   selector: '.change-source .result-dot',
+    //   type: function(el, val) {
+    //     el.classList.add('active');
+    //     setTimeout(function() {
+    //       el.classList.add('remove');
+    //     }, 100);
+    //     // console.info('sourceValue change for mapping %s: %s', this.model.cid, val);
+    //   }
+    // },
+    // 'model.targetValue': {
+    //   selector: '.change-target .result-dot',
+    //   type: function(el, val) {
+    //     el.classList.add('active');
+    //     setTimeout(function() {
+    //       el.classList.add('remove');
+    //     }, 100);
+    //     console.info('targetValue change for mapping %s: %s', this.model.cid, val);
+    //   }
     }
   },
 
@@ -91,9 +111,9 @@ var ItemView = View.extend({
   },
 
   _handleEditTransformFunction: function() {
-    var editor = this.codeEditor;
+    var editor = this.rootView.getEditor();
     if (!editor.changed) {
-      editor.edit(this.model, 'transformation', 'function transform(val) {\n  return val;\n}', this.model.targetPath);
+      editor.edit(this.model, 'transformation', this.model.targetPath);
     }
     else {
       console.warn('A function is already being edited');

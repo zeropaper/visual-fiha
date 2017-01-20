@@ -1,8 +1,11 @@
-'use strict';
 describe('Mapping Service', function() {
+  'use strict';
   function warn(e) {console.warn(e);}
-
-  var mappings, structure, VFDeps, State, Collection, TestState, PropState, info, instance;
+  var expect = require('expect.js');
+  var State = require('ampersand-state');
+  var Collection = require('ampersand-collection');
+  var mappings = require('./../../src/mapping/service');
+  var structure, TestState, PropState, info, instance;
 
   function newStructure(data) {
     data = data || {
@@ -29,72 +32,54 @@ describe('Mapping Service', function() {
     return new TestState(data);
   }
 
-  before(function (done) {
-    function createModels() {
-      PropState = State.extend({
-        props: {
-          id: ['any', false, true],
-          propName: ['any', false, null],
-          altPropName: ['any', false, null]
-        },
+  before(function () {
+    PropState = State.extend({
+      props: {
+        id: ['any', false, true],
+        propName: ['any', false, null],
+        altPropName: ['any', false, null]
+      },
 
-        mappable: {
-          source: ['propName'],
-          target: ['altPropName']
-        }
-      });
+      mappable: {
+        source: ['propName'],
+        target: ['altPropName']
+      }
+    });
 
 
-      TestState = State.extend({
-        mappable: {
-          source: ['propA', 'propB', 'childA', 'collectionA'],
-          target: ['propA', 'propB', 'childB', 'collectionB']
-        },
+    TestState = State.extend({
+      mappable: {
+        source: ['propA', 'propB', 'childA', 'collectionA'],
+        target: ['propA', 'propB', 'childB', 'collectionB']
+      },
 
-        children: {
-          childA: PropState,
-          childB: PropState
-        },
+      children: {
+        childA: PropState,
+        childB: PropState
+      },
 
-        props: {
-          propA: ['state', false, null],
-          number1: 'number'
-        },
+      props: {
+        propA: ['state', false, null],
+        number1: 'number'
+      },
 
-        session: {
-          propB: ['state', false, null],
-          number2: 'number'
-        },
+      session: {
+        propB: ['state', false, null],
+        number2: 'number'
+      },
 
-        collections: {
-          collectionA: Collection.extend({
-            model: PropState
-          }),
+      collections: {
+        collectionA: Collection.extend({
+          model: PropState
+        }),
 
-          collectionB: Collection.extend({
-            model: PropState
-          })
-        }
-      });
+        collectionB: Collection.extend({
+          model: PropState
+        })
+      }
+    });
 
-      structure = newStructure();
-
-      done();
-    }
-
-    if (typeof R === 'undefined') {
-      VFDeps = require('./../../deps-build');
-      Collection = VFDeps.Collection;
-      State = VFDeps.State;
-      mappings = require('./../../src/mapping/state');
-      return createModels();
-    }
-    R(function (require) {
-      VFDeps = window.VFDeps;
-      Collection = VFDeps.Collection;
-      State = VFDeps.State;
-      mappings = require('./../src/mapping/state');
-    }, createModels);
+    structure = newStructure();
   });
 
   it('provides a collection instance as a service', function() {
@@ -173,6 +158,40 @@ describe('Mapping Service', function() {
     it('has a function to transform values', function () {
       expect(instance.transformation).to.be.a('string');
       expect(instance.transformationFunction).to.be.a('function');
+    });
+  });
+
+
+
+  describe('service.remove()', function() {
+    beforeEach(function() {
+      structure = newStructure();
+
+      mappings.add({
+        sourceObject: structure.childA,
+        sourceProperty: 'propName',
+
+        targetObject: structure.collectionA.get('inst1'),
+        targetProperty: 'propName',
+
+        transformation: 'function(t) { return t; }'
+      });
+    });
+
+    xit('stops listening to the source', function() {
+      var mapping = mappings.at(0);
+      mappings.remove(mapping);
+      mapping.sourceObject.set(mapping.sourceProperty, 'changed');
+    });
+
+    it('stops triggering changes on the target', function() {
+      var mapping = mappings.at(0);
+      structure.childA.propName = 'original';
+      expect(mapping.targetValue).to.be('original');
+
+      mappings.remove(mapping);
+      structure.childA.propName = 'changed';
+      expect(mapping.targetValue).not.to.be('changed');
     });
   });
 
@@ -388,7 +407,6 @@ describe('Mapping Service', function() {
       expect(function() {
         suggestions = mappings.sourceSuggestions(structure);
       }).not.to.throwException(warn);
-      console.info('suggestions', suggestions);
     });
   });
 
@@ -405,7 +423,6 @@ describe('Mapping Service', function() {
       expect(function() {
         suggestions = mappings.targetSuggestions(structure);
       }).not.to.throwException(warn);
-      console.info('suggestions', suggestions);
     });
   });
 });

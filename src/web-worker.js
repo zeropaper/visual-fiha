@@ -1,27 +1,32 @@
-/* eslint-env worker */
+/* jshint worker:true */
 'use strict';
 
-var worker = /*module.exports =*/ self;
-var VFDeps = worker.VFDeps = {};
+var worker = self;
 
-// require.ensure(['ampersand-state'], function(require) {
-// require.ensure(['ampersand-collection'], function(require) {
-// require.ensure(['localforage', 'txml'], function(require) {
 
-var localForage = VFDeps.localForage = require('localforage');
-localForage.config({
-  // driver      : localforage.WEBSQL, // Force WebSQL; same as using setDriver()
-  name        : 'visualFiha',
-  version     : 1.0,
-  size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
-  storeName   : 'keyvaluepairs', // Should be alphanumeric, with underscores.
-  description : 'Visual Fiha storage'
+worker.mappings = require('./mapping/service');
+
+
+var ScreenState = require('./screen/state');
+worker.screen = new ScreenState();
+
+var clientCollectionMixin = {
+
+};
+var workerCollectionMixin = {
+
+};
+
+var LayerCollection = require('./layer/collection');
+worker.layers = new (LayerCollection.extend(clientCollectionMixin, workerCollectionMixin))({
+  parent: worker.screen
 });
-VFDeps.State = require('ampersand-state');
-VFDeps.Collection = require('ampersand-collection');
 
+var SignalCollection = require('./signal/collection');
+worker.signals = new (SignalCollection.extend(workerCollectionMixin))({
+  parent: worker.screen
+});
 
-var mappings = require('./mapping/state');
 
 // var tXML = require('txml');
 // function loadSVG(url, done) {
@@ -61,24 +66,15 @@ var mappings = require('./mapping/state');
 // loadSVG('assets/zeropaper-fat.svg');
 
 
-var ScreenState = require('./screen/state');
-var workerScreen = new ScreenState();
 
 
-
-var SignalCollection = require('./signal/collection');
-var workerSignals = new SignalCollection();
-workerSignals.parent = workerScreen;
-
-
-
+// var localForage = require('./storage');
 // function snapshot() {
 //   localForage.setItem('snapshot', {
-//     screen: workerScreen.serialize(),
-//     signals: workerSignals.serialize()
+//     screen: worker.screen.serialize(),
+//     signals: worker.signals.serialize()
 //   });//.then(console.info.bind(console), console.error.bind(console));
 // }
-
 // setInterval(snapshot, 5000);
 
 
@@ -112,7 +108,7 @@ function registerCommand(commandName, command) {
 var screens = {};
 var channel = new BroadcastChannel('spike');
 function broadcastCommand(name, payload) {
-  // console.info('%cworker broadcast command "%s"', 'color:purple', name);
+  console.info('%cworker broadcast command "%s"', 'color:purple', name);
   channel.postMessage({
     command: name,
     payload: payload
@@ -129,25 +125,26 @@ channel.addEventListener('message', function(evt) {
 
   screens[payload.id] = payload.id;
   broadcastCommand('resetLayers', {
-    layers: workerScreen.layers.serialize()
+    layers: worker.screen.layers.serialize()
   });
 }, false);
 
 var commands = {
-  setup: function(state) {
-    workerScreen.set(state);
+  bootstrap: function(screen, mappings) {
+    worker.screen.set(screen);
+    worker.mappings.import(mappings, worker.screen, true);
 
-    broadcastCommand('setup', {
-      state: state
+    broadcastCommand('bootstrap', {
+      screen: screen
     });
   },
   midi: function(name, value) {
     console.info('midi event "%s", %s', name, value);
   },
   heartbeat: function(frametime, audio) {
-    workerScreen.frametime = frametime;
-    workerScreen.audioFrequency = audio.frequency;
-    workerScreen.audioTimeDomain = audio.timeDomain;
+    worker.screen.frametime = frametime;
+    worker.screen.audioFrequency = audio.frequency;
+    worker.screen.audioTimeDomain = audio.timeDomain;
 
     broadcastCommand('heartbeat', {
       frametime: frametime,
@@ -156,70 +153,72 @@ var commands = {
   },
 
   addMapping: function(info) {
-    mappings.add(info);
+    worker.mappings.add(info);
   },
   updateMapping: function(info) {
-    var state = mappings.find(function(mapping) {
+    var state = worker.mappings.find(function(mapping) {
       return info.id === mapping.id;
     });
     state.set(info);
   },
+  resetMappings: function(mappings) {
+    worker.mappings.import(mappings, worker.screen, true);
+  },
 
   resetSignals: function(signals) {
-    workerSignals.reset(signals);
+    worker.signals.reset(signals);
   },
   addSignal: function(signal) {
-    workerSignals.add(signal);
+    worker.signals.add(signal);
   },
   removeSignal: function(signalName) {
-    workerSignals.remove(workerSignals.get(signalName));
+    worker.signals.remove(worker.signals.get(signalName));
   },
   updateSignal: function(signal, signalName) {
-    workerSignals.get(signalName).set(signal);
+    worker.signals.get(signalName).set(signal);
   },
 
   resetLayers: function(layers) {
     broadcastCommand('resetLayers', {
       layers: layers
     });
-    workerScreen.layers.reset(layers);
+    worker.screen.layers.reset(layers);
   },
   addLayer: function(layer) {
-    var collection = workerScreen.layers;
+    var layers = worker.screen.layers;
+
+    layers.add(layer);
+
     broadcastCommand('addLayer', {
       layer: layer
     });
 
-    collection.add(layer);
+    // var state = layers.get(layer.name);
+    // function filter(serialized) {
+    //   var filtered = {};
+    //   var obj = state.changedAttributes();
+    //   Object.keys(obj).forEach(function(key) {
+    //     if (typeof serialized[key] !== 'function') filtered[key] = serialized[key];
+    //   });
+    //   return filtered;
+    // }
 
-    var state = collection.get(layer.name);
-    function filter(serialized) {
-      var filtered = {};
-      var obj = state.changedAttributes();
-      Object.keys(obj).forEach(function(key) {
-        if (typeof serialized[key] !== 'function') filtered[key] = serialized[key];
-      });
-      return filtered;
-    }
-
-    state.on('change', function() {
-      broadcastCommand('updateLayer', {
-        layer: filter(state.serialize()),
-        layerName: layer.name
-      });
-    });
-
-    collection.add(layer);
+    // state.on('change', function() {
+    //   broadcastCommand('updateLayer', {
+    //     layer: filter(state.serialize()),
+    //     layerName: layer.name
+    //   });
+    // });
   },
   removeLayer: function(layerName) {
-    var collection = workerScreen.layers;
+    var collection = worker.screen.layers;
     broadcastCommand('removeLayer', {
       layerName: layerName
     });
     collection.remove(collection.get(layerName));
   },
   updateLayer: function(layer, layerName) {
-    var state = workerScreen.layers.get(layerName);
+    var state = worker.screen.layers.get(layerName);
     state.set(layer);
   }
 };

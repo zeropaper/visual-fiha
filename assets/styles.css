@@ -2,12 +2,14 @@
   --bg-color: #272822;
   --bg-color-alt: #222;
   --text-color: #F8F8F2;
-  --text-color-alt: #c8c8c2;
+  --text-color-alt: #909083;
+  --text-color-contrast: #272822;
   --text-color-disabled: #75715E;
   --yes: #A6E22E;
   --no: #F92672;
   --value: #E6DB74;
   --editable: #66D9EF;
+  --info: #A581FF;
   --border-color: #666;
   --spacing: .5rem;
   --spacing-neg: -0.5rem;
@@ -38,6 +40,15 @@ body {
 .test-page a:link,
 .test-page a:visited {
   color: var(--yes);
+  text-decoration: none;
+  box-shadow: 0 -2px 0 0 var(--bg-color) inset,
+              0 -3px 0 0 currentColor inset;
+  text-shadow: -3px 1px 0 var(--bg-color),
+               3px 1px 0 var(--bg-color),
+               -2px 1px 0 var(--bg-color),
+               2px 1px 0 var(--bg-color),
+               -1px 1px 0 var(--bg-color),
+               1px 1px 0 var(--bg-color);
 }
 
 .text-center {
@@ -57,17 +68,12 @@ body {
 .list-inline {
   padding: 0;
   list-style: none;
+  display: flex;
+  flex-direction: row;
 }
 .list-inline li {
-  display: inline-block;
-}
-.list-inline li:after {
-  display: inline-block;
-  content: '-';
-  margin-left: 0.3em;
-}
-.list-inline li:last-child:after {
-  display: none;
+  flex-grow: 1;
+  text-align: center;
 }
 
 /*
@@ -227,6 +233,7 @@ input:not([type=radio]):error {
 }
 */
 button {
+  border-radius: 0.1em;
   cursor: pointer;
 }
 button[disabled] {
@@ -242,7 +249,7 @@ button[disabled] {
 }
 button.yes,
 button.no {
-  color: var(--bg-color);
+  color: var(--text-color-contrast);
 }
 button.yes {
   border: 1px solid var(--yes);
@@ -391,6 +398,7 @@ Layout
   font-family: sans;
   color: var(--text-color);
   background-color: var(--bg-color);
+  font-weight: 400;
 }
 
 
@@ -498,7 +506,7 @@ Layout
   flex-direction: row;
   box-shadow: 0 var(--tabs-border-width) 0 0 var(--border-color),
               0 0 var(--spacing) 0 rgba(200,200,200,0.2) inset;
-  border-top: 1px solid var(--border-color);
+  /*border-top: 1px solid var(--border-color);*/
   background-color: rgba(122,122,122,0.1);
 }
 .tabs > li {
@@ -527,14 +535,14 @@ Layout
 }
 .tabs > li.active {
   cursor: default;
-  box-shadow: 0 var(--tabs-border-width) 0 0 var(--yes),
+  box-shadow: 0 var(--tabs-border-width) 0 0 var(--info),
               0 0 var(--spacing) 0 rgba(0,0,0,1) inset;
 }
 
 
 
 .default-layer-control {
-  border-bottom: 1px solid var(--text-color-disabled);
+  /* border-bottom: 1px solid var(--text-color-disabled); */
 }
 .canvas-control .new-layer,
 .canvas-control .layers > .items {
@@ -620,7 +628,7 @@ MIDI
   margin: 0;
 }
 .midi-access li.active {
-  background-color: var(--yes);
+  background-color: var(--info);
 }
 
 
@@ -656,6 +664,12 @@ Canvas layer controls
 .canvas-layer:hover {
 }
 
+
+section,
+.items > * {
+  box-shadow: 0 0 1px 0 #000 inset,
+              0 0 1px 0 currentColor;
+}
 
 section.disabled {
   cursor: default;
@@ -725,18 +739,22 @@ header h3 {
 
 
 .result-dot,
+.result-dot:empty,
 .signal-color .result-color {
-  display: block;
-  width: 1em;
-  height: 1em;
-  line-height: 1em;
-  border: 1px solid currentColor;
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  line-height: 1.25em;
   overflow: hidden;
+  text-align: center;
 }
-
-.result-dot:empty {
-  display: block;
-  border-radius: 1em;
+.result-dot {
+  border-radius: 100%;
+  color: var(--text-color-contrast);
+  /*background-color: var(--info);*/
+}
+.result-dot.active {
+  background-color: var(--info);
 }
 
 .signal-beat .detector {
@@ -839,9 +857,6 @@ details
 
 
 
-.details {
-  border-top: 1px solid var(--text-color-disabled);
-}
 .details.row {
   max-height: 35vh;
   overflow-y: auto;

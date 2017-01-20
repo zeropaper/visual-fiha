@@ -1,6 +1,6 @@
 'use strict';
 var ScreenLayerState = require('./../state');
-module.exports = ScreenLayerState.SVG = ScreenLayerState.extend({
+module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   props: {
     src: ['string', true, null],
     styles: ['string', true, '']

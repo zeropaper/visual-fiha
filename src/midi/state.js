@@ -1,9 +1,8 @@
-/* global VFDeps, require, console, module */
 'use strict';
 
-var throttle = VFDeps.throttle;
-var State = VFDeps.State;
-var Collection = VFDeps.Collection;
+var throttle = require('lodash.throttle');
+var State = require('ampersand-state');
+var Collection = require('ampersand-collection');
 
 var midiMappings = {
   'KORG INC.': {

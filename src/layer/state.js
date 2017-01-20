@@ -1,5 +1,5 @@
 'use strict';
-var State = VFDeps.State;
+var State = require('ampersand-state');
 var LayerState = State.extend({
   idAttribute: 'name',
   typeAttribute: 'type',
@@ -122,7 +122,7 @@ var LayerState = State.extend({
           Object.keys(proto._children || {}),
           Object.keys(proto._collections || {})
         ).filter(function(key) {
-          return key !== this.idAttribute && key !== this.typeAttribute;
+          return key !== this.idAttribute && key !== this.typeAttribute && key !== 'uiState';
         }, this);
 
         return {
@@ -133,4 +133,5 @@ var LayerState = State.extend({
     }
   }
 });
+LayerState.types = {};
 module.exports = LayerState;

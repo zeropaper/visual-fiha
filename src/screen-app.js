@@ -33,7 +33,7 @@ require.ensure([
     function resize() {
       screenView.resize(bdy);
     }
-    window.addEventListener('resize', VFDeps.debounce(resize, 100));
+    window.addEventListener('resize', require('lodash.debounce')(resize, 100));
     setTimeout(resize, 1500);
   });
 });

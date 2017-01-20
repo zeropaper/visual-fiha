@@ -1,7 +1,8 @@
 'use strict';
-var View = VFDeps.View;
-var Collection = VFDeps.Collection;
-var State = VFDeps.State;
+// var View = require('./control-view');
+var View = require('ampersand-view');
+var Collection = require('ampersand-collection');
+var State = require('ampersand-state');
 
 function sharedStart(array) {
   var A = array.concat().sort(),

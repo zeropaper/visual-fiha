@@ -1,149 +1,88 @@
-'use strict';
-describe.skip('Controller View', function () {
-  var holder, ControllerView, ScreenView, ScreenState;
+describe('Controller View', function () {
+  'use strict';
 
-  before(function (done) {
-    if (typeof R === 'undefined') {
-      ControllerView = require('./../../src/controller/view');
-      ScreenView = require('./../../src/screen/view');
-      ScreenState = require('./../../src/screen/state');
-      return done();
+  var holder, instance;
+  var testUtils = require('./../test-utils');
+  var expect = require('expect.js');
+  var ControllerView = require('./../../src/controller/view');
+  var ScreenState = require('./../../src/screen/state');
+
+  function makeInstance() {
+    if (instance) {
+      instance.remove();
     }
 
-    holder = document.createElement('div');
-    holder.className = 'controller-test-holder';
-    document.getElementById('holder').appendChild(holder);
-    R(function (require) {
-      ControllerView = require('./../src/controller/view');
-      ScreenView = require('./../src/screen/view');
-      ScreenState = require('./../src/screen/state');
-    }, function() {done();});
+    instance = new ControllerView({
+      el: holder,
+      model: new ScreenState({
+        layers: [],
+        signals: [],
+        mappings: []
+      })
+    });
+  }
+
+  before(function () {
+    holder = testUtils.makeHolder('controller-view');
+    makeInstance();
   });
 
-  describe('instance', function () {
-    var instance, standaloneScreen;
 
-    function makeInstance(viewSetup, modelSetup, clear) {
-      return function() {
-        if (clear) {
-          if (instance && typeof instance.remove === 'function') instance.remove();
-          holder.innerHTML = '';
-        }
+  it('renders automatically', function() {
+    expect(instance).to.be.ok();
+    expect(instance.el).to.be.ok();
+    expect(instance.rendered).to.be.ok();
+  });
 
-        viewSetup = viewSetup || {};
-        viewSetup.model = viewSetup.model || (new ScreenState(modelSetup || {
-          layers: [],
-          signals: []
-        }));
+  it('is paused by default');
 
-        instance = new ControllerView(viewSetup);
-        instance.el.style.minHeight = 'calc(45vh - 40px)';
-        holder.appendChild(instance.el);
+  it('does not show the control screen by default');
 
-        standaloneScreen = new ScreenView({model: new ScreenState(viewSetup.model.toJSON())});
-        holder.appendChild(standaloneScreen.el);
 
-        // instance.on('all', window.logEvents('controllerView'));
-        // instance.model.on('all', window.logEvents('controllerView.model'));
-        // standaloneScreen.on('all', window.logEvents('standaloneScreenView'));
-        // standaloneScreen.model.on('all', window.logEvents('standaloneScreenView.model'));
-      };
-    }
+  describe('top right region', function() {
+    var region;
 
-    before(makeInstance({}, {
-      layers: [
-        {
-          active: true,
-          name: 'Layer 1'
-        },
-        {
-          active: true,
-          name: 'Layer 2'
-        }
-      ],
-      signals: [
-        {
-          type: 'beat',
-          name: 'beat:a',
-          input: 120
-        }
-      ]
-    }));
+    before(function() { region = instance.regionRight; });
 
-    describe('methods', function() {
-      describe('update', function() {
-        this.slow(1000 / 16);
-        this.timeout(1000 / 4);
 
-        it('updates the screenView', function(done) {
-          this.retries(3);
-
-          var called = 0;
-          var latency;
-          var screenUpdate = standaloneScreen.update;
-          standaloneScreen.update = function(data) {
-            latency = data.latency;
-            called++;
-            screenUpdate.call(standaloneScreen, data);
-          };
-
-          var layers = instance.model.layers;
-          layers.remove(layers.at(0));
-
-          expect(layers.length).to.be(1);
-
-          standaloneScreen.on('change:layers', function() {
-            expect(called).to.be(1);
-            expect(latency).to.be.below(15);
-            expect(standaloneScreen.model.layers.length).to.be(1);
-            expect(standaloneScreen.queryAll('.missing-layer-view')).to.have.length(1);
-            done();
-          });
-
-          instance.update({frametime: performance.now()});
-        });
-      });
+    it('has tabs', function() {
+      expect(region).to.be.ok();
+      expect(region.el).to.be.ok();
+      expect(region.rendered).to.be.ok();
+      expect(instance.el.contains(region.el)).to.be.ok();
     });
 
-    describe('values', function() {
-      describe('screenView', function() {
-        before(makeInstance({}, {
-          layers: [
-            {
-              active: true,
-              name: 'Layer 1'
-            },
-            {
-              active: true,
-              name: 'Layer 2'
-            }
-          ],
-          signals: [
-            {
-              type: 'beat',
-              name: 'beat:a',
-              input: 120
-            }
-          ]
-        }));
+    describe('layers tab', function() {
 
-
-        it('is a rendered ScreenView', function() {
-          window.controller = instance;
-          expect(instance.screenView).to.be.ok();
-          expect(instance.screenView.el).to.be.ok();
-          expect(instance.el.contains(instance.screenView.el)).to.be(true);
-        });
-
-        it('adds layer elements to the screen', function() {
-          expect(instance.screenView.queryAll('.missing-layer-view')).to.have.length(2);
-          expect(standaloneScreen.queryAll('.missing-layer-view')).to.have.length(2);
-        });
-
-        it('does not share the model with its screen view', function () {
-          expect(instance.model === instance.screenView.model).not.to.be.ok();
-        });
-      });
     });
+
+    describe('signals tab', function() {
+
+    });
+
+    describe('code editor tab', function() {
+
+    });
+  });
+
+
+  describe('bottom left region', function() {
+    var region;
+
+    before(function() { region = instance.regionLeftBottom; });
+
+
+    it('has tabs', function() {
+      expect(region).to.be.ok();
+      expect(region.el).to.be.ok();
+      expect(region.rendered).to.be.ok();
+      expect(instance.el.contains(region.el)).to.be.ok();
+    });
+
+    describe('mappings tab', function() {});
+
+    describe('MIDI tab', function() {});
+
+    describe('Audio tab', function() {});
   });
 });

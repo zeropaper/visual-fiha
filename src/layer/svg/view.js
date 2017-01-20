@@ -1,14 +1,14 @@
 'use strict';
 var _ids = 0;
 var ScreenLayerView = require('./../view');
-module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
+module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
   autoRender: true,
 
   template: function() {
     return '<div class="layer-svg" layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></div>';
   },
 
-  // bindings: VFDeps.assign({
+  // bindings: require('lodash.assign')({
   // }, ScreenLayerView.prototype.bindings),
 
 

@@ -1,5 +1,5 @@
 'use strict';
-var Collection = VFDeps.Collection;
+var Collection = require('ampersand-collection');
 var SignalState = require('./state');
 require('./beat/state');
 require('./hsla/state');
