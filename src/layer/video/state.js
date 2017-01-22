@@ -2,13 +2,10 @@
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.types.video = ScreenLayerState.extend({
   props: {
-    src: ['string', true, null]
+    src: ['string', false, null]
   },
 
   initialize: function() {
     ScreenLayerState.prototype.initialize.apply(this, arguments);
-    if (!this.src) {
-      throw new Error('Missing src attribute for video layer');
-    }
   }
 });

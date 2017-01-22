@@ -108,7 +108,7 @@ describe('Layer View', function () {
         // }));
 
 
-        it('requires a src attribute', function () {
+        xit('requires a src attribute', function () {
           expect(makeInstance({
             type: 'video'
           })).to.throwError(warn);

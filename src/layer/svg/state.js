@@ -2,14 +2,11 @@
 var ScreenLayerState = require('./../state');
 module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   props: {
-    src: ['string', true, null],
+    src: ['string', false, null],
     styles: ['string', true, '']
   },
 
   initialize: function() {
     ScreenLayerState.prototype.initialize.apply(this, arguments);
-    if (!this.src) {
-      throw new Error('Missing src attribute for SVG layer');
-    }
   }
 });
