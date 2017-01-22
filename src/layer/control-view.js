@@ -34,13 +34,6 @@ var LayerControlView = View.extend({
     this.model.uiState = evt.type === 'mouseenter' ? 'highlighted' : '';
   },
 
-  _removeLayer: function() {
-    this.model.collection.remove(this.model);
-  },
-
-  _toggleActive: function () {
-    this.model.toggle('active');
-  },
 
   _showDetails: function () {
     this.rootView.showDetails(new DetailsView({
@@ -50,9 +43,6 @@ var LayerControlView = View.extend({
   },
 
   bindings: {
-    'model.uiState': {
-      type: 'class'
-    },
     'model.active': [
       {
         type: 'booleanClass',

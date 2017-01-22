@@ -3,23 +3,16 @@ var LayerControlView = require('./../control-view');
 var assign = require('lodash.assign');
 
 var CanvasControlLayerView = LayerControlView.extend({
-  template: '<section class="canvas-layer">' +
-    '<header class="columns">' +
-      '<div class="column no-grow"><button name="active"></button></div>' +
-      '<div class="column no-grow"><button class="edit-draw-function vfi-cog-alt"></button></div>' +
-      '<h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>' +
-      '<div class="column no-grow text-right"><button class="vfi-trash-empty remove-canvas-layer"></button></div>' +
-    '</header>' +
-    '</section>',
-
-  // derived: {
-  //   codeEditor: {
-  //     deps: ['rootView'],
-  //     fn: function () {
-  //       return this.rootView.codeEditor;
-  //     }
-  //   }
-  // },
+  template: `
+    <section class="canvas-layer">
+      <header class="columns">
+        <div class="column no-grow"><button name="active"></button></div>
+        <div class="column no-grow"><button class="edit-draw-function vfi-cog-alt"></button></div>
+        <h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>
+        <div class="column no-grow text-right"><button class="vfi-trash-empty remove-canvas-layer"></button></div>
+      </header>
+    </section>
+  `,
 
   events: {
     'mouseenter': '_highlight',
@@ -65,26 +58,28 @@ var CanvasControlLayerView = LayerControlView.extend({
 });
 
 module.exports = LayerControlView.types.canvas = LayerControlView.extend({
-  template: '<section class="row canvas-control">' +
-      '<header class="rows">' +
-        '<div class="row columns">' +
-          '<div class="column no-grow"><button class="active prop-toggle"></button></div>' +
-          '<h3 class="column layer-name" data-hook="name"></h3>' +
-        '</div>' +
+  template: `
+    <section class="row canvas-control">
+      <header class="rows">
+        <div class="row columns">
+          <div class="column no-grow"><button class="active prop-toggle"></button></div>
+          <h3 class="column layer-name" data-hook="name"></h3>
+        </div>
 
-        '<div class="row columns new-layer">' +
-          '<div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>' +
-          '<div class="column"><input type="text" placeholder="propA, propB" data-hook="new-layer-props" /></div>' +
-          '<div class="column no-grow">' +
-            '<button name="add-layer" class="vfi-plus"></button>' +
-          '</div>' +
-        '</div>' +
-      '</header>' +
+        <div class="row columns new-layer">
+          <div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>
+          <div class="column"><input type="text" placeholder="propA, propB" data-hook="new-layer-props" /></div>
+          <div class="column no-grow">
+            <button name="add-layer" class="vfi-plus"></button>
+          </div>
+        </div>
+      </header>
 
-      '<div class="layers">' +
-        '<div class="items"></div>' +
-      '</div>' +
-    '</section>',
+      <div class="layers">
+        <div class="items"></div>
+      </div>
+    </section>
+  `,
 
   events: assign({
     'change [data-hook=new-layer-name]': '_inputLayerName',

@@ -48,7 +48,6 @@ var ControllerView = View.extend({
   },
 
   sendCommand: function(name, payload, callback) {
-    console.info('controller view send command', name, payload, callback);
     if (!this.router || !this.router.worker) return;
     this.router.sendCommand(name, payload, callback);
     return this;
@@ -401,19 +400,13 @@ var ControllerView = View.extend({
   },
 
   fromJSON: function(obj) {
-    this.model.set({
-      layers: obj.layers || [],
-      signals: obj.signals || []
-    });
-    mappings.import(obj.mappings || [], this.model, true);
-
-    this.sendCommand('resetLayers', {
-      layers: obj.layers
+    this.sendCommand('bootstrap', {
+      layers: obj.layers,
+      signals: obj.signals,
+      mappings: obj.mappings
     });
 
-    this.sendCommand('resetSignals', {
-      signals: obj.signals
-    });
+
   },
 
   getEditor: function() {

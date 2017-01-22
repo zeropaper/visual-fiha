@@ -13,8 +13,6 @@ require.ensure([
   './signal/hsla/control-view',
   './signal/rgba/control-view'
 ], function(require) {
-
-require.ensure(['./controller/view'], function (require) {
 // ---------------------------------------------------------------
 
 var localForage = require('./storage');
@@ -154,6 +152,4 @@ localForage.getItem('snapshot').then(function(value) {
 
 
 // ---------------------------------------------------------------
-});
-
 });
