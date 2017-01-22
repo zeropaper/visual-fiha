@@ -3,6 +3,7 @@
   "browserify": true,
   "strict": true,
   "globals": {
+    "BroadcastChannel": false,
     "console": false,
     "VF": true
   }
