@@ -130,6 +130,7 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
   },
 
   initialize: function () {
+    LayerControlView.prototype.initialize.apply(this, arguments);
     this.once('change:rendered', this._inputLayerName);
   },
 
