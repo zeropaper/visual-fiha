@@ -29,7 +29,6 @@ var ControlView = View.extend({
     }
 
     view.on('change:el', initCommands);
-    initCommands();
   },
 
   derived:{
@@ -44,7 +43,6 @@ var ControlView = View.extend({
   },
 
   sendCommand: function(...args) {
-    console.info('controlView sendCommand', ...args);
     this.rootView.sendCommand(...args);
   },
 
@@ -87,7 +85,6 @@ var ControlView = View.extend({
       //   rootView.sendCommand(command, serializer(...args)/*, done*/);
       // }, 1000 / 24);
       var listener = function commandEventListener(...args) {
-        console.info(...args);
         rootView.sendCommand(command, serializer.apply(view, ...args)/*, done*/);
       };
 

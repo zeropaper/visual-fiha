@@ -1,8 +1,8 @@
 'use strict';
 var View = require('./control-view');
 
-var LayerControlView = require('./../layer/control-view');
-require('./../layer/canvas/control-view');
+var LayerControlView = require('./control-view');
+require('./canvas/control-view');
 
 var LayersView = View.extend({
   commands: {

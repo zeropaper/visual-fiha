@@ -112,15 +112,6 @@ var MappingState = State.extend({
     transformation: ['any', false, null]
   },
 
-  session: {
-    uiState: {
-      type: 'string',
-      values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
-      default: '',
-      required: true
-    }
-  },
-
   derived: {
     sourcePath: {
       deps: ['sourceObject', 'sourceProperty'],
