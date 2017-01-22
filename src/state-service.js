@@ -15,6 +15,87 @@ var StateState = State.extend({
   }
 });
 
+function isCollectionOfParent(o, p) {
+  if (!p || !p._collections) return;
+  for (var name in p._collections) {
+    if (p[name] === o.collection) return name + '.' + o.getId();
+  }
+}
+
+function isChildOfParent(o, p) {
+  if (!p || !p._children) return;
+  for (var name in p._children) {
+    if (p[name] === o) return name;
+  }
+}
+
+function isPropOfParent(o, p) {
+  if (!p) return;
+  for (var name in p) {
+    if (p[name] === o) return name;
+  }
+}
+
+
+function objectPath(state) {
+  if (!state) return null;
+  var parts = [];
+
+
+  var f = function(instance) {
+
+    var collectionName = instance.collection ?
+                      isCollectionOfParent(instance, instance.collection.parent) :
+                      null;
+    if (collectionName) {
+      parts.unshift(collectionName);
+      return f(instance.collection.parent);
+    }
+
+    var childName = isChildOfParent(instance, instance.parent);
+    if (childName) {
+      parts.unshift(childName);
+      return f(instance.parent);
+    }
+
+
+    var propName = isPropOfParent(instance, instance.parent);
+    if (propName) {
+      parts.unshift(propName);
+      return f(instance.parent);
+    }
+
+    if (instance.parent) f(instance.parent);
+  };
+
+  f(state);
+
+  return parts.join('.');
+}
+
+
+function resolve(path, context) {
+  if (!context) throw new Error('Missing context to solve mapping path');
+
+  function solver(str) {
+    var parts = str.split('.');
+
+    var f = function(instance) {
+      if (!parts.length) return instance;
+
+      var part = parts.shift();
+      if (instance[part] && instance[part].isCollection) {
+        return f(instance[part].get(parts.shift()));
+      }
+      else if (typeof instance[part] !== 'undefined') {
+        return f(instance[part]);
+      }
+    };
+    return f;
+  }
+
+  return solver(path)(context);
+}
 
 var StateService = Collection.extend({
   model: StateState,
@@ -86,4 +167,15 @@ var StateService = Collection.extend({
     console.info('destroy', instanceOrCid);
   }
 });
-module.exports = new StateService();
+
+StateService.resolve = resolve;
+StateService.objectPath = objectPath;
+
+var instance;
+StateService.service = function() {
+  if (instance) return instance;
+  instance = new StateService();
+  return instance;
+};
+
+module.exports = StateService;
