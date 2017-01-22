@@ -76,6 +76,12 @@ Browsers from Mircosoft or Apple, even the latest versions, do not deserve atten
 
 See the [development guide in the wiki](https://github.com/zeropaper/visual-fiha/wiki/Development).
 
+## Status
+
+[Master branch](https://zeropaper.github.io/visual-fiha): [![Build Status](https://travis-ci.org/zeropaper/visual-fiha.svg?branch=master)](https://travis-ci.org/zeropaper/visual-fiha/branches)
+
+Dev branch: [![Build Status](https://travis-ci.org/zeropaper/visual-fiha.svg?branch=dev)](https://travis-ci.org/zeropaper/visual-fiha/branches)
+
 # Supporting the project
 
 You can book the author or a contributor for a live act or a workshop.
