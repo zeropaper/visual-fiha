@@ -98,21 +98,6 @@ var LayerState = State.extend({
     zIndex: ['number', true, 0]
   },
 
-  session: {
-    uiState: {
-      type: 'string',
-      values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
-      default: '',
-      required: true
-    }
-  },
-
-  serialize: function() {
-    var returned = State.prototype.serialize.apply(this, arguments);
-    delete returned.uiState;
-    return returned;
-  },
-
   derived: {
     mappable: {
       deps: [],
@@ -122,7 +107,7 @@ var LayerState = State.extend({
           Object.keys(proto._children || {}),
           Object.keys(proto._collections || {})
         ).filter(function(key) {
-          return key !== this.idAttribute && key !== this.typeAttribute && key !== 'uiState';
+          return key !== this.idAttribute && key !== this.typeAttribute;
         }, this);
 
         return {

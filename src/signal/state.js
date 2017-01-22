@@ -43,15 +43,6 @@ var SignalState = State.extend({
     input: ['any', false, null]
   },
 
-  session: {
-    uiState: {
-      type: 'string',
-      values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
-      default: '',
-      required: true
-    }
-  },
-
   collections: {
     transformations: Collection.extend({
       model: SignalTransformationState

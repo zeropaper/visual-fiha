@@ -58,15 +58,6 @@ var CanvasLayer = State.extend({
     drawFunction: 'any'
   },
 
-  session: {
-    uiState: {
-      type: 'string',
-      values: ['', 'dependency', 'dependent', 'focus', 'highlighted'],
-      default: '',
-      required: true
-    }
-  },
-
   serialize: function() {
     var obj = State.prototype.serialize.apply(this, arguments);
     var returned = {};
@@ -116,7 +107,6 @@ var CanvasLayer = State.extend({
       returned.drawFunction = this.drawFunction;
     }
     returned.name = this.name;
-    delete returned.uiState;
     return returned;
   },
 
@@ -127,7 +117,6 @@ var CanvasLayer = State.extend({
         var mappable = ScreenLayerState.prototype._derived.mappable.fn.apply(this, arguments);
         var targets = mappable.target.filter(function(key) {
           return [
-            'uiState',
             'drawFunction',
             'screenState', // would make a circular reference if not excluded!
             'draw'

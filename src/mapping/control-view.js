@@ -35,9 +35,6 @@ var ItemView = View.extend({
   },
 
   bindings: {
-    'model.uiState': {
-      type: 'class'
-    },
     'model.sourcePath': {
       type: 'value',
       selector: '[name=source-path]'

@@ -41,9 +41,6 @@ var CanvasControlLayerView = LayerControlView.extend({
   },
 
   bindings: {
-    'model.uiState': {
-      type: 'class'
-    },
     'model.active': [
       {
         type: 'booleanClass',

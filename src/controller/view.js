@@ -59,7 +59,6 @@ var ControllerView = View.extend({
 
     // controllerView.listenTo(controllerView.model.layers, 'add', function(state) {
     //   var data = state.serialize();
-    //   delete data.uiState;
     //   if (!data) {
     //     console.warn('addLayer no layer data');
     //   }
@@ -82,11 +81,9 @@ var ControllerView = View.extend({
     //   if (!state) return;
 
     //   var changed = state.changedAttributes();
-    //   delete changed.uiState;
     //   if (!Object.keys(changed).length) {
     //     changed = state.serialize();
     //   }
-    //   delete changed.uiState;
     //   if (!Object.keys(changed).length) return;
 
     //   controllerView.sendCommand('updateLayer', {
