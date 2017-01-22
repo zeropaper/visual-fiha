@@ -9,23 +9,30 @@ worker.mappings = require('./mapping/service');
 
 var ScreenState = require('./screen/state');
 worker.screen = new ScreenState();
+worker.mappings.context = worker.screen;
 
-var clientCollectionMixin = {
+worker.layers = worker.screen.layers;
+worker.signals = worker.screen.signals;
 
-};
-var workerCollectionMixin = {
+// var clientCollectionMixin = {
 
-};
+// };
+// var workerCollectionMixin = {
 
-var LayerCollection = require('./layer/collection');
-worker.layers = new (LayerCollection.extend(clientCollectionMixin, workerCollectionMixin))({
-  parent: worker.screen
-});
+// };
 
-var SignalCollection = require('./signal/collection');
-worker.signals = new (SignalCollection.extend(workerCollectionMixin))({
-  parent: worker.screen
-});
+// var LayerCollection = require('./layer/collection');
+// worker.layers = new (LayerCollection.extend(clientCollectionMixin, workerCollectionMixin))({
+//   parent: worker.screen
+// });
+
+// var SignalCollection = require('./signal/collection');
+// worker.signals = new (SignalCollection.extend(workerCollectionMixin))({
+//   parent: worker.screen
+// });
+
+
+
 
 
 // var tXML = require('txml');
@@ -108,7 +115,7 @@ function registerCommand(commandName, command) {
 var screens = {};
 var channel = new BroadcastChannel('spike');
 function broadcastCommand(name, payload) {
-  console.info('%cworker broadcast command "%s"', 'color:purple', name);
+  // console.info('%cworker broadcast command "%s"', 'color:purple', name);
   channel.postMessage({
     command: name,
     payload: payload
@@ -125,26 +132,36 @@ channel.addEventListener('message', function(evt) {
 
   screens[payload.id] = payload.id;
   broadcastCommand('resetLayers', {
-    layers: worker.screen.layers.serialize()
+    layers: worker.layers.serialize()
   });
 }, false);
 
 var commands = {
-  bootstrap: function(screen, mappings) {
-    worker.screen.set(screen);
+  bootstrap: function(layers, signals, mappings) {
+    worker.layers.set(layers);
+    worker.signals.set(signals);
     worker.mappings.import(mappings, worker.screen, true);
 
     broadcastCommand('bootstrap', {
-      screen: screen
+      signals: worker.signals.serialize(),
+      mappings: worker.mappings.export(),
+      layers: worker.layers.serialize()
     });
   },
+  // start: function() {
+  //   if (this.refreshInterval) clearInterval(this.refreshInterval);
+  //   this.refreshInterval = setInterval(function() {
+  //     broadcastCommand('updateLayers', {
+  //       layers: worker.layers.serialize()
+  //     });
+  //   }, 1000 / 30);
+  // },
   midi: function(name, value) {
     console.info('midi event "%s", %s', name, value);
   },
   heartbeat: function(frametime, audio) {
-    worker.screen.frametime = frametime;
-    worker.screen.audioFrequency = audio.frequency;
-    worker.screen.audioTimeDomain = audio.timeDomain;
+    worker.frametime = frametime;
+    worker.audio = audio;
 
     broadcastCommand('heartbeat', {
       frametime: frametime,
@@ -220,11 +237,33 @@ var commands = {
   updateLayer: function(layer, layerName) {
     var state = worker.screen.layers.get(layerName);
     state.set(layer);
+  },
+  toggleLayer: function(layerName) {
+    var state = worker.screen.layers.get(layerName);
+    state.toggle('active');
   }
 };
 
 
+// worker.layers.on('reset', function() {
+//   broadcastCommand('resetLayers', {
+//     layers: worker.layers.serialize()
+//   });
+// });
+// worker.layers.on('add remove change', function() {
+//   broadcastCommand('resetLayers', {
+//     layers: worker.layers.serialize()
+//   });
+// });
+
+
 Object.keys(commands).forEach(registerCommand);
+
+setInterval(function() {
+  broadcastCommand('updateLayers', {
+    layers: worker.layers.serialize()
+  });
+}, 1000 / 30);
 
 
 worker.addEventListener('message', function(evt) {
@@ -266,6 +305,3 @@ worker.addEventListener('message', function(evt) {
     eventId: eventId
   });
 }, false);
-// });
-// });
-// });

@@ -14,25 +14,12 @@ var LayerControlView = View.extend({
     '<div class="mappings props"></div>' +
   '</section>',
 
-  // events: {
-  //   'mouseenter': '_highlight',
-  //   'mouseleave': '_highlight',
+  events: {
   //   'click .remove-layer': '_removeLayer',
   //   'click .active.prop-toggle': '_toggleActive',
-  //   'click .layer-name': '_showDetails'
-  // },
-
-  commands: {
-    'mouseenter': '_highlight',
-    'mouseleave': '_highlight',
-    'click .remove-layer': '_removeLayer',
-    'click .active.prop-toggle': '_toggleActive',
     'click .layer-name': '_showDetails'
   },
 
-  _highlight: function(evt) {
-    this.model.uiState = evt.type === 'mouseenter' ? 'highlighted' : '';
-  },
 
 
   _showDetails: function () {
@@ -40,6 +27,17 @@ var LayerControlView = View.extend({
       parent: this,
       model: this.model
     }));
+  },
+
+  commands: {
+    'click .remove-layer': 'removeLayer _layerName',
+    'click .active.prop-toggle': 'toggleLayer _layerName'
+  },
+
+  _layerName: function() {
+    return {
+      layerName: this.model.name
+    };
   },
 
   bindings: {

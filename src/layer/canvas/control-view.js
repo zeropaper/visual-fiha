@@ -15,12 +15,19 @@ var CanvasControlLayerView = LayerControlView.extend({
   `,
 
   events: {
-    'mouseenter': '_highlight',
-    'mouseleave': '_highlight',
-    'click .remove-canvas-layer': '_removeLayer',
     'click .edit-draw-function': '_editDrawFunction',
-    'click [name="active"]': '_toggleActive',
     'click .canvas-layer-name': '_showDetails'
+  },
+
+  commands: {
+    'click .remove-canvas-layer': 'removeLayer _layerName',
+    'click [name="active"]': 'toggleLayer _layerName',
+  },
+
+  _layerName: function() {
+    return {
+      layerName: this.model.name
+    };
   },
 
   _editDrawFunction: function () {

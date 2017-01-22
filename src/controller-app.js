@@ -36,7 +36,6 @@ var LoadedWorker = require('worker-loader!./web-worker.js');
 var ControllerView = require('./controller/view');
 var ScreenState = require('./screen/state');
 var MIDIAccessState = require('./midi/state');
-
 var mappings = require('./mapping/service');
 
 var VF = window.VF || {};
@@ -52,8 +51,39 @@ var AppRouter = require('ampersand-router').extend({
     router.worker = new LoadedWorker();
 
     var screen = router.model = new ScreenState({
-      signals: options.setup.signals,// TODO: move that
-      layers: options.setup.layers
+    });
+
+    router.broadcastChannel = new BroadcastChannel('spike');
+
+    router.broadcastChannel.addEventListener('message', function(evt) {
+      var command = evt.data.command;
+      var payload = evt.data.payload || {};
+      switch (command) {
+        case 'bootstrap':
+          console.info('execute bootstrap command', payload);
+          screen.layers.reset(payload.layers || []);
+          screen.signals.reset(payload.signals || []);
+          mappings.import(payload.mappings || [], screen, true);
+          break;
+        case 'addLayer':
+          screen.layers.add(payload.layer);
+          break;
+        case 'updateLayers':
+          // console.info('execute updateLayers command', payload);
+          payload.layers.forEach(function(obj) {
+            var layer = screen.layers.get(obj.name);
+            if (!layer) {
+              console.warn('missing layer', obj.name);
+              // screen.layers.add(obj);
+            }
+            else {
+              layer.set(obj);
+            }
+          });
+          break;
+        default:
+          console.info('unsupported command', command, payload);
+      }
     });
 
     var midi = router.midi || new MIDIAccessState({});
@@ -71,8 +101,9 @@ var AppRouter = require('ampersand-router').extend({
     });
 
     router.sendCommand('bootstrap', {
-      screen: screen.serialize(),
-      mappings: mappings.export()
+      layers: options.setup.layers,
+      signals: options.setup.signals,
+      mappings: options.setup.mappings
     });
   },
 

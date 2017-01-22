@@ -33,15 +33,12 @@ var LayersView = View.extend({
     var type = typeEl.value;
     var name = nameEl.value;
     if (!type || !name) { return; }
-    this.sendCommand('addLayer', {
+    return {
       layer: {
         name: name,
         type: type
       }
-    }, function(...args) {
-      console.info('added layer', ...args);
-    });
-    typeEl.value = nameEl.value = '';
+    };
   },
 
   subviews: {
