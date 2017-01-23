@@ -19,7 +19,6 @@ var ControlView = View.extend({
     var view = this;
 
     function initCommands() {
-      // console.info('initCommands', view.cid, !!view.el, view._commandsBound, view.el && !view._commandsBound ? 'bind' : view.el && view._commandsBound ? 'unbind' : 'skip');
       if (view.el) {
         view.bindCommands();
       }
@@ -54,10 +53,10 @@ var ControlView = View.extend({
     // not sure about that...
     if (!el) return commands;
 
-
     Object.keys(view.commands || {}).forEach(function(key) {
-
-      var evtNameSelctor = splitClean(key);
+      var evtNameSelector = splitClean(key);
+      var evtName = evtNameSelector.shift();
+      var selector = evtNameSelector.join(' ');
       var info = view.commands[key];
       var serializer = noop;
       var command;
@@ -89,12 +88,12 @@ var ControlView = View.extend({
       };
 
       var els = [view.el];
-      if (evtNameSelctor[1]) {
-        els = el.querySelectorAll(evtNameSelctor[1]);
+      if (selector) {
+        els = el.querySelectorAll(selector);
       }
 
       commands.push({
-        event: evtNameSelctor[0],
+        event: evtName,
         listener: listener,
         command: command,
         listenerOptions: {
@@ -103,12 +102,12 @@ var ControlView = View.extend({
         elements: els
       });
     }, view);
-    // console.info('commands', view.cid, view.el, commands);
     return commands;
   },
 
   bindCommands: function(el) {
-    if (this._commandsBound) return this;
+    // el = el || this.el;
+    if (/*!el || */this._commandsBound) return this;
     this._commands(el).forEach(function(info) {
       for (var e = 0; e < info.elements.length; e++) {
         info.elements[e].addEventListener(info.event, info.listener, info.listenerOptions);
@@ -120,7 +119,8 @@ var ControlView = View.extend({
   },
 
   unbindCommands: function(el) {
-    if (!this._commandsBound) return this;
+    // el = el || this.el;
+    if (/*el && */!this._commandsBound) return this;
     this._commands(el).forEach(function(info) {
       for (var e = 0; e < info.elements.length; e++) {
         //? if (info.elements[e].removeEventListener)
@@ -135,6 +135,13 @@ var ControlView = View.extend({
   remove: function() {
     this.unbindCommands();
     return View.prototype.remove.apply(this, arguments);
+  },
+
+  setObjectPropCmd: function() {
+    console.info('setObjectPropCmd', {
+      objectPath: this.model.objectPath,
+      property: this.model.name
+    });
   }
 });
 

@@ -38,12 +38,82 @@ var ScreenState = require('./screen/state');
 var MIDIAccessState = require('./midi/state');
 var mappings = require('./mapping/service');
 
+var DetailsView = require('./layer/details-view');
+
 var VF = window.VF || {};
 VF.setups = VF.setups || {};
 
 
 var AppRouter = require('ampersand-router').extend({
   _workerInit: false,
+
+
+  _handleBroadcastMessages: function(evt) {
+    var router = this;
+    var screen = router.model;
+    var command = evt.data.command;
+    var payload = evt.data.payload || {};
+    console.info('%capp incoming broadcast command "%s"', 'color:purple', command);
+
+    switch (command) {
+      case 'bootstrap':
+        screen.layers.reset(payload.layers || []);
+        screen.signals.reset(payload.signals || []);
+        mappings.import(payload.mappings || [], screen, true);
+        break;
+
+      case 'addLayer':
+        screen.layers.add(payload.layer);
+        var model = screen.layers.get(payload.layer.name);
+        console.info('add layer model', model);
+        router.view.showDetails(new DetailsView({
+          parent: router.view.layersView,
+          model: model
+        }));
+        break;
+      case 'updateLayers':
+        payload.layers.forEach(function(obj) {
+          var layer = screen.layers.get(obj.name);
+          if (!layer) {
+            console.warn('missing layer', obj.name);
+          }
+          else {
+            layer.set(obj);
+          }
+        });
+        break;
+    }
+  },
+
+  _handleWorkerMessages: function(evt) {
+    var router = this;
+    var command = evt.data.command;
+    var payload = evt.data.payload || {};
+    console.info('%capp incoming worker command "%s"', 'color:purple', command);
+
+    switch (command) {
+      case 'addSignal':
+        router.model.signals.add(payload.signal);
+        router.view.showDetails(new DetailsView({
+          parent: router.view.signalsView,
+          model: router.model.signals.get(payload.signal.name)
+        }));
+        break;
+      case 'updateSignals':
+        payload.signals.forEach(function(obj) {
+          var layer = router.model.signals.get(obj.name);
+          if (!layer) {
+            console.warn('missing layer', obj.name);
+          }
+          else {
+            layer.set(obj);
+          }
+        });
+        break;
+      default:
+        console.info('%cunsupported command', 'color:purple', command, payload);
+    }
+  },
 
   initialize: function(options) {
     var router = this;
@@ -55,36 +125,9 @@ var AppRouter = require('ampersand-router').extend({
 
     router.broadcastChannel = new BroadcastChannel('spike');
 
-    router.broadcastChannel.addEventListener('message', function(evt) {
-      var command = evt.data.command;
-      var payload = evt.data.payload || {};
-      switch (command) {
-        case 'bootstrap':
-          console.info('execute bootstrap command', payload);
-          screen.layers.reset(payload.layers || []);
-          screen.signals.reset(payload.signals || []);
-          mappings.import(payload.mappings || [], screen, true);
-          break;
-        case 'addLayer':
-          screen.layers.add(payload.layer);
-          break;
-        case 'updateLayers':
-          // console.info('execute updateLayers command', payload);
-          payload.layers.forEach(function(obj) {
-            var layer = screen.layers.get(obj.name);
-            if (!layer) {
-              console.warn('missing layer', obj.name);
-              // screen.layers.add(obj);
-            }
-            else {
-              layer.set(obj);
-            }
-          });
-          break;
-        default:
-          console.info('unsupported command', command, payload);
-      }
-    });
+    router.broadcastChannel.addEventListener('message', this._handleBroadcastMessages.bind(this));
+
+    router.worker.addEventListener('message', this._handleWorkerMessages.bind(this));
 
     var midi = router.midi || new MIDIAccessState({});
     console.info('midi', midi);
@@ -108,7 +151,6 @@ var AppRouter = require('ampersand-router').extend({
   },
 
   sendCommand: function(name, payload, callback) {
-    // console.info('%ccontroller send command "%s"', 'color:green', name);
     var worker = this.worker;
     var message = {
       command: name,

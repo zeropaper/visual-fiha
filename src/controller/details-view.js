@@ -109,7 +109,8 @@ var PropertyView = View.extend({
 
   commands: {
     'click .prop-value-reset button': '_handleReset',
-    'change [name=mapping]': '_handleMappingChange',
+  },
+  events: {
     'focus [type=text][name=value]': '_suggestValues',
     'focus [name=mapping]': '_suggestMappings'
   },
@@ -159,9 +160,6 @@ PropertyView.types.boolean = PropertyView.extend({
     '<div class="column prop-value">' +
       '<button class="prop-toggle-btn"></button>' +
     '</div>' +
-    // '<div class="column prop-mapping-path">' +
-    //   '<input name="mapping" />' +
-    // '</div>' +
     '<div class="column prop-mapping-clear">' +
       '<button class="vfi-unlink"></button>' +
     '</div>' +
@@ -196,9 +194,6 @@ PropertyView.types.number = PropertyView.extend({
     '<div class="column prop-value">' +
       '<input name="value" type="number" />' +
     '</div>' +
-    // '<div class="column prop-mapping-path">' +
-    //   '<input name="mapping" />' +
-    // '</div>' +
     '<div class="column prop-mapping-clear">' +
       '<button class="vfi-unlink"></button>' +
     '</div>' +

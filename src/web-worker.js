@@ -110,17 +110,32 @@ function registerCommand(commandName, command) {
 
 
 
+function emitCommand(name, payload) {
+  console.info('%cworker emit command "%s"', 'color:red', name);
+  worker.postMessage({
+    command: name,
+    payload: payload
+  });
+}
 
 
 var screens = {};
 var channel = new BroadcastChannel('spike');
 function broadcastCommand(name, payload) {
-  // console.info('%cworker broadcast command "%s"', 'color:purple', name);
   channel.postMessage({
     command: name,
     payload: payload
   });
 }
+
+
+
+setInterval(function() {
+  broadcastCommand('updateLayers', {
+    layers: worker.layers.serialize()
+  });
+}, 1000 / 40);
+
 channel.addEventListener('message', function(evt) {
   var command = evt.data.command;
   if (command !== 'register') return;
@@ -131,10 +146,6 @@ channel.addEventListener('message', function(evt) {
   }
 
   screens[payload.id] = payload.id;
-  broadcastCommand('resetLayers', {
-    layers: worker.layers.serialize()
-  });
-}, false);
 
 var commands = {
   bootstrap: function(layers, signals, mappings) {
@@ -147,6 +158,7 @@ var commands = {
       mappings: worker.mappings.export(),
       layers: worker.layers.serialize()
     });
+    broadcastCommand('__compute__', {});
   },
   // start: function() {
   //   if (this.refreshInterval) clearInterval(this.refreshInterval);
@@ -184,86 +196,83 @@ var commands = {
 
   resetSignals: function(signals) {
     worker.signals.reset(signals);
+    emitCommand('resetSignals', {
+      signals: signals
+    });
   },
   addSignal: function(signal) {
     worker.signals.add(signal);
+    emitCommand('addSignal', {
+      signal: signal
+    });
   },
   removeSignal: function(signalName) {
-    worker.signals.remove(worker.signals.get(signalName));
+    var collection = worker.signals;
+    collection.remove(collection.get(signalName));
+    emitCommand('removeSignal', {
+      signalName: signalName
+    });
   },
   updateSignal: function(signal, signalName) {
-    worker.signals.get(signalName).set(signal);
+    var state = worker.signals.get(signalName);
+    state.set(signal);
+    emitCommand('addSignal', {
+      signalName: signalName,
+      signal: signal
+    });
+  },
+  toggleSignal: function(signalName) {
+    var state = worker.signals.get(signalName);
+    state.toggle('active');
+    emitCommand('toggleSignal', {
+      signalName: signalName
+    });
   },
 
+
+
   resetLayers: function(layers) {
+    worker.layers.reset(layers);
+
     broadcastCommand('resetLayers', {
       layers: layers
     });
-    worker.screen.layers.reset(layers);
   },
   addLayer: function(layer) {
-    var layers = worker.screen.layers;
-
-    layers.add(layer);
+    worker.layers.add(layer);
 
     broadcastCommand('addLayer', {
       layer: layer
     });
-
-    // var state = layers.get(layer.name);
-    // function filter(serialized) {
-    //   var filtered = {};
-    //   var obj = state.changedAttributes();
-    //   Object.keys(obj).forEach(function(key) {
-    //     if (typeof serialized[key] !== 'function') filtered[key] = serialized[key];
-    //   });
-    //   return filtered;
-    // }
-
-    // state.on('change', function() {
-    //   broadcastCommand('updateLayer', {
-    //     layer: filter(state.serialize()),
-    //     layerName: layer.name
-    //   });
-    // });
   },
   removeLayer: function(layerName) {
-    var collection = worker.screen.layers;
+    var collection = worker.layers;
+    collection.remove(collection.get(layerName));
+
     broadcastCommand('removeLayer', {
       layerName: layerName
     });
-    collection.remove(collection.get(layerName));
   },
   updateLayer: function(layer, layerName) {
-    var state = worker.screen.layers.get(layerName);
+    var state = worker.layers.get(layerName);
     state.set(layer);
+
+    broadcastCommand('updateLayer', {
+      layer: layer,
+      layerName: layerName
+    });
   },
   toggleLayer: function(layerName) {
-    var state = worker.screen.layers.get(layerName);
+    var state = worker.layers.get(layerName);
     state.toggle('active');
   }
 };
 
 
-// worker.layers.on('reset', function() {
-//   broadcastCommand('resetLayers', {
-//     layers: worker.layers.serialize()
-//   });
-// });
-// worker.layers.on('add remove change', function() {
-//   broadcastCommand('resetLayers', {
-//     layers: worker.layers.serialize()
-//   });
-// });
 
 
 Object.keys(commands).forEach(registerCommand);
 
-setInterval(function() {
-  broadcastCommand('updateLayers', {
-    layers: worker.layers.serialize()
-  });
-}, 1000 / 30);
 
 
 worker.addEventListener('message', function(evt) {
