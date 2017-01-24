@@ -35,62 +35,26 @@ function registerCommand(commandName, command) {
 
 
 
-var commands = {};
-commands.bootstrap = function bootstrap(state) {
-  this.update(state);
-};
-commands.resetLayers = function resetLayers(layers) {
-  var triggerChange;
-  var collection = this.model.layers;
-
-  function findLayer(name) {
-    return layers.find(function () {
-      return function(lo) {
-        return lo.name === name;
-      };
-    });
+var commands = {
+  bootstrap: function bootstrap(state) {
+    this.update(state || {});
+  },
+  updateLayers: function(layers) {
+    layers.forEach(function(obj) {
+      var layer = this.model.layers.get(obj.name);
+      if (!layer) {
+        console.warn('missing layer', obj.name);
+      }
+      else {
+        layer.set(obj);
+      }
+    }, this);
   }
 
-  layers.forEach(function(layer) {
-    triggerChange = true;
-    var state = collection.get(layer.name);
-    if (state) {
-      state.set(layer);
-    }
-    else {
-      collection.add(layer);
-    }
-  });
 
-  collection.forEach(function(layer) {
-    var found = findLayer(layer.name);
-    if (!found) {
-      triggerChange = true;
-      collection.remove(layer);
-    }
-  });
 
-  if (triggerChange) {
-    this.trigger('change:layers', collection);
-  }
 
-  this.resize();
-};
-commands.addLayer = function addLayer(layer) {
-  var collection = this.model.layers;
-  collection.add(layer);
-};
-commands.removeLayer = function removeLayer(layerName) {
-  var collection = this.model.layers;
-  collection.remove(collection.get(layerName));
-};
-commands.updateLayer = function updateLayer(layer, layerName) {
-  this.model.layers.get(layerName).set(layer);
-};
 
-commands.heartbeat = function heartbeat(frametime, audio) {
-  this.model.frametime = frametime;
-  this.model.audio = audio;
 };
 
 Object.keys(commands).forEach(registerCommand);

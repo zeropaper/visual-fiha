@@ -58,7 +58,7 @@ var AppRouter = require('ampersand-router').extend({
     switch (command) {
       case 'bootstrap':
         screen.layers.reset(payload.layers || []);
-        screen.signals.reset(payload.signals || []);
+        signals.reset(payload.signals || []);
         mappings.import(payload.mappings || [], screen, true);
         break;
 
@@ -120,8 +120,7 @@ var AppRouter = require('ampersand-router').extend({
 
     router.worker = new LoadedWorker();
 
-    var screen = router.model = new ScreenState({
-    });
+    var screen = router.model = new ScreenState();
 
     router.broadcastChannel = new BroadcastChannel('spike');
 

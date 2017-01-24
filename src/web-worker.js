@@ -5,6 +5,7 @@ var worker = self;
 
 
 worker.mappings = require('./mapping/service');
+worker.mappings.context = worker;
 
 
 var ScreenState = require('./screen/state');
@@ -12,24 +13,11 @@ worker.screen = new ScreenState();
 worker.mappings.context = worker.screen;
 
 worker.layers = worker.screen.layers;
-worker.signals = worker.screen.signals;
 
-// var clientCollectionMixin = {
-
-// };
-// var workerCollectionMixin = {
-
-// };
-
-// var LayerCollection = require('./layer/collection');
-// worker.layers = new (LayerCollection.extend(clientCollectionMixin, workerCollectionMixin))({
-//   parent: worker.screen
-// });
-
-// var SignalCollection = require('./signal/collection');
-// worker.signals = new (SignalCollection.extend(workerCollectionMixin))({
-//   parent: worker.screen
-// });
+var SignalCollection = require('./signal/collection');
+worker.signals = new SignalCollection({
+  parent: worker.screen
+});
 
 
 
@@ -146,6 +134,10 @@ channel.addEventListener('message', function(evt) {
   }
 
   screens[payload.id] = payload.id;
+});
+
+
+
 
 var commands = {
   bootstrap: function(layers, signals, mappings) {

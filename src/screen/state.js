@@ -23,8 +23,7 @@ var ScreenState = State.extend({
   },
 
   collections: {
-    layers: require('./../layer/collection'),
-    signals: require('./../signal/collection')
+    layers: require('./../layer/collection')
   },
 
   toJSON: function() {
