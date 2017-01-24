@@ -251,8 +251,8 @@ var ControllerView = View.extend({
           parent: parent,
           el: el,
           tabs: [
-            {name: 'Layers', rebuild: buildLayers, pinned: true},
-            {name: 'Signals', rebuild: buildSignals, pinned: true, active: true},
+            {name: 'Layers', rebuild: buildLayers, pinned: true, active: true},
+            {name: 'Signals', rebuild: buildSignals, pinned: true},
             {name: 'Editor', rebuild: buildCodeEditor, pinned: true}
           ]
         });
