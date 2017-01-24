@@ -152,18 +152,20 @@ var PropertyView = View.extend({
 PropertyView.types = {};
 
 PropertyView.types.boolean = PropertyView.extend({
-  template: '<div class="columns object-prop prop-type-boolean">' +
-    '<div class="column gutter text-right prop-name"></div>' +
-    '<div class="column no-grow">' +
-      '<button class="vfi-cancel"></button>' +
-    '</div>' +
-    '<div class="column prop-value">' +
-      '<button class="prop-toggle-btn"></button>' +
-    '</div>' +
-    '<div class="column prop-mapping-clear">' +
-      '<button class="vfi-unlink"></button>' +
-    '</div>' +
-  '</div>',
+  template: `
+    <div class="columns object-prop prop-type-boolean">
+      <div class="column gutter text-right prop-name"></div>
+      <div class="column no-grow">
+        <button class="vfi-cancel"></button>
+      </div>
+      <div class="column prop-value">
+        <button class="prop-toggle-btn"></button>
+      </div>
+      <div class="column prop-mapping-clear">
+        <button class="vfi-unlink"></button>
+      </div>
+    </div>
+  `,
 
   bindings: assign({}, PropertyView.prototype.bindings, {
     value: {
@@ -186,18 +188,20 @@ PropertyView.types.boolean = PropertyView.extend({
 });
 
 PropertyView.types.number = PropertyView.extend({
-  template: '<div class="columns object-prop prop-type-number">' +
-    '<div class="column gutter text-right prop-name"></div>' +
-    '<div class="column no-grow">' +
-      '<button class="vfi-cancel"></button>' +
-    '</div>' +
-    '<div class="column prop-value">' +
-      '<input name="value" type="number" />' +
-    '</div>' +
-    '<div class="column prop-mapping-clear">' +
-      '<button class="vfi-unlink"></button>' +
-    '</div>' +
-  '</div>',
+  template: `
+    <div class="columns object-prop prop-type-number">
+      <div class="column gutter text-right prop-name"></div>
+      <div class="column no-grow">
+        <button class="vfi-cancel"></button>
+      </div>
+      <div class="column prop-value">
+        <input name="value" type="number" />
+      </div>
+      <div class="column prop-mapping-clear">
+        <button class="vfi-unlink"></button>
+      </div>
+    </div>
+  `,
 
   bindings: assign({}, PropertyView.prototype.bindings, {
     min: [
@@ -273,14 +277,16 @@ PropertyView.names.rotateZ = PropertyView.types.number.extend({
 
 
 var DetailsView = View.extend({
-  template:  '<section class="row rows">' +
-    '<header class="row no-grow">' +
-      '<h3>Details for <span data-hook="name"></span></h3>' +
-      '<h5 data-hook="object-path"></h5>' +
-    '</header>' +
+  template: `
+    <section class="row rows">
+      <header class="row no-grow">
+        <h3>Details for <span data-hook="name"></span></h3>
+        <h5 data-hook="object-path"></h5>
+      </header>
 
-    '<div class="row items"></div>' +
-  '</section>',
+      <div class="row items"></div>
+    </section>
+  `,
 
   initialize: function() {
     this.listenToAndRun(this, 'change:definition', function() {
