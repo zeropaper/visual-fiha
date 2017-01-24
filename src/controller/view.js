@@ -17,6 +17,10 @@ var jsYAML = require('js-yaml');
 var ControllerView = View.extend({
   initialize: function(options) {
     var controllerView = this;
+    var router = controllerView.router;
+    if (router) {
+      controllerView.showControlScreen = router.settings.get('controlScreen', false);
+    }
 
     [
       'minDecibels',
@@ -391,6 +395,9 @@ var ControllerView = View.extend({
 
   _toggleControlScreen: function() {
     this.toggle('showControlScreen');
+    if (this.router) {
+      this.router.settings.set('controlScreen', this.showControlScreen);
+    }
   },
 
   toJSON: function() {

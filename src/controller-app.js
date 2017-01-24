@@ -3,6 +3,7 @@
 
 
 require.ensure([
+  './controller/settings',
   './storage',
   './layer/canvas/scripts',
   './screen/state',
@@ -39,6 +40,7 @@ var MIDIAccessState = require('./midi/state');
 var mappings = require('./mapping/service');
 
 var DetailsView = require('./layer/details-view');
+var Settings = require('./controller/settings');
 
 var VF = window.VF || {};
 VF.setups = VF.setups || {};
@@ -119,6 +121,7 @@ var AppRouter = require('ampersand-router').extend({
     var router = this;
 
     router.worker = new LoadedWorker();
+    router.settings = new Settings('vf');
 
     var screen = router.model = new ScreenState();
 
