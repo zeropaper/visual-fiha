@@ -13,6 +13,8 @@ var GistView = require('./gist-view');
 var mappings = require('./../mapping/service');
 var MappingsControlView = require('./../mapping/control-view');
 var jsYAML = require('js-yaml');
+var objectPath = require('./../object-path');
+
 
 var ControllerView = View.extend({
   initialize: function(options) {
@@ -443,7 +445,7 @@ var ControllerView = View.extend({
   showDetails: function (view) {
     if (view === this.currentDetails) return this;
     var tabs = this.regionLeftBottom.tabs;
-    var tabName = this.mappingsView.collection.objectPath(view.model);
+    var tabName = objectPath(view.model);
     var found = tabs.get(tabName);
     if (!found) {
       found = tabs.add({name: tabName, view: view});

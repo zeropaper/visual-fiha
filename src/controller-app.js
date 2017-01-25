@@ -55,7 +55,6 @@ var AppRouter = require('ampersand-router').extend({
     var screen = router.model;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
-    console.info('%capp incoming broadcast command "%s"', 'color:purple', command);
 
     switch (command) {
       case 'bootstrap':
@@ -74,15 +73,18 @@ var AppRouter = require('ampersand-router').extend({
         }));
         break;
       case 'updateLayers':
-        payload.layers.forEach(function(obj) {
+        var obj;
+        for (var l = 0; l < payload.layers.length; l++) {
+          obj = payload.layers[l];
           var layer = screen.layers.get(obj.name);
+          // console.info('%cupdating layers in app', 'color:purple', obj.name, !!layer);
           if (!layer) {
             console.warn('missing layer', obj.name);
           }
           else {
             layer.set(obj);
           }
-        });
+        }
         break;
     }
   },

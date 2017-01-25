@@ -3,7 +3,7 @@ var State = require('ampersand-state');
 var Collection = require('ampersand-collection');
 
 var StateService = require('./../state-service');
-var objectPath = StateService.objectPath;
+var objectPath = require('./../object-path');
 var resolve = StateService.resolve;
 
 
@@ -94,9 +94,6 @@ var MappingState = State.extend({
     }
   },
 
-  objectPath: function(state) {
-    return objectPath(state);
-  },
 
   resolve: function(path, context) {
     return resolve(path, context || this.collection.context);
@@ -177,9 +174,6 @@ var _mappings = new (Collection.extend({
     return resolve(path, context || this.context);
   },
 
-  objectPath: function(state) {
-    return objectPath(state);
-  },
 
   isTarget: function(state, propName) {
     var p = objectPath(state);
@@ -326,7 +320,6 @@ var _mappings = new (Collection.extend({
       };
     }, this)
     .filter(function(info) {
-      console.info('info', info.sourceObject && info.targetObject);
       return info.sourceObject && info.targetObject;
     }, this);
 

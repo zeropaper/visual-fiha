@@ -1,7 +1,7 @@
 'use strict';
 var View = require('ampersand-view');
-// var throttle = require('lodash.throttle');
 require('./../EventListenerOptions.polyfill');
+var objectPath = require('./../object-path');
 
 function noop() {}
 
@@ -106,8 +106,7 @@ var ControlView = View.extend({
   },
 
   bindCommands: function(el) {
-    // el = el || this.el;
-    if (/*!el || */this._commandsBound) return this;
+    if (this._commandsBound) return this;
     this._commands(el).forEach(function(info) {
       for (var e = 0; e < info.elements.length; e++) {
         info.elements[e].addEventListener(info.event, info.listener, info.listenerOptions);
@@ -119,8 +118,7 @@ var ControlView = View.extend({
   },
 
   unbindCommands: function(el) {
-    // el = el || this.el;
-    if (/*el && */!this._commandsBound) return this;
+    if (!this._commandsBound) return this;
     this._commands(el).forEach(function(info) {
       for (var e = 0; e < info.elements.length; e++) {
         //? if (info.elements[e].removeEventListener)
@@ -139,7 +137,7 @@ var ControlView = View.extend({
 
   setObjectPropCmd: function() {
     console.info('setObjectPropCmd', {
-      objectPath: this.model.objectPath,
+      objectPath: objectPath(this.model),
       property: this.model.name
     });
   }

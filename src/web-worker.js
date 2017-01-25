@@ -10,7 +10,6 @@ worker.mappings.context = worker;
 
 var ScreenState = require('./screen/state');
 worker.screen = new ScreenState();
-worker.mappings.context = worker.screen;
 
 worker.layers = worker.screen.layers;
 
@@ -20,6 +19,14 @@ worker.signals = new SignalCollection({
 });
 
 
+
+var __dataContext = worker.mappings.context = {
+  frametime: 0,
+  firstframetime: 0,
+  audio: {},
+  layers: worker.layers,
+  signals: worker.signals
+};
 
 
 
@@ -118,11 +125,35 @@ function broadcastCommand(name, payload) {
 
 
 
-setInterval(function() {
+// if there's some magic in that software...
+// it's probably in the following lines
+var _fps = 45;
+var _prev = performance.now();
+var _frameMillis = 1000 / _fps;
+var _internalTimeout;
+// var _frameCounter = 0;
+// var _samplesCount = 10;
+// var _prevSamples = performance.now();
+
+function _animate() {
   broadcastCommand('updateLayers', {
     layers: worker.layers.serialize()
   });
-}, 1000 / 40);
+
+  var _now = performance.now();
+  var timeDiff = _frameMillis - ((_now - _prev) - _frameMillis);
+  // if (_frameCounter === _samplesCount) {
+  //   console.info('%c_animating', 'color:red', _frameMillis, (_now - _prevSamples) / _samplesCount);
+  //   _frameCounter = 0;
+  //   _prevSamples = _now;
+  // }
+  // _frameCounter++;
+  _prev = _now;
+  _internalTimeout = setTimeout(_animate, timeDiff);
+}
+_internalTimeout = setTimeout(_animate, _frameMillis);
+
+
 
 channel.addEventListener('message', function(evt) {
   var command = evt.data.command;
@@ -143,25 +174,23 @@ var commands = {
   bootstrap: function(layers, signals, mappings) {
     worker.layers.set(layers);
     worker.signals.set(signals);
-    worker.mappings.import(mappings, worker.screen, true);
+    worker.mappings.import(mappings, __dataContext, true);
 
     broadcastCommand('bootstrap', {
       signals: worker.signals.serialize(),
       mappings: worker.mappings.export(),
       layers: worker.layers.serialize()
     });
-    broadcastCommand('__compute__', {});
   },
-  // start: function() {
-  //   if (this.refreshInterval) clearInterval(this.refreshInterval);
-  //   this.refreshInterval = setInterval(function() {
-  //     broadcastCommand('updateLayers', {
-  //       layers: worker.layers.serialize()
-  //     });
-  //   }, 1000 / 30);
-  // },
-  midi: function(name, value) {
-    console.info('midi event "%s", %s', name, value);
+
+
+
+
+
+
+
+  midi: function(name, velocity) {
+    console.info('midi event "%s", %s', name, velocity);
   },
   heartbeat: function(frametime, audio) {
     worker.frametime = frametime;
@@ -173,6 +202,19 @@ var commands = {
     });
   },
 
+
+
+  propChange: function(path, property, value) {
+    if (!path || !property) {
+      throw new Error('Missing arguments for propChange');
+    }
+    var objA = worker.mappings.resolve(path);
+    console.info('%cchange "%s" on "%s(%s)" use %s(%s)', 'color:red', property, path, !!objA, value, objA[property]);
+    objA.set(property, value);
+  },
+
+
+
   addMapping: function(info) {
     worker.mappings.add(info);
   },
@@ -183,8 +225,12 @@ var commands = {
     state.set(info);
   },
   resetMappings: function(mappings) {
-    worker.mappings.import(mappings, worker.screen, true);
+    worker.mappings.import(mappings, __dataContext, true);
   },
+
+
+
+
 
   resetSignals: function(signals) {
     worker.signals.reset(signals);
@@ -213,13 +259,8 @@ var commands = {
       signal: signal
     });
   },
-  toggleSignal: function(signalName) {
-    var state = worker.signals.get(signalName);
-    state.toggle('active');
-    emitCommand('toggleSignal', {
-      signalName: signalName
-    });
-  },
+
+
 
 
 
@@ -253,17 +294,16 @@ var commands = {
       layer: layer,
       layerName: layerName
     });
-  },
-  toggleLayer: function(layerName) {
-    var state = worker.layers.get(layerName);
-    state.toggle('active');
   }
 };
 
 
 
 
+
 Object.keys(commands).forEach(registerCommand);
+
+
 
 
 

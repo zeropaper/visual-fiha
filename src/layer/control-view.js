@@ -1,6 +1,7 @@
 'use strict';
 var View = require('./../controller/control-view');
 var DetailsView = require('./../controller/details-view');
+var objectPath = require('./../object-path');
 
 var LayerControlView = View.extend({
   template: `
@@ -17,8 +18,6 @@ var LayerControlView = View.extend({
   `,
 
   events: {
-  //   'click .remove-layer': '_removeLayer',
-  //   'click .active.prop-toggle': '_toggleActive',
     'click .layer-name': '_showDetails'
   },
 
@@ -33,12 +32,20 @@ var LayerControlView = View.extend({
 
   commands: {
     'click .remove-layer': 'removeLayer _layerName',
-    'click .active.prop-toggle': 'toggleLayer _layerName'
+    'click .active.prop-toggle': 'propChange _toggleActive'
   },
 
   _layerName: function() {
     return {
       layerName: this.model.name
+    };
+  },
+
+  _toggleActive: function() {
+    return {
+      path: objectPath(this.model),
+      property: 'active',
+      value: !this.model.active
     };
   },
 

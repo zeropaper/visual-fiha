@@ -21,14 +21,9 @@ var CanvasControlLayerView = LayerControlView.extend({
 
   commands: {
     'click .remove-canvas-layer': 'removeLayer _layerName',
-    'click [name="active"]': 'toggleLayer _layerName',
+    'click [name="active"]': 'propChange _toggleActive',
   },
 
-  _layerName: function() {
-    return {
-      layerName: this.model.name
-    };
-  },
 
   _editDrawFunction: function () {
     var editor = this.rootView.getEditor();

@@ -4,6 +4,7 @@ var assign = require('lodash.assign');
 var Collection = require('ampersand-collection');
 var State = require('ampersand-state');
 var View = require('./control-view');
+var objectPath = require('./../object-path');
 
 var PropertyView = View.extend({
   template: `
@@ -22,28 +23,11 @@ var PropertyView = View.extend({
   `,
 
   initialize: function() {
-    // should improve the performances by using the passive option
-    var change = this._handleChange.bind(this);
-    this.on('change:el', function() {
-      if (this.previousAttributes.el) {
-        this.previousAttributes.el.removeEventListener('change', change, {passive: true});
-      }
+    View.prototype.initialize.apply(this, arguments);
 
-      if (!this.el) return;
-
-      this.el.addEventListener('change', change, {passive: true});
+    this.listenToAndRun(this.parent.model, 'change:' + this.model.name, function() {
+      this.trigger('change:model', this.model);
     });
-
-    // triggers an event which will clear the derived cache for .value
-    this.listenTo(this.parent.model, 'all', function(evtName) {
-      if (evtName === 'change:' + this.model.name) this.trigger('change:parent.model');
-    });
-
-    /*
-    this.listenToAndRun(mappings, 'all', function(evtName) {
-      console.info('mappings %s in %s property view', evtName, this.model.name, this.mappingObject);
-    });
-    */
   },
 
   derived: {
@@ -67,13 +51,6 @@ var PropertyView = View.extend({
       ],
       fn: function() {
         return this.parent.model.get(this.model.name);
-      }
-    },
-
-    mappingPath: {
-      deps: ['value'],
-      fn: function() {
-        return mappings.objectPath(this.parent.model) + this.model.name;
       }
     },
 
@@ -108,42 +85,45 @@ var PropertyView = View.extend({
   },
 
   commands: {
-    'click .prop-value-reset button': '_handleReset',
+    'click .prop-value-reset button': 'resetProp _handleReset',
   },
   events: {
-    'focus [type=text][name=value]': '_suggestValues',
-    'focus [name=mapping]': '_suggestMappings'
+    'change [name="value"]': '_handleChange',
+    'focus [type="text"][name="value"]': '_suggestValues'
   },
 
   _handleReset: function() {
     this.parent.model.unset(this.model.name);
   },
 
-  _handleMappingChange: function() {
-    console.info('_handleMappingChange');
+  _handleChange: function(evt) {
+    var parent = this.model.collection.parent.model;
+    this.sendCommand('propChange', {
+      path: objectPath(parent),
+      property: this.model.name,
+      value: evt.target.value
+    });
   },
 
   _suggestValues: function(evt) {
-    var helper = this.suggestionHelper;
-    if (!helper || !this.model.values || !this.model.values.length) return;
+    var view = this;
+    var helper = view.suggestionHelper;
+    if (!helper || !view.model.values || !view.model.values.length) return;
 
-    var model = this.model;
+    var model = view.model;
+    var parent = model.collection.parent.model;
     var el = evt.target;
     helper.attach(el, function(selected) {
-      model.collection.parent.set(model.name, selected);
-      el.value = selected;
+      console.info('set %s . %s = %s', objectPath(parent), model.name, selected, el.value !== selected);
+
+      view.sendCommand('propChange', {
+        path: objectPath(parent),
+        property: model.name,
+        value: selected
+      });
+
       helper.detach();
-    }).fill(this.model.values);
-  },
-
-  _suggestMappings: function(evt) {
-    console.info('_suggestMappings', this.model.values, evt.target, evt.delegatedTarget);
-  },
-
-  // can not / don't want to use evt.preventDefault() here
-  _handleChange: function() {
-    // if (!evt.target.value) return;
-    // this.parent.model.set(this.model.name, evt.target.value);
+    }).fill(model.values);
   }
 });
 
@@ -177,13 +157,16 @@ PropertyView.types.boolean = PropertyView.extend({
   }),
 
   events: {
-    'click button.prop-toggle-btn': '_handleToggle'
+    'click button.prop-toggle-btn': '_handleChange'
   },
 
-  _handleChange: function() {},
-
-  _handleToggle: function () {
-    this.parent.model.toggle(this.model.name);
+  _handleChange: function() {
+    var parent = this.model.collection.parent.model;
+    this.sendCommand('propChange', {
+      path: objectPath(parent),
+      property: this.model.name,
+      value: !parent[this.model.name]
+    });
   }
 });
 
@@ -238,7 +221,12 @@ PropertyView.types.number = PropertyView.extend({
   },
 
   _handleChange: function(evt) {
-    // this.parent.model.set(this.model.name, Number(evt.target.value));
+    var parent = this.model.collection.parent.model;
+    this.sendCommand('propChange', {
+      path: objectPath(parent),
+      property: this.model.name,
+      value: Number(evt.target.value)
+    });
   }
 });
 
@@ -292,11 +280,6 @@ var DetailsView = View.extend({
     this.listenToAndRun(this, 'change:definition', function() {
       this.properties.reset(this.definition);
     });
-    /*
-    this.listenToAndRun(mappings, 'all', function(evtName) {
-      console.info('mappings evt in details view %s%s', evtName, this.objectPath, );
-    });
-    */
   },
 
   derived: {
@@ -328,10 +311,11 @@ var DetailsView = View.extend({
       }
     },
 
-    objectPath: {
+    modelPath: {
+      // no cache?
       deps: ['model'],
       fn: function() {
-        return mappings.objectPath(this.model);
+        return objectPath(this.model);
       }
     }
   },
@@ -372,7 +356,7 @@ var DetailsView = View.extend({
 
   bindings: {
     'model.name': '[data-hook=name]',
-    objectPath: '[data-hook="object-path"]'
+    modelPath: '[data-hook="object-path"]'
   }
 });
 module.exports = DetailsView;
