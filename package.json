@@ -61,9 +61,8 @@
     "wdio-selenium-standalone-service": "latest",
     "wdio-spec-reporter": "0.0.5",
     "wdio-static-server-service": "latest",
-    "webpack": "^2.2.0-rc.3",
-    "webpack-dev-server": "^2.2.0-rc.0",
-    "webpack-validator": "^2.3.0",
+    "webpack": "^2.2.0",
+    "webpack-dev-server": "^2.2.0",
     "worker-loader": "^0.7.1"
   }
 }

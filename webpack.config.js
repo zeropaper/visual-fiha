@@ -1,8 +1,7 @@
 var resolve = require('path').resolve;
-var validate = require('webpack-validator');
 module.exports = function(env) {
   env = env || {};
-  return validate({
+  return {
     context: resolve(__dirname, 'src'),
     entry: {
       'controller':'./controller-app.js',
@@ -21,5 +20,5 @@ module.exports = function(env) {
       contentBase: __dirname,
       port: 8081
     }
-  });
+  };
 };
