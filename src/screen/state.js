@@ -14,7 +14,6 @@ var ScreenState = State.extend({
       frequency: new Uint8Array(128),
       timeDomain: new Uint8Array(128)
     }; }],
-    midi: 'state',
     frametime: ['number', true, 0],
     firstframetime: ['any', true, function () {
       return performance.now();

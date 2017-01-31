@@ -23,6 +23,7 @@ var ControllerView = View.extend({
     if (router) {
       controllerView.showControlScreen = router.settings.get('controlScreen', false);
     }
+    this.midi = options.midi;
 
     [
       'minDecibels',
@@ -176,16 +177,16 @@ var ControllerView = View.extend({
   },
 
   session: {
-    router: 'any',
-    minDecibels: ['number', true, -90],
-    maxDecibels: ['number', true, -10],
-    smoothingTimeConstant: ['number', true, 0.85],
-    fftSize: ['number', true, 256],
-    playing: ['boolean', true, false],
-    broadcastId: ['string', true, 'vfBus'],
-    showControlScreen: ['boolean', true, false],
     _arId: 'number',
-    currentDetails: 'state'
+    broadcastId: ['string', true, 'vfBus'],
+    currentDetails: 'state',
+    fftSize: ['number', true, 256],
+    maxDecibels: ['number', true, -10],
+    minDecibels: ['number', true, -90],
+    playing: ['boolean', true, false],
+    router: 'any',
+    showControlScreen: ['boolean', true, false],
+    smoothingTimeConstant: ['number', true, 0.85]
   },
 
   play: function() {
@@ -230,7 +231,7 @@ var ControllerView = View.extend({
             parent.stopListening(parent.signalsView);
           }
           parent.signalsView = new SignalsView({
-            collection: parent.model.signals,
+            collection: parent.signals,
             parent: parent,
             model: parent.model
           });
@@ -270,36 +271,38 @@ var ControllerView = View.extend({
       selector: '.region-left-bottom',
       prepareView: function(el) {
         var styles = window.getComputedStyle(el);
-        var parent = this;
+        var controllerView = this;
 
         function buildAudioSource() {
-          parent.audioSource = new AudioSource({
-            audioAnalyser: parent.audioAnalyser,
-            parent: parent,
+          controllerView.audioSource = new AudioSource({
+            audioAnalyser: controllerView.audioAnalyser,
+            parent: controllerView,
             color: styles.color
           });
-          return parent.audioSource;
+          return controllerView.audioSource;
         }
         buildAudioSource();
 
-        parent.MIDIAccess = new MIDIAccessView({
-          parent: parent,
-          model: parent.model.midi
-        });
+        if (controllerView.midi) {
+          controllerView.MIDIAccess = new MIDIAccessView({
+            parent: controllerView,
+            model: controllerView.midi
+          });
+        }
 
-        parent.mappingsView = new MappingsControlView({
+        controllerView.mappingsView = new MappingsControlView({
           collection: mappings,
-          parent: parent,
-          model: parent.model
+          parent: controllerView,
+          model: controllerView.model
         });
 
         var view = new RegionView({
-          parent: parent,
+          parent: controllerView,
           el: el,
-          currentView: parent.mappingsView,
+          currentView: controllerView.mappingsView,
           tabs: [
-            {name: 'Mappings', view: parent.mappingsView, pinned: true},
-            {name: 'MIDI', view: parent.MIDIAccess, pinned: true},
+            {name: 'Mappings', view: controllerView.mappingsView, pinned: true},
+            {name: 'MIDI', view: controllerView.MIDIAccess, pinned: true},
             {name: 'Audio', rebuild: buildAudioSource, pinned: true, active: true}
           ]
         });
@@ -412,9 +415,9 @@ var ControllerView = View.extend({
       signals: obj.signals,
       mappings: obj.mappings
     });
-
-
   },
+
+
 
   getEditor: function() {
     this.regionRight.focusTab('Editor');

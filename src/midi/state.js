@@ -56,6 +56,7 @@ function handleMIDIMessage(accessState, model) {
 
     var info = _mappings(MIDIMessageEvent.data);
     if (info.name) setThrottled(info.name, info.velocity);
+    model.trigger('midi:change', info.name, info.velocity);
   };
 }
 
@@ -67,9 +68,11 @@ var MIDIAccessState = State.extend({
   },
 
   registerInput: function(info) {
+    var accessState = this;
     var _mappings = getMappings(info.manufacturer, info.name);
     if (!_mappings) {
       if (info.name !== 'Midi Through Port-0') {
+        // console..warn('Unrecognized MIDI controller %s from %s', info.name, info.manufacturer);
       }
       return;
     }
@@ -104,7 +107,11 @@ var MIDIAccessState = State.extend({
       info.onmidimessage = handleMIDIMessage(this, model);
     }
 
-    this.inputs.add(model);
+    model.on('all', function(evtName, name, velocity) {
+      if (evtName.slice(0, 5) === 'midi:') accessState.trigger(name, velocity);
+    });
+
+    accessState.inputs.add(model);
   },
 
   initialize: function(options) {
@@ -126,7 +133,6 @@ var MIDIAccessState = State.extend({
 
     if (typeof options.MIDIAccess === 'undefined') {
       if (!navigator.requestMIDIAccess) {
-        console.warn('No WebMIDI API support');
         accessState.MIDIAccess = false;
         return;
       }

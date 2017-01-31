@@ -135,8 +135,14 @@ var AppRouter = require('ampersand-router').extend({
 
     router.worker.addEventListener('message', this._handleWorkerMessages.bind(this));
 
-    var midi = router.midi || new MIDIAccessState({});
-    console.info('midi', midi);
+    var midi = router.midi = (router.midi || new MIDIAccessState({}));
+
+    midi.on('midi:change', function(name, velocity) {
+      router.sendCommand('midi', {
+        name: name,
+        velocity: velocity
+      });
+    });
 
     router.listenTo(midi, 'change:inputs', function() {
       var _mappings = mappings.length ? mappings.export() : options.mappings || [];
@@ -144,6 +150,7 @@ var AppRouter = require('ampersand-router').extend({
     });
 
     router.view = new ControllerView({
+      midi: midi,
       model: screen,
       router: router,
       el: document.querySelector('.controller')
