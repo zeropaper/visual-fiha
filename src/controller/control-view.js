@@ -1,6 +1,5 @@
 'use strict';
 var View = require('ampersand-view');
-require('./../EventListenerOptions.polyfill');
 var objectPath = require('./../object-path');
 
 function noop() {}
