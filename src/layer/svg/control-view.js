@@ -15,12 +15,6 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
   '</section>',
 
   _editSVGStyles: function () {
-    var editor = this.codeEditor;
-    if (!editor.changed) {
-      editor.edit(this.model, 'drawFunction');
-    }
-    else {
-      console.warn('A function is already being edited');
-    }
+    throw new Error('_editSVGStyles not implemented');
   }
 });

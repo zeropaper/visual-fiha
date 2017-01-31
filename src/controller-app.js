@@ -221,9 +221,7 @@ var AppRouter = require('ampersand-router').extend({
 
 
 
-localForage.getItem('snapshot').then(function(value) {
-  console.info('snapshot found', value);
-
+localForage.getItem('snapshot').then(function(/*value*/) {
   var controllerSetup = VF._defaultSetup;
   controllerSetup.el = document.querySelector('.controller');
 

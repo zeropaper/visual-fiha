@@ -55,47 +55,6 @@ var ControllerView = View.extend({
     return this;
   },
 
-  _bindLayerEvents: function() {
-    // var controllerView = this;
-
-    // controllerView.listenTo(controllerView.model.layers, 'add', function(state) {
-    //   var data = state.serialize();
-    //   if (!data) {
-    //     console.warn('addLayer no layer data');
-    //   }
-    //   controllerView.sendCommand('addLayer', {
-    //     layer: data
-    //   });
-    // });
-
-    // controllerView.listenTo(controllerView.model.layers, 'remove', function(state) {
-    //   var layerName = state.name;
-    //   if (!layerName) {
-    //     console.warn('removeLayer no layer data');
-    //   }
-    //   controllerView.sendCommand('removeLayer', {
-    //     layerName: layerName
-    //   });
-    // });
-
-    // controllerView.listenTo(controllerView.model.layers, 'change:layer', function(state) {
-    //   if (!state) return;
-
-    //   var changed = state.changedAttributes();
-    //   if (!Object.keys(changed).length) {
-    //     changed = state.serialize();
-    //   }
-    //   if (!Object.keys(changed).length) return;
-
-    //   controllerView.sendCommand('updateLayer', {
-    //     layer: changed,
-    //     layerName: state.name
-    //   });
-    // });
-
-    return this;
-  },
-
   _animate: function(timestamp) {
     if (this.controllerSparkline) {
       this.controllerSparkline.update(1000 / ((timestamp - this.model.frametime) - this.model.firstframetime));

@@ -49,11 +49,6 @@ var commands = {
       }
     }, this);
   }
-
-
-
-
-
 };
 
 Object.keys(commands).forEach(registerCommand);
@@ -77,21 +72,12 @@ clientMixin.initializeClient = function initializeClient() {
       return;
     }
 
-    // console.info('%cscreen command "%s"', 'color:blue', commandName);
-
     commandArgs = signatures[commandName].map(function(argName) {
       if (argName === 'timeStamp') return evt.timeStamp;
       return evt.data.payload[argName];
     });
 
     command.apply(follower, commandArgs);
-  }, false);
-
-  channel.postMessage({
-    command: 'register',
-    payload: {
-      id: 'screen' + performance.now()
-    }
   });
 
   this.channel = channel;
@@ -189,45 +175,6 @@ var ScreenView = View.extend(clientMixin, {
     }
 
     this.model.set(options);
-
-    function findLayer(name) {
-      return function(lo) {
-        return lo.name === name;
-      };
-    }
-
-    var triggerChange;
-    var collection = this.model.layers;
-    if (options.layers) {
-      options.layers.forEach(function(layer) {
-        triggerChange = true;
-        var state = collection.get(layer.name);
-        if (state) {
-          state.set(layer, {
-            silent: true
-          });
-        }
-        else {
-          collection.add(layer, {
-            silent: true
-          });
-        }
-      });
-
-      collection.forEach(function(layer) {
-        var found = options.layers.find(findLayer(layer.name));
-        if (!found) {
-          triggerChange = true;
-          collection.remove(layer, {
-            silent: true
-          });
-        }
-      });
-
-      if (triggerChange) {
-        this.trigger('change:layers', collection);
-      }
-    }
 
     return this;
   },

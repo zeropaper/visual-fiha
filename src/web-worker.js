@@ -4,8 +4,6 @@
 var logger = require('./logging')('orange');
 
 var worker = self;
-
-
 worker.mappings = require('./mapping/service');
 worker.mappings.context = worker;
 
@@ -206,8 +204,7 @@ var commands = {
     if (!path || !property) {
       throw new Error('Missing arguments for propChange');
     }
-    var objA = worker.mappings.resolve(path);
-    objA.set(property, value);
+    worker.mappings.resolve(path).set(property, value);
   },
 
 
