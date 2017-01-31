@@ -1,6 +1,7 @@
 'use strict';
 var LayerControlView = require('./../control-view');
 var assign = require('lodash.assign');
+var objectPath = require('./../../object-path');
 
 var CanvasControlLayerView = LayerControlView.extend({
   template: `
@@ -26,13 +27,22 @@ var CanvasControlLayerView = LayerControlView.extend({
 
 
   _editDrawFunction: function () {
-    var editor = this.rootView.getEditor();
-    if (!editor.changed) {
-      editor.edit(this.model, 'drawFunction');
-    }
-    else {
-      console.warn('A function is already being edited');
-    }
+    var rootView = this.rootView;
+    var path = objectPath(this.model);
+
+    var editor = rootView.getEditor();
+    editor.editCode({
+      script: this.model.drawFunction.toString(),
+      autoApply: true,
+      language: 'javascript',
+      onvalidchange: function doneEditingCanvasDrawFunction(str) {
+        rootView.sendCommand('propChange', {
+          path: path,
+          property: 'drawFunction',
+          value: str
+        });
+      }
+    });
   },
 
   bindings: {
@@ -114,13 +124,10 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
     }
     nameEl.value = '';
 
-    this.canvasLayersView.views.find(function(v) {
+    var newView = this.canvasLayersView.views.find(function(v) {
       return v.model === res;
     });
-    var editor = this.rootView.getEditor();
-    if (!editor.changed) {
-      editor.edit(res, 'drawFunction');
-    }
+    newView._editDrawFunction();
   },
 
   initialize: function () {

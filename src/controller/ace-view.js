@@ -1,29 +1,10 @@
 'use strict';
 var View = require('ampersand-view');
 var AceEditor = View.extend({
-  edit: function(target, propName, targetName) {
+  editCode: function(options) {
     if (!this.editor) this.render();
-    this.unset('done');
-    this.set({
-      model: target,
-      targetProperty: propName,
-      targetName: targetName || ((target.name || '') + propName)
-    });
-    this.script = this.original;
-    var session = this.editor.getSession();
-    session.setMode('ace/mode/javascript');
-    this.editor.setValue(this.original);
-  },
-
-  editCode: function(str, done, language) {
-    if (!this.editor) this.render();
-    if (language) {
-      var session = this.editor.getSession();
-      session.setMode('ace/mode/' + language);
-    }
-    this.unset(['model', 'targetProperty', 'targetName']);
-    this.editor.setValue(str);
-    this.done = done;
+    options.original = options.script = options.script.toString();
+    this.set(options);
   },
 
   template: `
@@ -43,86 +24,71 @@ var AceEditor = View.extend({
   `,
 
   session: {
+    language: {
+      type: 'string',
+      values: ['javascript', 'yaml', 'css'],
+      required: true,
+      default: 'javascript'
+    },
+    autoApply: 'boolean',
+    errors: 'array',
     editor: 'any',
+    original: ['string', true, ''],
     script: ['string', true, ''],
-    targetName: 'string',
-    targetProperty: 'string',
-    done: 'any'
+    onvalidchange: 'any',
   },
 
   derived: {
-    original: {
-      deps: ['model', 'targetProperty'],
+    pristine: {
+      deps: ['script', 'original'],
       fn: function() {
-        return (this.model ? this.model[this.targetProperty] || '' : '').toString();
-      }
-    },
-    changed: {
-      deps: ['original', 'script'],
-      fn: function() {
-        return this.original != this.script;
+        return this.script === this.original;
       }
     }
   },
 
   bindings: {
-    targetName: 'header>h3',
-    changed: {
+    language: {
+      type: function() {
+        if (!this.editor) return;
+        this.editor.getSession().setMode('ace/mode/' + this.language);
+      }
+    },
+    script: {
+      type: function() {
+        if (!this.editor) return;
+        this.editor.setValue(this.script);
+      }
+    },
+    pristine: {
+      type: 'booleanClass',
+      name: 'pristine'
+    },
+    autoApply: {
+      selector: '[name=apply],[name=cancel]',
       type: 'toggle',
-      selector: 'button'
+      invert: true
     }
   },
 
-  events: {
-    'click [name=cancel]': '_handleCancel',
-    'click [name=apply]': '_handleApply'
+  setPristine: function() {
+    if (this.original != this.script) this.original = this.script;
+    return this;
   },
 
-  _cleanup: function(trigger) {
+  _cleanup: function() {
+    // delete this._cache = {};
     delete this._cache.changed;
     delete this._cache.original;
-    if (trigger) {
-      this.trigger('change:changed');
-      this.trigger('change:original');
-    }
-  },
 
-  _handleCancel: function(evt) {
-    evt.preventDefault();
-    if (typeof this.done === 'function') {
-      this._cleanup();
-      this.unset('done');
-      return;
-    }
-    if (!this.model || !this.targetProperty || !this.editor) return;
-
-    this.editor.setValue(this.original);
-  },
-
-  _handleApply: function(evt) {
-    evt.preventDefault();
-    if (typeof this.done === 'function') {
-      this.done(this.script);
-      this._cleanup(true);
-      return;
-    }
-    if (!this.model || !this.targetProperty || !this.editor) return;
-
-
-    try {
-      eval('var fn = ' + this.script +';');// jshint ignore:line
-    }
-    catch (err) {
-      console.info('script error!', err.stack, err.message, err.line);
-      return;
-    }
-
-    this.model.set(this.targetProperty, this.script);
-
-    this._cleanup();
-    this.model.trigger('change:' + this.targetProperty);
     this.trigger('change:changed');
     this.trigger('change:original');
+
+    if (typeof this.onvalidchange === 'function') {
+      this.unset('onvalidchange');
+    }
+
+    return this;
   },
 
   getErrors: function() {
@@ -141,6 +107,20 @@ var AceEditor = View.extend({
 
     var ace = window.ace;
     var editor = view.editor = ace.edit(view.query('.ace-editor'));
+
+    function changed() {
+      var errors = view.getErrors();
+      if (errors.length) {
+        return;
+      }
+
+      var str = editor.getValue();
+      view.set('script', str, {silent: true});
+      if (typeof view.onvalidchange === 'function') {
+        view.onvalidchange(str);
+      }
+    }
+
     ace.require('ace/ext/language_tools');
     editor.setOptions({
       enableBasicAutocompletion: true,
@@ -149,19 +129,13 @@ var AceEditor = View.extend({
     });
 
     editor.$blockScrolling = Infinity;
-    editor.on('change', function() {
-      var errors = view.getErrors();
-      if (errors.length) {
-        console.info('errors in the code', errors);
-        return;
-      }
-      var str = editor.getValue();
-      view.set('script', str);
-    });
     editor.setTheme('ace/theme/monokai');
     editor.setShowInvisibles();
+    editor.on('change', changed);
 
     var session = editor.getSession();
+
+    session.on('changeAnnotation', changed);
     session.setMode('ace/mode/javascript');
     session.setUseSoftTabs(true);
     session.setTabSize(2);
@@ -171,7 +145,7 @@ var AceEditor = View.extend({
       editor.setValue(view.original);
     }
 
-    return this;
+    return view;
   },
 
   remove: function() {

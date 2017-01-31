@@ -45,18 +45,20 @@ var GistView = View.extend({
     fetch('https://api.github.com/gists/' + id)
       .then(toJSON)
       .then(function(json) {
-        // var setupJson = jsYAML.safeLoad(json.files['visual-fiha-setup.yml'].content);
-        // parent.fromJSON(setupJson);
-        parent.codeEditor.editCode(json.files['visual-fiha-setup.yml'].content, function updateSetupFromGist(newStr) {
-          var obj;
-          try {
-            obj = jsYAML.safeLoad(newStr);
-            parent.fromJSON(obj);
+        parent.codeEditor.editCode({
+          laguage: 'yaml',
+          script: json.files['visual-fiha-setup.yml'].content,
+          onvalidchange: function(newStr) {
+            var obj;
+            try {
+              obj = jsYAML.safeLoad(newStr);
+              parent.fromJSON(obj);
+            }
+            catch(e) {
+              // console..warn(e);
+            }
           }
-          catch(e) {
-            console.warn(e);
-          }
-        }, 'yaml');
+        });
       });
   },
 

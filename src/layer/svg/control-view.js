@@ -16,5 +16,16 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
 
   _editSVGStyles: function () {
     throw new Error('_editSVGStyles not implemented');
+    // var editor = this.codeEditor;
+    // if (!editor.changed) {
+    //   editor.edit({
+    //     script: this.model.drawFunction,
+    //     language: 'javascript',
+    //     onvalidchange: function () {}
+    //   });
+    // }
+    // else {
+    //   // console..warn('A function is already being edited');
+    // }
   }
 });

@@ -387,16 +387,20 @@ var ControllerView = View.extend({
     var str = JSON.parse(JSON.stringify(json));
     str = jsYAML.safeDump(str);
 
-    editor.editCode(str, function updateSetup(newStr) {
-      var obj;
-      try {
-        obj = jsYAML.safeLoad(newStr);
-        view.fromJSON(obj);
+    editor.editCode({
+      script: str,
+      language: 'yaml',
+      onvalidchange: function updateSetup(newStr) {
+        var obj;
+        try {
+          obj = jsYAML.safeLoad(newStr);
+          view.fromJSON(obj);
+        }
+        catch(e) {
+          // console..warn(e);
+        }
       }
-      catch(e) {
-        console.warn(e);
-      }
-    }, 'yaml');
+    });
   },
 
   showDetails: function (view) {
