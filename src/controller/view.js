@@ -19,10 +19,7 @@ var objectPath = require('./../object-path');
 var ControllerView = View.extend({
   initialize: function(options) {
     var controllerView = this;
-    var router = controllerView.router;
-    if (router) {
-      controllerView.showControlScreen = router.settings.get('controlScreen', false);
-    }
+    this.signals = options.signals;
     this.midi = options.midi;
 
     [

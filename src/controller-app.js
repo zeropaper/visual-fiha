@@ -43,6 +43,12 @@ var mappings = require('./mapping/service');
 var DetailsView = require('./layer/details-view');
 var Settings = require('./controller/settings');
 
+var SignalCollection = require('./signal/collection');
+
+var signals = new SignalCollection([], {
+  parent: this
+});
+
 var VF = window.VF || {};
 VF.setups = VF.setups || {};
 
@@ -153,6 +159,7 @@ var AppRouter = require('ampersand-router').extend({
       midi: midi,
       model: screen,
       router: router,
+      signals: signals,
       el: document.querySelector('.controller')
     });
 
