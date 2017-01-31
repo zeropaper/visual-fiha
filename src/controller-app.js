@@ -26,6 +26,7 @@ localForage.config({
   description : 'Visual Fiha storage'
 });
 
+var logger = require('./logging')('purple');
 
 
 
@@ -55,6 +56,7 @@ var AppRouter = require('ampersand-router').extend({
     var screen = router.model;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
+    // logger.info('app incoming broadcast command "%s"', command);
 
     switch (command) {
       case 'bootstrap':
@@ -66,7 +68,7 @@ var AppRouter = require('ampersand-router').extend({
       case 'addLayer':
         screen.layers.add(payload.layer);
         var model = screen.layers.get(payload.layer.name);
-        console.info('add layer model', model);
+        // logger.info('add layer model', model);
         router.view.showDetails(new DetailsView({
           parent: router.view.layersView,
           model: model
@@ -77,9 +79,9 @@ var AppRouter = require('ampersand-router').extend({
         for (var l = 0; l < payload.layers.length; l++) {
           obj = payload.layers[l];
           var layer = screen.layers.get(obj.name);
-          // console.info('%cupdating layers in app', 'color:purple', obj.name, !!layer);
+          // logger.info('updating layers in app', obj.name, !!layer);
           if (!layer) {
-            console.warn('missing layer', obj.name);
+            // logger.warn('missing layer', obj.name);
           }
           else {
             layer.set(obj);
@@ -93,7 +95,7 @@ var AppRouter = require('ampersand-router').extend({
     var router = this;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
-    console.info('%capp incoming worker command "%s"', 'color:purple', command);
+    // logger.info('app incoming worker command "%s"', command);
 
     switch (command) {
       case 'addSignal':
@@ -107,7 +109,7 @@ var AppRouter = require('ampersand-router').extend({
         payload.signals.forEach(function(obj) {
           var layer = router.model.signals.get(obj.name);
           if (!layer) {
-            console.warn('missing layer', obj.name);
+            // logger.warn('missing layer', obj.name);
           }
           else {
             layer.set(obj);
@@ -115,7 +117,7 @@ var AppRouter = require('ampersand-router').extend({
         });
         break;
       default:
-        console.info('%cunsupported command', 'color:purple', command, payload);
+        // logger.info('unsupported command', command, payload);
     }
   },
 
@@ -185,7 +187,7 @@ var AppRouter = require('ampersand-router').extend({
   },
 
   loadSetup: function(setupId) {
-    console.info('use setup?', setupId, VF);
+    // logger.info('use setup?', setupId, VF);
     // window.VF._defaultSetup
 
     // var gistView = this.view.gistView;

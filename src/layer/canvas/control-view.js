@@ -110,7 +110,6 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
     });
 
     if (!res) {
-      console.warn('new layer?', res);
       return;
     }
     nameEl.value = '';

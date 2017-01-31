@@ -16,7 +16,6 @@ function Settings(name, defaults) {
 Settings.prototype._vars = {};
 
 Settings.prototype.set = function(name, value) {
-  console.info('settings set "%s"', name, value);
   this._vars[name] = value;
   try {
     localStorage.setItem(this.name, JSON.stringify(this._vars));
@@ -28,7 +27,6 @@ Settings.prototype.set = function(name, value) {
 };
 
 Settings.prototype.get = function(name, defaultValue) {
-  console.info('settings get "%s"', name, defaultValue);
   return this._vars[name] === undefined ? defaultValue : this._vars[name];
 };
 

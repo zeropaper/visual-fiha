@@ -135,10 +135,10 @@ var ControlView = View.extend({
   },
 
   setObjectPropCmd: function() {
-    console.info('setObjectPropCmd', {
-      objectPath: objectPath(this.model),
-      property: this.model.name
-    });
+    // logger..info('setObjectPropCmd', {
+    //   objectPath: objectPath(this.model),
+    //   property: this.model.name
+    // });
   }
 });
 

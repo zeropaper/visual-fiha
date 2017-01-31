@@ -6,7 +6,7 @@ require('./../layer/canvas/view');
 require('./../layer/svg/view');
 require('./../layer/video/view');
 require('./../layer/img/view');
-
+var logger = require('./../logging')('green');
 
 
 function signature(fn) {
@@ -43,7 +43,6 @@ var commands = {
     layers.forEach(function(obj) {
       var layer = this.model.layers.get(obj.name);
       if (!layer) {
-        console.warn('missing layer', obj.name);
       }
       else {
         layer.set(obj);

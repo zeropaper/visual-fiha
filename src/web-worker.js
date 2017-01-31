@@ -1,6 +1,8 @@
 /* jshint worker:true */
 'use strict';
 
+var logger = require('./logging')('orange');
+
 var worker = self;
 
 
@@ -33,7 +35,6 @@ var __dataContext = worker.mappings.context = {
 // var tXML = require('txml');
 // function loadSVG(url, done) {
 //   done = done || function(err, obj) {
-//     console.info('loadSVG', err ? err.stack : obj);
 //   };
 
 //   fetch(url)
@@ -106,7 +107,6 @@ function registerCommand(commandName, command) {
 
 
 function emitCommand(name, payload) {
-  console.info('%cworker emit command "%s"', 'color:red', name);
   worker.postMessage({
     command: name,
     payload: payload
@@ -143,7 +143,6 @@ function _animate() {
   var _now = performance.now();
   var timeDiff = _frameMillis - ((_now - _prev) - _frameMillis);
   // if (_frameCounter === _samplesCount) {
-  //   console.info('%c_animating', 'color:red', _frameMillis, (_now - _prevSamples) / _samplesCount);
   //   _frameCounter = 0;
   //   _prevSamples = _now;
   // }
@@ -190,7 +189,6 @@ var commands = {
 
 
   midi: function(name, velocity) {
-    console.info('midi event "%s", %s', name, velocity);
   },
   heartbeat: function(frametime, audio) {
     worker.frametime = frametime;
@@ -209,7 +207,6 @@ var commands = {
       throw new Error('Missing arguments for propChange');
     }
     var objA = worker.mappings.resolve(path);
-    console.info('%cchange "%s" on "%s(%s)" use %s(%s)', 'color:red', property, path, !!objA, value, objA[property]);
     objA.set(property, value);
   },
 
@@ -313,7 +310,6 @@ worker.addEventListener('message', function(evt) {
   var commandName = evt.data.command;
   var command = commands[commandName];
 
-  // console.info('%cworker recieved command "%s"', 'color:red', commandName);
 
   if (typeof command !== 'function') {
     return worker.postMessage({

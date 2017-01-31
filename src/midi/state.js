@@ -70,7 +70,6 @@ var MIDIAccessState = State.extend({
     var _mappings = getMappings(info.manufacturer, info.name);
     if (!_mappings) {
       if (info.name !== 'Midi Through Port-0') {
-        console.warn('Unrecognized MIDI controller %s from %s', info.name, info.manufacturer);
       }
       return;
     }

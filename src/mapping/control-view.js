@@ -50,7 +50,6 @@ var ItemView = View.extend({
     //     setTimeout(function() {
     //       el.classList.add('remove');
     //     }, 100);
-    //     // console.info('sourceValue change for mapping %s: %s', this.model.cid, val);
     //   }
     // },
     // 'model.targetValue': {
@@ -60,7 +59,6 @@ var ItemView = View.extend({
     //     setTimeout(function() {
     //       el.classList.add('remove');
     //     }, 100);
-    //     console.info('targetValue change for mapping %s: %s', this.model.cid, val);
     //   }
     }
   },
@@ -118,7 +116,6 @@ var ItemView = View.extend({
   },
 
   _handleTargetPathChange: function(evt) {
-    console.info(evt);
   }
 });
 

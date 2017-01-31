@@ -164,7 +164,6 @@ var StateService = Collection.extend({
   },
 
   destroy: function(instanceOrCid) {
-    console.info('destroy', instanceOrCid);
   }
 });
 

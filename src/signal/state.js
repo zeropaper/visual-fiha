@@ -18,7 +18,6 @@ var SignalState = State.extend({
   initialize: function() {
     this.on('change:result', function() {
       if (!this.collection || !this.collection.parent) {
-        console.info('signal has no collection');
         this.off('change:result');
         return;
       }

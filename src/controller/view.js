@@ -37,8 +37,6 @@ var ControllerView = View.extend({
     }, controllerView);
 
 
-    controllerView._bindLayerEvents();
-
     controllerView._animate();
 
     if (options.autoStart) {

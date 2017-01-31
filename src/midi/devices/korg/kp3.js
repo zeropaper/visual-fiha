@@ -164,7 +164,6 @@ module.exports = function(data) {
   if (name === 'bpmKnob') {
     velocity = note;
   }
-  // console.info('MIDI evt on %s (%s) => %s', name, note, velocity, type);
   return {
     name: name,
     velocity: velocity,

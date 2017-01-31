@@ -14,10 +14,8 @@ require.ensure([
     //   navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
     //   .then(function(reg) {
     //     // registration worked
-    //     console.info('Registration succeeded. Scope is ' + reg.scope);
     //   }).catch(function(error) {
     //     // registration failed
-    //     console.warn('Registration failed with ' + error);
     //   });
     // }
 

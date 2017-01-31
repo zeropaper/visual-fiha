@@ -157,7 +157,7 @@ var SuggestionView = View.extend({
         break;
       case 'ArrowUp':
       case 'ArrowDown':
-        console.info('suggestion input %s %s', evt.type, evt.key);
+        // console..info('suggestion input %s %s', evt.type, evt.key);
         break;
       default:
         this.filterCollection();
