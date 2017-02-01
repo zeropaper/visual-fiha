@@ -15,7 +15,7 @@
     "test": "karma start ./test/karma.conf.js --single-run",
     "clean": "rimraf *-build.js && rimraf *-build.js.map",
     "prebuild": "npm-run-all clean --parallel build:*",
-    "build": "webpack",
+    "build": "webpack --env.prod",
     "build:ace": "./.build-ace.sh",
     "postinstall": "npm run build",
     "prerun:dev": "npm run prebuild",
