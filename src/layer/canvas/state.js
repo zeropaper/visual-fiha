@@ -52,7 +52,8 @@ var CanvasLayer = State.extend({
         'destination-atop',
         'lighter',
         'copy',
-        'xor'
+        'xor',
+        ''
       ]
     },
     drawFunction: 'any'
