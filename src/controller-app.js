@@ -88,6 +88,7 @@ var AppRouter = require('ampersand-router').extend({
           // logger.info('updating layers in app', obj.name, !!layer);
           if (!layer) {
             // logger.warn('missing layer', obj.name);
+            screen.layers.add(obj);
           }
           else {
             layer.set(obj);
