@@ -2,7 +2,7 @@
 
 window.VF = window.VF || {};
 
-// var canvasLayers = [
+var canvasLayers = [
 //   {
 //     name: 'background',
 //     weight: 0,
@@ -140,50 +140,50 @@ window.VF = window.VF || {};
 //   //   },
 //   // },
 
-//   // {
-//   //   name: 'lines',
-//   //   active: false,
-//   //   weight: 50,
-//   //   drawFunction: function(ctx) {
-//   //     var h;
-//   //     var w;
-//   //     var vh;
-//   //     var vw;
-//   //     var cw = ctx.canvas.width;
-//   //     var ch = ctx.canvas.height;
-//   //     var hcw = cw * 0.5;
-//   //     var hch = ch * 0.5;
-//   //     var bw = Math.max(1, this.barWidth || 0);
-//   //     var bbw = bw * 0.25;
-//   //     var dl = window.VF.canvasTools.drawLine;
-//   //     // dl(ctx, 100, 100, 200, 100, 50, 2);
+  {
+    name: 'lines',
+    active: false,
+    weight: 50,
+    drawFunction: `function(ctx) {
+      var h;
+      var w;
+      var vh;
+      var vw;
+      var cw = ctx.canvas.width;
+      var ch = ctx.canvas.height;
+      var hcw = cw * 0.5;
+      var hch = ch * 0.5;
+      var bw = Math.max(1, this.barWidth || 0);
+      var bbw = bw * 0.25;
+      var dl = window.VF.canvasTools.drawLine;
+      // dl(ctx, 100, 100, 200, 100, 50, 2);
 
-//   //     // dl(ctx, 100, 200, 200, 350, 50, 2);
+      // dl(ctx, 100, 200, 200, 350, 50, 2);
 
-//   //     var _ca = 100 - this.arbitraryA;
-//   //     var _cb = 100 - this.arbitraryB;
-//   //     var dbw = bw * 2;
-//   //     ctx.barColor = this.barColor;
-//   //     // ctx.lineWidth = bw;
+      var _ca = 100 - this.arbitraryA;
+      var _cb = 100 - this.arbitraryB;
+      var dbw = bw * 2;
+      ctx.barColor = this.barColor;
+      // ctx.lineWidth = bw;
 
-//   //     vh = (ch / 200) * _ca;
-//   //     for (w = (hcw - (Math.floor(hcw / dbw) * dbw)); w <= cw; w += dbw) {
-//   //       dl(ctx, w, vh, w, ch - vh, bw, bbw);
-//   //     }
+      vh = (ch / 200) * _ca;
+      for (w = (hcw - (Math.floor(hcw / dbw) * dbw)); w <= cw; w += dbw) {
+        dl(ctx, w, vh, w, ch - vh, bw, bbw);
+      }
 
-//   //     vw = (cw / 200) * _cb;
-//   //     for (h = (hch - (Math.floor(hcw / dbw) * dbw)); h <= ch; h += dbw) {
-//   //       dl(ctx, vw, h, cw - vw, h, bw, bbw, true);
-//   //     }
-//   //   },
-//   //   props: {
-//   //     barWidth: ['number', true, 50],
-//   //     barColor: ['string', true, '#fff'],
-//   //     borderColor: ['string', true, '#fff'],
-//   //     arbitraryA: ['number', true, 10],
-//   //     arbitraryB: ['number', true, 10]
-//   //   },
-//   // },
+      vw = (cw / 200) * _cb;
+      for (h = (hch - (Math.floor(hcw / dbw) * dbw)); h <= ch; h += dbw) {
+        dl(ctx, vw, h, cw - vw, h, bw, bbw, true);
+      }
+    }`,
+    props: {
+      barWidth: ['number', true, 50],
+      barColor: ['string', true, '#fff'],
+      borderColor: ['string', true, '#fff'],
+      arbitraryA: ['number', true, 10],
+      arbitraryB: ['number', true, 10]
+    },
+  },
 
 //   // {
 //   //   name: 'frametime',
@@ -205,10 +205,10 @@ window.VF = window.VF || {};
 //   //   weight: 60,
 //   //   drawFunction: window.VF.canvas.utils.fps
 //   // }
-// ];
+];
 
-// window.VF._defaultSetup = {
-//   mappings: [
+window.VF._defaultSetup = {
+  mappings: [
 //     {
 //       source: 'frametime',
 //       target: 'signals.beat:a.frametime',
@@ -249,115 +249,81 @@ window.VF = window.VF || {};
 //       source: 'midi.inputs.nk2.slider3',
 //       target: 'layers.canvas.canvasLayers.grid.pointRadius'
 //     }
-//   ],
+  ],
 
 
-//   signals: [
-//     {
-//       type: 'hslaSignal',
-//       defaultValue: '180,50%,50%,1',
-//       name: 'color:a',
-//       hue: 180,
-//       saturation: 100,
-//       lightness: 50,
-//       alpha: 100,
-//     },
-//     {
-//       type: 'hslaSignal',
-//       defaultValue: '190,50%,50%,1',
-//       name: 'color:b',
-//       hue: 180,
-//       saturation: 100,
-//       lightness: 30,
-//       alpha: 100,
-//     },
-//     // {
-//     //   type: 'rgbaSignal',
-//     //   defaultValue: '122,122,122,0.5',
-//     //   name: 'color:b',
-//     // },
-//     {
-//       type: 'beatSignal',
-//       name: 'beat:a',
-//       input: 125
-//     },
-//     {
-//       type: 'default',
-//       name: 'padX*3.6',
-//       transformations: [
-//         {
-//           name: 'math.multiply',
-//           arguments: [3.6]
-//         }
-//       ],
-//     },
-//     {
-//       type: 'default',
-//       name: 'beat:a*3.6',
-//       transformations: [
-//         {
-//           name: 'math.multiply',
-//           arguments: [3.6]
-//         }
-//       ],
-//     }
-//   ],
+  signals: [
+    {
+      type: 'hslaSignal',
+      defaultValue: '180,50%,50%,1',
+      name: 'color:a',
+      hue: 180,
+      saturation: 100,
+      lightness: 50,
+      alpha: 100,
+    },
+    {
+      type: 'beatSignal',
+      name: 'beat:a',
+      input: 125
+    },
+  ],
 
 
-//   layers: [
-//     {
-//       type: 'img',
-//       name: 'no-signal',
-//       active: true,
-//       src: './assets/no-signal.jpg'
-//     },
-//     {
-//       type: 'img',
-//       name: 'Sky-1-back',
-//       active: false,
-//       src: './assets/sky1/sky1-back-grey.png'
-//     },
+  layers: [
+    {
+      type: 'img',
+      name: 'no-signal',
+      active: true,
+      src: './assets/no-signal.jpg'
+    },
+    {
+      type: 'img',
+      name: 'Sky-1-back',
+      active: false,
+      src: './assets/sky1/sky1-back-grey.png'
+    },
 
-//     {
-//       type: 'SVG',
-//       name: 'zeropaper',
-//       active: false,
-//       src: './assets/zeropaper-fat.svg'
-//     },
+    {
+      type: 'SVG',
+      name: 'zeropaper',
+      active: false,
+      src: './assets/zeropaper-fat.svg'
+    },
 
-//     {
-//       type: 'SVG',
-//       name: 'vf',
-//       active: false,
-//       src: './assets/visual-fiha.svg'
-//     },
+    {
+      type: 'SVG',
+      name: 'vf',
+      active: false,
+      src: './assets/visual-fiha.svg'
+    },
 
-//     {
-//       type: 'SVG',
-//       name: 'KD',
-//       active: false,
-//       src: './assets/kd/kd_logo_final.svg'
-//     },
+    {
+      type: 'SVG',
+      name: 'KD',
+      active: false,
+      src: './assets/kd/kd_logo_final.svg'
+    },
 
-//     {
-//       type: 'canvas',
-//       name: 'canvas',
-//       active: true,
-//       canvasLayers: canvasLayers
-//     },
+    {
+      type: 'canvas',
+      name: 'canvas',
+      active: true,
+      canvasLayers: canvasLayers
+    },
 
-//     {
-//       type: 'img',
-//       name: 'Sky-1-front',
-//       active: false,
-//       src: './assets/sky1/sky1-front-grey.png'
-//     }
-//   ]
-// };
-
-
-window.VF._defaultSetup = {
-  mappings: [],
-  signals: [],
-  layers: []
+    {
+      type: 'img',
+      name: 'Sky-1-front',
+      active: false,
+      src: './assets/sky1/sky1-front-grey.png'
+    }
+  ]
 };
+
+
+// window.VF._defaultSetup = {
+//   mappings: [],
+//   signals: [],
+//   layers: []
+// };
