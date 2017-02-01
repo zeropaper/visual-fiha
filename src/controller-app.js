@@ -161,6 +161,7 @@ var AppRouter = require('ampersand-router').extend({
       model: screen,
       router: router,
       signals: signals,
+      showControlScreen: router.settings.get('controlScreen', false),
       el: document.querySelector('.controller')
     });
 
