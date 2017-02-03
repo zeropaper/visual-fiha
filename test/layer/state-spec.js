@@ -119,10 +119,21 @@ describe('Layer State', function () {
           var canvasLayer;
           before(function() {
             canvasLayer = instance.canvasLayers.get('first');
-            canvasLayer.collection = {parent: {collection: {parent: {frametime: 10}}}};
-            delete canvasLayer._cache.screenState;
-            canvasLayer.trigger('change:screenState');
-            canvasLayer.trigger('change');
+            // mock the screen layer
+            canvasLayer.collection = {
+              parent: {
+                collection: {
+                  parent: {
+                    frametime: 10,
+                    audio: {
+                      bufferLength: 128,
+                      frequency: new Uint8Array(128),
+                      timeDomain: new Uint8Array(128)
+                    }
+                  }
+                }
+              }
+            };
           });
 
           it('has a canvas layer', function() {
