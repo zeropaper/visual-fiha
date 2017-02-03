@@ -28,10 +28,6 @@ var CanvasLayer = State.extend({
   cache: {},
 
   props: {
-    /*
-    duration: ['number', true, 1000],
-    fps: ['number', true, 16],
-    */
     zIndex: ['number', true, 0],
     name: ['string', true, null],
     active: ['boolean', true, true],
