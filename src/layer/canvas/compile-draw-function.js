@@ -13,7 +13,6 @@ function log(...args) {
 
 /**
  * txt
- * @param ctx
  * @param [x]
  * @param [y]
  * @param text
@@ -30,7 +29,6 @@ function txt(...args) {
 
 /**
  * dot
- * @param ctx
  * @param [x]
  * @param [y]
  * @param [radius]: 10
@@ -58,7 +56,6 @@ function loop(...args) {
 
 /**
  * circle
- * @param ctx
  * @param [x]
  * @param [y]
  * @param [radius]: 10
