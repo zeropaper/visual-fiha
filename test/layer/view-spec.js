@@ -35,43 +35,6 @@ describe('Layer View', function () {
 
   describe('options.type', function(){
     describe('canvas', function() {
-      before(makeInstance({
-        type: 'canvas',
-        canvasLayers: [
-          {
-            name: 'First layer',
-            drawFunction: function(ctx) {
-              ctx.fillStyle = '#f00';
-              ctx.fillRect(0, 0, this.width, this.height);
-            },
-            mappings: [
-              {
-                eventNames: 'mic:1',
-                targetProperty: 'someProp'
-              }
-            ],
-            props: {
-              someProp: ['string', true, 'layer 1']
-            }
-          },
-          {
-            name: 'Second layer',
-            drawFunction: function(ctx) {
-              ctx.fillStyle = '#0f0';
-              ctx.fillRect(0, 0, this.width, this.height);
-            },
-            mappings: [
-              {
-                eventNames: 'mic:2',
-                targetProperty: 'someProp'
-              }
-            ],
-            props: {
-              someProp: ['string', true, 'layer 2']
-            }
-          }
-        ]
-      }));
 
       it('is available as LayerView.types.canvas', function() {
         expect(LayerView.types.canvas).to.be.ok();
@@ -80,6 +43,32 @@ describe('Layer View', function () {
       describe('instance', function () {
         describe('options', function() {
           describe('canvasLayers', function() {
+            before(makeInstance({
+              type: 'canvas',
+              canvasLayers: [
+                {
+                  name: 'First layer',
+                  drawFunction: function(ctx) {
+                    ctx.fillStyle = '#f00';
+                    ctx.fillRect(0, 0, this.width, this.height);
+                  },
+                  props: {
+                    someProp: ['string', true, 'layer 1']
+                  }
+                },
+                {
+                  name: 'Second layer',
+                  drawFunction: function(ctx) {
+                    ctx.fillStyle = '#0f0';
+                    ctx.fillRect(0, 0, this.width, this.height);
+                  },
+                  props: {
+                    someProp: ['string', true, 'layer 2']
+                  }
+                }
+              ]
+            }));
+
             it('describes the layers of the canvas composition', function() {
               expect(instance.canvasLayers.length).to.be(2);
             });

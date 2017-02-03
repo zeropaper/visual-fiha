@@ -1,6 +1,6 @@
 describe('Layer State', function () {
   'use strict';
-  function warn(e) {console.warn(e);}
+  function warn(e) {console.warn(e.stack);}
   var expect = require('expect.js');
   var LayerState = require('./../../src/layer/state');
   require('./../../src/layer/canvas/state');
@@ -71,10 +71,17 @@ describe('Layer State', function () {
   describe('options.type', function() {
     describe('canvas', function() {
       var instance;
+
       before(function () {
         instance = new LayerState.types.canvas({
           type: 'canvas',
-          name: 'canvas layer'
+          name: 'canvasScreenLayer',
+          canvasLayers: [
+            {
+              name: 'first',
+              drawFunction: 'function(){}'
+            }
+          ]
         });
       });
 
@@ -106,10 +113,106 @@ describe('Layer State', function () {
             });
           });
         });
+
+
+        describe('derived properties', function() {
+          var canvasLayer;
+          before(function() {
+            canvasLayer = instance.canvasLayers.get('first');
+            // mock the screen layer
+            canvasLayer.collection = {
+              parent: {
+                collection: {
+                  parent: {
+                    frametime: 10,
+                    audio: {
+                      bufferLength: 128,
+                      frequency: new Uint8Array(128),
+                      timeDomain: new Uint8Array(128)
+                    }
+                  }
+                }
+              }
+            };
+          });
+
+          it('has a canvas layer', function() {
+            expect(canvasLayer).to.be.ok();
+            expect(canvasLayer.name).to.be('first');
+          });
+
+          describe('draw', function() {
+            var ctx;
+            before(function() {
+              var cnv = document.createElement('canvas');
+              ctx = cnv.getContext('2d');
+              document.body.appendChild(cnv);
+            });
+
+            it('is a function', function() {
+              expect(canvasLayer.draw).to.be.a('function');
+            });
+
+            'navigator window global document module exports'.split(' ').forEach(function(varName) {
+              it('overrides "' + varName + '"', function() {
+                var result;
+                canvasLayer.drawFunction = `function() {
+                  return ${ varName };
+                }`;
+
+                expect(function() {
+                  result = canvasLayer.draw(ctx);
+                }).withArgs().not.to.throwException(warn);
+                expect(result).to.be(undefined);
+              });
+            });
+
+            describe('scope global', function() {
+              describe('log', function() {
+                it('can be called to output something in the console', function() {
+                  canvasLayer.drawFunction = `function(ctx) {
+                    log('Hello!');
+                  }`;
+                  expect(canvasLayer.draw).withArgs(ctx).not.to.throwException(warn);
+                });
+              });
+
+              describe('txt', function() {
+                it('draws a text', function() {
+                  canvasLayer.drawFunction = `function withCtx() {
+                    txt('Text!');
+                  }`;
+                  expect(canvasLayer.draw).withArgs(ctx).not.to.throwException(warn);
+                });
+              });
+
+              describe('dot', function() {
+                it('draws a text', function() {
+                  // canvasLayer.screenState.frametime = 10;
+                  canvasLayer.drawFunction = `function withCtx() {
+                    ctx.fillStyle = 'red';
+                    log(frametime);
+                    dot();
+                  }`;
+                  expect(canvasLayer.draw).withArgs(ctx).not.to.throwException(warn);
+                });
+              });
+
+              describe('circle', function() {
+                it('draws a text', function() {
+                  canvasLayer.drawFunction = `function withCtx() {
+                    ctx.lineWidth = 3;
+                    circle();
+                  }`;
+                  expect(canvasLayer.draw).withArgs(ctx).not.to.throwException(warn);
+                });
+              });
+            });
+
+          });
+        });
       });
     });
-
-
 
     describe('video', function() {
       it('is available as LayerState.types.video', function() {
