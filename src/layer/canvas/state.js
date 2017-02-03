@@ -2,6 +2,9 @@
 var State = require('ampersand-state');
 var Collection = require('ampersand-collection');
 var ScreenLayerState = require('./../state');
+var mockedCtx = require('./mocked-canvas-2d-context');
+var compileFunction = require('./compile-draw-function');
+
 
 var CanvasLayer = State.extend({
   scripts: require('./scripts'),
@@ -25,19 +28,31 @@ var CanvasLayer = State.extend({
   cache: {},
 
   props: {
+    /*
     duration: ['number', true, 1000],
     fps: ['number', true, 16],
-    weight: ['number', true, 0],
+    */
+    zIndex: ['number', true, 0],
     name: ['string', true, null],
     active: ['boolean', true, true],
-    opacity: ['number', true, 100],
-    /*
-    shadowOffsetX: ['number', true, 0],
-    shadowOffsetY: ['number', true, 0],
-    shadowBlur: ['number', true, 0],
-    shadowColor: ['string', true, 'rgba(0,0,0,0.5)'],
-    */
-    blending: {
+
+    fillStyle: {
+      type: 'string',
+      default: '#000000'
+    },
+    filter: {
+      type: 'string',
+      default: 'none'
+    },
+    font: {
+      type: 'string',
+      default: '1vw monospace'// hehehe
+    },
+    globalAlpha: {
+      type: 'number',
+      default: 1
+    },
+    globalCompositeOperation: {
       type: 'string',
       required: true,
       default: 'source-over',
@@ -56,6 +71,66 @@ var CanvasLayer = State.extend({
         ''
       ]
     },
+    imageSmoothingEnabled: {
+      type: 'boolean',
+      default: true
+    },
+    imageSmoothingQuality: {
+      type: 'string',
+      default: 'low'
+    },
+    lineCap: {
+      type: 'string',
+      default: 'butt'
+    },
+    lineDashOffset: {
+      type: 'number',
+      default: 0
+    },
+    lineJoin: {
+      type: 'string',
+      default: 'miter'
+    },
+    lineWidth: {
+      type: 'number',
+      default: 1
+    },
+    miterLimit: {
+      type: 'number',
+      default: 10
+    },
+    shadowBlur: {
+      type: 'number',
+      default: 0
+    },
+    shadowColor: {
+      type: 'string',
+      default: 'rgba(0, 0, 0, 0)'
+    },
+    shadowOffsetX: {
+      type: 'number',
+      default: 0
+    },
+    shadowOffsetY: {
+      type: 'number',
+      default: 0
+    },
+    strokeStyle: {
+      type: 'string',
+      default: '#000000'
+    },
+    textAlign: {
+      type: 'string',
+      default: 'start'
+    },
+    textBaseline: {
+      type: 'string',
+      default: 'alphabetic'
+    },
+
+
+
+
     drawFunction: 'any'
   },
 
@@ -137,6 +212,23 @@ var CanvasLayer = State.extend({
         return this.collection.parent.collection.parent;
       }
     },
+
+    frametime: {
+      deps: ['screenState'],
+      fn: function() {
+        // console.info(this.screenState);
+        if (!this.screenState) return 0;
+        return this.screenState.frametime || 0;
+      }
+    },
+    audio: {
+      deps: ['screenState'],
+      fn: function() {
+        if (!this.screenState) return {};
+        return this.screenState.audio || {};
+      }
+    },
+
     width: {
       deps: ['screenState', 'screenState.width'],
       fn: function() {
@@ -152,16 +244,18 @@ var CanvasLayer = State.extend({
     draw: {
       deps: ['drawFunction'],
       fn: function() {
-        var fn = this.drawFunction;
-        if (typeof fn === 'string') {
-          try {
-            eval('fn = (function() { return ' + this.drawFunction + '; })()');// jshint ignore:line
-          }
-          catch(err) {
-            console.warn('draw function error', err);
-          }
+        var fn;
+        try {
+          fn = compileFunction(this.drawFunction);
+          fn.call(this, mockedCtx);
         }
-        return (typeof fn === 'function' ? fn : function() {}).bind(this);
+        catch(err) {
+          console.warn('draw function error', err.stack);
+          fn = function() {
+            return err;
+          };
+        }
+        return fn.bind(this);
       }
     }
   }
@@ -181,12 +275,26 @@ var CanvasLayers = Collection.extend({
       serializationProps: {
         props: [].concat([
           'active',
-          'blending',
-          'opacity',
+          //
+          'fillStyle',
+          'filter',
+          'font',
+          'globalAlpha',
+          'globalCompositeOperation',
+          'imageSmoothingEnabled',
+          'imageSmoothingQuality',
+          'lineCap',
+          'lineDashOffset',
+          'lineJoin',
+          'lineWidth',
+          'miterLimit',
           'shadowBlur',
           'shadowColor',
           'shadowOffsetX',
-          'shadowOffsetY'
+          'shadowOffsetY',
+          'strokeStyle',
+          'textAlign',
+          'textBaseline'
         ], Object.keys(attrs.props || {})),
         // session: Object.keys(attrs.session),
         // derived: Object.keys(attrs.prderived)

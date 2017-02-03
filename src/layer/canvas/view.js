@@ -55,8 +55,13 @@ module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
       */
       ctx.globalAlpha = layer.opacity / 100;
       ctx.globalCompositeOperation = layer.blending;
-
-      layer.draw(ctx);
+      // try {
+      var err = layer.draw(ctx);
+      // }
+      // catch (e) {
+      //   console.info('canvas script error on "%s" layer', layer.getId(), e.message);
+      // }
+      if (err) console.warn('canvas script error on "%s" layer', layer.getId(), err.stack);
     });
 
     this.destCtx.clearRect(0, 0, cw, ch);
