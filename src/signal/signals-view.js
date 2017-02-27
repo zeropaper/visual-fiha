@@ -39,12 +39,6 @@ var SignalsView = View.extend({
         name: name
       }
     };
-    // if (!type || !name) { return; }
-    // this.model.signals.add({
-    //   name: name,
-    //   type: type
-    // });
-    // typeEl.value = nameEl.value = '';
   },
 
   subviews: {

@@ -5,15 +5,63 @@ var MIDIAccessView = require('./../midi/view');
 var SignalsView = require('./../signal/signals-view');
 var LayersView = require('./../layer/layers-view');
 var SuggestionView = require('./suggestion-view');
-var SparklineView = require('./sparkline-view');
 var AudioSource = require('./audio-source-view');
 var AceEditor = require('./ace-view');
 var RegionView = require('./region-view');
 var GistView = require('./gist-view');
-var mappings = require('./../mapping/service');
 var MappingsControlView = require('./../mapping/control-view');
 var jsYAML = require('js-yaml');
 var objectPath = require('./../object-path');
+// var Timeline = require('./timeline-view');
+
+
+var ControlScreenControls = View.extend({
+  template: `<div class="column columns control-screen-controls">
+    <div class="column">
+      <button name="control-screen">Control screen</button>
+    </div>
+
+    <div class="column columns control-screen-size">
+      <div class="column">
+        <input type="number" min="25" max="75" name="control-screen-width" />
+      </div>
+
+      <div class="column">
+        <input type="number" min="25" max="75" name="control-screen-height" />
+      </div>
+    </div>
+  </div>`,
+
+  props: {
+    active: ['boolean', true, true],
+    width: ['number', true, 33],
+    height: ['number', true, 33],
+  },
+
+  bindings: {
+    'width': {type: 'value', selector: '[name="control-screen-width"]'},
+    'height': {type: 'value', selector: '[name="control-screen-height"]'}
+  },
+
+  events: {
+    'click [name="control-screen"]': 'toggleActive',
+    'change [name="control-screen-width"]': 'setWidth',
+    'change [name="control-screen-height"]': 'setHeight'
+  },
+
+  toggleActive: function() {
+    this.toggle('active');
+  },
+
+  setWidth: function(evt) {
+    this.width = Number(evt.target.value);
+  },
+
+  setHeight: function(evt) {
+    this.height = Number(evt.target.value);
+  }
+});
+
 
 
 var ControllerView = View.extend({
@@ -21,6 +69,14 @@ var ControllerView = View.extend({
     var controllerView = this;
     this.signals = options.signals;
     this.midi = options.midi;
+    this.mappings = options.mappings;
+    if (!this.router) {
+      throw new Error('Missing router options for ControllerView');
+    }
+
+    this.listenTo(this.router, 'all', function(...args) {
+      if (args[0].indexOf('app:') === 0) this.trigger(...args);
+    });
 
     [
       'minDecibels',
@@ -47,6 +103,8 @@ var ControllerView = View.extend({
     else {
       controllerView.once('change:el', controllerView._attachSuggestionHelper);
     }
+
+    this._animate();
   },
 
   sendCommand: function(name, payload, callback) {
@@ -64,11 +122,11 @@ var ControllerView = View.extend({
       this.audioSource.update();
     }
 
-    if (this.playing) {
+    // if (this.playing) {
       this.model.frametime = timestamp - this.model.firstframetime;
 
       this.update();
-    }
+    // }
 
     this._arId = window.requestAnimationFrame(this._animate.bind(this));
   },
@@ -105,10 +163,13 @@ var ControllerView = View.extend({
       deps: ['audioContext'],
       fn: function() {
         var analyser = this.audioContext.createAnalyser();
-        analyser.minDecibels = this.minDecibels;
-        analyser.maxDecibels = this.maxDecibels;
-        analyser.smoothingTimeConstant = this.smoothingTimeConstant;
-        analyser.fftSize = this.fftSize;
+        try {
+          analyser.minDecibels = this.minDecibels;
+          analyser.maxDecibels = this.maxDecibels;
+          analyser.smoothingTimeConstant = this.smoothingTimeConstant;
+          analyser.fftSize = this.fftSize;
+        }
+        catch (e) {}
         return analyser;
       }
     },
@@ -142,7 +203,10 @@ var ControllerView = View.extend({
     playing: ['boolean', true, false],
     router: 'any',
     showControlScreen: ['boolean', true, false],
-    smoothingTimeConstant: ['number', true, 0.85]
+    controlScreenWidth: ['number', true, 33],
+    controlScreenHeight: ['number', true, 33],
+    smoothingTimeConstant: ['number', true, 0.85],
+    workerPerformance: 'string'
   },
 
   play: function() {
@@ -163,6 +227,48 @@ var ControllerView = View.extend({
   },
 
   subviews: {
+    controlScreenControls: {
+      waitFor: 'el',
+      selector: '.control-screen-controls',
+      prepareView: function(el) {
+        if (this.router) {
+          this.set({
+            showControlScreen: this.router.settings.get('showControlScreen', true),
+            controlScreenWidth: this.router.settings.get('controlScreenWidth', 45),
+            controlScreenHeight: this.router.settings.get('controlScreenHeight', 45)
+          });
+        }
+
+        var view = new ControlScreenControls({
+          el: el,
+          active: this.showControlScreen,
+          width: this.controlScreenWidth,
+          height: this.controlScreenHeight,
+          parent: this
+        });
+
+        this.listenToAndRun(view, 'change:active', function() {
+          this.showControlScreen = view.active;
+          if (this.router) {
+            this.router.settings.set('showControlScreen', this.showControlScreen);
+          }
+        });
+        this.listenToAndRun(view, 'change:width', function() {
+          this.controlScreenWidth = view.width;
+          if (this.router) {
+            this.router.settings.set('controlScreenWidth', this.controlScreenWidth);
+          }
+        });
+        this.listenToAndRun(view, 'change:height', function() {
+          this.controlScreenHeight = view.height;
+          if (this.router) {
+            this.router.settings.set('controlScreenHeight', this.controlScreenHeight);
+          }
+        });
+        return view;
+      }
+    },
+
     regionRight: {
       waitFor: 'el',
       selector: '.region-right',
@@ -180,6 +286,12 @@ var ControllerView = View.extend({
           });
           return parent.layersView;
         }
+
+        parent.mappingsView = new MappingsControlView({
+          collection: parent.mappings,
+          parent: parent,
+          model: parent.model
+        });
 
         function buildSignals() {
           if (parent.signalsView && parent.signalsView.remove) {
@@ -210,6 +322,7 @@ var ControllerView = View.extend({
           tabs: [
             {name: 'Layers', rebuild: buildLayers, pinned: true, active: true},
             {name: 'Signals', rebuild: buildSignals, pinned: true},
+            {name: 'Mappings', view: parent.mappingsView, pinned: true},
             {name: 'Editor', rebuild: buildCodeEditor, pinned: true}
           ]
         });
@@ -226,44 +339,44 @@ var ControllerView = View.extend({
       waitFor: 'el',
       selector: '.region-left-bottom',
       prepareView: function(el) {
+        var parent = this;
         var styles = window.getComputedStyle(el);
-        var controllerView = this;
 
         function buildAudioSource() {
-          controllerView.audioSource = new AudioSource({
-            audioAnalyser: controllerView.audioAnalyser,
-            parent: controllerView,
+          parent.audioSource = new AudioSource({
+            audioAnalyser: parent.audioAnalyser,
+            parent: parent,
             color: styles.color
           });
-          return controllerView.audioSource;
+          return parent.audioSource;
         }
         buildAudioSource();
 
-        if (controllerView.midi) {
-          controllerView.MIDIAccess = new MIDIAccessView({
-            parent: controllerView,
-            model: controllerView.midi
+        if (parent.midi) {
+          parent.MIDIAccess = new MIDIAccessView({
+            parent: parent,
+            model: parent.midi
           });
         }
 
-        controllerView.mappingsView = new MappingsControlView({
-          collection: mappings,
-          parent: controllerView,
-          model: controllerView.model
-        });
+        // parent.timeline = new Timeline({
+        //   parent: this,
+        //   entries: []
+        // });
 
         var view = new RegionView({
-          parent: controllerView,
+          parent: parent,
           el: el,
-          currentView: controllerView.mappingsView,
+          currentView: parent.mappingsView,
           tabs: [
-            {name: 'Mappings', view: controllerView.mappingsView, pinned: true},
-            {name: 'MIDI', view: controllerView.MIDIAccess, pinned: true},
-            {name: 'Audio', rebuild: buildAudioSource, pinned: true, active: true}
+            {name: 'MIDI', view: parent.MIDIAccess, pinned: true, active: true},
+            {name: 'Audio', rebuild: buildAudioSource, pinned: true},
+            // {name: 'Timeline', view: parent.timeline, pinned: true, active: true}
           ]
         });
 
         view.el.classList.add('row');
+        view.el.classList.add('grow-l');
         view.el.classList.add('region-left-bottom');
 
         return view;
@@ -276,21 +389,6 @@ var ControllerView = View.extend({
       prepareView: function(el) {
         var view = new GistView({parent: this, model: this.model});
         el.appendChild(view.render().el);
-        return view;
-      }
-    },
-
-    controllerSparkline: {
-      waitFor: 'el',
-      selector: '.sparkline-controller',
-      prepareView: function(el) {
-        var styles = window.getComputedStyle(el);
-        var view = new SparklineView({
-          parent: this,
-          color: styles.color,
-          font: styles.fontSize + ' ' + styles.fontFamily.split(' ').pop()
-        });
-        el.appendChild(view.el);
         return view;
       }
     }
@@ -308,20 +406,34 @@ var ControllerView = View.extend({
   },
 
   bindings: {
+    workerPerformance: '.worker-performance',
     showControlScreen: [
+      {
+        selector: '.control-screen',
+        type: 'toggle'
+      },
       {
         selector: '.control-screen',
         type: function(el, val) {
           el.src = !val ? '' : './screen.html#' + this.broadcastId;
         }
-      },
-      {
-        selector: 'button[name=control-screen]',
-        type: 'booleanClass',
-        yes: 'yes',
-        no: 'no'
       }
     ],
+    controlScreenWidth: {
+      selector: '.region-left',
+      type: function(el, val) {
+        el.style.width = val +'%';
+      }
+    },
+    controlScreenHeight: {
+      selector: '.region-left-top',
+      type: function(el, val) {
+        var parentNode = el.parentNode;
+        var height = ((Math.max(100, parentNode.clientHeight) / 100) * val) +'px';
+        el.style.maxHeight = height;
+        el.style.minHeight = height;
+      }
+    },
     playing: [
       {
         type: 'toggle',
@@ -342,9 +454,7 @@ var ControllerView = View.extend({
   },
 
   events: {
-    'click [name="resize"]': 'resizeScreen',
     'click [name="screen"]': '_openScreen',
-    'click [name="control-screen"]': '_toggleControlScreen',
     'click [name="setup-editor"]': '_setupEditor'
   },
 
@@ -352,16 +462,9 @@ var ControllerView = View.extend({
     window.open('./screen.html#' + this.broadcastId, 'screen', 'width=800,height=600,location=no');
   },
 
-  _toggleControlScreen: function() {
-    this.toggle('showControlScreen');
-    if (this.router) {
-      this.router.settings.set('controlScreen', this.showControlScreen);
-    }
-  },
-
   toJSON: function() {
     var obj = this.model.toJSON();
-    obj.mappings = mappings.export();
+    obj.mappings = this.mappings.export();
     return obj;
   },
 
@@ -406,8 +509,9 @@ var ControllerView = View.extend({
   showDetails: function (view) {
     if (view === this.currentDetails) return this;
     var tabs = this.regionLeftBottom.tabs;
-    var tabName = objectPath(view.model);
+    var tabName = view.modelPath || objectPath(view.model);
     var found = tabs.get(tabName);
+    console.info('showDetails for "%s"', tabName, view, found);
     if (!found) {
       found = tabs.add({name: tabName, view: view});
     }
@@ -451,23 +555,29 @@ var ControllerView = View.extend({
         <div class="column no-grow gutter-right">Visual Fiha</div>
 
         <div class="column columns">
-          <span class="column columns no-grow button-group">
+          <!-- <span class="column columns no-grow button-group">
             <button class="column gutter-horizontal" name="play"><span class="vfi-play"></span></button>
             <button class="column gutter-horizontal" name="pause"><span class="vfi-pause"></span></button>
             <button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>
-          </span>
+          </span> -->
+
+          <div class="column"></div>
+
+          <div class="column worker-performance"></div>
+
+          <div class="column"></div>
+
+          <div class="column no-grow control-screen-controls"></div>
+
+          <div class="column"></div>
 
           <div class="column no-grow">
             <button name="screen">Open screen</button>
           </div>
 
-          <div class="column no-grow">
-            <button name="control-screen">Control screen</button>
-          </div>
-
-          <div class="column gutter-horizontal no-grow columns performance">
+          <!-- <div class="column gutter-horizontal no-grow columns performance">
             Controller <span class="column sparkline-controller"></span>
-          </div>
+          </div> -->
 
           <div class="column"></div>
 
@@ -479,9 +589,9 @@ var ControllerView = View.extend({
 
       <div class="row columns body">
         <div class="region-left column no-grow rows">
-          <iframe class="region-left-top row grow-l control-screen"></iframe>
+          <iframe class="region-left-top row control-screen"></iframe>
 
-          <div class="region-left-bottom row rows"></div>
+          <div class="region-left-bottom row grow-l rows"></div>
         </div>
 
         <div class="region-right column rows settings">

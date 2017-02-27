@@ -6,19 +6,39 @@ describe('Controller View', function () {
   var expect = require('expect.js');
   var ControllerView = require('./../../src/controller/view');
   var ScreenState = require('./../../src/screen/state');
+  var Settings = require('./../../src/controller/settings');
+  var SignalCollection = require('./../../src/signal/collection');
+  var Mappings = require('./../../src/mapping/data');
+  var mockedRouter = {
+    sendCommand: function(/*name, payload, callback*/) {},
+    settings: new Settings('testvf')
+  };
+  require('ampersand-events').createEmitter(mockedRouter);
+
+
 
   function makeInstance() {
     if (instance) {
       instance.remove();
     }
+    var screen = new ScreenState({
+      layers: []
+    });
+    var signals = new SignalCollection([]);
+    var mappings = new Mappings([], {
+      context: {
+        signals: signals,
+        layers: screen.layers
+      }
+    });
 
     instance = new ControllerView({
+      // midi: midi,
       el: holder,
-      model: new ScreenState({
-        layers: [],
-        signals: [],
-        mappings: []
-      })
+      router: mockedRouter,
+      signals: signals,
+      mappings: mappings,
+      model: screen
     });
   }
 

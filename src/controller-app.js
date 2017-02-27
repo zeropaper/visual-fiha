@@ -26,7 +26,7 @@ localForage.config({
   description : 'Visual Fiha storage'
 });
 
-var logger = require('./logging')('purple');
+// var logger = require('./logging')('purple');
 
 
 
@@ -38,24 +38,23 @@ var LoadedWorker = require('worker-loader!./web-worker.js');
 var ControllerView = require('./controller/view');
 var ScreenState = require('./screen/state');
 var MIDIAccessState = require('./midi/state');
-var mappings = require('./mapping/service');
+var Mappings = require('./mapping/data');
+
 
 var DetailsView = require('./layer/details-view');
 var Settings = require('./controller/settings');
 
 var SignalCollection = require('./signal/collection');
 
-var signals = new SignalCollection([], {
-  parent: this
-});
+var signals = new SignalCollection([]);
 
 var VF = window.VF || {};
 VF.setups = VF.setups || {};
 
+// var _executedCommands = [];
 
 var AppRouter = require('ampersand-router').extend({
   _workerInit: false,
-
 
   _handleBroadcastMessages: function(evt) {
     var router = this;
@@ -68,7 +67,7 @@ var AppRouter = require('ampersand-router').extend({
       case 'bootstrap':
         screen.layers.reset(payload.layers || []);
         signals.reset(payload.signals || []);
-        mappings.import(payload.mappings || [], screen, true);
+        router.mappings.import(payload.mappings || [], true);
         break;
 
       case 'addLayer':
@@ -81,21 +80,25 @@ var AppRouter = require('ampersand-router').extend({
         }));
         break;
       case 'updateLayers':
-        var obj;
-        for (var l = 0; l < payload.layers.length; l++) {
-          obj = payload.layers[l];
-          var layer = screen.layers.get(obj.name);
-          // logger.info('updating layers in app', obj.name, !!layer);
-          if (!layer) {
-            // logger.warn('missing layer', obj.name);
-            screen.layers.add(obj);
-          }
-          else {
-            layer.set(obj);
-          }
-        }
+        // var obj;
+        // for (var l = 0; l < payload.layers.length; l++) {
+        //   obj = payload.layers[l];
+        //   var layer = screen.layers.get(obj.name);
+        //   // logger.info('updating layers in app', obj.name, !!layer);
+        //   if (!layer) {
+        //     // logger.warn('missing layer', obj.name);
+        //     screen.layers.add(obj);
+        //   }
+        //   else {
+        //     layer.set(obj);
+        //   }
+        // }
+        screen.layers.set(payload.layers);
         break;
+      default:
+        console.info('unrecognized broadcast command "%s"', command);
     }
+    router.trigger('app:broadcast:' + command, payload);
   },
 
   _handleWorkerMessages: function(evt) {
@@ -105,27 +108,52 @@ var AppRouter = require('ampersand-router').extend({
     // logger.info('app incoming worker command "%s"', command);
 
     switch (command) {
+      case 'health':
+        router.view.workerPerformance = `~${ ((payload.samplesCount / payload.elapsed) * 1000).toFixed(2) }/${ payload.fps }fps`;
+        break;
+
       case 'addSignal':
-        router.model.signals.add(payload.signal);
+        signals.add(payload.signal);
         router.view.showDetails(new DetailsView({
           parent: router.view.signalsView,
-          model: router.model.signals.get(payload.signal.name)
+          model: signals.get(payload.signal.name)
         }));
         break;
-      case 'updateSignals':
-        payload.signals.forEach(function(obj) {
-          var layer = router.model.signals.get(obj.name);
-          if (!layer) {
-            // logger.warn('missing layer', obj.name);
-          }
-          else {
-            layer.set(obj);
-          }
-        });
+      case 'updateSignal':
+        var signalState = signals.get(payload.signal.name);
+        if (signalState) {
+          signalState.set(payload.signal);
+        }
         break;
+      case 'updateSignals':
+        signals.set(payload.signals);
+        break;
+      case 'removeSignal':
+        signals.remove(payload.name);
+        break;
+
+      case 'addMapping':
+        router.mappings.add(payload.mapping);
+        break;
+      case 'updateMapping':
+        var mappingState = router.mappings.get(payload.mapping.name);
+        if (mappingState) {
+          mappingState.set(payload.mapping);
+          mappingState.trigger('change:targets');
+        }
+        break;
+      case 'removeMapping':
+        router.mappings.remove(payload.name);
+        break;
+
+      case 'timelineCommands':
+        router.view.timeline.addEntries(payload.commands);
+        break;
+
       default:
-        // logger.info('unsupported command', command, payload);
+        console.info('unrecognized worker command "%s"', command);
     }
+    router.trigger('app:worker:' + command, payload);
   },
 
   initialize: function(options) {
@@ -136,6 +164,14 @@ var AppRouter = require('ampersand-router').extend({
 
     var screen = router.model = new ScreenState();
 
+    var mappingContext = {
+      context: {
+        signals: signals,
+        layers: screen.layers
+      }
+    };
+    router.mappings = new Mappings([], mappingContext);
+
     router.broadcastChannel = new BroadcastChannel('spike');
 
     router.broadcastChannel.addEventListener('message', this._handleBroadcastMessages.bind(this));
@@ -144,16 +180,20 @@ var AppRouter = require('ampersand-router').extend({
 
     var midi = router.midi = (router.midi || new MIDIAccessState({}));
 
-    midi.on('midi:change', function(name, velocity) {
+    midi.on('midi:change', function(deviceName, property, velocity) {
       router.sendCommand('midi', {
-        name: name,
+        deviceName: deviceName,
+        property: property,
         velocity: velocity
       });
     });
 
     router.listenTo(midi, 'change:inputs', function() {
-      var _mappings = mappings.length ? mappings.export() : options.mappings || [];
-      router.sendCommand('resetMappings', {mappings: _mappings});
+      var _mappings = router.mappings.length ? router.mappings.export() : options.mappings || [];
+      if (!_mappings.length) return;
+      router.sendCommand('resetMappings', {
+        mappings: _mappings
+      });
     });
 
     router.view = new ControllerView({
@@ -161,7 +201,7 @@ var AppRouter = require('ampersand-router').extend({
       model: screen,
       router: router,
       signals: signals,
-      showControlScreen: router.settings.get('controlScreen', false),
+      mappings: router.mappings,
       el: document.querySelector('.controller')
     });
 

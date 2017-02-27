@@ -100,7 +100,7 @@ module.exports = function(data) {
   var velocity = data[2] || 0;
 
   var name = mappings.note[note];
-  console.info('nk2 MIDI evt on %s (%s) => %s', name, note, velocity, type);
+  // console.info('nk2 MIDI evt on %s (%s) => %s', name, note, velocity, type);
   return {
     name: name,
     velocity: velocity,

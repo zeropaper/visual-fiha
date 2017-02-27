@@ -25,6 +25,7 @@ var SuggestionItem = View.extend({
     }
   },
   bindings: {
+    'model.active': {type: 'booleanClass', name: 'active'},
     shortText: {type: 'text'}
   },
   events: {
@@ -62,15 +63,18 @@ var SuggestionView = View.extend({
   },
 
   fill: function (arr) {
+    arr = typeof arr === 'function' ? arr(this.inputEl.value) : arr;
     this.collection.reset(arr.map(function (v) { return {text:v}; }));
     return this.filterCollection();
   },
 
-  detach: function () {
+  detach: function (done) {
+    done = done || function(){};
     this._removeHintEl();
     this.off('selected');
     this.unset('inputEl');
     this.collection.reset([]);
+    done();
     return this;
   },
 
@@ -97,12 +101,17 @@ var SuggestionView = View.extend({
     }
     else if (update.length/* === 1*/) {
       this.commonStart = update[0].text;
+      if (this.commonStart === this.inputEl.value) {
+        update = [];
+      }
     }
     else {
       this.commonStart = '';
+      update = [];
     }
     this.suggestions.reset(update);
-
+    this.hasSuggestions = !!update.length;
+    if (this.hasSuggestions) this.suggestions.at(0).toggle('active');
     return this;
   },
 
@@ -128,11 +137,15 @@ var SuggestionView = View.extend({
   },
 
   session: {
+    hasSuggestions: 'boolean',
     commonStart: 'string',
     inputEl: 'element'
   },
 
   bindings: {
+    hasSuggestions: {
+      type: 'toggle'
+    },
     commonStart: {
       type: function() {
         var el = this.suggestionHint;
@@ -143,13 +156,25 @@ var SuggestionView = View.extend({
   },
 
   _handleInput: function(evt) {
-    // that way, autocomplete can be done using the Tab keyu
-    if (evt.type === 'keydown' && evt.key === 'Tab' && this.commonStart !== this.inputEl.value) {
-      evt.preventDefault();
+    var suggestions = this.suggestions;
+    var activeState = suggestions.filter(function(state) {
+      return state.active;
+    })[0];
+    var activeIndex = activeState ? suggestions.indexOf(activeState) : -1;
+
+
+    if (evt.type === 'keydown') {
+      // that way, autocomplete can be done using the Tab keyup
+      if (evt.key === 'Tab' && this.commonStart !== this.inputEl.value) {
+        evt.preventDefault();
+      }
+      else if (evt.key === 'Enter') {
+        this.items.views[activeIndex]._handleClick(evt);
+      }
+      return;
     }
 
-    if (evt.type !== 'keyup') return this.filterCollection();
-
+    // keyup
     switch (evt.key) {
       case 'ArrowRight':
       case 'Tab':
@@ -157,7 +182,20 @@ var SuggestionView = View.extend({
         break;
       case 'ArrowUp':
       case 'ArrowDown':
-        // console..info('suggestion input %s %s', evt.type, evt.key);
+        activeIndex += evt.key === 'ArrowDown' ? 1 : -1;
+
+        if (activeIndex < 0) {
+          activeIndex = suggestions.length - 1;
+        }
+        else if (activeIndex >= suggestions.length) {
+          activeIndex = 0;
+        }
+
+        suggestions.forEach(function(state, index) {
+          state.active = index === activeIndex;
+        });
+
+        this.query('li.active').scrollIntoView();
         break;
       default:
         this.filterCollection();
@@ -320,6 +358,7 @@ var SuggestionView = View.extend({
     suggestions: Collection.extend({
       model: State.extend({
         props: {
+          active: 'boolean',
           text: ['string', true, ''],
           value: ['any', false, null]
         }

@@ -40,8 +40,10 @@ module.exports = function(config) {
 
 
     webpack: {
-      devtool: 'inline-source-map'
-      // devtool: 'cheap-module-eval-source-map'
+      devServer: {
+        clientLogLevel: 'error'
+      },
+      devtool: 'eval-source-map'
     },
 
 

@@ -13,16 +13,16 @@ describe('Layer State', function () {
     // 'mappings',
     'mixBlendMode',
     'name',
-    'opacity',
-    'rotateX',
-    'rotateY',
-    'rotateZ',
-    'scaleX',
-    'scaleY',
-    'skewX',
-    'skewY',
-    'translateX',
-    'translateY',
+    // 'opacity',
+    // 'rotateX',
+    // 'rotateY',
+    // 'rotateZ',
+    // 'scaleX',
+    // 'scaleY',
+    // 'skewX',
+    // 'skewY',
+    // 'translateX',
+    // 'translateY',
     'type',
     'zIndex'
   ];
@@ -87,7 +87,9 @@ describe('Layer State', function () {
 
       describe('instance', function () {
         var canvasLayerProps = [
-          'canvasLayers'
+          'name',
+          'canvasLayers',
+          'clear'
         ].concat(defaultLayerProperties);
 
         describe('options', function() {});
@@ -170,39 +172,104 @@ describe('Layer State', function () {
             describe('scope global', function() {
               describe('log', function() {
                 it('can be called to output something in the console', function() {
+                  var result;
                   canvasLayer.drawFunction = `function(ctx) {
                     log('Hello!');
                   }`;
-                  expect(canvasLayer.draw).withArgs(ctx).not.to.throwException(warn);
+                  expect(function() {
+                    result = canvasLayer.draw(ctx);
+                  }).withArgs().not.to.throwException(warn);
+                  expect(result).to.be(undefined);
                 });
               });
 
               describe('txt', function() {
                 it('draws a text', function() {
+                  var result;
                   canvasLayer.drawFunction = `function withCtx() {
                     txt('Text!');
                   }`;
-                  expect(canvasLayer.draw).withArgs(ctx).not.to.throwException(warn);
+                  expect(function() {
+                    result = canvasLayer.draw(ctx);
+                  }).withArgs().not.to.throwException(warn);
+                  expect(result).to.be(undefined);
                 });
               });
 
               describe('dot', function() {
                 it('draws a text', function() {
-                  // canvasLayer.screenState.frametime = 10;
+                  var result;
                   canvasLayer.drawFunction = `function withCtx() {
                     ctx.fillStyle = 'red';
-                    log(frametime);
                     dot();
                   }`;
-                  expect(canvasLayer.draw).withArgs(ctx).not.to.throwException(warn);
+                  expect(function() {
+                    result = canvasLayer.draw(ctx);
+                  }).withArgs().not.to.throwException(warn);
+                  expect(result).to.be(undefined);
                 });
               });
 
               describe('circle', function() {
                 it('draws a text', function() {
+                  var result;
                   canvasLayer.drawFunction = `function withCtx() {
                     ctx.lineWidth = 3;
                     circle();
+                    return 2;
+                  }`;
+                  expect(function() {
+                    result = canvasLayer.draw(ctx);
+                  }).withArgs().not.to.throwException(warn);
+                  expect(result).to.be(2);
+                });
+              });
+
+              describe.skip('ramda tools set', function() {
+                it('is exposed', function() {
+                  var result;
+                  canvasLayer.drawFunction = `function withCtx() {
+                    var returned = add(2, 3);
+                    // log(returned);
+                    return returned;
+                  }`;
+                  expect(function() {
+                    result = canvasLayer.draw(ctx);
+                  }).withArgs().not.to.throwException(warn);
+                  expect(result).to.be(5);
+                });
+              });
+
+              describe('2d context properties and methods', function() {
+                it('are exposed', function() {
+                  var result;
+                  canvasLayer.drawFunction = `function withCtx() {
+                    var returned = typeof lineWidth;
+                    // log(returned);
+                    return returned;
+                  }`;
+                  expect(function() {
+                    result = canvasLayer.draw(ctx);
+                  }).withArgs().not.to.throwException(warn);
+                  expect(result).to.be('function');
+
+                  canvasLayer.drawFunction = `function withCtx() {
+                    var returned = typeof fill;
+                    // log(returned);
+                    return returned;
+                  }`;
+                  expect(function() {
+                    result = canvasLayer.draw(ctx);
+                  }).withArgs().not.to.throwException(warn);
+                  expect(result).to.be('function');
+
+
+                  canvasLayer.drawFunction = `function() {
+                    lineWidth(5);
+                    strokeStyle('#f00');
+                    moveTo(width * 0.25, height * 0.25);
+                    lineTo(width * 0.75, height * 0.75);
+                    stroke();
                   }`;
                   expect(canvasLayer.draw).withArgs(ctx).not.to.throwException(warn);
                 });

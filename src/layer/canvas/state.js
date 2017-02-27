@@ -10,7 +10,7 @@ var CanvasLayer = State.extend({
   scripts: require('./scripts'),
 
   idAttribute: 'name',
-
+  /*
   initialize: function() {
     State.prototype.initialize.apply(this, arguments);
     var canvasLayer = this;
@@ -24,7 +24,7 @@ var CanvasLayer = State.extend({
       screenLayer.trigger('change');
     });
   },
-
+  */
   cache: {},
 
   props: {
@@ -32,97 +32,97 @@ var CanvasLayer = State.extend({
     name: ['string', true, null],
     active: ['boolean', true, true],
 
-    fillStyle: {
-      type: 'string',
-      default: '#000000'
-    },
-    filter: {
-      type: 'string',
-      default: 'none'
-    },
-    font: {
-      type: 'string',
-      default: '1vw monospace'// hehehe
-    },
-    globalAlpha: {
-      type: 'number',
-      default: 1
-    },
-    globalCompositeOperation: {
-      type: 'string',
-      required: true,
-      default: 'source-over',
-      values: [
-        'source-over',
-        'source-in',
-        'source-out',
-        'source-atop',
-        'destination-over',
-        'destination-in',
-        'destination-out',
-        'destination-atop',
-        'lighter',
-        'copy',
-        'xor',
-        ''
-      ]
-    },
-    imageSmoothingEnabled: {
-      type: 'boolean',
-      default: true
-    },
-    imageSmoothingQuality: {
-      type: 'string',
-      default: 'low'
-    },
-    lineCap: {
-      type: 'string',
-      default: 'butt'
-    },
-    lineDashOffset: {
-      type: 'number',
-      default: 0
-    },
-    lineJoin: {
-      type: 'string',
-      default: 'miter'
-    },
-    lineWidth: {
-      type: 'number',
-      default: 1
-    },
-    miterLimit: {
-      type: 'number',
-      default: 10
-    },
-    shadowBlur: {
-      type: 'number',
-      default: 0
-    },
-    shadowColor: {
-      type: 'string',
-      default: 'rgba(0, 0, 0, 0)'
-    },
-    shadowOffsetX: {
-      type: 'number',
-      default: 0
-    },
-    shadowOffsetY: {
-      type: 'number',
-      default: 0
-    },
-    strokeStyle: {
-      type: 'string',
-      default: '#000000'
-    },
-    textAlign: {
-      type: 'string',
-      default: 'start'
-    },
-    textBaseline: {
-      type: 'string',
-      default: 'alphabetic'
-    },
+    // fillStyle: {
+    //   type: 'string',
+    //   default: '#000000'
+    // },
+    // filter: {
+    //   type: 'string',
+    //   default: 'none'
+    // },
+    // font: {
+    //   type: 'string',
+    //   default: '1vw monospace'// hehehe
+    // },
+    // globalAlpha: {
+    //   type: 'number',
+    //   default: 1
+    // },
+    // globalCompositeOperation: {
+    //   type: 'string',
+    //   required: true,
+    //   default: 'source-over',
+    //   values: [
+    //     'source-over',
+    //     'source-in',
+    //     'source-out',
+    //     'source-atop',
+    //     'destination-over',
+    //     'destination-in',
+    //     'destination-out',
+    //     'destination-atop',
+    //     'lighter',
+    //     'copy',
+    //     'xor',
+    //     ''
+    //   ]
+    // },
+    // imageSmoothingEnabled: {
+    //   type: 'boolean',
+    //   default: true
+    // },
+    // imageSmoothingQuality: {
+    //   type: 'string',
+    //   default: 'low'
+    // },
+    // lineCap: {
+    //   type: 'string',
+    //   default: 'butt'
+    // },
+    // lineDashOffset: {
+    //   type: 'number',
+    //   default: 0
+    // },
+    // lineJoin: {
+    //   type: 'string',
+    //   default: 'miter'
+    // },
+    // lineWidth: {
+    //   type: 'number',
+    //   default: 1
+    // },
+    // miterLimit: {
+    //   type: 'number',
+    //   default: 10
+    // },
+    // shadowBlur: {
+    //   type: 'number',
+    //   default: 0
+    // },
+    // shadowColor: {
+    //   type: 'string',
+    //   default: 'rgba(0, 0, 0, 0)'
+    // },
+    // shadowOffsetX: {
+    //   type: 'number',
+    //   default: 0
+    // },
+    // shadowOffsetY: {
+    //   type: 'number',
+    //   default: 0
+    // },
+    // strokeStyle: {
+    //   type: 'string',
+    //   default: '#000000'
+    // },
+    // textAlign: {
+    //   type: 'string',
+    //   default: 'start'
+    // },
+    // textBaseline: {
+    //   type: 'string',
+    //   default: 'alphabetic'
+    // },
 
 
 
@@ -210,14 +210,15 @@ var CanvasLayer = State.extend({
     },
 
     frametime: {
+      cache: false,
       deps: ['screenState'],
       fn: function() {
-        // console.info(this.screenState);
         if (!this.screenState) return 0;
         return this.screenState.frametime || 0;
       }
     },
     audio: {
+      cache: false,
       deps: ['screenState'],
       fn: function() {
         if (!this.screenState) return {};
@@ -240,17 +241,22 @@ var CanvasLayer = State.extend({
     draw: {
       deps: ['drawFunction'],
       fn: function() {
-        var fn;
+        var fn, result, err;
+
         try {
           fn = compileFunction(this.drawFunction);
-          fn.call(this, mockedCtx);
+          result = fn.call(this, mockedCtx);
+          err = result instanceof Error ? result : null;
         }
-        catch(err) {
-          console.warn('draw function error', err.stack);
-          fn = function() {
-            return err;
-          };
+        catch(e) {
+          err = e;
         }
+
+        if (err) {
+          // console.warn('draw function error', err.stack);
+          fn = function() { return err; };
+        }
+
         return fn.bind(this);
       }
     }
@@ -272,25 +278,25 @@ var CanvasLayers = Collection.extend({
         props: [].concat([
           'active',
           //
-          'fillStyle',
-          'filter',
-          'font',
-          'globalAlpha',
-          'globalCompositeOperation',
-          'imageSmoothingEnabled',
-          'imageSmoothingQuality',
-          'lineCap',
-          'lineDashOffset',
-          'lineJoin',
-          'lineWidth',
-          'miterLimit',
-          'shadowBlur',
-          'shadowColor',
-          'shadowOffsetX',
-          'shadowOffsetY',
-          'strokeStyle',
-          'textAlign',
-          'textBaseline'
+          // 'fillStyle',
+          // 'filter',
+          // 'font',
+          // 'globalAlpha',
+          // 'globalCompositeOperation',
+          // 'imageSmoothingEnabled',
+          // 'imageSmoothingQuality',
+          // 'lineCap',
+          // 'lineDashOffset',
+          // 'lineJoin',
+          // 'lineWidth',
+          // 'miterLimit',
+          // 'shadowBlur',
+          // 'shadowColor',
+          // 'shadowOffsetX',
+          // 'shadowOffsetY',
+          // 'strokeStyle',
+          // 'textAlign',
+          // 'textBaseline'
         ], Object.keys(attrs.props || {})),
         // session: Object.keys(attrs.session),
         // derived: Object.keys(attrs.prderived)
@@ -299,7 +305,7 @@ var CanvasLayers = Collection.extend({
     var Constructor = _CanvasLayersCache[attrs.name] || CanvasLayer.extend(def);
     _CanvasLayersCache[attrs.name] = Constructor;
     var inst =  new Constructor(attrs, options);
-    inst.on('change:weight', function() {
+    inst.on('change:zIndex', function() {
       inst.collection.sort();
     });
     if (options.init === false) inst.initialize();
@@ -309,6 +315,10 @@ var CanvasLayers = Collection.extend({
 
 
 module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
+  props: {
+    clear: ['boolean', true, true]
+  },
+
   collections: {
     canvasLayers: CanvasLayers
   }

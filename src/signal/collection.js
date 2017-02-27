@@ -9,7 +9,8 @@ var SignalCollection = Collection.extend({
   mainIndex: 'name',
   model: function(attrs, opts) {
     var Constructor = SignalState.types[attrs.type] || SignalState;
-    return new Constructor(attrs, opts);
+    var state = new Constructor(attrs, opts);
+    return state;
   }
 });
 module.exports = SignalCollection;

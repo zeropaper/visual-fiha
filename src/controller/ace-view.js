@@ -1,17 +1,19 @@
 'use strict';
 var View = require('ampersand-view');
+var canvasCompleter = require('./../layer/canvas/canvas-completer');
+
 var AceEditor = View.extend({
   editCode: function(options) {
     if (!this.editor) this.render();
     options.original = options.script = options.script.toString();
-    this.set(options);
+    this._cleanup().set(options);
   },
 
   template: `
     <section class="row code-editor rows">
-      <header>
+      <!-- <header>
         <h3></h3>
-      </header>
+      </header> -->
       <div class="ace-editor row grow-xl"></div>
       <div class="ace-controls row no-grow gutter columns">
         <div class="column"></div>
@@ -36,6 +38,7 @@ var AceEditor = View.extend({
     original: ['string', true, ''],
     script: ['string', true, ''],
     onvalidchange: 'any',
+    validator: 'any'
   },
 
   derived: {
@@ -65,7 +68,7 @@ var AceEditor = View.extend({
       name: 'pristine'
     },
     autoApply: {
-      selector: '[name=apply],[name=cancel]',
+      selector: '.ace-controls',
       type: 'toggle',
       invert: true
     }
@@ -77,18 +80,23 @@ var AceEditor = View.extend({
   },
 
   _cleanup: function() {
-    // delete this._cache = {};
     delete this._cache.changed;
     delete this._cache.original;
-
-    this.trigger('change:changed');
-    this.trigger('change:original');
 
     if (typeof this.onvalidchange === 'function') {
       this.unset('onvalidchange');
     }
+    if (typeof this.validator === 'function') {
+      this.unset('validator');
+    }
 
     return this;
+  },
+
+  validateScript: function() {
+    if (typeof this.validator === 'function') {
+      this.validator(this.script);
+    }
   },
 
   getErrors: function() {
@@ -121,7 +129,7 @@ var AceEditor = View.extend({
       }
     }
 
-    ace.require('ace/ext/language_tools');
+    var languageTools = ace.require('ace/ext/language_tools');
     editor.setOptions({
       enableBasicAutocompletion: true,
       enableSnippets: true,
@@ -132,6 +140,7 @@ var AceEditor = View.extend({
     editor.setTheme('ace/theme/monokai');
     editor.setShowInvisibles();
     editor.on('change', changed);
+    editor.setFontSize(16);
 
     var session = editor.getSession();
 
@@ -140,6 +149,8 @@ var AceEditor = View.extend({
     session.setUseSoftTabs(true);
     session.setTabSize(2);
     session.setUseWrapMode(true);
+
+    languageTools.addCompleter(canvasCompleter);
 
     if (view.original) {
       editor.setValue(view.original);

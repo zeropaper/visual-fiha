@@ -1,5 +1,4 @@
 'use strict';
-var mappings = require('./../mapping/service');
 var assign = require('lodash.assign');
 var Collection = require('ampersand-collection');
 var State = require('ampersand-state');
@@ -16,8 +15,14 @@ var PropertyView = View.extend({
       <div class="column prop-value">
         <input name="value" type="text" />
       </div>
-      <div class="column prop-mapping-clear">
+      <div class="column prop-mapping-clear no-grow">
         <button class="vfi-unlink"></button>
+      </div>
+      <div class="column prop-mapping-name">
+        <input name="mapping-name" type="text" />
+      </div>
+      <div class="column no-grow">
+        <button class="mapping-details"></button>
       </div>
     </div>
   `,
@@ -54,10 +59,17 @@ var PropertyView = View.extend({
       }
     },
 
-    mappingObject: {
-      deps: ['value'],
+    propertyPath: {
+      deps: [],
       fn: function() {
-        return mappings.isTarget(this.parent.model, this.model.name);
+        return this.parent.modelPath + '.' + this.model.name;
+      }
+    },
+
+    mapping: {
+      deps: [],
+      fn: function() {
+        return this.rootView.mappings.findMappingByTarget(this.propertyPath);
       }
     }
   },
@@ -76,33 +88,86 @@ var PropertyView = View.extend({
       selector: 'input[name=value]',
     },
 
-    mappingObject: {
-      type: 'booleanAttribute',
-      selector: '.prop-mapping-clear button',
-      name: 'disabled',
-      invert: true
-    }
+    'mapping.name': [
+      {
+        type: 'booleanAttribute',
+        selector: '.prop-mapping-clear button',
+        name: 'disabled',
+        invert: true
+      },
+      {
+        type: 'value',
+        selector: '[name="mapping-name"]'
+      },
+      {
+        type: 'booleanClass',
+        selector: '.mapping-details',
+        yes: 'vfi-eye',
+        no: 'vfi-eye-off'
+      },
+      {
+        type: 'booleanAttribute',
+        selector: '.mapping-details',
+        name: 'disabled',
+        invert: true
+      },
+      {
+        type: 'booleanAttribute',
+        selector: '.prop-value-reset button',
+        name: 'disabled'
+      }
+    ]
   },
 
   commands: {
-    'click .prop-value-reset button': 'resetProp _handleReset',
+    'click .prop-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
+    'change [name="value"]': 'propChange _handleChange',
+    // 'click .prop-value-reset button': 'resetProp _handleReset',
   },
+
+  _handleRemoveMappingTarget: function() {
+    var propertyPath = this.propertyPath;
+    var mapping = this.mapping.serialize();
+    mapping.targets = mapping.targets.filter(function(target) {
+      return target !== propertyPath;
+    });
+    return {mapping: mapping};
+  },
+
+  _handleChange: function() {
+    var parent = this.model.collection.parent.model;
+    return {
+      path: objectPath(parent),
+      property: this.model.name,
+      value: this.query('[name="value"]').value
+    };
+  },
+
+  // _handleReset: function() {
+  //   this.parent.model.unset(this.model.name);
+  // },
+
   events: {
-    'change [name="value"]': '_handleChange',
+    'focus [name="mapping-name"]': '_suggestMapping',
     'focus [type="text"][name="value"]': '_suggestValues'
   },
 
-  _handleReset: function() {
-    this.parent.model.unset(this.model.name);
-  },
-
-  _handleChange: function(evt) {
-    var parent = this.model.collection.parent.model;
-    this.sendCommand('propChange', {
-      path: objectPath(parent),
-      property: this.model.name,
-      value: evt.target.value
-    });
+  _suggestMapping: function(evt) {
+    var view = this;
+    var helper = view.suggestionHelper;
+    var mappings = this.rootView.mappings;
+    var propertyPath = this.propertyPath;
+    console.info('propertyPath', propertyPath);
+    helper.attach(evt.target, function(selected) {
+      var mappingState = mappings.get(selected);
+      if (!mappingState) return;
+      var mapping = mappingState.serialize();
+      mapping.targets.push(propertyPath);
+      view.sendCommand('updateMapping', {
+        mapping: mapping
+      });
+      helper.detach();
+    }).fill(mappings.map(function(state) { return state.name; }));
   },
 
   _suggestValues: function(evt) {
@@ -122,6 +187,7 @@ var PropertyView = View.extend({
         value: selected
       });
 
+      el.value = selected;
       helper.detach();
     }).fill(model.values);
   }
@@ -135,14 +201,20 @@ PropertyView.types.boolean = PropertyView.extend({
   template: `
     <div class="columns object-prop prop-type-boolean">
       <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow">
+      <div class="column no-grow prop-value-reset">
         <button class="vfi-cancel"></button>
       </div>
       <div class="column prop-value">
         <button class="prop-toggle-btn"></button>
       </div>
-      <div class="column prop-mapping-clear">
+      <div class="column prop-mapping-clear no-grow">
         <button class="vfi-unlink"></button>
+      </div>
+      <div class="column prop-mapping-name">
+        <input name="mapping-name" type="text" />
+      </div>
+      <div class="column no-grow">
+        <button class="mapping-details"></button>
       </div>
     </div>
   `,
@@ -157,6 +229,7 @@ PropertyView.types.boolean = PropertyView.extend({
   }),
 
   events: {
+    'focus [name="mapping-name"]': '_suggestMapping',
     'click button.prop-toggle-btn': '_handleChange'
   },
 
@@ -174,14 +247,20 @@ PropertyView.types.number = PropertyView.extend({
   template: `
     <div class="columns object-prop prop-type-number">
       <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow">
+      <div class="column no-grow prop-value-reset">
         <button class="vfi-cancel"></button>
       </div>
       <div class="column prop-value">
         <input name="value" type="number" />
       </div>
-      <div class="column prop-mapping-clear">
+      <div class="column prop-mapping-clear no-grow">
         <button class="vfi-unlink"></button>
+      </div>
+      <div class="column prop-mapping-name">
+        <input name="mapping-name" type="text" />
+      </div>
+      <div class="column no-grow">
+        <button class="mapping-details"></button>
       </div>
     </div>
   `,
@@ -220,13 +299,10 @@ PropertyView.types.number = PropertyView.extend({
     max: ['number', false, null]
   },
 
-  _handleChange: function(evt) {
-    var parent = this.model.collection.parent.model;
-    this.sendCommand('propChange', {
-      path: objectPath(parent),
-      property: this.model.name,
-      value: Number(evt.target.value)
-    });
+  _handleChange: function() {
+    var payload = PropertyView.prototype._handleChange.apply(this, arguments);
+    payload.value = Number(payload.value);
+    return payload;
   }
 });
 
@@ -279,6 +355,12 @@ var DetailsView = View.extend({
   initialize: function() {
     this.listenToAndRun(this, 'change:definition', function() {
       this.properties.reset(this.definition);
+    });
+
+    this.listenTo(this.rootView, 'all', function(evtName) {
+      if (evtName.indexOf('app:') === 0 && evtName.indexOf('Mapping') > 0) {
+        this.trigger('change:model', this.model);
+      }
     });
   },
 

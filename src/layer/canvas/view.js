@@ -1,4 +1,6 @@
 'use strict';
+var assign = require('lodash.assign');
+var mockedCtx = require('./mocked-canvas-2d-context');
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
@@ -30,10 +32,6 @@ module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
     }
   },
 
-  remove: function() {
-    return ScreenLayerView.prototype.remove.apply(this, arguments);
-  },
-
   update: function() {
     this.model.frametime = this.parent.model.frametime;
     if (!this.parent || !this.parent.el) return;
@@ -47,31 +45,26 @@ module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
     this.model.canvasLayers.filter(function (layer) {
       return layer.active;
     }).forEach(function(layer) {
-      /*
-      ctx.shadowOffsetX = layer.shadowOffsetX;
-      ctx.shadowOffsetY = layer.shadowOffsetY;
-      ctx.shadowBlur = layer.shadowBlur;
-      ctx.shadowColor = layer.shadowColor;
-      */
-      ctx.globalAlpha = layer.opacity / 100;
-      ctx.globalCompositeOperation = layer.blending;
-      // try {
+      // mockedCtx._.properties.forEach(function(propName) {
+      //   if (propName !== 'canvas') ctx[propName] = layer[propName];
+      // });
+
       var err = layer.draw(ctx);
-      // }
-      // catch (e) {
-      //   console.info('canvas script error on "%s" layer', layer.getId(), e.message);
-      // }
-      if (err) console.warn('canvas script error on "%s" layer', layer.getId(), err.stack);
+      if (err && err instanceof Error) {
+        console.warn('canvas script error on "%s" layer', layer.getId(), err.message);
+      }
     });
 
-    this.destCtx.clearRect(0, 0, cw, ch);
+    if (this.model.clear) {
+      this.destCtx.clearRect(0, 0, cw, ch);
+    }
     this.destCtx.drawImage(this.offCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
     return this;
   },
 
 
-  bindings: require('lodash.assign')({
+  bindings: assign({
     width: {
       name: 'width',
       type: 'attribute'

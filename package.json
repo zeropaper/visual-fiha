@@ -27,13 +27,14 @@
     "_make-index": "node ./.markitdown.js",
     "_update-report": "plato -r -q -d report src",
     "prestage-master": "npm-run-all --parallel build _make-index _update-report",
-    "stage-master": "git add index.html report/ ./worker-javascript.js ./test/expect.js ./*.worker.js ./*-build.js && git commit --allow-empty -m \"update builds\""
+    "stage-master": "git add index.html report/ ./worker-javascript.js ./*.worker.js ./*-build.js && git commit --allow-empty -m \"update builds\""
   },
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",
   "devDependencies": {
     "ace-builds": "^1.2.5",
     "ampersand-collection": "^2.0.0",
+    "ampersand-events": "^2.0.2",
     "ampersand-router": "^4.0.0",
     "ampersand-state": "^5.0.2",
     "ampersand-view": "^10.0.1",
@@ -52,6 +53,7 @@
     "marked": "^0.3.6",
     "npm-run-all": "^4.0.0",
     "plato": "^1.7.0",
+    "ramda": "^0.23.0",
     "rimraf": "^2.5.4",
     "txml": "^1.0.17",
     "wdio": "latest",
@@ -59,7 +61,7 @@
     "wdio-selenium-standalone-service": "latest",
     "wdio-spec-reporter": "0.0.5",
     "wdio-static-server-service": "latest",
-    "webpack": "^2.2.0",
+    "webpack": "^2.2.1",
     "webpack-dev-server": "^2.2.0",
     "worker-loader": "^0.7.1"
   }

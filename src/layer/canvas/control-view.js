@@ -124,10 +124,11 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
     }
     nameEl.value = '';
 
-    var newView = this.canvasLayersView.views.find(function(v) {
-      return v.model === res;
+    this.rootView.sendCommand('propChange', {
+      path: objectPath(this.model),
+      property: 'canvasLayers',
+      value: this.model.canvasLayers.serialize()
     });
-    newView._editDrawFunction();
   },
 
   initialize: function () {
