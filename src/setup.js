@@ -1,272 +1,318 @@
 'use strict';
-
+/*global store, width, height, layer, grid, beginPath, closePath, dot, circle, moveTo, lineTo, fillStyle, stroke, strokeStyle, lineWidth, clearRect, timeDomain, frequency, bufferLength, restoreContexts, cacheContext*/
 window.VF = window.VF || {};
 
 var canvasLayers = [
-//   {
-//     name: 'background',
-//     weight: 0,
-//     drawFunction: function(ctx) {
-//       ctx.fillStyle = this.colorA;
-//       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-//     },
-//     props: {
-//       colorA: ['string', true, '#bbb']
-//     }
-//   },
+  {
+    name: 'levels',
+    active: false,
+    zIndex: 0,
+    props: {
+      levelA: ['number', true, 30],
+      levelB: ['number', true, 120]
+    },
+    drawFunction: function () {
+  lineWidth(1);
+  strokeStyle('#fff');
 
-//   {
-//     name: 'vidA',
-//     weight: 10,
-//     active: false,
-//     drawFunction: function(ctx) {
-//       var url = this.src;
-//       window.VF.canvas.loaders.video(url, function(err, video) {
-//         if (!video) return;
-//         ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, ctx.canvas.width, ctx.canvas.height);
-//       });
-//     },
-//     props: {
-//       reverse: ['boolean', true, false],
-//       src: ['string', true, './assets/kd/fire.mp4']
-//     }
-//   },
+  beginPath();
+  moveTo(0, height - layer.levelA);
+  lineTo(width, height - layer.levelA);
+  stroke();
 
-//   // {
-//   //   name: 'imgA',
-//   //   weight: 20,
-//   //   active: false,
-//   //   drawFunction: function(ctx) {
-//   //     var url = './assets/kd/kd_logo_final.svg';
-//   //     window.VF.canvas.loaders.img(url, function(err, img) {
-//   //       if (!img) return;
-//   //       var is = Math.min(img.width, img.height);
-//   //       var cs = Math.min(ctx.canvas.width, ctx.canvas.height);
-//   //       var s = Math.min(is, cs);
-//   //       var x = (ctx.canvas.width - s) * 0.5;
-//   //       var y = (ctx.canvas.height - s) * 0.5;
-//   //       ctx.drawImage(img, x, y, s, s);
-//   //     });
-//   //   },
-//   //   props: {
-//   //     colorA: ['string', true, '#bbb']
-//   //   }
-//   // },
+  beginPath();
+  moveTo(0, height - layer.levelB);
+  lineTo(width, height - layer.levelB);
+  stroke();
 
-//   {
-//     name: 'panorama',
-//     weight: 20,
-//     active: false,
-//     drawFunction: function(ctx) {
-//       var url = this.src;
-//       var shift = this.shift;
-//       var frametime = this.screenState.frametime || 0;
-//       window.VF.canvas.loaders.img(url, function(err, img) {
-//         if (!img) return;
-//         var iw = img.width;
-//         var ih = img.height;
-//         var cw = ctx.canvas.width;
-//         var ch = ctx.canvas.height;
-//         var fh = ch / ih;
-//         var fw = cw / iw;
-//         var sx = (frametime % (iw - (cw * fh)) + shift);
-//         var dw = cw / fw;
-//         var dh = ch / fh;
+  // -----------------------------------
+  var length = bufferLength();
+  var barWidth = (width / length) - 1;
+  var f = 0;
+  var alpha;
+  lineWidth(barWidth);
 
-//         ctx.drawImage(img, sx, 0, iw, ih, 0, 0, dw, dh);
-//       });
-//     },
-//     props: {
-//       src: ['string', true, './assets/panorma-karl-marx-allee.jpg'],
-//       shift: ['number', true, 0]
-//     },
-//   },
+  grid(length, 1, function(x) {
+    var td = timeDomain(f) * 1;
+    var freq = frequency(f);
 
-//   // {
-//   //   name: 'grid',
-//   //   active: true,
-//   //   weight: 40,
-//   //   drawFunction: window.VF.canvas.lines.grid,
-//   //   props: {
-//   //     lineColor: ['string', true, '#fff'],
-//   //     lineWidth: ['number', true, 1],
-//   //     randFactor: ['number', true, 0],
-//   //     pointRows: ['number', true, 8],
-//   //     pointRadius: ['number', true, 1],
-//   //     pointsCount: ['number', true, 40]
-//   //   },
-//   // },
+    alpha = td > layer.levelA && td < layer.levelB ? 0.7 : 0;
+    strokeStyle('rgba(160,122,122,' + alpha + ')');
+    beginPath();
+    moveTo(x, height);
+    lineTo(x, height - td);
+    stroke();
 
-//   // {
-//   //   name: 'loungeA',
-//   //   active: false,
-//   //   weight: 40,
-//   //   drawFunction: function(ctx) {
-//   //     var cw = ctx.canvas.width;
-//   //     var ch = ctx.canvas.height;
-//   //     var bw = Math.max(1, this.barWidth);
-//   //     var bbw = this.borderWidth;
-//   //     var sh = (bw - (ch % bw)) * 0.5;
-//   //     var c = (ch / Math.max(2, bw)) + bw;
-//   //     var s = this.frametime % cw;
-//   //     var dl = window.VF.canvasTools.drawLine;
-//   //     var b, l, r, y;
+    alpha = freq > layer.levelA && freq < layer.levelB ? 0.7 : 0;
+    strokeStyle('rgba(122,122,160,' + alpha + ')');
+    beginPath();
+    moveTo(x, height);
+    lineTo(x, height - freq);
+    stroke();
+    f++;
+  });
+}.toString()
+  },
+  {
+    name: 'audio1',
+    active: false,
+    zIndex: 0,
+    props: {
+      colorA: ['string', true, '#A581FF'],
+      widthA: ['number', true, 1],
+      colorB: ['string', true, '#66D9EF'],
+      widthB: ['number', true, 1]
+    },
+    drawFunction: function () {
+  var x = width * 0.5;
+  var y = height * 0.5;
+  var r = Math.min(x, y) - 20;
+  var rad = Math.PI * 2;
+  var length = bufferLength();
+  var shift1 = Math.PI * 0.5;
+  var shift2 = Math.PI * 1.5;
 
-//   //     ctx.fillStyle = this.barColor;
-//   //     ctx.strokeStyle = this.borderColor;
+  var i, a, f, td, lx, ly;
 
+  // -----------------------------
 
-//   //     for (b = 0; b < c; b++) {
-//   //       if (b % 2) {
-//   //         l = s - cw;
-//   //         r = l + cw;
-//   //         y = (b * bw) - sh;
-//   //         dl(ctx, l, y, r, y, bw, bbw);
-//   //       }
-//   //       else {
-//   //         l = s + cw;
-//   //         r = l - cw;
-//   //         y = (b * bw) - sh;
-//   //         dl(ctx, r, y, l, y, bw, bbw);
-//   //       }
-//   //     }
-//   //   },
-//   //   props: {
-//   //     borderWidth: ['number', true, 0],
-//   //     barWidth: ['number', true, 50],
-//   //     barColor: ['string', true, 'rgb(234, 105, 41)'],
-//   //     borderColor: ['string', true, 'rgb(236, 183, 156)'],
-//   //     beat: ['number', true, 100]
-//   //   },
-//   // },
+  strokeStyle(layer.colorA);
+  lineWidth(layer.widthA);
+  beginPath();
+  for (i = 0; i < length; i++) {
+    a = ((rad / length) * i) - shift1;
+    f = (r / 100) * (frequency(i) / 2);
+    lx = Math.round(x + Math.cos(a) * f);
+    ly = Math.round(y + Math.sin(a) * f);
+    lineTo(lx, ly);
+  }
+  stroke();
+
+  beginPath();
+  i = 0;
+  lineTo(0, height * 0.5);
+  lineTo(width, height * 0.5);
+  stroke();
+
+  beginPath();
+  grid(length, 1, function(x, y){
+    lineTo(x, y + (frequency(i) * 0.5));
+    i++;
+  });
+  stroke();
+
+  // -----------------------------
+
+  strokeStyle(layer.colorB);
+  lineWidth(layer.widthB);
+  beginPath();
+  for (i = 0; i < length; i++) {
+    a = ((rad / length) * i) - shift2;
+    td = (r / 100) * (timeDomain(i) / 2);
+    lx = Math.round(x + Math.cos(a) * td);
+    ly = Math.round(y + Math.sin(a) * td);
+    lineTo(lx, ly);
+  }
+  stroke();
+
+  beginPath();
+  i = 0;
+  lineTo(0, height * 0.5);
+  lineTo(width, height * 0.5);
+  stroke();
+
+  beginPath();
+  grid(length, 1, function(x, y){
+    lineTo(x, y + (timeDomain(i) * 0.5));
+    i++;
+  });
+  stroke();
+}.toString()
+  },
+
 
   {
     name: 'lines',
-    active: false,
-    weight: 50,
-    drawFunction: `function(ctx) {
-      var h;
-      var w;
-      var vh;
-      var vw;
-      var cw = ctx.canvas.width;
-      var ch = ctx.canvas.height;
-      var hcw = cw * 0.5;
-      var hch = ch * 0.5;
-      var bw = Math.max(1, this.barWidth || 0);
-      var bbw = bw * 0.25;
-      var dl = window.VF.canvasTools.drawLine;
-      // dl(ctx, 100, 100, 200, 100, 50, 2);
-
-      // dl(ctx, 100, 200, 200, 350, 50, 2);
-
-      var _ca = 100 - this.arbitraryA;
-      var _cb = 100 - this.arbitraryB;
-      var dbw = bw * 2;
-      ctx.barColor = this.barColor;
-      // ctx.lineWidth = bw;
-
-      vh = (ch / 200) * _ca;
-      for (w = (hcw - (Math.floor(hcw / dbw) * dbw)); w <= cw; w += dbw) {
-        dl(ctx, w, vh, w, ch - vh, bw, bbw);
-      }
-
-      vw = (cw / 200) * _cb;
-      for (h = (hch - (Math.floor(hcw / dbw) * dbw)); h <= ch; h += dbw) {
-        dl(ctx, vw, h, cw - vw, h, bw, bbw, true);
-      }
-    }`,
+    active: true,
+    zIndex: 50,
     props: {
-      barWidth: ['number', true, 50],
-      barColor: ['string', true, '#fff'],
-      borderColor: ['string', true, '#fff'],
-      arbitraryA: ['number', true, 10],
-      arbitraryB: ['number', true, 10]
+      text:['string', true, 'Hello World!'],
+      toggleA: ['boolean', true, false],
+      knobA: ['number', true, 127],
+      knobB: ['number', true, 127],
+      knobC: ['number', true, 127]
     },
-  },
+    drawFunction: function () {
+  var l = bufferLength();
+  var str = layer.text || '';
 
-//   // {
-//   //   name: 'frametime',
-//   //   active: false,
-//   //   weight: 60,
-//   //   drawFunction: window.VF.canvas.utils.frametime
-//   // },
+  var letters = str.length <= l ? repeat('', Math.round((l - str.length) / 2))
+                .concat(str.split('')) : str.split('');
+  var f = 0;
+  var k = Math.round(layer.knobA * 0.05);
+  var p = Math.max(1, k);
+  var d = Math.pow(2, p);
 
-//   // {
-//   //   name: 'audio',
-//   //   active: false,
-//   //   weight: 30,
-//   //   drawFunction: window.VF.canvas.lines.roundFrequencies
-//   // },
+  textAlign('center');
+  textBaseline('middle');
 
-//   // {
-//   //   name: 'fps',
-//   //   active: false,
-//   //   weight: 60,
-//   //   drawFunction: window.VF.canvas.utils.fps
-//   // }
+  grid(l, l / d, function(...args) {
+    fillStyle('black');
+    fillStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');
+    strokeStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');
+
+    circle(...args, timeDomain(f) * 0.1);
+    polygone(...args, timeDomain(f) * layer.knobC * 0.05);
+    // font('20px monospace');
+    // font('20px monospace');
+    // txt(letters[f], ...args);
+    f++;
+  });
+}.toString()
+  }
 ];
 
 window.VF._defaultSetup = {
   mappings: [
-//     {
-//       source: 'frametime',
-//       target: 'signals.beat:a.frametime',
-//       transform: 'function (v) {\n  return v * 0.5;\n}'
-//     },
-//     {
-//       source: 'midi.inputs.nk2.slider1',
-//       target: 'signals.color:a.lightness',
-//       transform: 'function (v) {\n  return (v /127) * 100;\n}'
-//     },
-//     {
-//       source: 'signals.beat:a.result',
-//       target: 'signals.color:a.hue'
-//     },
-//     {
-//       source: 'frametime',
-//       target: 'layers.canvas.canvasLayers.background.opacity',
-//       transform: 'function (v) {\n  return v % 100;\n}'
-//     },
-//     {
-//       source: 'midi.inputs.nk2.r1',
-//       target: 'layers.canvas.canvasLayers.background.active',
-//       transform: 'function (v) {\n  return !!v;\n}'
-//     },
-//     {
-//       source: 'signals.color:a.result',
-//       target: 'layers.canvas.canvasLayers.background.colorA'
-//     },
-//     {
-//       source: 'midi.inputs.nk2.slider2',
-//       target: 'layers.canvas.canvasLayers.grid.lineWidth'
-//     },
-//     {
-//       source: 'midi.inputs.nk2.knob2',
-//       target: 'layers.canvas.canvasLayers.grid.randFactor'
-//     },
-//     {
-//       source: 'midi.inputs.nk2.slider3',
-//       target: 'layers.canvas.canvasLayers.grid.pointRadius'
-//     }
+    {
+      targets: [
+        'layers.no-signal.opacity'
+      ],
+      transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
+      name: 'nk2.slider1',
+      source: 'signals.beatA.result'
+    },
+    // // {
+    // //   targets: [
+    // //     'layers.no-signal.opacity'
+    // //   ],
+    // //   transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
+    // //   name: 'nk2.slider1',
+    // //   source: 'midi:nk2.slider1'
+    // // },
+    // {
+    //   targets: [
+    //     'layers.no-signal.active'
+    //   ],
+    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+    //   name: 'nk2.r1',
+    //   source: 'midi:nk2.r1'
+    // },
+    // {
+    //   targets: [
+    //     'layers.Sky-1-back.opacity',
+    //     'layers.Sky-1-front.opacity'
+    //   ],
+    //   transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
+    //   name: 'nk2.slider2',
+    //   source: 'midi:nk2.slider2'
+    // },
+    // {
+    //   targets: [
+    //     'layers.Sky-1-back.active'
+    //   ],
+    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+    //   name: 'nk2.r2',
+    //   source: 'midi:nk2.r2'
+    // },
+    // {
+    //   targets: [
+    //     'layers.Sky-1-front.active'
+    //   ],
+    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+    //   name: 'nk2.m2',
+    //   source: 'midi:nk2.m2'
+    // },
+    // {
+    //   targets: [
+    //     'layers.canvas.canvasLayers.lines.knobA'
+    //   ],
+    //   transformFunction: 'function (value) {\n  return value;\n}',
+    //   name: 'nk2.knob1',
+    //   source: 'midi:nk2.knob1'
+    // },
+    // {
+    //   targets: [
+    //     'layers.canvas.canvasLayers.lines.knobB'
+    //   ],
+    //   transformFunction: 'function (value) {\n  return value;\n}',
+    //   name: 'nk2.knob2',
+    //   source: 'midi:nk2.knob2'
+    // },
+    // {
+    //   targets: [
+    //     'layers.canvas.canvasLayers.lines.knobC'
+    //   ],
+    //   transformFunction: 'function (value) {\n  return value;\n}',
+    //   name: 'nk2.knob3',
+    //   source: 'midi:nk2.knob3'
+    // },
+    // {
+    //   targets: [
+    //     'layers.zeropaper.opacity'
+    //   ],
+    //   transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
+    //   name: 'nk2.slider6',
+    //   source: 'midi:nk2.slider6'
+    // },
+    // {
+    //   targets: [
+    //     'layers.zeropaper.active'
+    //   ],
+    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+    //   name: 'nk2.r6',
+    //   source: 'midi:nk2.r6'
+    // },
+    // {
+    //   targets: [
+    //     'layers.vf.opacity'
+    //   ],
+    //   transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
+    //   name: 'nk2.slider7',
+    //   source: 'midi:nk2.slider7'
+    // },
+    // {
+    //   targets: [
+    //     'layers.vf.active'
+    //   ],
+    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+    //   name: 'nk2.r7',
+    //   source: 'midi:nk2.r7'
+    // },
+    // {
+    //   targets: [
+    //     'signals.beatA.input'
+    //   ],
+    //   transformFunction: 'function (value) {\n  return value + 63;\n}',
+    //   name: 'beatKnob',
+    //   source: 'midi:nk2.knob8'
+    // },
+    // {
+    //   targets: [
+    //     'signals.colorA.hue'
+    //   ],
+    //   transformFunction: 'function (newVal, prevVal) {\n  return newVal;\n}',
+    //   name: 'beatA',
+    //   source: 'signals.beatA.result'
+    // }
   ],
 
 
   signals: [
     {
-      type: 'hslaSignal',
+      type: 'hsla',
       defaultValue: '180,50%,50%,1',
-      name: 'color:a',
+      name: 'colorA',
       hue: 180,
       saturation: 100,
       lightness: 50,
       alpha: 100,
     },
     {
-      type: 'beatSignal',
-      name: 'beat:a',
+      type: 'beat',
+      name: 'beatA',
       input: 125
-    },
+    }
   ],
 
 
@@ -274,7 +320,7 @@ window.VF._defaultSetup = {
     {
       type: 'img',
       name: 'no-signal',
-      active: true,
+      active: false,
       src: './assets/no-signal.jpg'
     },
     {
@@ -285,45 +331,36 @@ window.VF._defaultSetup = {
     },
 
     {
+      type: 'canvas',
+      name: 'canvas',
+      active: true,
+      mixBlendingMode: 'soft-light',
+      canvasLayers: canvasLayers,
+    },
+
+    {
       type: 'SVG',
       name: 'zeropaper',
       active: false,
-      src: './assets/zeropaper-fat.svg'
+      src: './assets/zeropaper-fat.svg',
+      mixBlendingMode: 'overlay'
     },
 
     {
       type: 'SVG',
       name: 'vf',
       active: false,
-      src: './assets/visual-fiha.svg'
-    },
-
-    {
-      type: 'SVG',
-      name: 'KD',
-      active: false,
-      src: './assets/kd/kd_logo_final.svg'
-    },
-
-    {
-      type: 'canvas',
-      name: 'canvas',
-      active: true,
-      canvasLayers: canvasLayers
+      src: './assets/visual-fiha.svg',
+      opacity: 30,
+      mixBlendingMode: 'saturation'
     },
 
     {
       type: 'img',
       name: 'Sky-1-front',
       active: false,
-      src: './assets/sky1/sky1-front-grey.png'
+      src: './assets/sky1/sky1-front-grey.png',
+      opacity: 0
     }
   ]
 };
-
-
-// window.VF._defaultSetup = {
-//   mappings: [],
-//   signals: [],
-//   layers: []
-// };

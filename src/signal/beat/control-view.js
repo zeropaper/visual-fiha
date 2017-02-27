@@ -1,7 +1,7 @@
 'use strict';
 var assign = require('lodash.assign');
 var SignalControlView = require('./../control-view');
-var BeatSignalControlView = SignalControlView.types.beatSignal = SignalControlView.extend({
+var BeatSignalControlView = SignalControlView.types.beat = SignalControlView.extend({
   template: '<section class="rows signal signal-beat">' +
     '<header class="row">' +
       '<h3 class="name"></h3>' +

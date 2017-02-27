@@ -2,7 +2,14 @@
 var SignalState = require('./../state');
 
 var BeatState = SignalState.types.beat = SignalState.extend({
-  session: {
+  initialize: function() {
+    SignalState.prototype.initialize.apply(this, arguments);
+    this.listenTo(this.collection, 'frametime', function(frametime) {
+      this.frametime = frametime;
+    });
+  },
+
+  props: {
     frametime: ['number', true, 0]
   },
 
@@ -29,9 +36,9 @@ var BeatState = SignalState.types.beat = SignalState.extend({
   computeSignal: function() {
     var frametime = this.frametime;
     var preTransform = !frametime ? 0 : (100 - (((frametime % this.timeBetweenBeats) / this.timeBetweenBeats) * 100));
-    var result = SignalState.prototype.computeSignal.apply(this, [preTransform]);
-    // this.collection.parent.signals[this.name] = result;
-    return result;
+    return preTransform;
+    // var result = SignalState.prototype.computeSignal.apply(this, [preTransform]);
+    // return result;
   }
 });
 

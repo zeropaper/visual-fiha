@@ -2,9 +2,8 @@
 var State = require('ampersand-state');
 var Collection = require('ampersand-collection');
 
-var StateService = require('./../state-service');
 var objectPath = require('./../object-path');
-var resolve = StateService.resolve;
+var resolve = require('./../resolve');
 
 
 

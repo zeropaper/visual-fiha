@@ -1,4 +1,4 @@
-describe('Mapping Control View', function () {
+describe.skip('Mapping Control View', function () {
   'use strict';
   function warn(e) {console.warn(e);}
   var expect = require('expect.js');

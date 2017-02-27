@@ -1,7 +1,7 @@
 'use strict';
 var assign = require('lodash.assign');
 var SignalControlView = require('./../control-view');
-var HSLASignalControlView = SignalControlView.types.hslaSignal = SignalControlView.extend({
+var HSLASignalControlView = SignalControlView.types.hsla = SignalControlView.extend({
   template: [
     '<section class="rows signal signal-color">',
     '<header class="row">',

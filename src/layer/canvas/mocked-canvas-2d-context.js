@@ -61,6 +61,16 @@ var mockedCtx = {
   font: '10px sans-serif',
   textAlign: 'start',
   textBaseline: 'alphabetic',
-  canvas: {width: 400, height: 300}
+  canvas: {width: 400, height: 300},
+  // utilities
+  _: {}
 };
+mockedCtx._.methods = Object.keys(mockedCtx)
+  .filter(function(name) {
+    return typeof mockedCtx[name] === 'function';
+  });
+mockedCtx._.properties = Object.keys(mockedCtx)
+  .filter(function(name) {
+    return name != '_' && typeof mockedCtx[name] !== 'function';
+  });
 module.exports = mockedCtx;

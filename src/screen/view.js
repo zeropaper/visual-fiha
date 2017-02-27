@@ -6,7 +6,7 @@ require('./../layer/canvas/view');
 require('./../layer/svg/view');
 require('./../layer/video/view');
 require('./../layer/img/view');
-var logger = require('./../logging')('green');
+// var logger = require('./../logging')('green');
 
 
 function signature(fn) {
@@ -39,7 +39,8 @@ var commands = {
   bootstrap: function bootstrap(state) {
     this.update(state || {});
   },
-  updateLayers: function(layers) {
+  updateLayers: function(layers, audio) {
+    if (audio) this.model.audio = audio;
     var obj;
     for (var l = 0; l < layers.length; l++) {
       obj = layers[l];

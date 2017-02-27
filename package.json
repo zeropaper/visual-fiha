@@ -34,6 +34,7 @@
   "devDependencies": {
     "ace-builds": "^1.2.5",
     "ampersand-collection": "^2.0.0",
+    "ampersand-events": "^2.0.2",
     "ampersand-router": "^4.0.0",
     "ampersand-state": "^5.0.2",
     "ampersand-view": "^10.0.1",
@@ -52,6 +53,7 @@
     "marked": "^0.3.6",
     "npm-run-all": "^4.0.0",
     "plato": "^1.7.0",
+    "ramda": "^0.23.0",
     "rimraf": "^2.5.4",
     "txml": "^1.0.17",
     "wdio": "latest",
@@ -59,7 +61,7 @@
     "wdio-selenium-standalone-service": "latest",
     "wdio-spec-reporter": "0.0.5",
     "wdio-static-server-service": "latest",
-    "webpack": "^2.2.0",
+    "webpack": "^2.2.1",
     "webpack-dev-server": "^2.2.0",
     "worker-loader": "^0.7.1"
   }

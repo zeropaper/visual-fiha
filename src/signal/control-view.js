@@ -49,7 +49,7 @@ var SignalControlView = View.extend({
   _showDetails: function () {
     this.rootView.showDetails(new SignalDetailsView({
       parent: this,
-      model: this.model,
+      model: this.model
     }));
   },
 

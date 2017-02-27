@@ -46,17 +46,16 @@ function getMappings(manufacturer, name) {
 
 
 function handleMIDIMessage(accessState, model) {
-  var setThrottled = throttle(function(name, velocity) {
-    model.set(name, velocity);
-  }, 1000 / 16);
+  // var setThrottled = throttle(function(name, velocity) {
+  //   model.set(name, velocity);
+  // }, 1000 / 16);
   var _mappings = getMappings(model.manufacturer, model.name);
 
   return function(MIDIMessageEvent) {
     if (!model.active) { return; }
-
     var info = _mappings(MIDIMessageEvent.data);
-    if (info.name) setThrottled(info.name, info.velocity);
-    model.trigger('midi:change', info.name, info.velocity);
+    // if (info.name) setThrottled(info.name, info.velocity);
+    if (model.collection.parent && info.name) model.collection.parent.trigger('midi:change', model.id, info.name, info.velocity);
   };
 }
 

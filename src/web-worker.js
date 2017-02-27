@@ -1,12 +1,11 @@
 /* jshint worker:true */
 'use strict';
-
-var logger = require('./logging')('orange');
+// var logger = require('./logging')('orange');
 
 var worker = self;
-worker.mappings = require('./mapping/service');
-worker.mappings.context = worker;
+var resolve = require('./resolve');
 
+var Mappings = require('./mapping/data');
 
 var ScreenState = require('./screen/state');
 worker.screen = new ScreenState();
@@ -20,7 +19,7 @@ worker.signals = new SignalCollection({
 
 
 
-var __dataContext = worker.mappings.context = {
+var __dataContext = {
   frametime: 0,
   firstframetime: 0,
   audio: {},
@@ -29,42 +28,11 @@ var __dataContext = worker.mappings.context = {
 };
 
 
-
-// var tXML = require('txml');
-// function loadSVG(url, done) {
-//   done = done || function(err, obj) {
-//   };
-
-//   fetch(url)
-//     .then(function(res) {
-//       return res.text();
-//     })
-//     .then(function(string) {
-//       var styles = {};
-
-//       try {
-//         tXML(string, {
-//           filter: function(child) {
-//             return child.attributes && child.attributes.id && child.attributes.style;
-//           }
-//         }).forEach(function(node) {
-//           styles[node.attributes.id] = node.attributes.style;
-//         });
-//       }
-//       catch (e) {
-//         return done(e);
-//       }
-
-//       done(null, {
-//         source: string,
-//         styles: styles
-//       });
-//     })
-//     .catch(done);
-// }
+worker.mappings = new Mappings([], {
+  context: __dataContext
+});
 
 
-// loadSVG('assets/zeropaper-fat.svg');
 
 
 
@@ -125,28 +93,51 @@ function broadcastCommand(name, payload) {
 
 // if there's some magic in that software...
 // it's probably in the following lines
-var _fps = 45;
+var _fps = 30;
 var _prev = performance.now();
 var _frameMillis = 1000 / _fps;
 var _internalTimeout;
-// var _frameCounter = 0;
-// var _samplesCount = 10;
-// var _prevSamples = performance.now();
+var _frameCounter = 0;
+var _samplesCount = _fps * 2;
+var _prevSamples = _prev;
+var _animationStartTime = performance.now();
 
 function _animate() {
+  worker.screen.frametime = __dataContext.frametime = performance.now() - _animationStartTime;
+  worker.signals.trigger('frametime', __dataContext.frametime);
+
+  emitCommand('updateSignals', {
+    signals: worker.signals.serialize()
+  });
+
   broadcastCommand('updateLayers', {
+    frametime: __dataContext.frametime,
+    audio: worker.audio,
     layers: worker.layers.serialize()
   });
 
+
   var _now = performance.now();
-  var timeDiff = _frameMillis - ((_now - _prev) - _frameMillis);
-  // if (_frameCounter === _samplesCount) {
-  //   _frameCounter = 0;
-  //   _prevSamples = _now;
-  // }
-  // _frameCounter++;
+  var elapsed = _now - _prev;
+  var timeDiff = _frameMillis - (elapsed - _frameMillis);
   _prev = _now;
   _internalTimeout = setTimeout(_animate, timeDiff);
+  // console.info('_frameMillis: %s, elapsed %s, timeDiff %s', _frameMillis, elapsed.toFixed(2), timeDiff.toFixed(2));
+
+  _frameCounter++;
+  if (_frameCounter === _samplesCount) {
+    // inform the controller of the health of the worker
+    emitCommand('health', {
+      frametime: worker.screen.frametime,
+      elapsed: _now - _prevSamples,
+      fps: _fps,
+      frameCounter: _frameCounter,
+      samplesCount: _samplesCount
+    });
+
+    _frameCounter = 0;
+    _prevSamples = _now;
+  }
 }
 _internalTimeout = setTimeout(_animate, _frameMillis);
 
@@ -164,14 +155,26 @@ channel.addEventListener('message', function(evt) {
   screens[payload.id] = payload.id;
 });
 
+// var _bootstrapTime = Date.now();
+// var _executedCommands = [];
+// var _previousCommandIndex = 0;
 
+// setInterval(function() {
+//   if (_previousCommandIndex < _executedCommands.length) {
+//     console.info('send %s timelineCommands', _executedCommands.length - _previousCommandIndex);
+//     emitCommand('timelineCommands', {
+//       commands: _executedCommands.slice(_previousCommandIndex, _executedCommands.length)
+//     });
+//     _previousCommandIndex = _executedCommands.length;
+//   }
+// }, 100);
 
 
 var commands = {
   bootstrap: function(layers, signals, mappings) {
     worker.layers.set(layers);
     worker.signals.set(signals);
-    worker.mappings.import(mappings, __dataContext, true);
+    worker.mappings.import(mappings, true);
 
     broadcastCommand('bootstrap', {
       signals: worker.signals.serialize(),
@@ -182,44 +185,47 @@ var commands = {
 
 
 
+  // event: worker.mappings.process,
 
-
-
-
-  midi: function(name, velocity) {
+  midi: function(deviceName, property, velocity) {
+    worker.mappings.process('midi:' + deviceName + '.' + property, velocity);
   },
+
+
+
   heartbeat: function(frametime, audio) {
     worker.frametime = frametime;
     worker.audio = audio;
-
-    broadcastCommand('heartbeat', {
-      frametime: frametime,
-      audio: audio
-    });
   },
 
 
 
   propChange: function(path, property, value) {
-    if (!path || !property) {
-      throw new Error('Missing arguments for propChange');
-    }
-    worker.mappings.resolve(path).set(property, value);
+    var obj = resolve(path, __dataContext);
+    if (!obj) return;
+    obj.set(property, value);
   },
 
 
 
-  addMapping: function(info) {
-    worker.mappings.add(info);
+  addMapping: function(mapping) {
+    worker.mappings.add(mapping);
+    emitCommand('addMapping', {mapping: mapping});
   },
-  updateMapping: function(info) {
-    var state = worker.mappings.find(function(mapping) {
-      return info.id === mapping.id;
-    });
-    state.set(info);
+  updateMapping: function(mapping) {
+    var state = worker.mappings.get(mapping.name);
+    // console.info('found %s mapping state?', mapping.name, state, mapping);
+    if (state) state.set(mapping);
+    emitCommand('updateMapping', {mapping: mapping});
+  },
+  removeMapping: function(name) {
+    worker.mappings.remove(name);
+    emitCommand('removeMapping', {name: name});
   },
   resetMappings: function(mappings) {
-    worker.mappings.import(mappings, __dataContext, true);
+    // console.info('worker resetMappings', mappings.length);
+    worker.mappings.import(mappings, true);
+    // emitCommand('resetMappings', {mappings: mappings});
   },
 
 
@@ -248,9 +254,15 @@ var commands = {
   updateSignal: function(signal, signalName) {
     var state = worker.signals.get(signalName);
     state.set(signal);
-    emitCommand('addSignal', {
+    emitCommand('updateSignal', {
       signalName: signalName,
       signal: signal
+    });
+  },
+  updateSignals: function(signals) {
+    worker.signals.set(signals);
+    emitCommand('updateSignals', {
+      signals: signals
     });
   },
 
@@ -293,8 +305,6 @@ var commands = {
 
 
 
-
-
 Object.keys(commands).forEach(registerCommand);
 
 
@@ -330,6 +340,14 @@ worker.addEventListener('message', function(evt) {
     return evt.data.payload[argName];
   });
 
+  // if (['heartbeat'].indexOf(commandName) === -1) {
+  //   _executedCommands.push({
+  //     time: Date.now(),
+  //     command: commandName,
+  //     payload: evt.data.payload
+  //   });
+  // }
+
   var result = command.apply(worker, commandArgs);
   if (!eventId) return;
   worker.postMessage({
@@ -338,4 +356,7 @@ worker.addEventListener('message', function(evt) {
     payload: result,
     eventId: eventId
   });
-}, false);
+}, {
+  passive: true,
+  capture: false
+});
