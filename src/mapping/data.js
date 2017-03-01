@@ -25,8 +25,16 @@ function compileTransformFunction(fn) {
   var navigator, window, global, document, module, exports;
 
   ${ ramdaMethods }
-
-  return ${ fn.toString() };
+  return function(val, oldVal) {
+    var result;
+    try {
+      result = (${ fn.toString() })(val, oldVal);
+    }
+    catch(e) {
+      result = e;
+    }
+    return result;
+  };
 })();`;
   try {
     eval(str);// jshint ignore:line
@@ -53,63 +61,26 @@ var MappingEmitter = State.extend({
       fn: function() {
         return compileTransformFunction(this.transformFunction);
       }
+    },
+    sourceState: {
+      deps: ['source'],
+      fn: function() {
+        if (this.source.indexOf('midi:') === 0) return;
+        var sourcePath = this.source.split('.');
+        sourcePath.pop();
+        sourcePath = sourcePath.join('.');
+        return this.collection.resolve(sourcePath);
+      }
+    },
+    sourceProperty: {
+      deps: ['source'],
+      fn: function() {
+        if (this.source.indexOf('midi:') === 0) return;
+        var sourcePath = this.source.split('.');
+        return sourcePath.pop();
+      }
     }
   },
-
-  // processSource: function(newVal, prevVal) {
-  //   console.info('processSource as eventListener', newVal, prevVal);
-  //   this.targets.forEach(function(target) {
-  //     var parts = target.split('.');
-  //     var targetProperty = parts.pop();
-  //     var targetStatePath = parts.join('.');
-  //     var state = this.collection.resolve(targetStatePath);
-  //     if (!state) return;
-
-  //     var finalValue = this.fn(newVal, state.get(targetProperty));
-  //     // console.info('%s.%s => %s', targetStatePath, targetProperty, finalValue);
-  //     state.set(targetProperty, finalValue);
-  //   }, this);
-  // },
-
-  // bindSource: function(source) {
-  //   if (source.indexOf('midi:') === 0) return;
-  //   var sourcePath = source.split('.');
-  //   var propertyName = sourcePath.pop();
-  //   sourcePath = sourcePath.join('.');
-  //   var resolved = this.collection.resolve(sourcePath);
-
-  //   console.info('bindSource', 'change:' + propertyName, source, resolved.cid, resolved[propertyName]);
-
-  //   // this.listenTo(resolved, 'all', function(eventName) { console.info('mapping emitter source', eventName); });
-  //   this.listenTo(resolved, 'all', function(eventName, state, newValue) {
-  //     console.info('%s on behalf of %s', resolved.getId(), eventName, this.getId());
-  //     if (eventName === 'change' + propertyName) {
-  //       var previousValue = state.previousAttributes()[propertyName];
-  //       this.processSource(newValue, previousValue);
-  //     }
-  //   });
-  // },
-
-  // unbindSource: function(source) {
-  //   if (source.indexOf('midi:') === 0) return;
-  //   var sourcePath = source.split('.');
-  //   var propertyName = sourcePath.pop();
-  //   sourcePath = sourcePath.join('.');
-  //   var resolved = this.collection.resolve(sourcePath);
-
-  //   this.stopListening(resolved, 'change:' + propertyName);
-  // },
-
-  // initialize: function() {
-  //   if (this.collection.readonly) return;
-  //   this.on('all', function(eventName) { console.info('mapping emitter', eventName); });
-
-  //   this.on('change:source', function(state, newValue) {
-  //     console.info('mapping emitter source change', newValue, this.previousAttributes().source);
-  //     this.bindSource();
-  //   });
-  //   this.bindSource(this.source);
-  // }
 });
 
 var Mappings = Collection.extend({
@@ -117,16 +88,53 @@ var Mappings = Collection.extend({
 
   initialize: function(models, options) {
     if (!options.context) throw new Error('Missing context option for Mappings');
-
+    var readonly;
     if (typeof options.readonly === 'undefined') {
-      this.readonly = typeof DedicatedWorkerGlobalScope === 'undefined';
+      readonly = this.readonly = typeof DedicatedWorkerGlobalScope === 'undefined';
     }
     else {
-      this.readonly = options.readonly;
+      readonly = this.readonly = options.readonly;
     }
+
+    this.on('reset', function(collection, info) {
+      this.unbindMappings(info.previousModels).bindMappings(collection.models);
+    });
+    this.on('remove', function(model) {
+      this.unbindMappings([model]);
+    });
+    this.on('add', function(model) {
+      this.bindMappings([model]);
+    });
 
     this.context = options.context;
   },
+
+
+  bindMappings: function(mappings) {
+    if (this.readonly) return this;
+
+    (mappings || []).forEach(function(mapping) {
+      if (!mapping.sourceState) return;
+      this.listenTo(mapping.sourceState, 'all', function(evtName, source, value) {
+        if (evtName !== 'change:' + mapping.sourceProperty) return;
+        this.process([mapping], value);
+      });
+    }, this);
+
+    return this;
+  },
+
+  unbindMappings: function(mappings) {
+    if (this.readonly) return this;
+
+    (mappings || []).forEach(function(mapping) {
+      if (!mapping.sourceState) return;
+      this.stopListening(mapping.sourceState, 'all');
+    }, this);
+
+    return this;
+  },
+
 
   findMappingsBySource: function(path) {
     return this.models.filter(function(mapping) {
@@ -162,10 +170,8 @@ var Mappings = Collection.extend({
     return resolve(path, this.context);
   },
 
-  process: function(eventName, value) {
-    var mappings = this.findMappingsBySource(eventName);
-    if (!mappings || !mappings.length) return this;
-    mappings.forEach(function(info) {
+  process: function(sources, value) {
+    sources.forEach(function(info) {
       info.targets.forEach(function(target) {
         var parts = target.split('.');
         var targetProperty = parts.pop();
@@ -174,11 +180,23 @@ var Mappings = Collection.extend({
         if (!state) return;
 
         var finalValue = info.fn(value, state.get(targetProperty));
-        // console.info('%s.%s => %s', targetStatePath, targetProperty, finalValue);
-        state.set(targetProperty, finalValue);
+        if (finalValue instanceof Error) return;
+        try {
+          state.set(targetProperty, finalValue);
+        }
+        catch (e) {
+          console.info(e.message);
+        }
       }, this);
     }, this);
+
     return this;
+  },
+
+  processMIDI: function(deviceName, property, value) {
+    var sources = this.findMappingsBySource('midi:' + deviceName + '.' + property);
+    if (!sources || !sources.length) return this;
+    return this.process(sources, value);
   }
 });
 
