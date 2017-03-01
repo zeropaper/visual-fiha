@@ -34,7 +34,7 @@ localForage.config({
 function auid() {
   return parseInt((Math.random() + '.' + performance.now()).replace(/\./g, ''), 10);
 }
-var LoadedWorker = require('worker-loader!./web-worker.js');
+var LoadedWorker = require('worker-loader?name=worker-build.js!./web-worker.js');
 var ControllerView = require('./controller/view');
 var ScreenState = require('./screen/state');
 var MIDIAccessState = require('./midi/state');
