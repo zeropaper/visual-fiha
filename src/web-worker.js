@@ -91,9 +91,10 @@ function broadcastCommand(name, payload) {
 
 
 
-// if there's some magic in that software...
-// it's probably in the following lines
-var _fps = 30;
+/******************************************************\
+ * Worker   clock                                     *
+\******************************************************/
+var _fps = 45;
 var _prev = performance.now();
 var _frameMillis = 1000 / _fps;
 var _internalTimeout;
@@ -122,7 +123,6 @@ function _animate() {
   var timeDiff = _frameMillis - (elapsed - _frameMillis);
   _prev = _now;
   _internalTimeout = setTimeout(_animate, timeDiff);
-  // console.info('_frameMillis: %s, elapsed %s, timeDiff %s', _frameMillis, elapsed.toFixed(2), timeDiff.toFixed(2));
 
   _frameCounter++;
   if (_frameCounter === _samplesCount) {
@@ -142,19 +142,6 @@ function _animate() {
 _internalTimeout = setTimeout(_animate, _frameMillis);
 
 
-
-channel.addEventListener('message', function(evt) {
-  var command = evt.data.command;
-  if (command !== 'register') return;
-
-  var payload = evt.data.payload;
-  if (screens[payload.id]) {
-    return;
-  }
-
-  screens[payload.id] = payload.id;
-});
-
 // var _bootstrapTime = Date.now();
 // var _executedCommands = [];
 // var _previousCommandIndex = 0;
@@ -170,6 +157,26 @@ channel.addEventListener('message', function(evt) {
 // }, 100);
 
 
+/******************************************************\
+ * Screen registration                                *
+\******************************************************/
+channel.addEventListener('message', function(evt) {
+  var command = evt.data.command;
+  if (command !== 'register') return;
+
+  var payload = evt.data.payload;
+  if (screens[payload.id]) {
+    return;
+  }
+
+  screens[payload.id] = payload.id;
+});
+
+
+
+/******************************************************\
+ * Worker commands                                    *
+\******************************************************/
 var commands = {
   bootstrap: function(layers, signals, mappings) {
     worker.layers.set(layers);
@@ -184,11 +191,8 @@ var commands = {
   },
 
 
-
-  // event: worker.mappings.process,
-
   midi: function(deviceName, property, velocity) {
-    worker.mappings.process('midi:' + deviceName + '.' + property, velocity);
+    worker.mappings.processMIDI(deviceName, property, velocity);
   },
 
 
@@ -214,7 +218,6 @@ var commands = {
   },
   updateMapping: function(mapping) {
     var state = worker.mappings.get(mapping.name);
-    // console.info('found %s mapping state?', mapping.name, state, mapping);
     if (state) state.set(mapping);
     emitCommand('updateMapping', {mapping: mapping});
   },
@@ -223,9 +226,7 @@ var commands = {
     emitCommand('removeMapping', {name: name});
   },
   resetMappings: function(mappings) {
-    // console.info('worker resetMappings', mappings.length);
     worker.mappings.import(mappings, true);
-    // emitCommand('resetMappings', {mappings: mappings});
   },
 
 

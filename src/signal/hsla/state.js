@@ -17,7 +17,7 @@ var _100 = {
 };
 
 var HSLASignalState = SignalState.types.hsla = SignalState.extend({
-  session: {
+  props: {
     hue: _360,
     saturation: _100,
     lightness: _100,

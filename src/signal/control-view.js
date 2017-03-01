@@ -27,7 +27,7 @@ var SignalControlView = View.extend({
 
   derived: {
     result: {
-      deps: ['input', 'model', 'model.transformations'],
+      deps: ['input', 'model'/*, 'model.transformations'*/],
       fn: function() {
         return this.model.computeSignal(this.input);
       }

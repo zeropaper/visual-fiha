@@ -137,7 +137,7 @@ var PropertyView = View.extend({
   _handleChange: function() {
     var parent = this.model.collection.parent.model;
     return {
-      path: objectPath(parent),
+      path: parent.modelPath || objectPath(parent),
       property: this.model.name,
       value: this.query('[name="value"]').value
     };
@@ -157,7 +157,7 @@ var PropertyView = View.extend({
     var helper = view.suggestionHelper;
     var mappings = this.rootView.mappings;
     var propertyPath = this.propertyPath;
-    console.info('propertyPath', propertyPath);
+
     helper.attach(evt.target, function(selected) {
       var mappingState = mappings.get(selected);
       if (!mappingState) return;
@@ -179,7 +179,7 @@ var PropertyView = View.extend({
     var parent = model.collection.parent.model;
     var el = evt.target;
     helper.attach(el, function(selected) {
-      console.info('set %s . %s = %s', objectPath(parent), model.name, selected, el.value !== selected);
+      // console.info('set %s . %s = %s', objectPath(parent), model.name, selected, el.value !== selected);
 
       view.sendCommand('propChange', {
         path: objectPath(parent),

@@ -41,12 +41,19 @@ var BeatSignalControlView = SignalControlView.types.beat = SignalControlView.ext
   }),
 
   events: assign({}, SignalControlView.prototype.events, {
-    'click .detector > button': 'tap',
-    'change [data-hook=input]': '_updateBPM'
+    'click .detector > button': 'tap'
   }),
 
+  commands: {
+    'change [data-hook=input]': 'propChange _updateBPM'
+  },
+
   _updateBPM: function() {
-    this.model.input = parseInt(this.queryByHook('input').value.trim(), 10);
+    return {
+      path: 'signals.' + this.model.getId(),
+      property: 'input',
+      value: parseInt(this.queryByHook('input').value.trim(), 10)
+    };
   },
 
   session: {
