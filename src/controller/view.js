@@ -511,7 +511,6 @@ var ControllerView = View.extend({
     var tabs = this.regionLeftBottom.tabs;
     var tabName = view.modelPath || objectPath(view.model);
     var found = tabs.get(tabName);
-    console.info('showDetails for "%s"', tabName, view, found);
     if (!found) {
       found = tabs.add({name: tabName, view: view});
     }
