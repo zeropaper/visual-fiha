@@ -1,6 +1,5 @@
 'use strict';
 var View = require('ampersand-view');
-var objectPath = require('./../object-path');
 
 function noop() {}
 
@@ -12,6 +11,17 @@ function splitClean(str) {
 
 var ControlView = View.extend({
   _commandsBound: false,
+
+  blink: function() {
+    var classes = this.el.classList;
+    this.el.addEventListener('animationend', function() {
+      classes.remove('blink');
+    });
+    if (!classes.contains('blink')) {
+      classes.add('blink');
+    }
+    return this;
+  },
 
   initialize: function() {
     View.prototype.initialize.apply(this, arguments);
