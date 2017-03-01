@@ -1,5 +1,5 @@
 'use strict';
-/*global store, width, height, layer, grid, beginPath, closePath, dot, circle, moveTo, lineTo, fillStyle, stroke, strokeStyle, lineWidth, clearRect, timeDomain, frequency, bufferLength, restoreContexts, cacheContext*/
+/*global store, width, height, layer, grid, beginPath, closePath, dot, circle, polygone, moveTo, lineTo, fillStyle, stroke, strokeStyle, lineWidth, clearRect, timeDomain, frequency, bufferLength, restoreContexts, cacheContext*/
 window.VF = window.VF || {};
 
 var canvasLayers = [
@@ -178,123 +178,115 @@ window.VF._defaultSetup = {
       targets: [
         'layers.no-signal.opacity'
       ],
-      transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
-      name: 'nk2.slider1',
+      transformFunction: 'function (value) {\n  return value > 90 ? 100 : 15;\n}',
+      name: 'beatOpacity',
       source: 'signals.beatA.result'
     },
-    // // {
-    // //   targets: [
-    // //     'layers.no-signal.opacity'
-    // //   ],
-    // //   transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
-    // //   name: 'nk2.slider1',
-    // //   source: 'midi:nk2.slider1'
-    // // },
-    // {
-    //   targets: [
-    //     'layers.no-signal.active'
-    //   ],
-    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
-    //   name: 'nk2.r1',
-    //   source: 'midi:nk2.r1'
-    // },
-    // {
-    //   targets: [
-    //     'layers.Sky-1-back.opacity',
-    //     'layers.Sky-1-front.opacity'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
-    //   name: 'nk2.slider2',
-    //   source: 'midi:nk2.slider2'
-    // },
-    // {
-    //   targets: [
-    //     'layers.Sky-1-back.active'
-    //   ],
-    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
-    //   name: 'nk2.r2',
-    //   source: 'midi:nk2.r2'
-    // },
-    // {
-    //   targets: [
-    //     'layers.Sky-1-front.active'
-    //   ],
-    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
-    //   name: 'nk2.m2',
-    //   source: 'midi:nk2.m2'
-    // },
-    // {
-    //   targets: [
-    //     'layers.canvas.canvasLayers.lines.knobA'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return value;\n}',
-    //   name: 'nk2.knob1',
-    //   source: 'midi:nk2.knob1'
-    // },
-    // {
-    //   targets: [
-    //     'layers.canvas.canvasLayers.lines.knobB'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return value;\n}',
-    //   name: 'nk2.knob2',
-    //   source: 'midi:nk2.knob2'
-    // },
-    // {
-    //   targets: [
-    //     'layers.canvas.canvasLayers.lines.knobC'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return value;\n}',
-    //   name: 'nk2.knob3',
-    //   source: 'midi:nk2.knob3'
-    // },
-    // {
-    //   targets: [
-    //     'layers.zeropaper.opacity'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
-    //   name: 'nk2.slider6',
-    //   source: 'midi:nk2.slider6'
-    // },
-    // {
-    //   targets: [
-    //     'layers.zeropaper.active'
-    //   ],
-    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
-    //   name: 'nk2.r6',
-    //   source: 'midi:nk2.r6'
-    // },
-    // {
-    //   targets: [
-    //     'layers.vf.opacity'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
-    //   name: 'nk2.slider7',
-    //   source: 'midi:nk2.slider7'
-    // },
-    // {
-    //   targets: [
-    //     'layers.vf.active'
-    //   ],
-    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
-    //   name: 'nk2.r7',
-    //   source: 'midi:nk2.r7'
-    // },
-    // {
-    //   targets: [
-    //     'signals.beatA.input'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return value + 63;\n}',
-    //   name: 'beatKnob',
-    //   source: 'midi:nk2.knob8'
-    // },
-    // {
-    //   targets: [
-    //     'signals.colorA.hue'
-    //   ],
-    //   transformFunction: 'function (newVal, prevVal) {\n  return newVal;\n}',
-    //   name: 'beatA',
-    //   source: 'signals.beatA.result'
-    // }
+    {
+      targets: [
+        'layers.no-signal.active'
+      ],
+      transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+      name: 'nk2.r1',
+      source: 'midi:nk2.r1'
+    },
+    {
+      targets: [
+        'layers.Sky-1-back.opacity',
+        'layers.Sky-1-front.opacity'
+      ],
+      transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
+      name: 'nk2.slider2',
+      source: 'midi:nk2.slider2'
+    },
+    {
+      targets: [
+        'layers.Sky-1-back.active'
+      ],
+      transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+      name: 'nk2.r2',
+      source: 'midi:nk2.r2'
+    },
+    {
+      targets: [
+        'layers.Sky-1-front.active'
+      ],
+      transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+      name: 'nk2.m2',
+      source: 'midi:nk2.m2'
+    },
+    {
+      targets: [
+        'layers.canvas.canvasLayers.lines.knobA'
+      ],
+      transformFunction: 'function (value) {\n  return value;\n}',
+      name: 'nk2.knob1',
+      source: 'midi:nk2.knob1'
+    },
+    {
+      targets: [
+        'layers.canvas.canvasLayers.lines.knobB'
+      ],
+      transformFunction: 'function (value) {\n  return value;\n}',
+      name: 'nk2.knob2',
+      source: 'midi:nk2.knob2'
+    },
+    {
+      targets: [
+        'layers.canvas.canvasLayers.lines.knobC'
+      ],
+      transformFunction: 'function (value) {\n  return value;\n}',
+      name: 'nk2.knob3',
+      source: 'midi:nk2.knob3'
+    },
+    {
+      targets: [
+        'layers.zeropaper.opacity'
+      ],
+      transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
+      name: 'nk2.slider6',
+      source: 'midi:nk2.slider6'
+    },
+    {
+      targets: [
+        'layers.zeropaper.active'
+      ],
+      transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+      name: 'nk2.r6',
+      source: 'midi:nk2.r6'
+    },
+    {
+      targets: [
+        'layers.vf.opacity'
+      ],
+      transformFunction: 'function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}',
+      name: 'nk2.slider7',
+      source: 'midi:nk2.slider7'
+    },
+    {
+      targets: [
+        'layers.vf.active'
+      ],
+      transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+      name: 'nk2.r7',
+      source: 'midi:nk2.r7'
+    },
+    {
+      targets: [
+        'signals.beatA.input'
+      ],
+      transformFunction: 'function (value) {\n  return value + 63;\n}',
+      name: 'beatKnob',
+      source: 'midi:nk2.knob8'
+    },
+    {
+      targets: [
+        'signals.colorA.hue'
+      ],
+      transformFunction: 'function (newVal, prevVal) {\n  return newVal;\n}',
+      name: 'slider8Hue',
+      source: 'midi:nk2.slider8'
+    }
   ],
 
 
@@ -304,7 +296,7 @@ window.VF._defaultSetup = {
       defaultValue: '180,50%,50%,1',
       name: 'colorA',
       hue: 180,
-      saturation: 100,
+      saturation: 50,
       lightness: 50,
       alpha: 100,
     },
