@@ -369,16 +369,6 @@ var MappingsControlView = View.extend({
   },
 
 
-  subviews: {
-    mappingsList: {
-      waitFor: 'collection',
-      selector: '.items',
-      prepareView: function(el) {
-        return this.renderCollection(this.collection, EmitterView, el);
-      }
-    }
-  },
-
   derived: {
     suggestionHelper: {
       deps: ['rootView'],
@@ -387,6 +377,12 @@ var MappingsControlView = View.extend({
       }
     }
   },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+    this.mappingsList = this.renderCollection(this.collection, EmitterView, this.query('.items'));
+    return this;
+  }
 });
 
 module.exports = MappingsControlView;
