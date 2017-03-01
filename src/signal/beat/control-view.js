@@ -90,7 +90,11 @@ var BeatSignalControlView = SignalControlView.types.beat = SignalControlView.ext
       this.count++;
     }
 
-    this.model.input = this.avg;
+    this.sendCommand('propChange', {
+      path: 'signals.' + this.model.getId(),
+      property: 'input',
+      value: this.avg
+    });
 
     this.previous = msecs;
   }
