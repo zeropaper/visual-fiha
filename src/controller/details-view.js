@@ -149,7 +149,8 @@ var PropertyView = View.extend({
 
   events: {
     'focus [name="mapping-name"]': '_suggestMapping',
-    'focus [type="text"][name="value"]': '_suggestValues'
+    'focus [type="text"][name="value"]': '_suggestValues',
+    'click button.mapping-details': '_showMapping'
   },
 
   _suggestMapping: function(evt) {
@@ -190,6 +191,17 @@ var PropertyView = View.extend({
       el.value = selected;
       helper.detach();
     }).fill(model.values);
+  },
+
+  _showMapping: function() {
+    var mapping = this.mapping;
+    this.rootView.regionRight.focusTab('Mappings');
+    this.rootView.mappingsView.mappingsList.views.forEach(function(view) {
+      if (view.model === mapping) {
+        view.el.scrollIntoView();
+        view.blink();
+      }
+    });
   }
 });
 
