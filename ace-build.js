@@ -2284,6 +2284,9 @@ var TextInput = function(parentNode, host) {
         if (e.type == "compositionend" && c.range) {
             host.selection.setRange(c.range);
         }
+        if (useragent.isChrome && useragent.isChrome >= 53) {
+          onInput();
+        }
     };
     
     
@@ -6048,7 +6051,7 @@ var Mode = function() {
 };
 
 (function() {
-    this.$behaviour = new CstyleBehaviour();
+    this.$defaultBehaviour = new CstyleBehaviour();
 
     this.tokenRe = new RegExp("^["
         + unicode.packages.L
@@ -10534,7 +10537,7 @@ var Search = function() {
             needle = lang.escapeRegExp(needle);
 
         if (options.wholeWord)
-            needle = "\\b" + needle + "\\b";
+            needle = addWordBoundary(needle, options);
 
         var modifier = options.caseSensitive ? "gm" : "gmi";
 
@@ -10622,6 +10625,15 @@ var Search = function() {
     };
 
 }).call(Search.prototype);
+
+function addWordBoundary(needle, options) {
+    function wordBoundary(c) {
+        if (/\w/.test(c) || options.regExp) return "\\b";
+        return "";
+    }
+    return wordBoundary(needle[0]) + needle
+        + wordBoundary(needle[needle.length - 1]);
+}
 
 exports.Search = Search;
 });
@@ -10977,7 +10989,7 @@ exports.commands = [{
     readOnly: true
 }, {
     name: "goToNextError",
-    bindKey: bindKey("Alt-E", "Ctrl-E"),
+    bindKey: bindKey("Alt-E", "F4"),
     exec: function(editor) {
         config.loadModule("ace/ext/error_marker", function(module) {
             module.showErrorMarker(editor, 1);
@@ -10987,7 +10999,7 @@ exports.commands = [{
     readOnly: true
 }, {
     name: "goToPreviousError",
-    bindKey: bindKey("Alt-Shift-E", "Ctrl-Shift-E"),
+    bindKey: bindKey("Alt-Shift-E", "Shift-F4"),
     exec: function(editor) {
         config.loadModule("ace/ext/error_marker", function(module) {
             module.showErrorMarker(editor, -1);
@@ -11112,7 +11124,7 @@ exports.commands = [{
     readOnly: true
 }, {
     name: "selecttostart",
-    bindKey: bindKey("Ctrl-Shift-Home", "Command-Shift-Up"),
+    bindKey: bindKey("Ctrl-Shift-Home", "Command-Shift-Home|Command-Shift-Up"),
     exec: function(editor) { editor.getSelection().selectFileStart(); },
     multiSelectAction: "forEach",
     readOnly: true,
@@ -11128,7 +11140,7 @@ exports.commands = [{
     aceCommandGroup: "fileJump"
 }, {
     name: "selectup",
-    bindKey: bindKey("Shift-Up", "Shift-Up"),
+    bindKey: bindKey("Shift-Up", "Shift-Up|Ctrl-Shift-P"),
     exec: function(editor) { editor.getSelection().selectUp(); },
     multiSelectAction: "forEach",
     scrollIntoView: "cursor",
@@ -11142,7 +11154,7 @@ exports.commands = [{
     readOnly: true
 }, {
     name: "selecttoend",
-    bindKey: bindKey("Ctrl-Shift-End", "Command-Shift-Down"),
+    bindKey: bindKey("Ctrl-Shift-End", "Command-Shift-End|Command-Shift-Down"),
     exec: function(editor) { editor.getSelection().selectFileEnd(); },
     multiSelectAction: "forEach",
     readOnly: true,
@@ -11158,7 +11170,7 @@ exports.commands = [{
     aceCommandGroup: "fileJump"
 }, {
     name: "selectdown",
-    bindKey: bindKey("Shift-Down", "Shift-Down"),
+    bindKey: bindKey("Shift-Down", "Shift-Down|Ctrl-Shift-N"),
     exec: function(editor) { editor.getSelection().selectDown(); },
     multiSelectAction: "forEach",
     scrollIntoView: "cursor",
@@ -11186,7 +11198,7 @@ exports.commands = [{
     readOnly: true
 }, {
     name: "selecttolinestart",
-    bindKey: bindKey("Alt-Shift-Left", "Command-Shift-Left"),
+    bindKey: bindKey("Alt-Shift-Left", "Command-Shift-Left|Ctrl-Shift-A"),
     exec: function(editor) { editor.getSelection().selectLineStart(); },
     multiSelectAction: "forEach",
     scrollIntoView: "cursor",
@@ -11200,7 +11212,7 @@ exports.commands = [{
     readOnly: true
 }, {
     name: "selectleft",
-    bindKey: bindKey("Shift-Left", "Shift-Left"),
+    bindKey: bindKey("Shift-Left", "Shift-Left|Ctrl-Shift-B"),
     exec: function(editor) { editor.getSelection().selectLeft(); },
     multiSelectAction: "forEach",
     scrollIntoView: "cursor",
@@ -11228,7 +11240,7 @@ exports.commands = [{
     readOnly: true
 }, {
     name: "selecttolineend",
-    bindKey: bindKey("Alt-Shift-Right", "Command-Shift-Right"),
+    bindKey: bindKey("Alt-Shift-Right", "Command-Shift-Right|Shift-End|Ctrl-Shift-E"),
     exec: function(editor) { editor.getSelection().selectLineEnd(); },
     multiSelectAction: "forEach",
     scrollIntoView: "cursor",
@@ -12092,7 +12104,8 @@ var Editor = function(renderer, session) {
             var row = iterator.getCurrentTokenRow();
             var column = iterator.getCurrentTokenColumn();
             var range = new Range(row, column, row, column+token.value.length);
-            if (session.$tagHighlight && range.compareRange(session.$backMarkers[session.$tagHighlight].range)!==0) {
+            var sbm = session.$backMarkers[session.$tagHighlight];
+            if (session.$tagHighlight && sbm != undefined && range.compareRange(sbm.range) !== 0) {
                 session.removeMarker(session.$tagHighlight);
                 session.$tagHighlight = null;
             }
@@ -19040,7 +19053,7 @@ exports.createEditSession = function(text, mode) {
 }
 exports.EditSession = EditSession;
 exports.UndoManager = UndoManager;
-exports.version = "1.2.5";
+exports.version = "1.2.6";
 });
             (function() {
                 window.require(["ace/ace"], function(a) {
@@ -20784,6 +20797,9 @@ var Autocomplete = function() {
     };
 
     this.blurListener = function(e) {
+        if (e.relatedTarget && e.relatedTarget.nodeName == "A" && e.relatedTarget.href) {
+            window.open(e.relatedTarget.href, "_blank");
+        }
         var el = document.activeElement;
         var text = this.editor.textInput.getElement();
         var fromTooltip = e.relatedTarget && e.relatedTarget == this.tooltipNode;
@@ -21378,6 +21394,7 @@ outline: 1px solid red;\
 }\
 .ace_search_field {\
 background-color: white;\
+color: black;\
 border-right: 1px solid #cbcbcb;\
 border: 0 none;\
 -webkit-box-sizing: border-box;\
@@ -21672,7 +21689,9 @@ var SearchBox = function(editor, range, showReplaceForm) {
             wholeWord: this.wholeWordOption.checked,
             preventScroll: preventScroll
         });
-        dom.setCssClass(this.searchBox, "ace_nomatch", !range && this.searchInput.value);
+        var noMatch = !range && this.searchInput.value;
+        dom.setCssClass(this.searchBox, "ace_nomatch", noMatch);
+        this.editor._emit("findSearchBox", { match: !noMatch });
         this.highlight();
     };
     this.findNext = function() {
@@ -21849,6 +21868,7 @@ var supportedModes = {
     Assembly_x86:["asm|a"],
     AutoHotKey:  ["ahk"],
     BatchFile:   ["bat|cmd"],
+    Bro:         ["bro"],
     C_Cpp:       ["cpp|c|cc|cxx|h|hh|hpp|ino"],
     C9Search:    ["c9search_results"],
     Cirru:       ["cirru|cr"],
@@ -21887,13 +21907,14 @@ var supportedModes = {
     Haskell:     ["hs"],
     Haskell_Cabal:     ["cabal"],
     haXe:        ["hx"],
+    Hjson:       ["hjson"],
     HTML:        ["html|htm|xhtml"],
     HTML_Elixir: ["eex|html.eex"],
     HTML_Ruby:   ["erb|rhtml|html.erb"],
     INI:         ["ini|conf|cfg|prefs"],
     Io:          ["io"],
     Jack:        ["jack"],
-    Jade:        ["jade"],
+    Jade:        ["jade|pug"],
     Java:        ["java"],
     JavaScript:  ["js|jsm|jsx"],
     JSON:        ["json"],
@@ -21962,9 +21983,9 @@ var supportedModes = {
     Text:        ["txt"],
     Textile:     ["textile"],
     Toml:        ["toml"],
+    TSX:         ["tsx"],
     Twig:        ["twig|swig"],
     Typescript:  ["ts|typescript|str"],
-    TSX:         ["tsx"],
     Vala:        ["vala"],
     VBScript:    ["vbs|vb"],
     Velocity:    ["vm"],
@@ -23610,7 +23631,7 @@ var JavaScriptHighlightRules = function(options) {
         "keyword":
             "const|yield|import|get|set|async|await|" +
             "break|case|catch|continue|default|delete|do|else|finally|for|function|" +
-            "if|in|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
+            "if|in|of|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
             "__parent__|__count__|escape|unescape|with|__proto__|" +
             "class|enum|extends|super|export|implements|private|public|interface|package|protected|static",
         "storage.type":
@@ -24233,14 +24254,13 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 });
 
-define("ace/mode/javascript",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/javascript_highlight_rules","ace/mode/matching_brace_outdent","ace/range","ace/worker/worker_client","ace/mode/behaviour/cstyle","ace/mode/folding/cstyle"], function(require, exports, module) {
+define("ace/mode/javascript",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/javascript_highlight_rules","ace/mode/matching_brace_outdent","ace/worker/worker_client","ace/mode/behaviour/cstyle","ace/mode/folding/cstyle"], function(require, exports, module) {
 "use strict";
 
 var oop = require("../lib/oop");
 var TextMode = require("./text").Mode;
 var JavaScriptHighlightRules = require("./javascript_highlight_rules").JavaScriptHighlightRules;
 var MatchingBraceOutdent = require("./matching_brace_outdent").MatchingBraceOutdent;
-var Range = require("../range").Range;
 var WorkerClient = require("../worker/worker_client").WorkerClient;
 var CstyleBehaviour = require("./behaviour/cstyle").CstyleBehaviour;
 var CStyleFoldMode = require("./folding/cstyle").FoldMode;
@@ -25059,7 +25079,7 @@ var JavaScriptHighlightRules = function(options) {
         "keyword":
             "const|yield|import|get|set|async|await|" +
             "break|case|catch|continue|default|delete|do|else|finally|for|function|" +
-            "if|in|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
+            "if|in|of|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
             "__parent__|__count__|escape|unescape|with|__proto__|" +
             "class|enum|extends|super|export|implements|private|public|interface|package|protected|static",
         "storage.type":
@@ -25682,14 +25702,13 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 });
 
-define("ace/mode/javascript",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/javascript_highlight_rules","ace/mode/matching_brace_outdent","ace/range","ace/worker/worker_client","ace/mode/behaviour/cstyle","ace/mode/folding/cstyle"], function(require, exports, module) {
+define("ace/mode/javascript",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/javascript_highlight_rules","ace/mode/matching_brace_outdent","ace/worker/worker_client","ace/mode/behaviour/cstyle","ace/mode/folding/cstyle"], function(require, exports, module) {
 "use strict";
 
 var oop = require("../lib/oop");
 var TextMode = require("./text").Mode;
 var JavaScriptHighlightRules = require("./javascript_highlight_rules").JavaScriptHighlightRules;
 var MatchingBraceOutdent = require("./matching_brace_outdent").MatchingBraceOutdent;
-var Range = require("../range").Range;
 var WorkerClient = require("../worker/worker_client").WorkerClient;
 var CstyleBehaviour = require("./behaviour/cstyle").CstyleBehaviour;
 var CStyleFoldMode = require("./folding/cstyle").FoldMode;
@@ -26103,6 +26122,7 @@ var Mode = function() {
     this.HighlightRules = YamlHighlightRules;
     this.$outdent = new MatchingBraceOutdent();
     this.foldingRules = new FoldMode();
+    this.$behaviour = this.$defaultBehaviour;
 };
 oop.inherits(Mode, TextMode);
 
