@@ -41,8 +41,8 @@ body {
 .test-page a:visited {
   color: var(--yes-color);
   text-decoration: none;
-  box-shadow: 0 -2px 0 0 var(--bg-color) inset,
-              0 -3px 0 0 currentColor inset;
+  box-shadow: 0 -1px 0 0 var(--bg-color) inset,
+              0 -2px 0 0 currentColor inset;
   text-shadow: -3px 1px 0 var(--bg-color),
                3px 1px 0 var(--bg-color),
                -2px 1px 0 var(--bg-color),
@@ -106,7 +106,6 @@ Icons
   font-style: normal;
   font-weight: normal;
   speak: none;
-
   display: inline-block;
   text-decoration: inherit;
   text-align: center;
@@ -122,7 +121,8 @@ Icons
   /* remove if not needed */
 
   /* you can be more comfortable with increased icons size */
-  /* font-size: 120%; */
+  /*font-size: 120%;*/
+  line-height: 1.2;
 
   /* Font smoothing. That was taken from TWBS */
   -webkit-font-smoothing: antialiased;
@@ -188,6 +188,7 @@ input:not([type=radio]) {
   background: transparent;
   margin: 0;
   padding: var(--spacing);
+  box-shadow: 0 0 1px 0 currentColor inset;
 }
 select,
 textarea,
@@ -246,6 +247,8 @@ input:not([type=radio]):error {
 button {
   border-radius: 0.1em;
   cursor: pointer;
+  line-height: 1.2;
+  /* font-size: inherit; */
 }
 button[disabled] {
   cursor: not-allowed;
@@ -403,7 +406,7 @@ Layout
   max-width: 750px;
   margin: auto;
   padding: 1vw;
-  color: var(--text-color-alt);
+  color: var(--text-color);
 }
 @media (max-width: 1280px) {
   .index-page .page-content {
@@ -420,7 +423,7 @@ Layout
   margin: auto;
   text-align: center;
   font-size: 10px;
-  color: var(--value-color);
+  color: var(--highlight-color);
 }
 .index-page pre:first-child > code {
   display: inline-block;
@@ -632,8 +635,7 @@ Canvas layer controls
 .canvas-layer:hover {
 }
 
-section,
-.items > * {
+section {
   box-shadow: 0 0 1px 0 #000 inset,
               0 0 1px 0 currentColor;
 }
@@ -657,13 +659,10 @@ section.disabled:hover button {
 header h3,
 header h5 {
   margin: 0;
+  line-height: 1;
   padding: var(--spacing);
 }
-header h3,
-header button {
-  font-weight: 400;
-  font-size: 1.1rem;
-  line-height: 1.25rem;
+header h3 {
   cursor: pointer;
 }
 header > .column.no-grow {
@@ -811,8 +810,10 @@ UI state
 }
 
 .mapping-emitter-view .items {
-  margin-left: var(--spacing);
-  border-left: 1px solid var(--text-color-disabled);
+  margin: 0 calc(var(--spacing) * 2);
+  border: 1px solid var(--text-color-disabled);
+  border-width: 0 1px;
+  padding: 0 var(--spacing) var(--spacing) var(--spacing);
 }
 .mapping-emitter-view .items:empty {
   display: none;
