@@ -316,7 +316,7 @@ var CanvasLayers = Collection.extend({
 
 module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
   props: {
-    clear: ['boolean', true, true]
+    clear: ['number', true, 1]
   },
 
   collections: {
