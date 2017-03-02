@@ -161,15 +161,21 @@ var SuggestionView = View.extend({
       return state.active;
     })[0];
     var activeIndex = activeState ? suggestions.indexOf(activeState) : -1;
+    var inputElVal = this.inputEl.value;
 
 
     if (evt.type === 'keydown') {
       // that way, autocomplete can be done using the Tab keyup
-      if (evt.key === 'Tab' && this.commonStart !== this.inputEl.value) {
+      if (evt.key === 'Tab' && this.commonStart !== inputElVal) {
         evt.preventDefault();
       }
       else if (evt.key === 'Enter') {
-        this.items.views[activeIndex]._handleClick(evt);
+        if (this.items.views[activeIndex]) {
+          this.items.views[activeIndex]._handleClick(evt);
+        }
+        else {
+          this.trigger('selected', inputElVal);
+        }
       }
       return;
     }

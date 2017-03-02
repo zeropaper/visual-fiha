@@ -107,6 +107,17 @@ var ControllerView = View.extend({
     this._animate();
   },
 
+  midiSources: function() {
+    var eventNames = [];
+    this.midi.inputs.forEach(function(midiInput) {
+      var id = midiInput.getId();
+      eventNames = eventNames.concat(midiInput.mappable.source.map(function(property) {
+        return 'midi:' + id + '.' + property;
+      }));
+    });
+    return eventNames;
+  },
+
   sendCommand: function(name, payload, callback) {
     if (!this.router || !this.router.worker) return;
     this.router.sendCommand(name, payload, callback);

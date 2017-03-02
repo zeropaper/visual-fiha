@@ -66,9 +66,7 @@ function sourceSuggestions(origin) {
       });
     });
 
-  return results/*.filter(function(val) {
-    return kepts.indexOf(val) < 0;
-  })*/;
+  return results;
 }
 
 
@@ -130,9 +128,7 @@ function targetSuggestions(origin) {
       });
     });
 
-  return results/*.filter(function(val) {
-    return kepts.indexOf(val) < 0;
-  })*/;
+  return results;
 }
 
 
@@ -275,7 +271,7 @@ var EmitterView = View.extend({
     var editor = rootView.getEditor();
     var model = this.model;
     editor.editCode({
-      script: model.transformFunction.toString(),
+      script: (model.transformFunction || function(val) { return val; }).toString(),
       // autoApply: true,
       language: 'javascript',
       onvalidchange: function doneEditingTransformFunction(str) {
@@ -339,14 +335,15 @@ var MappingsControlView = View.extend({
   _handleSourceFocus: function(evt) {
     var rootView = this.rootView;
     var helper = rootView.suggestionHelper;
+    var midiSources = this.rootView.midiSources();
 
     var results = [];
     rootView.signals.forEach(function(model) {
       var id = model.getId();
-      var suggestions = sourceSuggestions(model);
-      results = results.concat(suggestions.filter(filterEmpty).map(function(name) {
+      var suggestions = sourceSuggestions(model).filter(filterEmpty).map(function(name) {
         return 'signals.' + id + '.' + name;
-      }));
+      });
+      results = results.concat(suggestions, midiSources);
     });
 
     helper.attach(evt.target, function(selected) {
