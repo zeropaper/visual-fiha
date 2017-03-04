@@ -248,11 +248,15 @@ button {
   border-radius: 0.1em;
   cursor: pointer;
   line-height: 1.2;
-  /* font-size: inherit; */
 }
 button[disabled] {
   cursor: not-allowed;
   color: var(--text-color-disabled);
+}
+
+button.default {
+  background-color: var(--text-color);
+  color: var(--text-color-contrast);
 }
 
 .yes {
@@ -676,7 +680,7 @@ section.disabled:hover button {
 header h3,
 header h5 {
   margin: 0;
-  line-height: 1;
+  font-weight: 400;
   padding: var(--spacing);
 }
 header h3 {
@@ -699,8 +703,10 @@ header h3 {
 }
 .prop-value input {
   margin: auto;
-  width: auto;
   max-width: 100%;
+}
+.prop-toggle-btn {
+  width: 100%;
 }
 
 .result-dot,
