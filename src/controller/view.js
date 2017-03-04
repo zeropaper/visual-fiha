@@ -133,11 +133,8 @@ var ControllerView = View.extend({
       this.audioSource.update();
     }
 
-    // if (this.playing) {
-      this.model.frametime = timestamp - this.model.firstframetime;
-
-      this.update();
-    // }
+    this.model.frametime = timestamp - this.model.firstframetime;
+    this.update();
 
     this._arId = window.requestAnimationFrame(this._animate.bind(this));
   },

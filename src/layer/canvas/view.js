@@ -1,6 +1,5 @@
 'use strict';
 var assign = require('lodash.assign');
-var mockedCtx = require('./mocked-canvas-2d-context');
 
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
