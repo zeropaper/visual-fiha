@@ -2,7 +2,7 @@
 var Collection = require('ampersand-collection');
 var State = require('ampersand-state');
 var View = require('./../controller/control-view');
-
+var uniq = require('lodash.uniq');
 
 function filterEmpty(v) { return !!v; }
 
@@ -66,7 +66,7 @@ function sourceSuggestions(origin) {
       });
     });
 
-  return results;
+  return uniq(results);
 }
 
 
@@ -128,7 +128,7 @@ function targetSuggestions(origin) {
       });
     });
 
-  return results;
+  return uniq(results);
 }
 
 
@@ -340,11 +340,12 @@ var MappingsControlView = View.extend({
     var results = [];
     rootView.signals.forEach(function(model) {
       var id = model.getId();
-      var suggestions = sourceSuggestions(model).filter(filterEmpty).map(function(name) {
+      results = results.concat(sourceSuggestions(model).filter(filterEmpty).map(function(name) {
         return 'signals.' + id + '.' + name;
-      });
-      results = results.concat(suggestions, midiSources);
+      }));
     });
+
+    results = midiSources.concat(results);
 
     helper.attach(evt.target, function(selected) {
       evt.target.value = selected;
