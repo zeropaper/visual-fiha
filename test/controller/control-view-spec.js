@@ -98,19 +98,4 @@ describe('Control View', function () {
       expect(calledCommandsBound).to.be.ok();
     });
   });
-
-  describe.skip('user interaction', function() {
-    beforeEach(function() {
-      if (!instance.rendered) instance.render();
-    });
-
-    it('calls the rootView sendCommand method', function() {
-      expect(rootViewMock._sentCommands).to.have.length(0);
-      testUtils.doclick(instance.query('button'));
-      expect(rootViewMock._sentCommands).to.have.length(1);
-
-      expect(rootViewMock._sentCommands[0]).to.have.length(3);
-      expect(rootViewMock._sentCommands[0][0]).to.be('commandName');
-    });
-  });
 });
