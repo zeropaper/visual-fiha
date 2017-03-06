@@ -123,10 +123,10 @@ var AceEditor = View.extend({
       }
 
       var str = editor.getValue();
-      view.set('script', str, {silent: true});
-      if (typeof view.onvalidchange === 'function') {
+      if (typeof view.onvalidchange === 'function' && view.script !== str) {
         view.onvalidchange(str);
       }
+      view.set('script', str, {silent: true});
     }
 
     var languageTools = ace.require('ace/ext/language_tools');
@@ -139,7 +139,7 @@ var AceEditor = View.extend({
     editor.$blockScrolling = Infinity;
     editor.setTheme('ace/theme/monokai');
     editor.setShowInvisibles();
-    editor.on('change', changed);
+    // editor.on('change', changed);
     editor.setFontSize(16);
 
     var session = editor.getSession();
