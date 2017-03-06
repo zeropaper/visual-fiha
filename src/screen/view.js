@@ -41,6 +41,7 @@ var commands = {
   },
   updateLayers: function(layers, audio) {
     if (audio) this.model.audio = audio;
+    this.model.layers.set(layers);
   }
 };
 

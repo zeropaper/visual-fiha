@@ -70,31 +70,23 @@ var AppRouter = require('ampersand-router').extend({
         router.mappings.import(payload.mappings || [], true);
         break;
 
+      case 'updateLayer':
+        screen.layers.get(payload.layer.name).set(payload.layer);
+        break;
+
       case 'addLayer':
         screen.layers.add(payload.layer);
         var model = screen.layers.get(payload.layer.name);
-        // logger.info('add layer model', model);
         router.view.showDetails(new DetailsView({
           parent: router.view.layersView,
           model: model
         }));
         break;
+
       case 'updateLayers':
-        // var obj;
-        // for (var l = 0; l < payload.layers.length; l++) {
-        //   obj = payload.layers[l];
-        //   var layer = screen.layers.get(obj.name);
-        //   // logger.info('updating layers in app', obj.name, !!layer);
-        //   if (!layer) {
-        //     // logger.warn('missing layer', obj.name);
-        //     screen.layers.add(obj);
-        //   }
-        //   else {
-        //     layer.set(obj);
-        //   }
-        // }
         screen.layers.set(payload.layers);
         break;
+
       default:
         console.info('unrecognized broadcast command "%s"', command);
     }
