@@ -1,6 +1,5 @@
 'use strict';
 
-var throttle = require('lodash.throttle');
 var State = require('ampersand-state');
 var Collection = require('ampersand-collection');
 
