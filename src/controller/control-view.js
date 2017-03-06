@@ -142,13 +142,6 @@ var ControlView = View.extend({
   remove: function() {
     this.unbindCommands();
     return View.prototype.remove.apply(this, arguments);
-  },
-
-  setObjectPropCmd: function() {
-    // logger..info('setObjectPropCmd', {
-    //   objectPath: objectPath(this.model),
-    //   property: this.model.name
-    // });
   }
 });
 

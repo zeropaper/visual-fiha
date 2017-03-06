@@ -79,7 +79,7 @@ var RegionView = View.extend({
   render: function() {
     if (this.rendered) return this;
 
-    this.renderWithTemplate();
+    View.prototype.render.apply(this, arguments);
 
     this.regionSwitcher = new ViewSwitcher(this.query('.region-content'), {});
 
