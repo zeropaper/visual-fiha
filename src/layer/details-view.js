@@ -8,8 +8,6 @@ var LayerDetailsView = DetailsView.extend({
       </header>
 
       <div class="row mappings props"></div>
-
-      <div class="row gutter transformations-control columns">
     </section>
   `,
 

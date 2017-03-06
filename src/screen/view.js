@@ -41,17 +41,6 @@ var commands = {
   },
   updateLayers: function(layers, audio) {
     if (audio) this.model.audio = audio;
-    var obj;
-    for (var l = 0; l < layers.length; l++) {
-      obj = layers[l];
-      var layer = this.model.layers.get(obj.name);
-      if (!layer) {
-        this.model.layers.add(obj);
-      }
-      else {
-        layer.set(obj);
-      }
-    }
   }
 };
 

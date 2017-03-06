@@ -3,6 +3,9 @@ var View = require('./control-view');
 
 var LayerControlView = require('./control-view');
 require('./canvas/control-view');
+require('./svg/control-view');
+require('./img/control-view');
+require('./video/control-view');
 
 var LayersView = View.extend({
   commands: {
