@@ -207,6 +207,7 @@ var commands = {
   propChange: function(path, property, value) {
     var obj = resolve(path, __dataContext);
     if (!obj) return;
+    if (obj[property].isCollection) return obj[property].set(Array.isArray(value) ? value : [value]);
     obj.set(property, value);
   },
 
@@ -293,14 +294,10 @@ var commands = {
       layerName: layerName
     });
   },
-  updateLayer: function(layer, layerName) {
-    var state = worker.layers.get(layerName);
+  updateLayer: function(layer, broadcast) {
+    var state = worker.layers.get(layer.name);
     state.set(layer);
-
-    broadcastCommand('updateLayer', {
-      layer: layer,
-      layerName: layerName
-    });
+    if (broadcast) broadcastCommand('updateLayer', {layer: layer});
   }
 };
 

@@ -1,6 +1,6 @@
 'use strict';
-var _ids = 0;
 var ScreenLayerView = require('./../view');
+
 module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
   autoRender: true,
 
@@ -8,76 +8,54 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     return '<div class="layer-svg" layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></div>';
   },
 
-  // bindings: require('lodash.assign')({
-  // }, ScreenLayerView.prototype.bindings),
+  _updateContent: function() {
+    if (!this.el) return;
+    this.el.innerHTML = this.model.content;
+    this.svg = this.query('svg');
+    if (!this.svg) return;
 
-
-  // derived: {
-  //   styleEl: {
-  //     deps: ['model.src'],
-  //     fn: function() {
-  //       var el = document.createElement('style');
-  //       el.id = this.cid;
-  //       document.head.appendChild(el);
-  //       return el;
-  //     }
-  //   }
-  // },
-
-  extractStyles: function() {
-    var self = this;
-    this.queryAll('[style]').forEach(function(el) {
-      if (!el.id) {
-        _ids++;
-        el.id = 'auto-svg-id-' + _ids;
-      }
-
-      self.addRule('#' + el.id, el.getAttribute('style'));
-      el.removeAttribute('style');
+    this.svg.style = null;
+    this.svg.querySelectorAll('[style][id]').forEach(function(el) {
+      el.style = null;
     });
+
+    return this._updateStyles()._updateProperties();
+  },
+
+  _updateStyles: function() {
+    var selectors = Object.keys(this.model.svgStyles);
+    selectors.forEach(function(selector) {
+      this.addRule(selector, this.model.svgStyles[selector]);
+    }, this);
     return this;
   },
 
-  editStyles: function() {
+  _updateProperties: function() {
+    if (!this.el) return this;
+    var svg = this.query('svg');
+    if (!svg || !svg.style) return this;
 
-  },
+    this.model.styleProperties.forEach(function(styleProp) {
+      this.setProperty(styleProp.name, styleProp.value);
+    }, this);
 
-  loadSVG: function() {
-    var view = this;
-    var src = view.model.src;
-    var el = view.el;
-    if (!src || !el) {
-      return;
+    var paths = this.svg.querySelectorAll('path');
+    for (var p = 0; p < paths.length; p++) {
+      paths[p].style.setProperty('--path-length', paths[p].getTotalLength());
     }
 
-    fetch(src)
-    .then(function(response) {
-      return response.text();
-    })
-    .then(function(txt) {
-      el.innerHTML = txt;
-      view.extractStyles();
-    });
+    return this;
   },
 
   initialize: function() {
-    ScreenLayerView.prototype.initialize.apply(this, arguments);
-    this.on('change:rendered', this.loadSVG);
-    this.listenToAndRun(this.model, 'change:src', this.loadSVG);
+    this.listenToAndRun(this.model, 'change:content', this._updateContent);
+    this.listenToAndRun(this.model, 'change:svgStyles', this._updateStyles);
+    this.listenToAndRun(this.model, 'change:styleProperties', this._updateProperties);
   },
 
   remove: function() {
     var style = this.styleEl;
-    style.parentNode.removeChild(style);
+    if (style && style.parentNode) style.parentNode.removeChild(style);
     ScreenLayerView.prototype.remove.apply(this, arguments);
-  },
-
-  render: function() {
-    if (this.el) {
-      return this;
-    }
-
-    this.renderWithTemplate();
-    return this;
   }
 });

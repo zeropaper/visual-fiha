@@ -1,5 +1,4 @@
 'use strict';
-// var View = require('./../controller/control-view');
 var View = require('ampersand-view');
 
 var LayerView = View.extend({
@@ -16,6 +15,10 @@ var LayerView = View.extend({
         </div>
       </div>
     `;
+  },
+
+  setProperty: function(...args) {
+    this.cssRule.style.setProperty(...args);
   },
 
   derived: {
@@ -119,16 +122,27 @@ var LayerView = View.extend({
     }
   },
 
-  addRule: function(selector, rules, index) {
+  addRule: function(selector, properties) {
     var sheet = this.sheet;
     var prefix = '[view-id="'+ this.cid +'"] ';
-    index = index || 0;
+    var index = sheet.cssRules.length;
+    selector = selector.indexOf('@') === 0 ? selector : prefix + selector;
+    for (var i = index - 1; i >= 0; i--) {
+      if (sheet.cssRules[i].selectorText === selector) {
+        sheet.deleteRule(i);
+      }
+    }
+
+
+    index = sheet.cssRules.length;
+
     if('insertRule' in sheet) {
-      sheet.insertRule(prefix + selector + ' { ' + rules + ' } ', index);
+      sheet.insertRule(selector + ' { ' + properties + ' } ', index);
     }
     else if('addRule' in sheet) {
-      sheet.addRule(prefix + selector, rules, index);
+      sheet.addRule(selector, properties, index);
     }
+    return this;
   },
 
   remove: function() {

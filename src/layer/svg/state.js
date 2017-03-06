@@ -1,78 +1,92 @@
 'use strict';
 var ScreenLayerState = require('./../state');
-var tXML = require('txml');
 
-function loadSVG(url, done) {
-  done = done || function(err/*, obj*/) {
-    console.warn(err.message);
-  };
+var State = require('ampersand-state');
+var Collection = require('ampersand-collection');
 
-  fetch(url)
-    .then(function(res) {
-      return res.text();
-    })
-    .then(function(string) {
-      done(null, string);
-    })
-    .catch(done);
-}
+var PropertyState = State.extend({
+  idAttribute: 'name',
 
+  mappable: {
+    target: ['value']
+  },
 
+  props: {
+    name: ['string', true, ''],
+    value: ['string', false, ''],
+    default: ['string', true, '']
+  }
+});
+
+var PropertyCollection = Collection.extend({
+  mainIndex: 'name',
+  model: PropertyState
+});
 
 module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   props: {
-    src: ['string', false, null]
+    svgStyles: ['object', true, function() { return {}; }],
+    src: ['string', false, null],
+    content: ['string', false, '']
   },
 
-  session: {
-    _loaded: 'string'
+  derived: {
+    mappable: {
+      deps: [],
+      fn: function() {
+        return {
+          source: [],
+          target: [
+            'active',
+            'styleProperties'
+          ]
+        };
+      }
+    }
+  },
+
+  collections: {
+    styleProperties: PropertyCollection
   },
 
   initialize: function() {
     ScreenLayerState.prototype.initialize.apply(this, arguments);
-    this.on('change:src', function() {
-      if (!this.src) return this.set('_loaded', '');
-
-      loadSVG(this.src, function(err, loaded) {
-        this.set('_loaded', err ? '' : loaded);
-      });
+    this.listenTo(this.styleProperties, 'change', function() {
+      this.trigger('change:styleProperties', this, this.styleProperties, {styleProperties: true});
     });
+    this.listenTo(this, 'change:src', function() { this.loadSVG(); });
+    if (this.src) this.loadSVG();
   },
 
-  derived: {
-    data: {
-      deps: ['_loaded'],
-      fn: function() {
-        if (!this._loaded) {
-          return {
-            xml: '',
-            styles: {}
-          };
-        }
-
-        var styles = {};
-        try {
-          tXML(this._loaded, {
-            filter: function(child) {
-              return child.attributes && child.attributes.id && child.attributes.style;
-            }
-          }).forEach(function(node) {
-            styles[node.attributes.id] = node.attributes.style;
-          });
-        }
-        catch (e) {
-          return {
-            xml: '',
-            styles: {}
-          };
-        }
-
-        console.info('styles from %s', this.src, styles);
-        return {
-          xml: this._loaded,
-          styles: styles
-        };
+  loadSVG: function(done) {
+    var state = this;
+    done = done || function(err/*, obj*/) {
+      if (err) {
+        state.content = '';
+        console.warn(err.message);
       }
+    };
+
+    if (!this.src) {
+      state.content = '';
+      return done(new Error('No src to load for ' + this.getId() + ' SVG layer'));
     }
+
+    fetch(this.src)
+      .then(function(res) {
+        return res.text();
+      })
+      .then(function(string) {
+        state.content = string;
+        done(null, state);
+      })
+      .catch(done);
+  },
+
+  toJSON: function() {
+    var obj = ScreenLayerState.prototype.toJSON.apply(this, arguments);
+    delete obj.content;
+    delete obj.svgStyles;
+    return obj;
   }
 });
