@@ -291,20 +291,20 @@ window.VF._defaultSetup = {
 
 
   signals: [
-    // {
-    //   type: 'hsla',
-    //   defaultValue: '180,50%,50%,1',
-    //   name: 'colorA',
-    //   hue: 180,
-    //   saturation: 50,
-    //   lightness: 50,
-    //   alpha: 100,
-    // },
-    // {
-    //   type: 'beat',
-    //   name: 'beatA',
-    //   input: 125
-    // }
+    {
+      type: 'hsla',
+      defaultValue: '180,50%,50%,1',
+      name: 'colorA',
+      hue: 180,
+      saturation: 50,
+      lightness: 50,
+      alpha: 100,
+    },
+    {
+      type: 'beat',
+      name: 'beatA',
+      input: 125
+    }
   ],
 
 
@@ -322,30 +322,28 @@ window.VF._defaultSetup = {
     //   src: './assets/sky1/sky1-back-grey.png'
     // },
 
-    // {
-    //   type: 'canvas',
-    //   name: 'canvas',
-    //   active: true,
-    //   mixBlendingMode: 'soft-light',
-    //   canvasLayers: canvasLayers,
-    // },
-
     {
-      type: 'SVG',
-      name: 'zeropaper',
+      type: 'canvas',
+      name: 'canvas',
       active: true,
-      src: './assets/zeropaper-fat.svg',
-      mixBlendingMode: 'overlay'
+      mixBlendingMode: 'soft-light',
+      canvasLayers: canvasLayers,
     },
 
     // {
     //   type: 'SVG',
-    //   name: 'vf',
-    //   active: false,
-    //   src: './assets/visual-fiha.svg',
-    //   opacity: 30,
-    //   mixBlendingMode: 'saturation'
+    //   name: 'zeropaper',
+    //   active: true,
+    //   src: './assets/zeropaper-fat.svg',
+    //   mixBlendingMode: 'overlay'
     // },
+
+    {
+      type: 'SVG',
+      name: 'vf',
+      active: true,
+      src: './assets/visual-fiha.svg'
+    },
 
     // {
     //   type: 'img',
