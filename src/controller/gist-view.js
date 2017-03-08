@@ -3,15 +3,34 @@
 var View = require('./control-view');
 var jsYAML = require('js-yaml');
 
-function toJSON(res) {
+function resToJSON(res) {
   return res.json();
 }
+
+function toObj(arr) {
+  var obj = {};
+  arr.forEach(function(o) {
+    obj[o.name] = o;
+    delete obj[o.name].name;
+  });
+  return obj;
+}
+
+function toArr(obj) {
+  var keys = Object.keys(obj);
+  return keys.map(function(key) {
+    obj[key].name = key;
+    return obj[key];
+  });
+}
+
 
 var GistView = View.extend({
   template: `
     <div class="columns">
       <div class="column"><input placeholder="Gist ID" name="gist-id"/></div>
       <div class="column no-grow"><button name="save-gist">Save gist</button></div>
+      <a target="_blank">Open on GH</a>
     </div>
   `,
 
@@ -22,47 +41,80 @@ var GistView = View.extend({
 
   session: {
     gistId: 'string',
-    revision: 'any',
-    url: 'string'
+    revision: 'any'
   },
 
-  bindings: {
-    gistId: {
-      type: 'value',
-      selector: '[name="gist-id"]'
-    },
+  derived: {
     url: {
-      type: 'attribute',
-      name: 'href',
-      selector: 'a'
+      deps: ['gistId'],
+      fn: function() {
+        return this.gistId ? 'https://gist.github.com/' + this.gistId : false;
+      }
     }
   },
 
+  bindings: {
+    gistId: [
+      {
+        type: 'value',
+        selector: '[name="gist-id"]'
+      }
+    ],
+    url: [
+      {
+        type: 'attribute',
+        name: 'href',
+        selector: 'a'
+      },
+      {
+        type: 'toggle',
+        selector: 'a'
+      }
+    ]
+  },
+
   _loadGist: function() {
-    var id = this.gistId;
-    var parent = this.parent;
-    if (!id) return;
-    fetch('https://api.github.com/gists/' + id)
-      .then(toJSON)
+    var view = this;
+    if (!view.gistId) return;
+    var parent = view.parent;
+
+    fetch('https://api.github.com/gists/' + view.gistId)
+      .then(resToJSON)
       .then(function(json) {
-        parent.codeEditor.editCode({
-          laguage: 'yaml',
-          script: json.files['visual-fiha-setup.yml'].content,
-          onvalidchange: function(newStr) {
-            var obj;
-            try {
-              obj = jsYAML.safeLoad(newStr);
-              parent.fromJSON(obj);
-            }
-            catch(e) {
-              // console..warn(e);
-            }
-          }
+        var content = json.files['visual-fiha-setup.yml'].content;
+        view.fromYaml(content);
+        parent.getEditor().editCode({
+          language: 'yaml',
+          script: content,
+          onvalidchange: view.fromYaml
         });
       });
   },
 
+  fromYaml: function(newStr) {
+    var obj;
+    try {
+      obj = jsYAML.safeLoad(newStr);
+      obj.signals = toArr(obj.signals || {});
+      obj.layers = toArr(obj.layers || {});
+      obj.mappings = toArr(obj.mappings || {});
+      this.parent.fromJSON(obj);
+    }
+    catch(e) {
+      console.warn(e);
+    }
+  },
+
+  toYaml: function() {
+    var setup = this.parent.toJSON();
+    setup.signals = toObj(setup.signals || []);
+    setup.layers = toObj(setup.layers || []);
+    setup.mappings = toObj(setup.mappings || []);
+    return jsYAML.safeDump(JSON.parse(JSON.stringify(setup)));
+  },
+
   _saveGist: function(evt) {
+    console.info('_saveGist');
     evt.preventDefault();
     var method = 'POST';
     var url = 'https://api.github.com/gists';
@@ -82,14 +134,14 @@ var GistView = View.extend({
         public: true,
         files: {
           'visual-fiha-setup.yml': {
-            content: jsYAML.safeDump(JSON.parse(JSON.stringify(this.parent.toJSON())))
+            content: view.toYaml()
           }
         }
       })
     });
 
     fetch(req)
-      .then(toJSON)
+      .then(resToJSON)
       .then(function(json) {
         view.gistId = json.id;
       });

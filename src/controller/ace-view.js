@@ -4,9 +4,8 @@ var canvasCompleter = require('./../layer/canvas/canvas-completer');
 
 var AceEditor = View.extend({
   editCode: function(options) {
-    if (!this.editor) this.render();
     options.original = options.script = options.script.toString();
-    this._cleanup().set(options);
+    this._cleanup().set(options).render();
   },
 
   template: `
@@ -51,12 +50,6 @@ var AceEditor = View.extend({
   },
 
   bindings: {
-    language: {
-      type: function() {
-        if (!this.editor) return;
-        this.editor.getSession().setMode('ace/mode/' + this.language);
-      }
-    },
     script: {
       type: function() {
         if (!this.editor) return;
@@ -108,12 +101,12 @@ var AceEditor = View.extend({
       });
   },
 
-  render: function() {
-    if (this.editor) { return this; }
+  _makeEditor: function() {
     var view = this;
-    view.renderWithTemplate();
-
     var ace = window.ace;
+    if (view.editor) view.editor.destroy();
+
+    var hasAnnotations = ['javascript', 'css'].indexOf(view.language) > -1;
     var editor = view.editor = ace.edit(view.query('.ace-editor'));
 
     function changed() {
@@ -129,34 +122,45 @@ var AceEditor = View.extend({
       view.set('script', str, {silent: true});
     }
 
-    var languageTools = ace.require('ace/ext/language_tools');
-    editor.setOptions({
-      enableBasicAutocompletion: true,
-      enableSnippets: true,
-      enableLiveAutocompletion: false
-    });
-
     editor.$blockScrolling = Infinity;
     editor.setTheme('ace/theme/monokai');
     editor.setShowInvisibles();
-    // editor.on('change', changed);
     editor.setFontSize(16);
 
-    var session = editor.getSession();
+    if (view.language === 'javascript') {
+      var languageTools = ace.require('ace/ext/language_tools');
+      editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: false
+      });
+      languageTools.addCompleter(canvasCompleter);
+    }
 
-    session.on('changeAnnotation', changed);
-    session.setMode('ace/mode/javascript');
+    var session = editor.getSession();
+    session.setMode('ace/mode/' + view.language);
     session.setUseSoftTabs(true);
     session.setTabSize(2);
     session.setUseWrapMode(true);
 
-    languageTools.addCompleter(canvasCompleter);
-
-    if (view.original) {
-      editor.setValue(view.original);
+    if (hasAnnotations) {
+      session.on('changeAnnotation', changed);
+    }
+    else {
+      session.on('change', changed);
     }
 
+    editor.setValue(view.script || view.original || '');
+
     return view;
+  },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+
+    this._makeEditor();
+
+    return this;
   },
 
   remove: function() {
