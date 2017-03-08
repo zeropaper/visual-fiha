@@ -10,7 +10,6 @@ var AceEditor = require('./ace-view');
 var RegionView = require('./region-view');
 var GistView = require('./gist-view');
 var MappingsControlView = require('./../mapping/control-view');
-var jsYAML = require('js-yaml');
 var objectPath = require('./../object-path');
 // var Timeline = require('./timeline-view');
 
@@ -471,16 +470,18 @@ var ControllerView = View.extend({
   },
 
   toJSON: function() {
-    var obj = this.model.toJSON();
-    obj.mappings = this.mappings.export();
-    return obj;
+    return {
+      signals: this.signals.toJSON(),
+      mappings: this.mappings.toJSON(),
+      layers: this.model.layers.toJSON()
+    };
   },
 
   fromJSON: function(obj) {
     this.sendCommand('bootstrap', {
-      layers: obj.layers,
-      signals: obj.signals,
-      mappings: obj.mappings
+      layers: obj.layers.filter(o => !!o.name),
+      signals: obj.signals.filter(o => !!o.name),
+      mappings: obj.mappings.filter(o => !!o.name)
     });
   },
 
@@ -493,24 +494,12 @@ var ControllerView = View.extend({
 
   _setupEditor: function() {
     var view = this;
-    var json = view.toJSON();
     var editor = view.getEditor();
-    var str = JSON.parse(JSON.stringify(json));
-    str = jsYAML.safeDump(str);
 
     editor.editCode({
-      script: str,
+      script: view.gistView.toYaml(),
       language: 'yaml',
-      onvalidchange: function updateSetup(newStr) {
-        var obj;
-        try {
-          obj = jsYAML.safeLoad(newStr);
-          view.fromJSON(obj);
-        }
-        catch(e) {
-          // console..warn(e);
-        }
-      }
+      onvalidchange: view.gistView.fromYaml
     });
   },
 

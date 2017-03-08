@@ -108,13 +108,13 @@ function _animate() {
   worker.signals.trigger('frametime', __dataContext.frametime);
 
   emitCommand('updateSignals', {
-    signals: worker.signals.serialize()
+    signals: worker.signals.serialize().filter(o => o.name)
   });
 
   broadcastCommand('updateLayers', {
     frametime: __dataContext.frametime,
     audio: worker.audio,
-    layers: worker.layers.serialize()
+    layers: worker.layers.serialize().filter(o => o.name)
   });
 
 
@@ -207,7 +207,7 @@ var commands = {
   propChange: function(path, property, value) {
     var obj = resolve(path, __dataContext);
     if (!obj) return;
-    if (obj[property].isCollection) return obj[property].set(Array.isArray(value) ? value : [value]);
+    if (obj[property] && obj[property].isCollection) return obj[property].set(Array.isArray(value) ? value : [value]);
     obj.set(property, value);
   },
 
