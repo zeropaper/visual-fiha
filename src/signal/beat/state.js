@@ -14,7 +14,7 @@ var BeatState = SignalState.types.beat = SignalState.extend({
   },
 
   mappable: {
-    source: ['result', 'timeBetweenBeats'],
+    source: ['result', 'timeBetweenBeats', 'beatNum'],
     target: ['input']
   },
 
@@ -23,6 +23,12 @@ var BeatState = SignalState.types.beat = SignalState.extend({
       deps: ['timeBetweenBeats', 'frametime'],
       fn: function() {
         return this.computeSignal();
+      }
+    },
+    beatNum: {
+      deps: ['timeBetweenBeats', 'frametime'],
+      fn: function() {
+        return this.frametime ? Math.floor(this.frametime / this.timeBetweenBeats) : 0;
       }
     },
     timeBetweenBeats: {
