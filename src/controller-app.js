@@ -84,6 +84,9 @@ var AppRouter = require('ampersand-router').extend({
         break;
 
       case 'updateLayers':
+        var ft = payload.frametime || 0;
+        signals.trigger('frametime', ft);
+        screen.layers.trigger('frametime', ft);
         screen.layers.set(payload.layers);
         break;
 
