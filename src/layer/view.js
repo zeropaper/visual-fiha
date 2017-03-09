@@ -17,31 +17,11 @@ var LayerView = View.extend({
     `;
   },
 
-  setProperty: function(...args) {
-    this.cssRule.style.setProperty(...args);
-  },
-
   derived: {
     style: {
       deps: [
-        // 'width',
-        // 'height',
         'model.active',
         'model.opacity',
-        'model.skewX',
-        'model.skewY',
-        'model.rotateX',
-        'model.rotateY',
-        'model.rotateZ',
-        'model.translateX',
-        'model.translateY',
-        // 'model.translateZ',
-        'model.scaleX',
-        'model.scaleY',
-        // 'model.scaleZ',
-        'model.originX',
-        'model.originY',
-        'model.backfaceVisibility',
         'model.mixBlendMode',
         'model.zIndex'
       ],
@@ -54,22 +34,7 @@ var LayerView = View.extend({
           mixBlendMode: this.model.mixBlendMode,
           width: width,
           height: height,
-          zIndex: this.zIndex || 0,
-          perspective: this.model.perspective + 'px',
-          // transform:
-          //           'rotateX(' + this.model.rotateX + 'deg) ' +
-          //           'rotateY(' + this.model.rotateY + 'deg) ' +
-          //           'rotateZ(' + this.model.rotateZ + 'deg) ' +
-          //           'translateX(' + this.model.translateX + '%) ' +
-          //           'translateY(' + this.model.translateY + '%) ' +
-          //           // 'translateZ(' + this.model.translateZ + '%) ' +
-          //           'scaleX(' + (this.model.scaleX * 0.01) + ') ' +
-          //           'scaleY(' + (this.model.scaleY * 0.01) + ') ' +
-          //           // 'scaleZ(' + this.model.scaleZ + '%) ' +
-          //           'skewX(' + this.model.skewX + 'deg) ' +
-          //           'skewY(' + this.model.skewY + 'deg) ' +
-          //           // 'perspective(' + this.model.perspective + ')' +
-          //           ''
+          zIndex: this.zIndex || 0
         };
       }
     },
@@ -120,6 +85,11 @@ var LayerView = View.extend({
         });
       }
     }
+  },
+
+  setProperty: function(...args) {
+    // console.info('set CSS  %s: %s on "%s" (%s)', ...args, this.model.getId(), this.model.getType());
+    this.cssRule.style.setProperty(...args);
   },
 
   addRule: function(selector, properties) {
