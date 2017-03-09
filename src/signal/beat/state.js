@@ -9,7 +9,7 @@ var BeatState = SignalState.types.beat = SignalState.extend({
     });
   },
 
-  props: {
+  session: {
     frametime: ['number', true, 0]
   },
 
@@ -40,11 +40,9 @@ var BeatState = SignalState.types.beat = SignalState.extend({
   },
 
   computeSignal: function() {
-    var frametime = this.frametime;
-    var preTransform = !frametime ? 0 : (100 - (((frametime % this.timeBetweenBeats) / this.timeBetweenBeats) * 100));
-    return preTransform;
-    // var result = SignalState.prototype.computeSignal.apply(this, [preTransform]);
-    // return result;
+    var ft = this.frametime;
+    var tbb = this.timeBetweenBeats;
+    return !ft ? 0 : (100 - (((ft % tbb) / tbb) * 100));
   }
 });
 
