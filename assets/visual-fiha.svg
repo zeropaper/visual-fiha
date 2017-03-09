@@ -6,9 +6,18 @@
    viewBox="0 0 1000 1000"
    height="1000"
    width="1000"
-   style="--fill-color:green;--stroke-color:white;--stroke-width:5px;--frametime:0;--beat:0.5">
+   style="--fill-color:none;--stroke-color:white;--stroke-width:5px;--frametime:0;--beat:0">
+  <defs>
+    <filter id="glow" primitiveUnits="userSpaceOnUse">
+  <feGaussianBlur stdDeviation="9" result="coloredBlur"/>
+  <feMerge>
+    <feMergeNode in="coloredBlur"/>
+    <feMergeNode in="SourceGraphic"/>
+  </feMerge>
+    </filter>
+  </defs>
   <path
-     id="zeropaper"
-     style="fill: var(--fill-color); stroke: var(--stroke-color); stroke-width: var(--stroke-width); stroke-dasharray: var(--path-length); stroke-dashoffset: calc(var(--path-length) * var(--beat)); stroke-linejoin: round; stroke-linecap: round"
-     d="M 31.431077,56.857959 502.85882,942.57281 641.82171,678.28765 l -88.9961,0 -82.04687,-160.36719 255.36523,0 79.23633,-150.69335 -411.70117,0 -82.04883,-160.36915 578.07227,0 78.87109,-150.000001 -937.142583,0 z" />
+     id="fiha"
+     style="filter:url(#glow);fill:var(--fill-color);stroke:var(--stroke-color);stroke-width:var(--stroke-width);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray: var(--path-length);stroke-dashoffset: calc(var(--path-length) * var(--beat));"
+     d="m 42.144772,100.70423 460.738378,798.02231 137.92084,-238.11891 -100.83949,0 -83.42113,-144.48961 267.68175,0 78.38889,-135.77355 -424.45952,0 -83.42215,-144.49139 591.30382,0 78.02825,-135.14885 z" />
 </svg>
