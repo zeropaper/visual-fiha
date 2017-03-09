@@ -76,18 +76,18 @@ var GistView = View.extend({
   _loadGist: function() {
     var view = this;
     if (!view.gistId) return;
-    var parent = view.parent;
+    // var parent = view.parent;
 
     fetch('https://api.github.com/gists/' + view.gistId)
       .then(resToJSON)
       .then(function(json) {
         var content = json.files['visual-fiha-setup.yml'].content;
         view.fromYaml(content);
-        parent.getEditor().editCode({
-          language: 'yaml',
-          script: content,
-          onvalidchange: view.fromYaml
-        });
+        // parent.getEditor().editCode({
+        //   language: 'yaml',
+        //   script: content,
+        //   onvalidchange: view.fromYaml
+        // });
       });
   },
 
