@@ -42,8 +42,7 @@ var DetailsView = View.extend({
               'drawFunction',
 
               'name',
-              'type',
-              'zIndex'
+              'type'
             ].indexOf(key) < 0;
           });
       }
