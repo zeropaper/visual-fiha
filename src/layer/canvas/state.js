@@ -51,6 +51,10 @@ var CanvasLayer = State.extend({
     return returned;
   },
 
+  toJSON: function(...args) {
+    return this.serialize(...args);
+  },
+
   derived: {
     mappable: {
       deps: ScreenLayerState.prototype._derived.mappable.deps,
@@ -150,9 +154,6 @@ var CanvasLayers = Collection.extend({
     var Constructor = _CanvasLayersCache[attrs.name] || CanvasLayer.extend(def);
     _CanvasLayersCache[attrs.name] = Constructor;
     var inst =  new Constructor(attrs, options);
-    inst.on('change:zIndex', function() {
-      inst.collection.sort();
-    });
     if (options.init === false) inst.initialize();
     return inst;
   }

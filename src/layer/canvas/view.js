@@ -48,10 +48,6 @@ module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
     this.model.canvasLayers.filter(function (layer) {
       return layer.active;
     }).forEach(function(layer) {
-      // mockedCtx._.properties.forEach(function(propName) {
-      //   if (propName !== 'canvas') ctx[propName] = layer[propName];
-      // });
-
       layer.draw(ctx);
     });
 
