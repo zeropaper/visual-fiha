@@ -4,7 +4,7 @@ var View = require('ampersand-view');
 var LayerView = View.extend({
   template: function() {
     return `
-      <div layer-id="${this.model.cid}" view-id="${this.cid}" class="missing-layer-view" style="will-change:transform, opacity, backfaceVisibility;width:100%;height:100%;display:table">
+      <div layer-id="${this.model.getId()}" view-id="${this.cid}" class="missing-layer-view" style="will-change:transform, opacity, backfaceVisibility;width:100%;height:100%;display:table">
         <div style="display:table-cell;color:#a66;vertical-align:middle;text-align:center;font-weight:700;font-size:30px;text-shadow:0 0 4px #000">
           Missing
           <span data-hook="type"></span> for
@@ -94,7 +94,7 @@ var LayerView = View.extend({
 
   addRule: function(selector, properties) {
     var sheet = this.sheet;
-    var prefix = '[view-id="'+ this.cid +'"] ';
+    var prefix = '[layer-id="'+ this.model.getId() +'"] ';
     var index = sheet.cssRules.length;
     selector = selector.indexOf('@') === 0 ? selector : prefix + selector;
     for (var i = index - 1; i >= 0; i--) {

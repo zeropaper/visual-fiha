@@ -5,7 +5,7 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
   autoRender: true,
 
   template: function() {
-    return '<div class="layer-svg" layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></div>';
+    return '<div class="layer-svg" layer-id="' + this.model.getId() + '" view-id="' + this.cid + '"></div>';
   },
 
   _updateContent: function() {

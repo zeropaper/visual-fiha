@@ -4,7 +4,7 @@ var assign = require('lodash.assign');
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
   template: function() {
-    return '<canvas layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></canvas>';
+    return '<canvas layer-id="' + this.model.getId() + '" view-id="' + this.cid + '"></canvas>';
   },
 
   derived: {
