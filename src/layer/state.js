@@ -16,6 +16,31 @@ var LayerState = State.extend({
   },
 
   derived: {
+    screenState: {
+      deps: ['collection', 'collection.parent'],
+      fn: function() {
+        return this.collection.parent;
+      }
+    },
+    hasDOM: {
+      deps: ['screenState'],
+      fn: function() {
+        return this.screenState && this.screenState.hasDOM;
+      }
+    },
+    isControllerState: {
+      deps: ['screenState'],
+      fn: function() {
+        return this.screenState && this.screenState.isControllerState;
+      }
+    },
+    location: {
+      deps: ['isControllerState', 'hasDOM'],
+      fn: function() {
+        return this.screenState ? this.screenState.location : false;
+      }
+    },
+
     mappable: {
       deps: [],
       fn: function() {
@@ -33,6 +58,10 @@ var LayerState = State.extend({
         };
       }
     }
+  },
+
+  _log: function(...args) {
+    this.screenState._log(...args);
   }
 });
 

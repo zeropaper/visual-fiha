@@ -78,7 +78,7 @@ var CanvasLayer = State.extend({
     screenState: {
       deps: [],
       fn: function() {
-        return this.collection.parent.collection.parent;
+        return this.collection.parent.screenState;
       }
     },
 

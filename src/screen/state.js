@@ -3,6 +3,10 @@
 
 var State = require('ampersand-state');
 var ScreenState = State.extend({
+  initialize: function(attributes, options = {}) {
+    this._isControllerState = !!options.router;
+  },
+
   mappable: {
     source: ['frametime', 'midi', 'firstframetime', 'signals'],
     target: ['layers', 'signals']
@@ -23,6 +27,33 @@ var ScreenState = State.extend({
 
   collections: {
     layers: require('./../layer/collection')
+  },
+
+  derived: {
+    hasDOM: {
+      deps: [],
+      fn: function() {
+        return typeof DedicatedWorkerGlobalScope === 'undefined';
+      }
+    },
+    isControllerState: {
+      deps: [],
+      fn: function() {
+        return this._isControllerState;
+      }
+    },
+    location: {
+      deps: ['hasDOM', 'isControllerState'],
+      fn: function() {
+        return this.isControllerState ? 'control' : (this.hasDOM ? 'screen' : 'worker');
+      }
+    }
+  },
+
+  _log: function(...args) {
+    var color = this.location === 'screen' ? 'lightblue' : (this.location === 'control' ? 'lightgreen' : 'pink');
+    var txt = args.shift();
+    console.log('%c'+ this.location[0].toUpperCase() + ': ' + txt, 'color:' + color, ...args);
   },
 
   toJSON: function() {

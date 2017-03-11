@@ -168,7 +168,9 @@ var AppRouter = require('ampersand-router').extend({
     router.worker = new LoadedWorker();
     router.settings = new Settings('vf');
 
-    var screen = router.model = new ScreenState();
+    var screen = router.model = new ScreenState({}, {
+      router: this
+    });
 
     var mappingContext = {
       context: {
