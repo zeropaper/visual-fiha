@@ -10,6 +10,6 @@
    style="--stroke-color:white;--stroke-width:22;--beat:0;--translate-y: -20vh">
   <path
      id="algorave"
-     style="transform: translateY(var(--translate-y));fill:none;stroke:var(--stroke-color);stroke-width:var(--stroke-width);"
+     style="transform: translateY(var(--translate-y));fill:none;stroke:var(--stroke-color);stroke-width:var(--stroke-width);stroke-dasharray: calc(var(--path-length) * (1 / 80));stroke-dashoffset: calc(var(--path-length) * (1 / 2000) * var(--beat));"
      d="M 72.243364,880.30264 500.1113,139.79318 l 421.80484,730.45396 -787.02861,0 365.22377,-632.03428 336.56142,582.62833 -616.47471,0 279.91329,-483.99105 250.68929,434.79389 -444.82025,0 194.13096,-336.16168 165.31555,286.75704 -274.08546,0 108.76991,-188.43474 80.10881,139.18945 -103.61254,0 23.48099,-40.54458 0,0 0,0" />
 </svg>
