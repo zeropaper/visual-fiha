@@ -103,6 +103,10 @@ var ControllerView = View.extend({
       controllerView.once('change:el', controllerView._attachSuggestionHelper);
     }
 
+    controllerView.listenTo(controllerView.model.layers, 'sendCommand', function(...args) {
+      controllerView.sendCommand(...args);
+    });
+
     this._animate();
   },
 
