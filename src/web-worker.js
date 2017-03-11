@@ -207,7 +207,9 @@ var commands = {
   propChange: function(path, property, value) {
     var obj = resolve(path, __dataContext);
     if (!obj) return;
-    if (obj[property] && obj[property].isCollection) return obj[property].set(Array.isArray(value) ? value : [value]);
+    if (obj[property] && obj[property].isCollection) {
+      return obj[property].set(Array.isArray(value) ? value : [value]);
+    }
     obj.set(property, value);
   },
 
@@ -338,14 +340,13 @@ worker.addEventListener('message', function(evt) {
     return evt.data.payload[argName];
   });
 
-  // if (['heartbeat'].indexOf(commandName) === -1) {
-  //   _executedCommands.push({
-  //     time: Date.now(),
-  //     command: commandName,
-  //     payload: evt.data.payload
-  //   });
-  // }
-
+  if (['heartbeat'].indexOf(commandName) < 0) {
+    // _executedCommands.push({
+    //   time: Date.now(),
+    //   command: commandName,
+    //   payload: evt.data.payload
+    // });
+  }
   var result = command.apply(worker, commandArgs);
   if (!eventId) return;
   worker.postMessage({
@@ -357,4 +358,11 @@ worker.addEventListener('message', function(evt) {
 }, {
   passive: true,
   capture: false
+});
+
+worker.layers.on('emitCommand', function(...args) {
+  emitCommand(...args);
+});
+worker.layers.on('broadcastCommand', function(...args) {
+  broadcastCommand(...args);
 });
