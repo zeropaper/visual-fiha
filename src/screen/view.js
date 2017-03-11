@@ -1,12 +1,10 @@
 'use strict';
-// var View = require('./../controller/control-view');
 var View = require('ampersand-view');
 var LayerView = require('./../layer/view');
 require('./../layer/canvas/view');
 require('./../layer/svg/view');
 require('./../layer/video/view');
 require('./../layer/img/view');
-// var logger = require('./../logging')('green');
 
 
 function signature(fn) {
@@ -41,7 +39,6 @@ var commands = {
   },
   updateLayer: function(layer) {
     var state = this.model.layers.get(layer.name);
-    this.model._log('Step X: update screen layer', layer.name, state && state.styleProperties ? state.styleProperties.length : 'no state', layer.styleProperties ? layer.styleProperties.length : 'none');
     if (state) {
       state.set(layer);
     }

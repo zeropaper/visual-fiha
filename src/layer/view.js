@@ -21,10 +21,10 @@ var LayerView = View.extend({
     styleEl: {
       deps: ['el'],
       fn: function() {
-        var el = document.getElementById('style-' + this.cid);
+        var el = document.getElementById('style-' + this.model.getId());
         if (!el) {
           el = document.createElement('style');
-          el.id = 'style-' + this.cid;
+          el.id = 'style-' + this.model.getId();
           el.appendChild(document.createTextNode(''));
           document.head.appendChild(el);
         }
@@ -74,7 +74,6 @@ var LayerView = View.extend({
   },
 
   setProperty: function(...args) {
-    // console.info('set CSS  %s: %s on "%s" (%s)', ...args, this.model.getId(), this.model.getType());
     this.cssRule.style.setProperty(...args);
   },
 
@@ -109,7 +108,9 @@ var LayerView = View.extend({
     return View.prototype.remove.apply(this, arguments);
   },
 
-  update: function() {}
+  update: function() {
+    this.setProperty('--frametime', this.model.screenState.frametime);
+  }
 });
 LayerView.types = {};
 module.exports = LayerView;

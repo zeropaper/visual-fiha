@@ -31,58 +31,6 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
     }));
   },
 
-  initialize: function() {
-    ScreenLayerControlView.prototype.initialize.apply(this, arguments);
-    this._cacheEl = document.createElement('div');
-
-    this.listenToAndRun(this.model, 'change:content', function() {
-      if (!this.model.content || this._cacheEl.innerHTML === this.model.content) return;
-      this._cacheEl.innerHTML = this.model.content;
-
-      var obj = this.model.serialize();
-
-      if (!Object.keys(obj.svgStyles).length) {
-        obj.svgStyles = this.extractStyles();
-        obj.styleProperties = this.extractVars();
-      }
-
-      obj.content = this._cacheEl.innerHTML;
-
-      this.sendCommand('updateLayer', {layer: obj});
-    });
-  },
-
-  extractVars: function() {
-    var props = [];
-    var name, value;
-    var svg = this._cacheEl.getElementsByTagName('svg')[0];
-    if (!svg) return props;
-    for (var p = 0; p < svg.style.length; p++) {
-      name = svg.style[p];
-      value = svg.style.getPropertyValue(name).trim();
-      props.push({
-        name: name,
-        value: value,
-        default: value
-      });
-    }
-    return props;
-  },
-
-
-
-  extractStyles: function() {
-    var styles = {};
-    var changed;
-    this._cacheEl.querySelectorAll('[style][id]').forEach(function(styledEl) {
-      changed = true;
-      styles['#' + styledEl.id] = styledEl.getAttribute('style');
-      styledEl.style = null;
-    });
-
-    return styles;
-  },
-
   _editSVGStyles: function () {
     var view = this;
     var editorView = view.rootView.getEditor();

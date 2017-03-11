@@ -62,6 +62,10 @@ var LayerState = State.extend({
 
   _log: function(...args) {
     this.screenState._log(...args);
+  },
+
+  toJSON: function() {
+    return State.prototype.toJSON.apply(this, arguments);
   }
 });
 

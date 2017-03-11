@@ -8,21 +8,17 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     return '<div class="layer-svg" layer-id="' + this.model.getId() + '" view-id="' + this.cid + '"></div>';
   },
 
-  _updateContent: function() {
-    if (!this.el) return;
-    this.el.innerHTML = this.model.content;
-    this.svg = this.query('svg');
-    if (!this.svg) return;
-
-    this.svg.style = null;
-    this.svg.querySelectorAll('[style][id]').forEach(function(el) {
-      el.style = null;
-    });
-
-    return this._updateStyles()._updateProperties();
+  derived: {
+    svg: {
+      deps: ['el', 'model.content'],
+      fn: function() {
+        return this.el && this.model.content ? this.query('svg') || false : false;
+      }
+    }
   },
 
-  _updateStyles: function() {
+  updateStyles: function() {
+    if (!this.model.active || !this.el) return this;
     var selectors = Object.keys(this.model.svgStyles);
     selectors.forEach(function(selector) {
       this.addRule(selector, this.model.svgStyles[selector]);
@@ -30,27 +26,30 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     return this;
   },
 
-  _updateProperties: function() {
-    if (!this.el) return this;
-    var svg = this.query('svg');
-    if (!svg || !svg.style) return this;
-
+  updateProperties: function() {
+    if (!this.model.active || !this.el) return this;
     this.model.styleProperties.forEach(function(styleProp) {
       this.setProperty(styleProp.name, styleProp.value);
     }, this);
-
-    var paths = this.svg.querySelectorAll('path');
-    for (var p = 0; p < paths.length; p++) {
-      paths[p].style.setProperty('--path-length', paths[p].getTotalLength());
-    }
-
     return this;
   },
 
+  updateContent: function() {
+    if (!this.el || this.el.innerHTML === this.model.content) return this;
+
+    this.el.innerHTML = this.model.content;
+    this.updateStyles().updateProperties();
+  },
+
   initialize: function() {
-    this.listenToAndRun(this.model, 'change:content', this._updateContent);
-    this.listenToAndRun(this.model, 'change:svgStyles', this._updateStyles);
-    this.listenToAndRun(this.model, 'change:styleProperties', this._updateProperties);
+    ScreenLayerView.prototype.initialize.apply(this, arguments);
+    this.updateContent().updateStyles().updateProperties();
+
+    this.listenTo(this.model, 'change:content', this.updateContent);
+    this.on('change:el', this.updateContent);
+
+    this.listenToAndRun(this.model, 'change:svgStyles', this.updateStyles);
+    this.listenToAndRun(this.model.styleProperties, 'sort change', this.updateProperties);
   },
 
   remove: function() {
