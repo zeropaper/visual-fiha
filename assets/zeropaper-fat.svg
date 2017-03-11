@@ -6,7 +6,16 @@
    height="1000"
    viewbox="0 0 1000 1000"
    version="1.1"
-   style="--fill-color:green;--stroke-color:white;--stroke-width:5px;--frametime:0;--beat:0.5">
+   style="--fill-color:none;--stroke-color:white;--stroke-width:5px;--frametime:0;--beat:0;">
+  <defs>
+    <filter id="glow" primitiveUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="9" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
   <path
      id="zeropaper"
      style="fill: var(--fill-color); stroke: var(--stroke-color); stroke-width: var(--stroke-width); stroke-dasharray: var(--path-length); stroke-dashoffset: calc(var(--path-length) * var(--beat));"
