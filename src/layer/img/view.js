@@ -3,7 +3,7 @@
 var ScreenLayerView = require('./../view');
 module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
   template: function() {
-    return '<div class="layer-image" layer-id="' + this.model.cid + '" view-id="' + this.cid + '"></div>';
+    return '<div class="layer-image" layer-id="' + this.model.getId() + '" view-id="' + this.cid + '"></div>';
   },
 
   bindings: require('lodash.assign')({
