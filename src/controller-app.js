@@ -98,6 +98,7 @@ var AppRouter = require('ampersand-router').extend({
 
   _handleWorkerMessages: function(evt) {
     var router = this;
+    var screen = router.model;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
     // logger.info('app incoming worker command "%s"', command);
@@ -105,6 +106,16 @@ var AppRouter = require('ampersand-router').extend({
     switch (command) {
       case 'health':
         router.view.workerPerformance = `~${ ((payload.samplesCount / payload.elapsed) * 1000).toFixed(2) }/${ payload.fps }fps`;
+        break;
+
+      case 'updateLayer':
+        var layerState = screen.layers.get(payload.layer.name);
+        if(layerState) {
+          layerState.set(payload.layer);
+        }
+        else {
+          screen.layers.add(payload.layer);
+        }
         break;
 
       case 'addSignal':
