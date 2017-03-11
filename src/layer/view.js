@@ -18,26 +18,6 @@ var LayerView = View.extend({
   },
 
   derived: {
-    style: {
-      deps: [
-        'model.active',
-        'model.opacity',
-        'model.mixBlendMode',
-        'model.zIndex'
-      ],
-      fn: function() {
-        var width = this.el.parentNode ? (this.el.parentNode.clientWidth + 'px') : '100%';
-        var height = this.el.parentNode ? (this.el.parentNode.clientHeight + 'px') : '100%';
-        return {
-          display: this.model.active ? 'block' : 'none',
-          opacity: this.model.opacity * 0.01,
-          mixBlendMode: this.model.mixBlendMode,
-          width: width,
-          height: height,
-          zIndex: this.zIndex || 0
-        };
-      }
-    },
     styleEl: {
       deps: ['el'],
       fn: function() {
@@ -76,13 +56,19 @@ var LayerView = View.extend({
   bindings: {
     'model.type': '[data-hook=type]',
     'model.name': '[data-hook=name]',
-    style: {
-      type: function() {
-        var style = this.cssRule.style;
-        var computed = this.style;
-        Object.keys(computed).forEach(function(key) {
-          style[key] = computed[key];
-        });
+    'model.active': {
+      type: function(el, val) {
+        this.cssRule.style.display = val ? 'block' : 'none';
+      }
+    },
+    'model.opacity': {
+      type: function(el, val) {
+        this.cssRule.style.opacity = val * 0.01;
+      }
+    },
+    'model.zIndex': {
+      type: function(el, val) {
+        this.cssRule.style.zIndex = val;
       }
     }
   },
