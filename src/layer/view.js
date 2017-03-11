@@ -41,7 +41,7 @@ var LayerView = View.extend({
       deps: ['sheet'],
       fn: function() {
         if (this.sheet.cssRules.length === 0) {
-          this.addRule('', 'display: none');
+          this.addRule('', 'opacity: 1');
         }
         return this.sheet.cssRules[0];
       }
