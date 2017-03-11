@@ -3,132 +3,132 @@
 window.VF = window.VF || {};
 
 var canvasLayers = [
-  {
-    name: 'levels',
-    active: false,
-    zIndex: 0,
-    props: {
-      levelA: ['number', true, 30],
-      levelB: ['number', true, 120]
-    },
-    drawFunction: function () {
-  lineWidth(1);
-  strokeStyle('#fff');
+//   {
+//     name: 'levels',
+//     active: false,
+//     zIndex: 0,
+//     props: {
+//       levelA: ['number', true, 30],
+//       levelB: ['number', true, 120]
+//     },
+//     drawFunction: function () {
+//   lineWidth(1);
+//   strokeStyle('#fff');
 
-  beginPath();
-  moveTo(0, height - layer.levelA);
-  lineTo(width, height - layer.levelA);
-  stroke();
+//   beginPath();
+//   moveTo(0, height - layer.levelA);
+//   lineTo(width, height - layer.levelA);
+//   stroke();
 
-  beginPath();
-  moveTo(0, height - layer.levelB);
-  lineTo(width, height - layer.levelB);
-  stroke();
+//   beginPath();
+//   moveTo(0, height - layer.levelB);
+//   lineTo(width, height - layer.levelB);
+//   stroke();
 
-  // -----------------------------------
-  var length = bufferLength();
-  var barWidth = (width / length) - 1;
-  var f = 0;
-  var alpha;
-  lineWidth(barWidth);
+//   // -----------------------------------
+//   var length = bufferLength();
+//   var barWidth = (width / length) - 1;
+//   var f = 0;
+//   var alpha;
+//   lineWidth(barWidth);
 
-  grid(length, 1, function(x) {
-    var td = timeDomain(f) * 1;
-    var freq = frequency(f);
+//   grid(length, 1, function(x) {
+//     var td = timeDomain(f) * 1;
+//     var freq = frequency(f);
 
-    alpha = td > layer.levelA && td < layer.levelB ? 0.7 : 0;
-    strokeStyle('rgba(160,122,122,' + alpha + ')');
-    beginPath();
-    moveTo(x, height);
-    lineTo(x, height - td);
-    stroke();
+//     alpha = td > layer.levelA && td < layer.levelB ? 0.7 : 0;
+//     strokeStyle('rgba(160,122,122,' + alpha + ')');
+//     beginPath();
+//     moveTo(x, height);
+//     lineTo(x, height - td);
+//     stroke();
 
-    alpha = freq > layer.levelA && freq < layer.levelB ? 0.7 : 0;
-    strokeStyle('rgba(122,122,160,' + alpha + ')');
-    beginPath();
-    moveTo(x, height);
-    lineTo(x, height - freq);
-    stroke();
-    f++;
-  });
-}.toString()
-  },
-  {
-    name: 'audio1',
-    active: false,
-    zIndex: 0,
-    props: {
-      colorA: ['string', true, '#A581FF'],
-      widthA: ['number', true, 1],
-      colorB: ['string', true, '#66D9EF'],
-      widthB: ['number', true, 1]
-    },
-    drawFunction: function () {
-  var x = width * 0.5;
-  var y = height * 0.5;
-  var r = Math.min(x, y) - 20;
-  var rad = Math.PI * 2;
-  var length = bufferLength();
-  var shift1 = Math.PI * 0.5;
-  var shift2 = Math.PI * 1.5;
+//     alpha = freq > layer.levelA && freq < layer.levelB ? 0.7 : 0;
+//     strokeStyle('rgba(122,122,160,' + alpha + ')');
+//     beginPath();
+//     moveTo(x, height);
+//     lineTo(x, height - freq);
+//     stroke();
+//     f++;
+//   });
+// }.toString()
+//   },
+//   {
+//     name: 'audio1',
+//     active: false,
+//     zIndex: 0,
+//     props: {
+//       colorA: ['string', true, '#A581FF'],
+//       widthA: ['number', true, 1],
+//       colorB: ['string', true, '#66D9EF'],
+//       widthB: ['number', true, 1]
+//     },
+//     drawFunction: function () {
+//   var x = width * 0.5;
+//   var y = height * 0.5;
+//   var r = Math.min(x, y) - 20;
+//   var rad = Math.PI * 2;
+//   var length = bufferLength();
+//   var shift1 = Math.PI * 0.5;
+//   var shift2 = Math.PI * 1.5;
 
-  var i, a, f, td, lx, ly;
+//   var i, a, f, td, lx, ly;
 
-  // -----------------------------
+//   // -----------------------------
 
-  strokeStyle(layer.colorA);
-  lineWidth(layer.widthA);
-  beginPath();
-  for (i = 0; i < length; i++) {
-    a = ((rad / length) * i) - shift1;
-    f = (r / 100) * (frequency(i) / 2);
-    lx = Math.round(x + Math.cos(a) * f);
-    ly = Math.round(y + Math.sin(a) * f);
-    lineTo(lx, ly);
-  }
-  stroke();
+//   strokeStyle(layer.colorA);
+//   lineWidth(layer.widthA);
+//   beginPath();
+//   for (i = 0; i < length; i++) {
+//     a = ((rad / length) * i) - shift1;
+//     f = (r / 100) * (frequency(i) / 2);
+//     lx = Math.round(x + Math.cos(a) * f);
+//     ly = Math.round(y + Math.sin(a) * f);
+//     lineTo(lx, ly);
+//   }
+//   stroke();
 
-  beginPath();
-  i = 0;
-  lineTo(0, height * 0.5);
-  lineTo(width, height * 0.5);
-  stroke();
+//   beginPath();
+//   i = 0;
+//   lineTo(0, height * 0.5);
+//   lineTo(width, height * 0.5);
+//   stroke();
 
-  beginPath();
-  grid(length, 1, function(x, y){
-    lineTo(x, y + (frequency(i) * 0.5));
-    i++;
-  });
-  stroke();
+//   beginPath();
+//   grid(length, 1, function(x, y){
+//     lineTo(x, y + (frequency(i) * 0.5));
+//     i++;
+//   });
+//   stroke();
 
-  // -----------------------------
+//   // -----------------------------
 
-  strokeStyle(layer.colorB);
-  lineWidth(layer.widthB);
-  beginPath();
-  for (i = 0; i < length; i++) {
-    a = ((rad / length) * i) - shift2;
-    td = (r / 100) * (timeDomain(i) / 2);
-    lx = Math.round(x + Math.cos(a) * td);
-    ly = Math.round(y + Math.sin(a) * td);
-    lineTo(lx, ly);
-  }
-  stroke();
+//   strokeStyle(layer.colorB);
+//   lineWidth(layer.widthB);
+//   beginPath();
+//   for (i = 0; i < length; i++) {
+//     a = ((rad / length) * i) - shift2;
+//     td = (r / 100) * (timeDomain(i) / 2);
+//     lx = Math.round(x + Math.cos(a) * td);
+//     ly = Math.round(y + Math.sin(a) * td);
+//     lineTo(lx, ly);
+//   }
+//   stroke();
 
-  beginPath();
-  i = 0;
-  lineTo(0, height * 0.5);
-  lineTo(width, height * 0.5);
-  stroke();
+//   beginPath();
+//   i = 0;
+//   lineTo(0, height * 0.5);
+//   lineTo(width, height * 0.5);
+//   stroke();
 
-  beginPath();
-  grid(length, 1, function(x, y){
-    lineTo(x, y + (timeDomain(i) * 0.5));
-    i++;
-  });
-  stroke();
-}.toString()
-  },
+//   beginPath();
+//   grid(length, 1, function(x, y){
+//     lineTo(x, y + (timeDomain(i) * 0.5));
+//     i++;
+//   });
+//   stroke();
+// }.toString()
+//   },
 
 
   {
@@ -144,24 +144,24 @@ var canvasLayers = [
     },
     drawFunction: function () {
   var l = bufferLength();
-  var str = layer.text || '';
 
-  var letters = str.length <= l ? repeat('', Math.round((l - str.length) / 2))
-                .concat(str.split('')) : str.split('');
+  // var str = layer.text || '';
+  // var letters = str.length <= l ? repeat('', Math.round((l - str.length) / 2))
+  //               .concat(str.split('')) : str.split('');
   var f = 0;
   var k = Math.round(layer.knobA * 0.05);
   var p = Math.max(1, k);
   var d = Math.pow(2, p);
 
-  textAlign('center');
-  textBaseline('middle');
+  // textAlign('center');
+  // textBaseline('middle');
 
   grid(l, l / d, function(...args) {
     fillStyle('black');
     fillStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');
     strokeStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');
 
-    circle(...args, timeDomain(f) * 0.1);
+    // circle(...args, timeDomain(f) * 0.1);
     polygone(...args, timeDomain(f) * layer.knobC * 0.05);
     // font('20px monospace');
     // font('20px monospace');
@@ -174,22 +174,22 @@ var canvasLayers = [
 
 window.VF._defaultSetup = {
   mappings: [
-    // {
-    //   targets: [
-    //     'layers.no-signal.opacity'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return value > 90 ? 100 : 15;\n}',
-    //   name: 'beatOpacity',
-    //   source: 'signals.beatA.result'
-    // },
-    // {
-    //   targets: [
-    //     'layers.no-signal.active'
-    //   ],
-    //   transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
-    //   name: 'nk2.r1',
-    //   source: 'midi:nk2.r1'
-    // },
+    {
+      targets: [
+        'layers.no-signal.opacity'
+      ],
+      transformFunction: 'function (value) {\n  return value > 90 ? 100 : 15;\n}',
+      name: 'beatOpacity',
+      source: 'signals.beatA.result'
+    },
+    {
+      targets: [
+        'layers.no-signal.active'
+      ],
+      transformFunction: 'function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}',
+      name: 'nk2.r1',
+      source: 'midi:nk2.r1'
+    },
     // {
     //   targets: [
     //     'layers.Sky-1-back.opacity',
@@ -215,30 +215,30 @@ window.VF._defaultSetup = {
     //   name: 'nk2.m2',
     //   source: 'midi:nk2.m2'
     // },
-    // {
-    //   targets: [
-    //     'layers.canvas.canvasLayers.lines.knobA'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return value;\n}',
-    //   name: 'nk2.knob1',
-    //   source: 'midi:nk2.knob1'
-    // },
-    // {
-    //   targets: [
-    //     'layers.canvas.canvasLayers.lines.knobB'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return value;\n}',
-    //   name: 'nk2.knob2',
-    //   source: 'midi:nk2.knob2'
-    // },
-    // {
-    //   targets: [
-    //     'layers.canvas.canvasLayers.lines.knobC'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return value;\n}',
-    //   name: 'nk2.knob3',
-    //   source: 'midi:nk2.knob3'
-    // },
+    {
+      targets: [
+        'layers.canvas.canvasLayers.lines.knobA'
+      ],
+      transformFunction: 'function (value) {\n  return value;\n}',
+      name: 'nk2.knob1',
+      source: 'midi:nk2.knob1'
+    },
+    {
+      targets: [
+        'layers.canvas.canvasLayers.lines.knobB'
+      ],
+      transformFunction: 'function (value) {\n  return value;\n}',
+      name: 'nk2.knob2',
+      source: 'midi:nk2.knob2'
+    },
+    {
+      targets: [
+        'layers.canvas.canvasLayers.lines.knobC'
+      ],
+      transformFunction: 'function (value) {\n  return value;\n}',
+      name: 'nk2.knob3',
+      source: 'midi:nk2.knob3'
+    },
     // {
     //   targets: [
     //     'layers.zeropaper.opacity'
@@ -271,14 +271,23 @@ window.VF._defaultSetup = {
     //   name: 'nk2.r7',
     //   source: 'midi:nk2.r7'
     // },
-    // {
-    //   targets: [
-    //     'signals.beatA.input'
-    //   ],
-    //   transformFunction: 'function (value) {\n  return value + 63;\n}',
-    //   name: 'beatKnob',
-    //   source: 'midi:nk2.knob8'
-    // },
+    {
+      targets: [
+        'layers.ar.styleProperties.--beat.value',
+        'layers.vf.styleProperties.--beat.value'
+      ],
+      transformFunction: 'function (value) {\n  return (value % 100).toString();\n}',
+      name: 'beatNum20Str',
+      source: 'signals.beatA.result'
+    },
+    {
+      targets: [
+        'signals.beatA.input'
+      ],
+      transformFunction: 'function (value) {\n  return value + 63;\n}',
+      name: 'beatKnob',
+      source: 'midi:nk2.knob8'
+    },
     // {
     //   targets: [
     //     'signals.colorA.hue'
@@ -303,7 +312,7 @@ window.VF._defaultSetup = {
     {
       type: 'beat',
       name: 'beatA',
-      input: 125
+      input: 120
     }
   ],
 
@@ -337,6 +346,13 @@ window.VF._defaultSetup = {
     //   src: './assets/zeropaper-fat.svg',
     //   mixBlendingMode: 'overlay'
     // },
+
+    {
+      type: 'SVG',
+      name: 'ar',
+      active: true,
+      src: './assets/algorave/algorave-stroke.svg'
+    },
 
     {
       type: 'SVG',
