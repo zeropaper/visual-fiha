@@ -39,6 +39,16 @@ var commands = {
   bootstrap: function bootstrap(state) {
     this.update(state || {});
   },
+  updateLayer: function(layer) {
+    var state = this.model.layers.get(layer.name);
+    this.model._log('Step X: update screen layer', layer.name, state && state.styleProperties ? state.styleProperties.length : 'no state', layer.styleProperties ? layer.styleProperties.length : 'none');
+    if (state) {
+      state.set(layer);
+    }
+    else {
+      state = this.model.layers.add(layer);
+    }
+  },
   updateLayers: function(layers, audio) {
     if (audio) this.model.audio = audio;
     this.model.layers.set(layers);
