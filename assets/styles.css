@@ -732,8 +732,8 @@ header h3 {
 }
 .signal-beat .detector button {
   padding: 1rem;
-  min-width: 100px;
-  max-width: 200px;
+  width: 10vmax;
+  height: 10vmax;
   margin: var(--spacing) auto;
   display: block;
   text-align: center;
