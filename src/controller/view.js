@@ -16,52 +16,6 @@ var objectPath = require('./../object-path');
 // var Timeline = require('./timeline-view');
 
 
-var ControlScreenControls = View.extend({
-  template: `<div class="column columns control-screen-controls">
-    <div class="column">
-      <button name="control-screen">Control screen</button>
-    </div>
-
-    <div class="column columns control-screen-size">
-      <div class="column">
-        <input type="number" min="25" max="75" name="control-screen-width" />
-      </div>
-
-      <div class="column">
-        <input type="number" min="25" max="75" name="control-screen-height" />
-      </div>
-    </div>
-  </div>`,
-
-  props: {
-    active: ['boolean', true, true],
-    width: ['number', true, 33],
-    height: ['number', true, 33],
-  },
-
-  bindings: {
-    'width': {type: 'value', selector: '[name="control-screen-width"]'},
-    'height': {type: 'value', selector: '[name="control-screen-height"]'}
-  },
-
-  events: {
-    'click [name="control-screen"]': 'toggleActive',
-    'change [name="control-screen-width"]': 'setWidth',
-    'change [name="control-screen-height"]': 'setHeight'
-  },
-
-  toggleActive: function() {
-    this.toggle('active');
-  },
-
-  setWidth: function(evt) {
-    this.width = Number(evt.target.value);
-  },
-
-  setHeight: function(evt) {
-    this.height = Number(evt.target.value);
-  }
-});
 
 
 
@@ -495,11 +449,7 @@ var ControllerView = View.extend({
 
   fromJSON: function(obj) {
     this.router._sendBootstrap(obj);
-    // this.sendCommand('bootstrap', {
-    //   layers: obj.layers.filter(o => !!o.name),
-    //   signals: obj.signals.filter(o => !!o.name),
-    //   mappings: obj.mappings.filter(o => !!o.name)
-    // });
+    return this;
   },
 
 
@@ -578,19 +528,11 @@ var ControllerView = View.extend({
 
           <div class="column worker-performance"></div>
 
-          <div class="column"></div>
-
           <div class="column no-grow control-screen-controls"></div>
-
-          <div class="column"></div>
 
           <div class="column no-grow">
             <button name="screen">Open screen</button>
           </div>
-
-          <!-- <div class="column gutter-horizontal no-grow columns performance">
-            Controller <span class="column sparkline-controller"></span>
-          </div> -->
 
           <div class="column"></div>
 
