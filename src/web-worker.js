@@ -14,6 +14,7 @@ require.ensure([
   './layer/state',
   './layer/svg/state',
   './layer/img/state',
+  './layer/txt/state',
   './layer/video/state',
   './layer/canvas/state',
 ], function() {

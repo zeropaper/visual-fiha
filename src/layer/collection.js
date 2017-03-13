@@ -6,6 +6,7 @@ require('./canvas/state');
 require('./video/state');
 require('./svg/state');
 require('./img/state');
+require('./txt/state');
 
 module.exports = Collection.extend({
   comparator: 'zIndex',

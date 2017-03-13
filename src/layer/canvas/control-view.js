@@ -75,6 +75,7 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
       <header class="rows">
         <div class="row columns">
           <div class="column no-grow"><button class="active prop-toggle"></button></div>
+          <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
           <h3 class="column layer-name" data-hook="name"></h3>
         </div>
 

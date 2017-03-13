@@ -1,8 +1,43 @@
 'use strict';
 var State = require('ampersand-state');
+var State = require('ampersand-state');
+var Collection = require('ampersand-collection');
+
+var PropertyState = State.extend({
+  idAttribute: 'name',
+
+  mappable: {
+    target: ['value']
+  },
+
+  props: {
+    name: ['string', true, ''],
+    value: ['string', false, ''],
+    default: ['string', true, '']
+  }
+});
+
+var PropertyCollection = Collection.extend({
+  mainIndex: 'name',
+  model: PropertyState
+});
+
 var LayerState = State.extend({
   idAttribute: 'name',
   typeAttribute: 'type',
+
+  initialize: function() {
+    State.prototype.initialize.apply(this, arguments);
+    var state = this;
+    state.listenToAndRun(state.styleProperties, 'change', function() {
+      state.trigger('change:styleProperties', state, state.styleProperties, {styleProperties: true});
+    });
+    state.on('change:layerStyles', function() {state._log('layerStyles changed on %s', state.getId());});
+  },
+
+  collections: {
+    styleProperties: PropertyCollection
+  },
 
   props: {
     name: ['string', true, null],
@@ -12,7 +47,8 @@ var LayerState = State.extend({
       type: 'number',
       default: 100
     },
-    zIndex: ['number', true, 0]
+    zIndex: ['number', true, 0],
+    layerStyles: ['string', false, '']
   },
 
   derived: {

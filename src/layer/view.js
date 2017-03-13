@@ -4,7 +4,7 @@ var View = require('ampersand-view');
 var LayerView = View.extend({
   template: function() {
     return `
-      <div layer-id="${this.model.getId()}" view-id="${this.cid}" class="missing-layer-view" style="will-change:transform, opacity, backfaceVisibility;width:100%;height:100%;display:table">
+      <div id="${this.model.getId()}" view-id="${this.cid}" class="missing-layer-view" style="will-change:transform, opacity, backfaceVisibility;width:100%;height:100%;display:table">
         <div style="display:table-cell;color:#a66;vertical-align:middle;text-align:center;font-weight:700;font-size:30px;text-shadow:0 0 4px #000">
           Missing
           <span data-hook="type"></span> for
@@ -15,6 +15,10 @@ var LayerView = View.extend({
         </div>
       </div>
     `;
+  },
+
+  updateLayerStyles: function() {
+    this.cssRule
   },
 
   derived: {
@@ -38,12 +42,25 @@ var LayerView = View.extend({
       }
     },
     cssRule: {
-      deps: ['sheet'],
+      deps: ['sheet', 'model.layerStyles'],
       fn: function() {
         if (this.sheet.cssRules.length === 0) {
-          this.addRule('', 'opacity: 1');
+          this.addRule('', this.model.layerStyles);
         }
         return this.sheet.cssRules[0];
+      }
+    },
+    layerStyleObj: {
+      deps: ['model', 'model.layerStyles'],
+      fn: function() {
+        var exp = /[\s]*([^:]+)[\s]*:[\s]*([^;]+)[\s]*;[\s]*/gim;
+        return ((this.model.layerStyles || '').match(exp) || [])
+          .map(s => s
+            .trim()
+            .split(':')
+              .map(ss => ss
+                .replace(';', '')
+                .trim()));
       }
     }
   },
@@ -56,9 +73,13 @@ var LayerView = View.extend({
   bindings: {
     'model.type': '[data-hook=type]',
     'model.name': '[data-hook=name]',
-    'model.active': {
-      type: function(el, val) {
-        this.cssRule.style.display = val ? 'block' : 'none';
+    'model.active': {type: 'toggle'},
+    'model.layerStyles': {
+      type: function() {
+        var style = this.cssRule.style;
+        this.layerStyleObj.forEach(function(arr) {
+          style[arr[0]] = arr[1];
+        });
       }
     },
     'model.opacity': {
@@ -79,7 +100,7 @@ var LayerView = View.extend({
 
   addRule: function(selector, properties) {
     var sheet = this.sheet;
-    var prefix = '[layer-id="'+ this.model.getId() +'"] ';
+    var prefix = '#'+ this.model.getId() +' ';
     var index = sheet.cssRules.length;
     selector = selector.indexOf('@') === 0 ? selector : prefix + selector;
     for (var i = index - 1; i >= 0; i--) {
