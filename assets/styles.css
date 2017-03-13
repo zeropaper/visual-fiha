@@ -177,8 +177,7 @@ button,
 select,
 textarea,
 [contenteditable=true],
-input:not([type=checkbox]),
-input:not([type=radio]) {
+input:not([type=checkbox]):not([type=radio]) {
   display: inline-block;
   line-height: 1;
   font-size: inherit;
@@ -193,15 +192,13 @@ input:not([type=radio]) {
 select,
 textarea,
 [contenteditable=true],
-input:not([type=checkbox]),
-input:not([type=radio]) {
+input:not([type=checkbox]):not([type=radio]) {
   color: var(--editable-color);
 }
 select[disabled],
 textarea[disabled],
 [contenteditable=true][disabled],
-input:not([type=checkbox])[disabled],
-input:not([type=radio])[disabled] {
+input[disabled]:not([type=checkbox]):not([type=radio]) {
   color: currentColor;
 }
 
@@ -277,7 +274,7 @@ button.no {
   border: 1px solid var(--no-color);
   background-color: var(--no-color);
 }
-input {
+input:not([type=radio]):not([type=checkbox]) {
   border-bottom: 1px dashed currentColor;
 }
 
@@ -405,7 +402,7 @@ input.gutter-vertical {
   margin-bottom: var(--spacing);
 }
 
-.column > input {
+.column > input:not([type=checkbox]):not([type=radio]) {
   width: 100%;
 }
 
