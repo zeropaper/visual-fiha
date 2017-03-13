@@ -73,36 +73,33 @@ var GistView = View.extend({
     ]
   },
 
-  _loadGist: function() {
+  _loadGist: function(done) {
     var view = this;
-    if (!view.gistId) return;
-    // var parent = view.parent;
+    if (!view.gistId) return done(new Error('No Gist ID'));
+    done = typeof done === 'function' ? done : function(err) { console.error('gist loading error', err.message); };
 
     fetch('https://api.github.com/gists/' + view.gistId)
       .then(resToJSON)
       .then(function(json) {
         var content = json.files['visual-fiha-setup.yml'].content;
         view.fromYaml(content);
-        // parent.getEditor().editCode({
-        //   language: 'yaml',
-        //   script: content,
-        //   onvalidchange: view.fromYaml
-        // });
-      });
+        done(null, view.fromYaml(content));
+      }, done)
+      .catch(done);
   },
 
   fromYaml: function(newStr) {
-    var obj;
+    var obj = {};
     try {
       obj = jsYAML.safeLoad(newStr);
       obj.signals = toArr(obj.signals || {});
       obj.layers = toArr(obj.layers || {});
       obj.mappings = toArr(obj.mappings || {});
-      this.parent.fromJSON(obj);
     }
     catch(e) {
       console.warn(e);
     }
+    return obj;
   },
 
   toYaml: function() {

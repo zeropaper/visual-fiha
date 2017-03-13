@@ -10,6 +10,8 @@ var AceEditor = require('./ace-view');
 var RegionView = require('./region-view');
 var GistView = require('./gist-view');
 var MappingsControlView = require('./../mapping/control-view');
+var ControlScreenControls = require('./control-screen-controls-view');
+var LocalforageView = require('./localforage-view');
 var objectPath = require('./../object-path');
 // var Timeline = require('./timeline-view');
 
@@ -394,6 +396,16 @@ var ControllerView = View.extend({
       }
     },
 
+    localforageView: {
+      waitFor: 'el',
+      selector: '.controller > .header',
+      prepareView: function(el) {
+        var view = new LocalforageView({parent: this, model: this.model});
+        el.appendChild(view.render().el);
+        return view;
+      }
+    },
+
     gistView: {
       waitFor: 'el',
       selector: '.controller > .header',
@@ -482,11 +494,12 @@ var ControllerView = View.extend({
   },
 
   fromJSON: function(obj) {
-    this.sendCommand('bootstrap', {
-      layers: obj.layers.filter(o => !!o.name),
-      signals: obj.signals.filter(o => !!o.name),
-      mappings: obj.mappings.filter(o => !!o.name)
-    });
+    this.router._sendBootstrap(obj);
+    // this.sendCommand('bootstrap', {
+    //   layers: obj.layers.filter(o => !!o.name),
+    //   signals: obj.signals.filter(o => !!o.name),
+    //   mappings: obj.mappings.filter(o => !!o.name)
+    // });
   },
 
 
