@@ -1,3 +1,5 @@
+@import "font/vf-embedded.css";
+
 :root {
   --base-color: #fff;
   --bg-color: #272822;
@@ -76,97 +78,6 @@ body {
   text-align: center;
 }
 
-/*
-Icons
-*/
-@font-face {
-  font-family: 'vf';
-  src: url('font/vf.eot?41117676');
-  src: url('font/vf.eot?41117676#iefix') format('embedded-opentype'),
-       url('font/vf.woff2?41117676') format('woff2'),
-       url('font/vf.woff?41117676') format('woff'),
-       url('font/vf.ttf?41117676') format('truetype'),
-       url('font/vf.svg?41117676#vf') format('svg');
-  font-weight: normal;
-  font-style: normal;
-}
-/* Chrome hack: SVG is rendered more smooth in Windozze. 100% magic, uncomment if you need it. */
-/* Note, that will break hinting! In other OS-es font will be not as sharp as it could be */
-/*
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-  @font-face {
-    font-family: 'vf';
-    src: url('font/vf.svg?92236338#vf') format('svg');
-  }
-}
-*/
-
-[class^="vfi-"]:before, [class*=" vfi-"]:before {
-  font-family: "vf";
-  font-style: normal;
-  font-weight: normal;
-  speak: none;
-  display: inline-block;
-  text-decoration: inherit;
-  text-align: center;
-  /* opacity: .8; */
-
-  /* For safety - reset parent styles, that can break glyph codes*/
-  font-variant: normal;
-  text-transform: none;
-
-  /* fix buttons height, for twitter bootstrap */
-
-  /* Animation center compensation - margins should be symmetric */
-  /* remove if not needed */
-
-  /* you can be more comfortable with increased icons size */
-  /*font-size: 120%;*/
-  line-height: 1.2;
-
-  /* Font smoothing. That was taken from TWBS */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  /* Uncomment for 3D effect */
-  /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
-  vertical-align: inherit;
-}
-
-.vfi-play:before { content: '\e800'; } /* '' */
-.vfi-stop:before { content: '\e801'; } /* '' */
-.vfi-pause:before { content: '\e802'; } /* '' */
-.vfi-wrench:before { content: '\e803'; } /* '' */
-.vfi-cog-alt:before { content: '\e804'; } /* '' */
-.vfi-link:before { content: '\e805'; } /* '' */
-.vfi-lock:before { content: '\e806'; } /* '' */
-.vfi-lock-open:before { content: '\e807'; } /* '' */
-.vfi-clock:before { content: '\e808'; } /* '' */
-.vfi-login:before { content: '\e809'; } /* '' */
-.vfi-logout:before { content: '\e80a'; } /* '' */
-.vfi-trash-empty:before { content: '\e80b'; } /* '' */
-.vfi-resize-vertical:before { content: '\e80c'; } /* '' */
-.vfi-pencil:before { content: '\e80d'; } /* '' */
-.vfi-block:before { content: '\e80e'; } /* '' */
-.vfi-cancel:before { content: '\e80f'; } /* '' */
-.vfi-ok:before { content: '\e810'; } /* '' */
-.vfi-minus:before { content: '\e811'; } /* '' */
-.vfi-eye-off:before { content: '\e812'; } /* '' */
-.vfi-eye:before { content: '\e813'; } /* '' */
-.vfi-plus:before { content: '\e815'; } /* '' */
-.vfi-attach:before { content: '\e817'; } /* '' */
-.vfi-circle:before { content: '\f111'; } /* '' */
-.vfi-gamepad:before { content: '\f11b'; } /* '' */
-.vfi-keyboard:before { content: '\f11c'; } /* '' */
-.vfi-code:before { content: '\f121'; } /* '' */
-.vfi-unlink:before { content: '\f127'; } /* '' */
-.vfi-mic:before { content: '\f130'; } /* '' */
-.vfi-mute:before { content: '\f131'; } /* '' */
-.vfi-minus-squared-alt:before { content: '\f147'; } /* '' */
-.vfi-plus-squared-alt:before { content: '\f196'; } /* '' */
-.vfi-sliders:before { content: '\f1de'; } /* '' */
-.vfi-toggle-off:before { content: '\f204'; } /* '' */
-.vfi-toggle-on:before { content: '\f205'; } /* '' */
 
 
 
@@ -275,7 +186,7 @@ button.no {
   background-color: var(--no-color);
 }
 input:not([type=radio]):not([type=checkbox]) {
-  border-bottom: 1px dashed currentColor;
+  /* border-bottom: 1px dashed currentColor; */
 }
 
 /*
