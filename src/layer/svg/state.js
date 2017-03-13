@@ -2,28 +2,6 @@
 var ScreenLayerState = require('./../state');
 var Extractor = require('./extractor');
 
-var State = require('ampersand-state');
-var Collection = require('ampersand-collection');
-
-var PropertyState = State.extend({
-  idAttribute: 'name',
-
-  mappable: {
-    target: ['value']
-  },
-
-  props: {
-    name: ['string', true, ''],
-    value: ['string', false, ''],
-    default: ['string', true, '']
-  }
-});
-
-var PropertyCollection = Collection.extend({
-  mainIndex: 'name',
-  model: PropertyState
-});
-
 module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   props: {
     svgStyles: ['object', true, function() { return {}; }],
@@ -48,16 +26,12 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
     }
   },
 
-  collections: {
-    styleProperties: PropertyCollection
-  },
-
   initialize: function() {
     var svgState = this;
     ScreenLayerState.prototype.initialize.apply(svgState, arguments);
-    svgState.listenToAndRun(svgState.styleProperties, 'change', function() {
-      svgState.trigger('change:styleProperties', svgState, svgState.styleProperties, {styleProperties: true});
-    });
+    // svgState.listenToAndRun(svgState.styleProperties, 'change', function() {
+    //   svgState.trigger('change:styleProperties', svgState, svgState.styleProperties, {styleProperties: true});
+    // });
 
     // only load SVG content on the worker
     if (!svgState.hasDOM) {

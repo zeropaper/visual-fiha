@@ -7,8 +7,10 @@ var LayerControlView = View.extend({
   template: `
     <section class="default-layer-control">
       <header class="columns">
-        <div class="column no-grow"><button class="active prop-toggle"></button></div>
+        <div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>
+        <div class="column no-grow gutter-horizontal"><button class="edit-css vfi-code"></button></div>
         <h3 class="column layer-name gutter-left" data-hook="name"></h3>
+        <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
       </header>
 
       <div class="preview gutter-horizontal"></div>
@@ -18,9 +20,9 @@ var LayerControlView = View.extend({
   `,
 
   events: {
+    'click .edit-css': '_editLayerStyles',
     'click .layer-name': '_showDetails'
   },
-
 
 
   _showDetails: function () {
@@ -28,6 +30,25 @@ var LayerControlView = View.extend({
       parent: this,
       model: this.model
     }));
+  },
+
+  _editLayerStyles: function () {
+    var view = this;
+    var editorView = view.rootView.getEditor();
+    var id = view.model.getId();
+    editorView.editCode({
+      script: '#' + id + ' {\n' + this.model.layerStyles + '\n}',
+      language: 'css',
+      onvalidchange: function (str) {
+        var cleaned = str.split('{').pop().split('}').shift().trim();
+        console.info('cleaned', cleaned);
+        view.sendCommand('propChange', {
+          path: 'layers.' + id,
+          property: 'layerStyles',
+          value: cleaned
+        });
+      }
+    });
   },
 
   commands: {

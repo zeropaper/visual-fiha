@@ -206,7 +206,7 @@ var EmitterView = View.extend({
   template: `<section class="mapping-emitter-view">
   <header class="columns">
     <div class="column emitter-name gutter"></div>
-    <div class="column no-grow"><button name="edit-transform-function" class="vfi-cog-alt"></button></div>
+    <div class="column no-grow"><button name="edit-transform-function" class="vfi-code"></button></div>
     <div class="column"><input type="text" name="emitter-source" /></div>
     <div class="column no-grow"><button name="remove-emitter" class="vfi-trash-empty"></button></div>
   </header>

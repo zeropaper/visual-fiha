@@ -9,9 +9,11 @@ describe('Layer State', function () {
   require('./../../src/layer/svg/state');
 
   var defaultLayerProperties = [
+    'opacity',
     'active',
     'name',
     'type',
+    'layerStyles',
     'zIndex'
   ];
   var instance;

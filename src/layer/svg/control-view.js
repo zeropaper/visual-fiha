@@ -4,10 +4,11 @@ var ScreenLayerControlView = require('./../control-view');
 var SVGDetailsView = require('./details-view');
 
 module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
-  template: `<section class="default-layer-control">
+  template: `<section class="svg-layer-control">
     <header class="columns">
       <div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>
-      <div class="column no-grow gutter-horizontal"><button class="edit-css vfi-cog-alt"></button></div>
+      <div class="column no-grow gutter-horizontal"><button title="Edit layer CSS" class="edit-css vfi-code"></button></div>
+      <div class="column no-grow gutter-horizontal"><button title="Edit SVG elements CSS" class="edit-svg-css vfi-cog-alt"></button></div>
       <h3 class="column layer-name gutter-left" data-hook="name"></h3>
     </header>
 
@@ -17,7 +18,7 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
   </section>`,
 
   events: assign(ScreenLayerControlView.prototype.events, {
-    'click .edit-css': '_editSVGStyles'
+    'click .edit-svg-css': '_editSVGStyles'
   }),
 
   session: {
