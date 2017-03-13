@@ -1,8 +1,30 @@
 /* jshint worker:true */
 'use strict';
-// var logger = require('./logging')('orange');
-
 var worker = self;
+require.ensure([
+  'ramda',
+  'lodash.assign',
+  'ampersand-state',
+  'ampersand-collection'
+], function() {
+require.ensure([
+  './mapping/data',
+], function() {
+require.ensure([
+  './layer/state',
+  './layer/svg/state',
+  './layer/img/state',
+  './layer/video/state',
+  './layer/canvas/state',
+], function() {
+require.ensure([
+  './screen/state',
+], function() {
+require.ensure([
+  './resolve',
+  './signal/collection'
+], function() {
+// ---------------------------------------------------------------
 var resolve = require('./resolve');
 
 var Mappings = require('./mapping/data');
@@ -352,3 +374,9 @@ worker.layers.on('emitCommand', function(...args) {
 worker.layers.on('broadcastCommand', function(...args) {
   broadcastCommand(...args);
 });
+// --------------------------------------------------------------
+}, 'worker-deps');
+}, 'screen-state');
+}, 'layer-state');
+}, 'mapping-data');
+}, 'ampersand-data');

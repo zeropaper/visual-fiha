@@ -1,12 +1,32 @@
 'use strict';
 
-
-
+require.ensure([
+  'ramda',
+  'lodash.assign',
+  'ampersand-state',
+  'ampersand-collection'
+], function() {
+require.ensure([
+  'ampersand-view',
+  'ampersand-view-switcher'
+], function() {
+require.ensure([
+  './mapping/data',
+], function() {
+require.ensure([
+  './layer/state',
+  './layer/svg/state',
+  './layer/img/state',
+  './layer/video/state',
+  './layer/canvas/state',
+], function() {
+require.ensure([
+  './screen/state',
+], function() {
 require.ensure([
   './controller/settings',
   './storage',
   './layer/canvas/scripts',
-  './screen/state',
   './midi/state',
   './midi/view',
   './signal/control-view',
@@ -313,4 +333,9 @@ vf.history.start({
 
 
 // ---------------------------------------------------------------
-});
+}, 'controller-deps');
+}, 'screen-state');
+}, 'layer-state');
+}, 'mapping-data');
+}, 'ampersand-view');
+}, 'ampersand-data');
