@@ -10,19 +10,7 @@ describe('Layer State', function () {
 
   var defaultLayerProperties = [
     'active',
-    // 'mappings',
-    'mixBlendMode',
     'name',
-    // 'opacity',
-    // 'rotateX',
-    // 'rotateY',
-    // 'rotateZ',
-    // 'scaleX',
-    // 'scaleY',
-    // 'skewX',
-    // 'skewY',
-    // 'translateX',
-    // 'translateY',
     'type',
     'zIndex'
   ];
