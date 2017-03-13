@@ -33,20 +33,6 @@ worker.mappings = new Mappings([], {
 });
 
 
-
-
-
-
-// var localForage = require('./storage');
-// function snapshot() {
-//   localForage.setItem('snapshot', {
-//     screen: worker.screen.serialize(),
-//     signals: worker.signals.serialize()
-//   });//.then(console.info.bind(console), console.error.bind(console));
-// }
-// setInterval(snapshot, 5000);
-
-
 function signature(fn) {
   var args = fn.toString().match('function[^(]*\\(([^)]*)\\)');
   if (!args || !args[1].trim()) { return []; }

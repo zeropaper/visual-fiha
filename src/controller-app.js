@@ -16,18 +16,6 @@ require.ensure([
 ], function(require) {
 // ---------------------------------------------------------------
 
-var localForage = require('./storage');
-localForage.config({
-  // driver      : localforage.WEBSQL, // Force WebSQL; same as using setDriver()
-  name        : 'visualFiha',
-  version     : 1.0,
-  size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
-  storeName   : 'keyvaluepairs', // Should be alphanumeric, with underscores.
-  description : 'Visual Fiha storage'
-});
-
-// var logger = require('./logging')('purple');
-
 
 
 // almost unique id
@@ -249,41 +237,62 @@ var AppRouter = require('ampersand-router').extend({
     'setup/:setupId': 'loadSetup'
   },
 
-  _loadDefaultSetup: function() {
+  _sendBootstrap: function(setup, done) {
+    done = typeof done === 'function' ? done : function() { console.info('APP bootstraped'); };
+    this.once('app:broadcast:bootstrap', done);
     this.sendCommand('bootstrap', {
-      layers: this.defaultSetup.layers,
-      signals: this.defaultSetup.signals,
-      mappings: this.defaultSetup.mappings
+      layers: setup.layers,
+      signals: setup.signals,
+      mappings: setup.mappings
+    });
+  },
+
+  _defaultBootstrap: function() {
+    console.time();
+    var router = this;
+    this._sendBootstrap(this.defaultSetup, function() {
+      console.timeEnd();
+      router.view._setupEditor();
     });
   },
 
   loadSetup: function(setupId) {
-    var router = this;
     console.info('loadSetup', setupId);
+    var router = this;
+
+    function done(err, setup) {
+      if (err || !setup || !setup.layers || !setup.signals || !setup.mappings) {
+        return router._defaultBootstrap();
+      }
+
+      console.time();
+      router._sendBootstrap(setup, function() {
+        console.timeEnd();
+        router.view._setupEditor();
+      });
+    }
+
     if (!setupId) {
-      router._loadDefaultSetup();
+      router._defaultBootstrap();
     }
     else if (setupId.indexOf('local-') === 0) {
-      localForage.getItem(setupId)
-        .then(function(setup) {
-          router.sendCommand('bootstrap', {
-            layers: setup.layers,
-            signals: setup.signals,
-            mappings: setup.mappings
-          });
-        })
-        .catch(router._loadDefaultSetup.bind(router));
+      router.loadLocal(setupId, done);
     }
     else {
-      this.loadGist(setupId);
+      router.loadGist(setupId, done);
     }
   },
 
-  loadGist: function(gistId) {
+  loadLocal: function(localId, done) {
+    var localforageView = this.view.localforageView;
+    localforageView.loadLocal(localId, done);
+  },
+
+  loadGist: function(gistId, done) {
     var gistView = this.view.gistView;
     var same = gistView.gistId === gistId;
     gistView.gistId = gistId;
-    if (!same) gistView._loadGist();
+    if (!same) gistView._loadGist(done);
   }
 });
 
