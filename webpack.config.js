@@ -9,7 +9,22 @@ module.exports = function(env) {
     context: resolve(__dirname, 'src'),
     entry: {
       'controller':'./controller-app.js',
-      'screen':'./screen-app.js'
+      'screen':'./screen-app.js',
+      vendor: [
+        'ampersand-collection',
+        'ampersand-events',
+        'ampersand-router',
+        'ampersand-state',
+        'ampersand-view',
+        'ampersand-view-switcher',
+        'js-yaml',
+        'localforage',
+        'lodash.assign',
+        'lodash.debounce',
+        'lodash.throttle',
+        'lodash.uniq',
+        'ramda',
+      ],
     },
 
     output: {
@@ -20,10 +35,7 @@ module.exports = function(env) {
     devtool: env.prod ? 'source-map' : 'inline-source-map',
 
     plugins: [
-      new webpack.optimize.CommonsChunkPlugin({
-        name: 'vendor',
-        minChunks: 3
-      })
+      new webpack.optimize.CommonsChunkPlugin({name: 'vendor', filename: 'vendor-build.js'})
     ],
 
     devServer: {
