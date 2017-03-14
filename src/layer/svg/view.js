@@ -52,6 +52,12 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     this.listenToAndRun(this.model.styleProperties, 'sort change', this.updateProperties);
   },
 
+  addRule: function(selector, properties) {
+    selector = 'svg ' + selector;
+    ScreenLayerView.prototype.addRule.call(this, selector, properties);
+    return this;
+  },
+
   remove: function() {
     var style = this.styleEl;
     if (style && style.parentNode) style.parentNode.removeChild(style);
