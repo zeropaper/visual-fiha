@@ -29,9 +29,6 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   initialize: function() {
     var svgState = this;
     ScreenLayerState.prototype.initialize.apply(svgState, arguments);
-    // svgState.listenToAndRun(svgState.styleProperties, 'change', function() {
-    //   svgState.trigger('change:styleProperties', svgState, svgState.styleProperties, {styleProperties: true});
-    // });
 
     // only load SVG content on the worker
     if (!svgState.hasDOM) {
@@ -67,9 +64,7 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
       })
       .then(function(string) {
         state.set({
-          content: string,
-          styleProperties: [],
-          svgStyles: {}
+          content: string
         });
         done(null, state);
       })

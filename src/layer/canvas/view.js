@@ -36,6 +36,7 @@ module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
   },
 
   update: function() {
+    ScreenLayerView.prototype.update.apply(this, arguments);
     this.model.frametime = this.parent.model.frametime;
     if (!this.parent || !this.parent.el) return;
 

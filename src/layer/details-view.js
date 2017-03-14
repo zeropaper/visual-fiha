@@ -1,4 +1,5 @@
 'use strict';
+var assign = require('lodash.assign');
 var DetailsView = require('./../controller/details-view');
 var View = require('./../controller/control-view');
 var objectPath = require('./../object-path');
@@ -165,19 +166,46 @@ var LayerDetailsView = DetailsView.extend({
         <h3>Details for <span data-hook="name"></span></h3>
       </header>
 
+      <div class="row columns">
+        <div class="columns"><input type="text" name="style-prop-name" placeholder="--css-var-name" /></div>
+        <div class="columns"><input type="text" name="style-prop-default" placeholder="2px, 100%, " /></div>
+        <div class="columns no-grow"><button name="style-prop-add" class="vfi-plus"></button></div>
+      </div>
+
+      <div class="row style-props" ></div>
+      <hr/>
       <div class="row mappings props"></div>
     </section>
   `,
 
-  bindings: {
+  bindings: assign(DetailsView.prototype.bindings, {
     'model.name': '[data-hook=name]'
+  }),
+
+  events: assign(DetailsView.prototype.events, {
+    'click [name=style-prop-add]': 'addStyleProperty'
+  }),
+
+  addStyleProperty: function() {
+    var val = this.query('[name=style-prop-default]').value;
+    var props = this.model.styleProperties.serialize();
+    props.push({
+      name: this.query('[name=style-prop-name]').value,
+      default: val,
+      value: val
+    });
+    this.rootView.sendCommand('propChange', {
+      path: 'layers.' + this.model.getId(),
+      property: 'styleProperties',
+      value: props
+    });
   },
 
   render: function() {
     DetailsView.prototype.render.apply(this, arguments);
 
     if (!this.styleProperties) {
-      this.styleProperties = this.renderCollection(this.model.styleProperties, StylePropertyView, '.svg-vars');
+      this.styleProperties = this.renderCollection(this.model.styleProperties, StylePropertyView, '.style-props');
     }
 
     return this;
