@@ -601,6 +601,20 @@ header h3 {
   flex-grow: 2;
 }
 
+h3 small {
+  vertical-align: super;
+  display: inline-block;
+  border-radius: var(--spacing);
+  background-color: var(--info-color);
+  color: var(--text-color-contrast);
+  padding: 2px 4px;
+}
+header h3 span:before,
+header h3 span:after {
+  content: '"';
+  display: inline;
+}
+
 .object-prop {}
 
 .prop-name {
