@@ -11,9 +11,7 @@ var DetailsView = View.extend({
   template: `
     <section class="row rows">
       <header class="row no-grow">
-        <div class="columns">
-          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
-        </div>
+        <h3>Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
         <h5 data-hook="object-path"></h5>
       </header>
 
