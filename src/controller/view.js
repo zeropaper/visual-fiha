@@ -307,7 +307,7 @@ var ControllerView = View.extend({
       selector: '.region-left-bottom',
       prepareView: function(el) {
         var parent = this;
-        var styles = window.getComputedStyle(el);
+        var styles = this.computedStyle;
 
         function buildAudioSource() {
           parent.audioSource = new AudioSource({
