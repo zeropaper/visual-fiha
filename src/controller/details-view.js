@@ -11,7 +11,7 @@ var DetailsView = View.extend({
   template: `
     <section class="row rows">
       <header class="row no-grow">
-        <h3>Details for <span data-hook="name"></span></h3>
+        <h3>Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
         <h5 data-hook="object-path"></h5>
       </header>
 
@@ -91,17 +91,25 @@ var DetailsView = View.extend({
   render: function() {
     View.prototype.render.apply(this, arguments);
 
+    if (this.propertiesView) {
+      this.propertiesView.remove();
+    }
+
     this.propertiesView = this.renderCollection(this.properties, function (opts) {
       var Constructor = (PropertyView.names[opts.model.name] || PropertyView.types[opts.model.type] || PropertyView);
       // console.info('property name: %s (%s), type: %s (%s)', opts.model.name, !!PropertyView.names[opts.model.name], opts.model.type, !!PropertyView.types[opts.model.type]);
       return new Constructor(opts);
     }, '.items');
 
+    this.trigger('change:model');
+    this.trigger('change:model.name');
+    this.trigger('change:modelPath');
     return this;
   },
 
   bindings: {
     'model.name': '[data-hook=name]',
+    'model.type': '[data-hook=type]',
     modelPath: '[data-hook="object-path"]'
   }
 });

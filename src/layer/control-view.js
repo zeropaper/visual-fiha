@@ -1,6 +1,6 @@
 'use strict';
 var View = require('./../controller/control-view');
-var DetailsView = require('./../controller/details-view');
+var LayerDetailsView = require('./details-view');
 var objectPath = require('./../object-path');
 
 var LayerControlView = View.extend({
@@ -26,7 +26,9 @@ var LayerControlView = View.extend({
 
 
   _showDetails: function () {
-    this.rootView.showDetails(new DetailsView({
+    var DetailsViewConstructor = LayerDetailsView.types ? LayerDetailsView.types[this.model.getType()] : false;
+    DetailsViewConstructor = DetailsViewConstructor || LayerDetailsView;
+    this.rootView.showDetails(new DetailsViewConstructor({
       parent: this,
       model: this.model
     }));
@@ -41,7 +43,6 @@ var LayerControlView = View.extend({
       language: 'css',
       onvalidchange: function (str) {
         var cleaned = str.split('{').pop().split('}').shift().trim();
-        console.info('cleaned', cleaned);
         view.sendCommand('propChange', {
           path: 'layers.' + id,
           property: 'layerStyles',

@@ -1,7 +1,20 @@
 'use strict';
 var LayerControlView = require('./../control-view');
+var LayerDetailsView = require('./../details-view');
 var assign = require('lodash.assign');
 var objectPath = require('./../../object-path');
+
+var CanvasLayerDetailsView = LayerDetailsView.extend({
+  template: `
+    <section>
+      <header>
+        <h3>Details for <span data-hook="name"></span> <small>sublayer</small></h3>
+        <h5 data-hook="object-path"></h5>
+      </header>
+      <div class="row mappings props"></div>
+    </section>
+  `
+});
 
 var CanvasControlLayerView = LayerControlView.extend({
   template: `
@@ -43,6 +56,13 @@ var CanvasControlLayerView = LayerControlView.extend({
         });
       }
     });
+  },
+
+  _showDetails: function () {
+    this.rootView.showDetails(new CanvasLayerDetailsView({
+      parent: this,
+      model: this.model
+    }));
   },
 
   bindings: {

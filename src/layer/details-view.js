@@ -163,7 +163,8 @@ var LayerDetailsView = DetailsView.extend({
   template: `
     <section>
       <header>
-        <h3>Details for <span data-hook="name"></span></h3>
+        <h3>Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+        <h5 data-hook="object-path"></h5>
       </header>
 
       <div class="row columns">
@@ -178,9 +179,6 @@ var LayerDetailsView = DetailsView.extend({
     </section>
   `,
 
-  bindings: assign(DetailsView.prototype.bindings, {
-    'model.name': '[data-hook=name]'
-  }),
 
   events: assign(DetailsView.prototype.events, {
     'click [name=style-prop-add]': 'addStyleProperty'
@@ -204,11 +202,18 @@ var LayerDetailsView = DetailsView.extend({
   render: function() {
     DetailsView.prototype.render.apply(this, arguments);
 
-    if (!this.styleProperties) {
+    if (this.styleProperties) {
+      this.styleProperties.remove();
+    }
+
+    if (this.model.styleProperties) {
       this.styleProperties = this.renderCollection(this.model.styleProperties, StylePropertyView, '.style-props');
     }
 
     return this;
   }
 });
+
+LayerDetailsView.types = {};
+
 module.exports = LayerDetailsView;
