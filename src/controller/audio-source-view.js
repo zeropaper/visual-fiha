@@ -59,12 +59,17 @@ var AudioSource = View.extend({
     }
   },
 
+  session: {
+    color: 'string'
+  },
+
   subviews: {
     monitor: {
       waitFor: 'el',
       selector: '.audio-monitor',
       prepareView: function(el) {
         var view = new AudioMonitor({
+          color: this.color,
           audioAnalyser: this.parent.audioAnalyser,
           parent: this
         });
