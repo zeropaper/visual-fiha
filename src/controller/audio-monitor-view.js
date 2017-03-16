@@ -34,10 +34,11 @@ module.exports = require('ampersand-view').extend({
   drawScales: function(/*bufferLength*/) {
     var ctx = this.ctx;
     var x = ctx.canvas.width * 0.5;
-    var y = ctx.canvas.height * 0.5;
-    var r = Math.min(x, y) - 20;
+    var y = ((ctx.canvas.height - 30) * 0.5) + 15;
+    var r = Math.min(x, y) - 30;
     var rad = (Math.PI * 2);
 
+    ctx.font = '10px monospace';
     ctx.fillStyle = ctx.strokeStyle = this.color;
     var i, a, ax, ay, bx, by, lx, ly, ca, sa;
     ctx.globalAlpha = 0.5;
@@ -91,7 +92,9 @@ module.exports = require('ampersand-view').extend({
     var source = this.parent;
 
     var ctx = this.ctx;
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    var width = ctx.canvas.width;
+    var height = ctx.canvas.height;
+    ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = ctx.strokeStyle = this.color;
 
     var analyser = source.parent.audioAnalyser;
@@ -104,33 +107,56 @@ module.exports = require('ampersand-view').extend({
     var timeDomainArray = source.parent.audioTimeDomainArray;
     analyser.getByteTimeDomainData(timeDomainArray);
 
-    var x = ctx.canvas.width * 0.5;
-    var y = ctx.canvas.height * 0.5;
-    var r = Math.min(x, y) - 20;
+    var x = width * 0.5;
+    var y = ((height - 30) * 0.5) + 15;
+    var r = Math.min(x, y) - 30;
     var rad = Math.PI * 2;
 
-    var i, a, f, td, lx, ly;
-    ctx.strokeStyle = '#A581FF';
+    ctx.font = '13px monospace';
+    ctx.textAlign = 'center';
+
+
+    var i, a, f, td, lx, ly, val, min = 0, max = 0, avg = 0;
+    ctx.strokeStyle = ctx.fillStyle = '#A581FF';
     ctx.beginPath();
     for (i = 0; i < bufferLength; i++) {
+      val = freqArray[i];
+      avg += val;
+      min = Math.min(min, val);
+      max = Math.max(max, val);
+
       a = ((rad / bufferLength) * i) - Math.PI;
-      f = (r / 100) * (freqArray[i] / 2);
+      f = (r / 100) * (val * 0.5);
       lx = Math.round(x + Math.cos(a) * f);
       ly = Math.round(y + Math.sin(a) * f);
       ctx.lineTo(lx, ly);
     }
     ctx.stroke();
+    ctx.textBaseline = 'top';
+    ctx.fillText(min.toFixed(2) + ' - ' + max.toFixed(2) + ' | ' + (avg / bufferLength).toFixed(2), x, 0);
 
-    ctx.strokeStyle = '#66D9EF';
+
+
+    min = 0;
+    max = 0;
+    avg = 0;
+    ctx.strokeStyle = ctx.fillStyle = '#66D9EF';
     ctx.beginPath();
     for (i = 0; i < bufferLength; i++) {
+      val = timeDomainArray[i];
+      avg += val;
+      min = Math.min(min, val);
+      max = Math.max(max, val);
+
       a = ((rad / bufferLength) * i) - Math.PI;
-      td = (r / 100) * (timeDomainArray[i] / 2);
+      td = (r / 100) * (val * 0.5);
       lx = Math.round(x + Math.cos(a) * td);
       ly = Math.round(y + Math.sin(a) * td);
       ctx.lineTo(lx, ly);
     }
     ctx.stroke();
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(min.toFixed(2) + ' - ' + max.toFixed(2) + ' | ' + (avg / bufferLength).toFixed(2), x, height);
 
     return this;
   }
