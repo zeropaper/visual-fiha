@@ -116,6 +116,60 @@ var ScreenView = View.extend(clientMixin, {
     this.initializeClient();
   },
 
+  derived: {
+    styleEl: {
+      deps: ['el'],
+      fn: function() {
+        var el = document.getElementById('vf-screen-styles');
+        if (!el) {
+          el = document.createElement('style');
+          el.id = 'vf-screen-styles';
+          el.appendChild(document.createTextNode(''));
+          document.head.appendChild(el);
+        }
+        return el;
+      }
+    },
+    sheet: {
+      deps: ['styleEl'],
+      fn: function() {
+        return this.styleEl.sheet;
+      }
+    },
+    cssRule: {
+      deps: ['sheet'],
+      fn: function() {
+        if (this.sheet.cssRules.length === 0) {
+          this.addRule('', 'opacity:1');
+        }
+        return this.sheet.cssRules[0];
+      }
+    }
+  },
+
+  addRule: function(selector, properties) {
+    var sheet = this.sheet;
+    this.el.id = this.el.id || 'vf-screen-' + this.cid;
+    var prefix = '#'+ this.el.id +' ';
+    var index = sheet.cssRules.length;
+    selector = (prefix + selector).trim();
+    for (var i = index - 1; i >= 0; i--) {
+      if (sheet.cssRules[i].selectorText === selector) {
+        sheet.deleteRule(i);
+      }
+    }
+
+
+    index = sheet.cssRules.length;
+
+    sheet.insertRule(selector + ' { ' + properties + ' } ', index);
+    return this;
+  },
+
+  setProperty: function(...args) {
+    this.cssRule.style.setProperty(...args);
+  },
+
   remove: function() {
     if (this.channel) {
       this.channel.close();
@@ -125,11 +179,11 @@ var ScreenView = View.extend(clientMixin, {
 
   resize: function () {
     if (!this.el) { return this; }
-    this.el.style.position = 'fixed';
-    this.el.top = 0;
-    this.el.left = 0;
-    this.el.style.width = '100%';
-    this.el.style.height = '100%';
+    this.setProperty('position', 'fixed');
+    this.setProperty('top', 0);
+    this.setProperty('left', 0);
+    this.setProperty('width', '100%');
+    this.setProperty('height', '100%');
     if (!this.el || !this.el.parentNode) {
       return this;
     }
@@ -189,8 +243,26 @@ var ScreenView = View.extend(clientMixin, {
   },
 
   _updateLayers: function() {
+    this.setProperty('--frametime', this.model.frametime);
+
+    var audio = this.model.audio;
+    if (audio && audio.frequency && audio.timeDomain) {
+      var length = audio.frequency.length;
+      var l, li = 0, af = 0, av = 0, ll = length / 16;
+
+      for (l = 0; l < length; l += ll) {
+        li++;
+        af += audio.frequency[l];
+        av += audio.timeDomain[l];
+        this.setProperty('--freq' + li, audio.frequency[l]);
+        this.setProperty('--vol' + li, audio.timeDomain[l]);
+      }
+      this.setProperty('--freqAvg', af / length);
+      this.setProperty('--volAvg', av / length);
+    }
+
     this.layersView.views.forEach(function(subview) {
-      subview.update();
+      if (subview.model.active) subview.update();
     });
   }
 });

@@ -32,7 +32,6 @@ var LayerState = State.extend({
     state.listenToAndRun(state.styleProperties, 'change', function() {
       state.trigger('change:styleProperties', state, state.styleProperties, {styleProperties: true});
     });
-    state.on('change:layerStyles', function() {state._log('layerStyles changed on %s', state.getId());});
   },
 
   collections: {
