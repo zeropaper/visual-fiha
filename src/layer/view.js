@@ -17,10 +17,6 @@ var LayerView = View.extend({
     `;
   },
 
-  updateLayerStyles: function() {
-    this.cssRule
-  },
-
   derived: {
     styleEl: {
       deps: ['el'],
@@ -102,7 +98,7 @@ var LayerView = View.extend({
     var sheet = this.sheet;
     var prefix = '#'+ this.model.getId() +' ';
     var index = sheet.cssRules.length;
-    selector = selector.indexOf('@') === 0 ? selector : prefix + selector;
+    selector = (selector.indexOf('@') === 0 ? selector : prefix + selector).trim();
     for (var i = index - 1; i >= 0; i--) {
       if (sheet.cssRules[i].selectorText === selector) {
         sheet.deleteRule(i);
@@ -112,12 +108,7 @@ var LayerView = View.extend({
 
     index = sheet.cssRules.length;
 
-    if('insertRule' in sheet) {
-      sheet.insertRule(selector + ' { ' + properties + ' } ', index);
-    }
-    else if('addRule' in sheet) {
-      sheet.addRule(selector, properties, index);
-    }
+    sheet.insertRule(selector + ' { ' + properties + ' } ', index);
     return this;
   },
 
@@ -129,9 +120,7 @@ var LayerView = View.extend({
     return View.prototype.remove.apply(this, arguments);
   },
 
-  update: function() {
-    this.setProperty('--frametime', this.model.screenState.frametime);
-  }
+  update: function() {}
 });
 LayerView.types = {};
 module.exports = LayerView;
