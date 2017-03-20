@@ -119,6 +119,7 @@ module.exports = function(env) {
         'lodash.throttle',
         'lodash.uniq',
         'ramda',
+        'three'
       ],
     },
 
