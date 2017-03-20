@@ -10,6 +10,9 @@ require.ensure([
   'ampersand-view-switcher'
 ], function() {
 require.ensure([
+  'three',
+], function() {
+require.ensure([
   './screen/state',
 ], function() {
 require.ensure([
@@ -37,6 +40,7 @@ window.addEventListener('resize', require('lodash.debounce')(resize, 100));
 setTimeout(resize, 1500);
 // ---------------------------------------------------------------
 }, 'screen-view');
-}, 'ampersand-view');
 }, 'screen-state');
+}, 'threejs');
+}, 'ampersand-view');
 }, 'ampersand-data');

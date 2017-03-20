@@ -6,6 +6,7 @@ require('./../layer/svg/view');
 require('./../layer/video/view');
 require('./../layer/img/view');
 require('./../layer/txt/view');
+require('./../layer/threejs/view');
 
 
 function signature(fn) {
@@ -184,11 +185,11 @@ var ScreenView = View.extend(clientMixin, {
     this.setProperty('left', 0);
     this.setProperty('width', '100%');
     this.setProperty('height', '100%');
-    if (!this.el || !this.el.parentNode) {
+    if (!this.el || !this.el.parentNode || !document.body.contains(this.el)) {
       return this;
     }
-    this.width = this.el.parentNode.clientWidth;
-    this.height = this.el.parentNode.clientHeight;
+    this.width = this.el.clientWidth;
+    this.height = this.el.clientHeight;
     return this._resizeLayers();
   },
 
