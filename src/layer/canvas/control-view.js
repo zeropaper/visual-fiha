@@ -45,9 +45,10 @@ var CanvasControlLayerView = LayerControlView.extend({
 
     var editor = rootView.getEditor();
     editor.editCode({
-      script: this.model.drawFunction.toString(),
-      autoApply: true,
+      script: this.model.drawFunction || '',
       language: 'javascript',
+      title: path + '.drawFunction',
+      autoApply: true,
       onvalidchange: function doneEditingCanvasDrawFunction(str) {
         rootView.sendCommand('propChange', {
           path: path,

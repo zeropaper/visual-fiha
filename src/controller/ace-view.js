@@ -4,16 +4,23 @@ var canvasCompleter = require('./../layer/canvas/canvas-completer');
 
 var AceEditor = View.extend({
   editCode: function(options) {
+    options.autoApply = !!options.autoApply;
+    if (options.autoApply && typeof options.onvalidchange !== 'function') throw new Error('Missing onvalidchange function option');
+    if (!options.autoApply && typeof options.onapply !== 'function') throw new Error('Missing onapply function option');
     options.original = options.script = options.script.toString();
     this._cleanup().set(options).render();
   },
 
   template: `
     <section class="row code-editor rows">
-      <!-- <header>
-        <h3></h3>
-      </header> -->
+      <header>
+        <div class="columns">
+          <h3 class="column"><span data-hook="editor-title"></span> <small data-hook="editor-language"></small></h3>
+        </div>
+      </header>
+
       <div class="ace-editor row grow-xl"></div>
+
       <div class="ace-controls row no-grow gutter columns">
         <div class="column"></div>
         <div class="column no-grow gutter-right">
@@ -25,6 +32,7 @@ var AceEditor = View.extend({
   `,
 
   session: {
+    title: 'string',
     language: {
       type: 'string',
       values: ['javascript', 'yaml', 'css'],
@@ -37,6 +45,7 @@ var AceEditor = View.extend({
     original: ['string', true, ''],
     script: ['string', true, ''],
     onvalidchange: 'any',
+    onapply: 'any',
     validator: 'any'
   },
 
@@ -56,15 +65,47 @@ var AceEditor = View.extend({
         this.editor.setValue(this.script);
       }
     },
-    pristine: {
-      type: 'booleanClass',
-      name: 'pristine'
-    },
+
+    pristine: [
+      {
+          type: 'booleanClass',
+          name: 'pristine'
+      },
+      {
+        selector: '[name=cancel]',
+        type: 'booleanAttribute',
+        name: 'disabled'
+      },
+      {
+        selector: '[name=apply]',
+        type: 'booleanAttribute',
+        name: 'disabled'
+      }
+    ],
+
     autoApply: {
-      selector: '.ace-controls',
+      type: 'booleanClass',
+      name: 'autoapply'
+    },
+
+    onshoworigin: {
       type: 'toggle',
-      invert: true
-    }
+      selector: '.show-origin'
+    },
+
+    title: '[data-hook=editor-title]',
+    language: '[data-hook=editor-language]'
+  },
+
+  events: {
+    'click [name=show-origin]': '_showOrigin',
+    'click [name="cancel"]': '_cancel',
+    'click [name="apply"]': '_apply'
+  },
+
+  _showOrigin: function() {
+    var fn = this.onshoworigin;
+    if (typeof fn === 'function') fn();
   },
 
   setPristine: function() {
@@ -86,9 +127,10 @@ var AceEditor = View.extend({
     return this;
   },
 
-  validateScript: function() {
-    if (typeof this.validator === 'function') {
-      this.validator(this.script);
+  validateScript: function(script) {
+    var validator = this.validator;
+    if (typeof validator === 'function') {
+      return validator.call(this, script);
     }
   },
 
@@ -99,6 +141,21 @@ var AceEditor = View.extend({
       .filter(function (annotation) {
         return annotation.type === 'error';
       });
+  },
+
+  _cancel: function() {},
+
+  _apply: function() {
+    var view = this;
+    var editor = view.editor;
+    var str = editor.getValue();
+    if (typeof view.onapply === 'function') {
+      view.onapply(str);
+    }
+    view.set('script', str, {silent: true});
+    view.set('original', str, {silent: true});
+    delete view._cache.pristine;
+    view.trigger('change:pristine', view, view.script === view.original);
   },
 
   _makeEditor: function() {
@@ -116,10 +173,12 @@ var AceEditor = View.extend({
       }
 
       var str = editor.getValue();
-      if (typeof view.onvalidchange === 'function' && view.script !== str) {
+      if (view.autoApply && typeof view.onvalidchange === 'function' && view.script !== str) {
         view.onvalidchange(str);
       }
       view.set('script', str, {silent: true});
+      delete view._cache.pristine;
+      view.trigger('change:pristine', view, view.script === view.original);
     }
 
     editor.$blockScrolling = Infinity;

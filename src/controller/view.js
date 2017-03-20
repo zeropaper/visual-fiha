@@ -464,9 +464,13 @@ var ControllerView = View.extend({
     var editor = view.getEditor();
 
     editor.editCode({
+      autoApply: false,
+      title: 'Setup',
       script: view.gistView.toYaml(),
       language: 'yaml',
-      onvalidchange: view.gistView.fromYaml
+      onapply: function(str) {
+        view.router._sendBootstrap(view.gistView.fromYaml(str), view._setupEditor.bind(view));
+      }
     });
   },
 

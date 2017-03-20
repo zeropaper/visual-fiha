@@ -36,11 +36,14 @@ var LayerControlView = View.extend({
 
   _editLayerStyles: function () {
     var view = this;
-    var editorView = view.rootView.getEditor();
+    var rootView = view.rootView;
+    var editorView = rootView.getEditor();
     var id = view.model.getId();
     editorView.editCode({
       script: '#' + id + ' {\n' + this.model.layerStyles + '\n}',
       language: 'css',
+      title: id + ' layer styles',
+      autoApply: true,
       onvalidchange: function (str) {
         var cleaned = str.split('{').pop().split('}').shift().trim();
         view.sendCommand('propChange', {
