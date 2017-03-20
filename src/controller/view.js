@@ -487,7 +487,7 @@ var ControllerView = View.extend({
     }
 
     this.regionLeftBottom.focusTab(tabName);
-
+    found.view.blink();
     return this;
   },
 

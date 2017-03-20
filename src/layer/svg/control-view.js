@@ -53,6 +53,9 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
       script: cssStr,
       language: 'css',
       title: id + ' layer styles',
+      onshoworigin: function() {
+        view.rootView.trigger('blink', 'layers.' + id);
+      },
       autoApply: true,
       onvalidchange: function (str) {
         var parsed = {};

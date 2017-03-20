@@ -43,6 +43,9 @@ var LayerControlView = View.extend({
       script: '#' + id + ' {\n' + this.model.layerStyles + '\n}',
       language: 'css',
       title: id + ' layer styles',
+      onshoworigin: function() {
+        rootView.trigger('blink', 'layers.' + id);
+      },
       autoApply: true,
       onvalidchange: function (str) {
         var cleaned = str.split('{').pop().split('}').shift().trim();
@@ -102,6 +105,15 @@ var LayerControlView = View.extend({
         type: 'class'
       }
     ]
+  },
+
+  derived: {
+    modelPath: {
+      deps: ['model'],
+      fn: function() {
+        return objectPath(this.model);
+      }
+    }
   }
 });
 

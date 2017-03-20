@@ -8,7 +8,10 @@ var CanvasLayerDetailsView = LayerDetailsView.extend({
   template: `
     <section>
       <header>
-        <h3>Details for <span data-hook="name"></span> <small>sublayer</small></h3>
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small>sublayer</small></h3>
+          <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+        </div>
         <h5 data-hook="object-path"></h5>
       </header>
       <div class="row mappings props"></div>
@@ -38,16 +41,18 @@ var CanvasControlLayerView = LayerControlView.extend({
     'click [name="active"]': 'propChange _toggleActive',
   },
 
-
   _editDrawFunction: function () {
     var rootView = this.rootView;
     var path = objectPath(this.model);
-
     var editor = rootView.getEditor();
+
     editor.editCode({
       script: this.model.drawFunction || '',
       language: 'javascript',
       title: path + '.drawFunction',
+      onshoworigin: function() {
+        rootView.trigger('blink', path);
+      },
       autoApply: true,
       onvalidchange: function doneEditingCanvasDrawFunction(str) {
         rootView.sendCommand('propChange', {

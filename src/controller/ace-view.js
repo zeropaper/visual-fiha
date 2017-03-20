@@ -16,6 +16,7 @@ var AceEditor = View.extend({
       <header>
         <div class="columns">
           <h3 class="column"><span data-hook="editor-title"></span> <small data-hook="editor-language"></small></h3>
+          <div class="column no-grow show-origin"><button class="vfi-eye" name="show-origin"></button></div>
         </div>
       </header>
 
@@ -44,6 +45,7 @@ var AceEditor = View.extend({
     editor: 'any',
     original: ['string', true, ''],
     script: ['string', true, ''],
+    onshoworigin: 'any',
     onvalidchange: 'any',
     onapply: 'any',
     validator: 'any'
