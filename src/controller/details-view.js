@@ -11,7 +11,9 @@ var DetailsView = View.extend({
   template: `
     <section class="row rows">
       <header class="row no-grow">
-        <h3>Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+        </div>
         <h5 data-hook="object-path"></h5>
       </header>
 
@@ -27,6 +29,9 @@ var DetailsView = View.extend({
     this.listenTo(this.rootView, 'all', function(evtName) {
       if (evtName.indexOf('app:') === 0 && evtName.indexOf('Mapping') > 0) {
         this.trigger('change:model', this.model);
+      }
+      else if (evtName === 'blink') {
+        if(this.modelPath === arguments[1]) this.blink();
       }
     });
   },
@@ -60,7 +65,6 @@ var DetailsView = View.extend({
     },
 
     modelPath: {
-      // no cache?
       deps: ['model'],
       fn: function() {
         return objectPath(this.model);

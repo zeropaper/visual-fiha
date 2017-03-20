@@ -24,7 +24,6 @@ var ControlView = View.extend({
   },
 
   initialize: function() {
-    View.prototype.initialize.apply(this, arguments);
     var view = this;
 
     function initCommands() {
@@ -37,6 +36,11 @@ var ControlView = View.extend({
     }
 
     view.on('change:el', initCommands);
+
+    view.listenTo(view.rootView, 'blink', function(modelPath) {
+      console.info('blink', view.modelPath, view.modelPath && view.modelPath === modelPath);
+      if (view.modelPath && view.modelPath === modelPath) view.blink();
+    });
   },
 
   derived:{

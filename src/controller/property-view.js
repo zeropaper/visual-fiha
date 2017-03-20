@@ -193,8 +193,9 @@ var PropertyView = View.extend({
 
   _showMapping: function() {
     var mapping = this.mapping;
-    this.rootView.regionRight.focusTab('Mappings');
-    this.rootView.mappingsView.mappingsList.views.forEach(function(view) {
+    var rootView = this.rootView;
+    rootView.regionRight.focusTab('Mappings');
+    rootView.mappingsView.mappingsList.views.forEach(function(view) {
       if (view.model === mapping) {
         view.el.scrollIntoView();
         view.blink();

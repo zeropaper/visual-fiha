@@ -163,7 +163,10 @@ var LayerDetailsView = DetailsView.extend({
   template: `
     <section>
       <header>
-        <h3>Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+          <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+        </div>
         <h5 data-hook="object-path"></h5>
       </header>
 
@@ -181,8 +184,13 @@ var LayerDetailsView = DetailsView.extend({
 
 
   events: assign(DetailsView.prototype.events, {
+    'click [name=show-origin]': '_showOrigin',
     'click [name=style-prop-add]': 'addStyleProperty'
   }),
+
+  _showOrigin: function() {
+    this.rootView.trigger('blink', this.modelPath);
+  },
 
   addStyleProperty: function() {
     var val = this.query('[name=style-prop-default]').value;
