@@ -4,7 +4,11 @@ var Collection = require('ampersand-collection');
 var ScreenLayerState = require('./../state');
 var mockedCtx = require('./mocked-canvas-2d-context');
 var compileFunction = require('./compile-draw-function');
-
+function drawLayerCtx() {
+  /*
+    You can access the canvas 2d context with the global ctx
+  */
+}
 
 var CanvasLayer = State.extend({
   scripts: require('./scripts'),
@@ -16,7 +20,7 @@ var CanvasLayer = State.extend({
     zIndex: ['number', true, 0],
     name: ['string', true, null],
     active: ['boolean', true, true],
-    drawFunction: 'any'
+    drawFunction: ['any', true, function() { return drawLayerCtx; }]
   },
 
   serialize: function() {
@@ -126,7 +130,7 @@ var CanvasLayer = State.extend({
         }
 
         if (err) {
-          // console.warn('draw function error', err.stack);
+          console.warn('draw function error', err.stack);
           fn = function() { return err; };
         }
 

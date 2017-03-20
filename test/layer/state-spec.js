@@ -215,7 +215,7 @@ describe('Layer State', function () {
                 });
               });
 
-              describe('ramda tools set', function() {
+              describe.skip('ramda tools set', function() {
                 it('is exposed', function() {
                   var result;
                   canvasLayer.drawFunction = `function withCtx() {
