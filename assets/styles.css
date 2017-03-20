@@ -420,6 +420,13 @@ Layout
   height: calc(100% - 37px);
 }
 
+.code-editor.autoapply .ace-editor {
+  height: 100%;
+}
+.code-editor.autoapply .ace-controls {
+  display: none;
+}
+
 .tabs {
   padding: 0;
   margin: 0 0 var(--tabs-border-width) 0;

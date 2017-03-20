@@ -272,7 +272,7 @@ var EmitterView = View.extend({
     var model = this.model;
     editor.editCode({
       script: (model.transformFunction || function(val) { return val; }).toString(),
-      // autoApply: true,
+      autoApply: true,
       language: 'javascript',
       onvalidchange: function doneEditingTransformFunction(str) {
         var mapping = model.serialize();

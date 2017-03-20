@@ -4,18 +4,21 @@ var ScreenLayerControlView = require('./../control-view');
 var SVGDetailsView = require('./details-view');
 
 module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
-  template: `<section class="svg-layer-control">
-    <header class="columns">
-      <div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>
-      <div class="column no-grow gutter-horizontal"><button title="Edit layer CSS" class="edit-css vfi-code"></button></div>
-      <div class="column no-grow gutter-horizontal"><button title="Edit SVG elements CSS" class="edit-svg-css vfi-cog-alt"></button></div>
-      <h3 class="column layer-name gutter-left" data-hook="name"></h3>
-    </header>
+  template: `
+    <section class="svg-layer-control">
+      <header class="columns">
+        <div class="column no-grow gutter-right"><button class="active prop-toggle"></button></div>
+        <div class="column no-grow gutter-horizontal"><button title="Edit layer CSS" class="edit-css vfi-code"></button></div>
+        <div class="column no-grow gutter-horizontal"><button title="Edit SVG elements CSS" class="edit-svg-css vfi-cog-alt"></button></div>
+        <h3 class="column layer-name gutter-left" data-hook="name"></h3>
+        <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
+      </header>
 
-    <div class="preview gutter-horizontal"></div>
+      <div class="preview gutter-horizontal"></div>
 
-    <div class="mappings props"></div>
-  </section>`,
+      <div class="mappings props"></div>
+    </section>
+  `,
 
   events: assign(ScreenLayerControlView.prototype.events, {
     'click .edit-svg-css': '_editSVGStyles'
@@ -34,6 +37,7 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
 
   _editSVGStyles: function () {
     var view = this;
+    var id = view.model.getId();
     var editorView = view.rootView.getEditor();
 
     var cssStr = '';
@@ -48,6 +52,8 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
     editorView.editCode({
       script: cssStr,
       language: 'css',
+      title: id + ' layer styles',
+      autoApply: true,
       onvalidchange: function (str) {
         var parsed = {};
         str.split(/([^\{\}]+\{[^\{\}]+\})/igm).forEach(function(match) {
@@ -58,7 +64,7 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
         });
 
         view.sendCommand('propChange', {
-          path: 'layers.' + view.model.getId(),
+          path: 'layers.' + id,
           property: 'svgStyles',
           value: parsed
         });

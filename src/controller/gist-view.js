@@ -82,7 +82,6 @@ var GistView = View.extend({
       .then(resToJSON)
       .then(function(json) {
         var content = json.files['visual-fiha-setup.yml'].content;
-        view.fromYaml(content);
         done(null, view.fromYaml(content));
       }, done)
       .catch(done);
