@@ -8,6 +8,10 @@ utils.random = function random(multi = 100) {
   return Math.random() * multi;
 };
 
+utils.between = function between(val, min, max) {
+  return Math.max(min, Math.min(max, val));
+};
+
 
 utils.log = function log(ctx, ...args) {
   console.info(...args);
@@ -153,9 +157,12 @@ function () {
   var cx = width / 2;
   var cy = height / 2;
   var i = 0;
+  var r;
+  var s = -10;
   fillStyle('#fff');
-  distribute(cx, cy, 12, cy, 0, function(x, y, a) {
-    fillText(a.toFixed(2), x, y);
+  distribute(cx, cy, 12, cy, (layer.frametime % (360 * s)) / s, function(x, y, a) {
+    r = (cy / 12) * i;
+    fillText(a.toFixed(2), cx + (Math.cos(a) * r), cy + (Math.sin(a) * r));
     i++;
   });
 }
@@ -267,6 +274,7 @@ function compileFunction(drawFunction) {
     ${ ramdaMethods }
     */
     var random = utils.random;
+    var between = utils.between;
     var grid = function(...args) { utils.grid(width, height, ...args); };
     var distribute = function(...args) { utils.distribute(...args); };
     var repeat = function(...args) { utils.repeat(...args); };
