@@ -199,7 +199,10 @@ var Mappings = Collection.extend({
         var parts = target.split('.');
         var targetProperty = parts.pop();
         var targetStatePath = parts.join('.');
-        var state = this.resolve(targetStatePath);
+        var state;
+        try {
+          state = this.resolve(targetStatePath);
+        } catch(e) {}
         if (!state) return;
 
         var finalValue = info.fn(value, state.get(targetProperty));
