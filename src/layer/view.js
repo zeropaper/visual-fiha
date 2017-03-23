@@ -17,6 +17,13 @@ var LayerView = View.extend({
     `;
   },
 
+  initialize: function() {
+    var view = this;
+    view.model.styleProperties.on('change', function(prop) {
+      view.setProperty(prop.name, prop.value);
+    });
+  },
+
   derived: {
     styleEl: {
       deps: ['el'],
