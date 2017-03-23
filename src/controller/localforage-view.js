@@ -13,12 +13,14 @@ var LocalforageView = View.extend({
       <div class="column columns">
         <div class="column"><input placeholder="Local ID" name="local-id"/></div>
         <div class="column no-grow"><button name="save">Save</button></div>
+        <div class="column"><button name="restore" class="vfi-ccw" title="Reload"></button></div>
       </div>
     </div>
   `,
   events: {
     'click [name=snapshot-restore]': '_restoreSnapshot',
     'click [name=snapshot-save]': '_saveSnapshot',
+    'click [name=restore]': '_restoreSetup',
     'click [name=save]': '_saveSetup'
   },
   loadLocal: function(setupId, done) {
