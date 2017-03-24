@@ -18,10 +18,23 @@ var LocalforageView = View.extend({
     </div>
   `,
   events: {
+    'focus [name=local-id]': '_suggestKeys',
     'click [name=snapshot-restore]': '_restoreSnapshot',
     'click [name=snapshot-save]': '_saveSnapshot',
     'click [name=restore]': '_restoreSetup',
     'click [name=save]': '_saveSetup'
+  },
+  _suggestKeys: function(evt) {
+    var helper = this.parent.suggestionHelper;
+    localForage.keys().then(function(keys) {
+
+      helper
+        .attach(evt.target, function(selected) {
+          evt.target.value = selected;
+          helper.detach();
+        })
+        .fill(keys.map(s => s.replace('local-', '')));
+    });
   },
   loadLocal: function(setupId, done) {
     done = typeof done === 'function' ? done : function(err) { if(err) console.error('localforage error', err.message); };
