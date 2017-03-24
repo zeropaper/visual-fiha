@@ -49,7 +49,7 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     this.on('change:el', this.updateContent);
 
     this.listenToAndRun(this.model, 'change:svgStyles', this.updateStyles);
-    this.listenToAndRun(this.model.styleProperties, 'sort change', this.updateProperties);
+    this.listenToAndRun(this.model.styleProperties, 'add remove change', this.updateProperties);
   },
 
   addRule: function(selector, properties) {
