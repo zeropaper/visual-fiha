@@ -63,7 +63,8 @@ var Extractor = State.extend({
 
     layer.svgStyles = Object.keys(svgState.svgStyles).length ? this.removeStylesFromContent().model.svgStyles : this.extractStyles();
 
-    layer.styleProperties = this.setPathLengths().extractProps();
+    this.model.styleProperties.set(this.setPathLengths().extractProps());
+    layer.styleProperties = this.model.styleProperties.serialize();
 
     layer.content = this.el.innerHTML;
 
