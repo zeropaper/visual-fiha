@@ -27,7 +27,7 @@
     "_make-index": "node ./.markitdown.js",
     "_update-report": "plato -r -q -d report src",
     "prestage-master": "npm-run-all --parallel build _make-index _update-report",
-    "stage-master": "git add index.html report/ ./worker-javascript.js ./test/expect.js ./*.worker.js ./*-build.js && git commit --allow-empty -m \"update builds\""
+    "stage-master": "git add index.html report/ ./worker-javascript.js ./*.worker.js ./*-build.js && git commit --allow-empty -m \"update builds\""
   },
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",
