@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">69.02</p>
+      <p class="stat">90.56</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">81</p>
+      <p class="stat">43</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">14.49</p>
+      <p class="stat">8.59</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.58</p>
+      <p class="stat">0.23</p>
     </div>
   </div>
 </div>
@@ -89,87 +89,49 @@
 
 <div class="container">
   <div class="row">
-    <textarea id="file-source" class="col-md-12">(function(global) {
-  &#039;use strict&#039;;
-  var State = global.VFDeps.State;
-  var Collection = global.VFDeps.Collection;
-  var transformationFunctions = require(&#039;./../transformation/functions&#039;);
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var State = require(&#039;ampersand-state&#039;);
 
-  var SignalTransformationState = State.extend({
-    props: {
-      name: [&#039;string&#039;, true, null],
-      arguments: [&#039;array&#039;, true, function () { return []; }]
+var SignalState = State.extend({
+  idAttribute: &#039;name&#039;,
+  typeAttribute: &#039;type&#039;,
+
+  mappable: {
+    source: [&#039;result&#039;],
+    target: [&#039;input&#039;]
+  },
+
+  props: {
+    name: [&#039;string&#039;, true, null],
+    type: [&#039;string&#039;, true, &#039;default&#039;],
+    defaultValue: [&#039;any&#039;, true, function () { return 1; }],
+    input: [&#039;any&#039;, false, null]
+  },
+
+  derived: {
+    modelPath: {
+      deps: [&#039;name&#039;],
+      fn: function() {
+        return &#039;signals.&#039; + this.name;
+      }
+    },
+    result: {
+      deps: [&#039;input&#039;, &#039;transformations&#039;],
+      fn: function() {
+        return this.computeSignal();
+      }
     }
-  });
+  },
 
+  computeSignal: function(val) {
+    val = val || this.input;
+    return val;
+  }
+});
 
-  var SignalState = State.extend({
-    idAttribute: &#039;name&#039;,
-    typeAttribute: &#039;type&#039;,
+SignalState.types = {};
 
-    initialize: function() {
-      this.on(&#039;change:result&#039;, function() {
-        // this.collection.parent.signals[this.name] = this.result;
-        this.collection.parent.trigger(this.name, this.result);
-      });
-
-      if (this.input === null || this.input === undefined) {
-        this.input = this.defaultValue;
-      }
-    },
-
-    mappable: {
-      source: [&#039;result&#039;],
-      target: [&#039;input&#039;]
-    },
-
-    props: {
-      name: [&#039;string&#039;, true, null],
-      type: [&#039;string&#039;, true, &#039;default&#039;],
-      defaultValue: [&#039;any&#039;, true, function () { return 1; }],
-      input: [&#039;any&#039;, false, null]
-    },
-
-    session: {
-      uiState: {
-        type: &#039;string&#039;,
-        values: [&#039;&#039;, &#039;dependency&#039;, &#039;dependent&#039;, &#039;focus&#039;, &#039;highlighted&#039;],
-        default: &#039;&#039;,
-        required: true
-      }
-    },
-
-    collections: {
-      transformations: Collection.extend({
-        model: SignalTransformationState
-      })
-    },
-
-    derived: {
-      result: {
-        deps: [&#039;input&#039;, &#039;transformations&#039;],
-        fn: function() {
-          return this.computeSignal();
-        }
-      }
-    },
-
-    computeSignal: function(val) {
-      val = val || this.input;
-
-      this.transformations.forEach(function(transformationState) {
-        var args = [val].concat(transformationState.arguments);
-        val = transformationFunctions[transformationState.name].apply(this, args);
-      });
-
-      return val;
-    }
-  });
-
-  SignalState.types = {};
-
-  module.exports = SignalState;
-})(typeof window !== &#039;undefined&#039; ? window : self);</textarea>
+module.exports = SignalState;</textarea>
   </div>
 </div>
 

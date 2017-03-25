@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">81.75</p>
+      <p class="stat">92.02</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">57</p>
+      <p class="stat">18</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">6.82</p>
+      <p class="stat">6.30</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.40</p>
+      <p class="stat">0.10</p>
     </div>
   </div>
 </div>
@@ -90,55 +90,16 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var assign = window.VFDeps.assign;
+var assign = require(&#039;lodash.assign&#039;);
 var DetailsView = require(&#039;./../controller/details-view&#039;);
-var TransformationControlView = require(&#039;./../transformation/control-view&#039;);
-var transformationFunctions = require(&#039;./../transformation/functions&#039;);
 var SignalDetailsView = DetailsView.extend({
-  template: &#039;&lt;section&gt;&#039; +
-    &#039;&lt;header&gt;&#039; +
-      &#039;&lt;h3&gt;Details for &lt;span data-hook=&quot;name&quot;&gt;&lt;/span&gt;&lt;/h3&gt;&#039; +
-    &#039;&lt;/header&gt;&#039; +
-
-    &#039;&lt;div class=&quot;row mappings props&quot;&gt;&lt;/div&gt;&#039; +
-
-    &#039;&lt;div class=&quot;row gutter transformations-control columns&quot;&gt;&#039; +
-      &#039;&lt;input class=&quot;column gutter-right&quot; placeholder=&quot;New transformation&quot; data-hook=&quot;new-transformation-name&quot; type=&quot;text&quot;/&gt;&#039; +
-      &#039;&lt;div class=&quot;column gutter-left no-grow&quot;&gt;&lt;button name=&quot;add-transformation&quot; class=&quot;vfi-plus&quot;&gt;&lt;/button&gt;&lt;/div&gt;&#039; +
-    &#039;&lt;/div&gt;&#039; +
-    &#039;&lt;div class=&quot;row transformations props&quot;&gt;&lt;/div&gt;&#039; +
-  &#039;&lt;/section&gt;&#039;,
-
-  subviews: assign({}, DetailsView.prototype.subviews, {
-    transformationsView: {
-      selector: &#039;.transformations&#039;,
-      prepareView: function (el) {
-        return this.renderCollection(this.model.transformations, TransformationControlView, el);
+  derived: {
+    modelPath: {
+      deps: [],
+      fn: function() {
+        return &#039;signals.&#039; + this.model.getId();
       }
     }
-  }),
-
-  events: {
-    &#039;click [name=add-transformation]&#039;: &#039;_addTransformation&#039;,
-
-    &#039;focus [data-hook=new-transformation-name]&#039;: &#039;_focusName&#039;
-  },
-
-  _focusName: function() {
-    var nameEl = this.queryByHook(&#039;new-transformation-name&#039;);
-    var helper = this.rootView.suggestionHelper;
-
-    nameEl.select();
-    helper.attach(nameEl, function(selected){
-      nameEl.value = selected;
-      helper.detach();
-    }).fill(Object.keys(transformationFunctions));
-  },
-
-  _addTransformation: function () {
-    this.model.transformations.add({
-      name: this.queryByHook(&#039;new-transformation-name&#039;).value.trim()
-    });
   },
 
   bindings: assign({

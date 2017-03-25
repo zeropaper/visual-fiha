@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">72.38</p>
+      <p class="stat">76.01</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">26</p>
+      <p class="stat">77</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">6.39</p>
+      <p class="stat">13.56</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.13</p>
+      <p class="stat">0.60</p>
     </div>
   </div>
 </div>
@@ -90,29 +90,80 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-
+var assign = require(&#039;lodash.assign&#039;);
 var ScreenLayerControlView = require(&#039;./../control-view&#039;);
+var SVGDetailsView = require(&#039;./details-view&#039;);
+
 module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
-  template: &#039;&lt;section class=&quot;default-layer-control&quot;&gt;&#039; +
-    &#039;&lt;header class=&quot;columns&quot;&gt;&#039; +
-      &#039;&lt;div class=&quot;column no-grow gutter-right&quot;&gt;&lt;button class=&quot;active prop-toggle&quot;&gt;&lt;/button&gt;&lt;/div&gt;&#039; +
-      &#039;&lt;div class=&quot;column no-grow gutter-horizontal&quot;&gt;&lt;button class=&quot;edit-draw-function vfi-cog-alt&quot;&gt;&lt;/button&gt;&lt;/div&gt;&#039; +
-      &#039;&lt;h3 class=&quot;column layer-name gutter-left&quot; data-hook=&quot;name&quot;&gt;&lt;/h3&gt;&#039; +
-    &#039;&lt;/header&gt;&#039; +
+  template: `
+    &lt;section class=&quot;svg-layer-control&quot;&gt;
+      &lt;header class=&quot;columns&quot;&gt;
+        &lt;div class=&quot;column no-grow gutter-right&quot;&gt;&lt;button class=&quot;active prop-toggle&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+        &lt;div class=&quot;column no-grow gutter-horizontal&quot;&gt;&lt;button title=&quot;Edit layer CSS&quot; class=&quot;edit-css vfi-code&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+        &lt;div class=&quot;column no-grow gutter-horizontal&quot;&gt;&lt;button title=&quot;Edit SVG elements CSS&quot; class=&quot;edit-svg-css vfi-cog-alt&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+        &lt;h3 class=&quot;column layer-name gutter-left&quot; data-hook=&quot;name&quot;&gt;&lt;/h3&gt;
+        &lt;div class=&quot;column no-grow text-right&quot;&gt;&lt;button class=&quot;vfi-trash-empty remove-layer&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+      &lt;/header&gt;
 
-    &#039;&lt;div class=&quot;preview gutter-horizontal&quot;&gt;&lt;/div&gt;&#039; +
+      &lt;div class=&quot;preview gutter-horizontal&quot;&gt;&lt;/div&gt;
 
-    &#039;&lt;div class=&quot;mappings props&quot;&gt;&lt;/div&gt;&#039; +
-  &#039;&lt;/section&gt;&#039;,
+      &lt;div class=&quot;mappings props&quot;&gt;&lt;/div&gt;
+    &lt;/section&gt;
+  `,
+
+  events: assign(ScreenLayerControlView.prototype.events, {
+    &#039;click .edit-svg-css&#039;: &#039;_editSVGStyles&#039;
+  }),
+
+  session: {
+    svgStyles: [&#039;object&#039;, true, function() { return {}; }]
+  },
+
+  _showDetails: function () {
+    this.rootView.showDetails(new SVGDetailsView({
+      parent: this,
+      model: this.model
+    }));
+  },
 
   _editSVGStyles: function () {
-    var editor = this.codeEditor;
-    if (!editor.changed) {
-      editor.edit(this.model, &#039;drawFunction&#039;);
-    }
-    else {
-      console.warn(&#039;A function is already being edited&#039;);
-    }
+    var view = this;
+    var id = view.model.getId();
+    var editorView = view.rootView.getEditor();
+
+    var cssStr = &#039;&#039;;
+
+    var styles = view.model.svgStyles;
+    var selectors = Object.keys(styles);
+    selectors.forEach(function(selector) {
+      cssStr += `${ selector } {\n  ${ styles[selector].split(&#039;;&#039;).map(s =&gt; s.trim()).join(&#039;;\n  &#039;).trim() }\n}`;
+    });
+
+
+    editorView.editCode({
+      script: cssStr,
+      language: &#039;css&#039;,
+      title: id + &#039; layer styles&#039;,
+      onshoworigin: function() {
+        view.rootView.trigger(&#039;blink&#039;, &#039;layers.&#039; + id);
+      },
+      autoApply: true,
+      onvalidchange: function (str) {
+        var parsed = {};
+        str.split(/([^\{\}]+\{[^\{\}]+\})/igm).forEach(function(match) {
+          match = match.trim();
+          if (!match) return;
+          match = match.split(&#039;{&#039;).map(s =&gt; s.split(&#039;}&#039;)[0].trim());
+          parsed[match[0]] = match[1];
+        });
+
+        view.sendCommand(&#039;propChange&#039;, {
+          path: &#039;layers.&#039; + id,
+          property: &#039;svgStyles&#039;,
+          value: parsed
+        });
+      }
+    });
   }
 });</textarea>
   </div>

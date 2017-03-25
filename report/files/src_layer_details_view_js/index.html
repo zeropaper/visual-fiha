@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">67.09</p>
+      <p class="stat">75.48</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">20</p>
+      <p class="stat">227</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">3.83</p>
+      <p class="stat">17.83</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.06</p>
+      <p class="stat">1.50</p>
     </div>
   </div>
 </div>
@@ -90,24 +90,231 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var assign = require(&#039;lodash.assign&#039;);
 var DetailsView = require(&#039;./../controller/details-view&#039;);
-var LayerDetailsView = DetailsView.extend({
-  template: [
-    &#039;&lt;section&gt;&#039;,
-    &#039;&lt;header&gt;&#039;,
-    &#039;&lt;h3&gt;Details for &lt;span data-hook=&quot;name&quot;&gt;&lt;/span&gt;&lt;/h3&gt;&#039;,
-    &#039;&lt;/header&gt;&#039;,
+var View = require(&#039;./../controller/control-view&#039;);
+var objectPath = require(&#039;./../object-path&#039;);
 
-    &#039;&lt;div class=&quot;row mappings props&quot;&gt;&lt;/div&gt;&#039;,
+var StylePropertyView = View.extend({
+  template: `
+    &lt;div class=&quot;columns object-prop prop-type-default&quot;&gt;
+      &lt;div class=&quot;column gutter text-right prop-name&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;column no-grow prop-value-reset&quot;&gt;
+        &lt;button class=&quot;vfi-cancel&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-value&quot;&gt;
+        &lt;input name=&quot;value&quot; type=&quot;text&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-mapping-clear no-grow&quot;&gt;
+        &lt;button class=&quot;vfi-unlink&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-mapping-name&quot;&gt;
+        &lt;input name=&quot;mapping-name&quot; type=&quot;text&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column no-grow&quot;&gt;
+        &lt;button class=&quot;mapping-details&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  `,
 
-    &#039;&lt;div class=&quot;row gutter transformations-control columns&quot;&gt;&#039;,
-    &#039;&lt;/section&gt;&#039;
-  ].join(&#039;\n&#039;),
+  initialize: function() {
+    View.prototype.initialize.apply(this, arguments);
+    this.listenToAndRun(this.rootView.mappings, &#039;change:targets&#039;, function() {
+      this.trigger(&#039;change:rootView.mappings&#039;);
+    });
+  },
+
+  derived: {
+    suggestionHelper: {
+      cache: false,
+      fn: function() {
+        var view = this.parent;
+        while (view) {
+          if (view.suggestionHelper) return view.suggestionHelper;
+          view = view.parent;
+        }
+        return false;
+      }
+    },
+
+    propertyPath: {
+      deps: [&#039;model.name&#039;, &#039;parent.modelPath&#039;],
+      fn: function() {
+        return this.parent.modelPath + &#039;.styleProperties.&#039; + this.model.name + &#039;.value&#039;;
+      }
+    },
+
+    mapping: {
+      deps: [&#039;propertyPath&#039;, &#039;rootView.mappings&#039;],
+      fn: function() {
+        return this.rootView.mappings.findMappingByTarget(this.propertyPath);
+      }
+    }
+  },
 
   bindings: {
-    &#039;model.name&#039;: &#039;[data-hook=name]&#039;
+    &#039;model.name&#039;: &#039;.prop-name&#039;,
+    &#039;model.value&#039;: {
+      selector: &#039;[name=&quot;value&quot;]&#039;,
+      type: &#039;value&#039;
+    },
+
+    &#039;mapping.name&#039;: [
+      {
+        type: &#039;booleanAttribute&#039;,
+        selector: &#039;.prop-mapping-clear button&#039;,
+        name: &#039;disabled&#039;,
+        invert: true
+      },
+      {
+        type: &#039;value&#039;,
+        selector: &#039;[name=&quot;mapping-name&quot;]&#039;
+      },
+      {
+        type: &#039;booleanClass&#039;,
+        selector: &#039;.mapping-details&#039;,
+        yes: &#039;vfi-eye&#039;,
+        no: &#039;vfi-eye-off&#039;
+      },
+      {
+        type: &#039;booleanAttribute&#039;,
+        selector: &#039;.mapping-details&#039;,
+        name: &#039;disabled&#039;,
+        invert: true
+      },
+      {
+        type: &#039;booleanAttribute&#039;,
+        selector: &#039;.prop-value-reset button&#039;,
+        name: &#039;disabled&#039;
+      }
+    ]
+  },
+
+  commands: {
+    &#039;click .prop-mapping-clear button&#039;: &#039;updateMapping _handleRemoveMappingTarget&#039;,
+    &#039;change [name=&quot;value&quot;]&#039;: &#039;propChange _handleChange&#039;,
+    // &#039;click .prop-value-reset button&#039;: &#039;resetProp _handleReset&#039;,
+  },
+
+  _handleRemoveMappingTarget: function() {
+    var propertyPath = this.propertyPath;
+    var mapping = this.mapping.serialize();
+    mapping.targets = mapping.targets.filter(function(target) {
+      return target !== propertyPath;
+    });
+    return {mapping: mapping};
+  },
+
+  _handleChange: function() {
+    return {
+      path: objectPath(this.model),
+      property: &#039;value&#039;,
+      value: this.query(&#039;[name=&quot;value&quot;]&#039;).value
+    };
+  },
+
+  events: {
+    &#039;focus [name=&quot;mapping-name&quot;]&#039;: &#039;_suggestMapping&#039;,
+    &#039;click button.mapping-details&#039;: &#039;_showMapping&#039;
+  },
+
+  _suggestMapping: function(evt) {
+    var view = this;
+    var helper = view.suggestionHelper;
+    var mappings = this.rootView.mappings;
+    var propertyPath = this.propertyPath;
+
+    helper.attach(evt.target, function(selected) {
+      var mappingState = mappings.get(selected);
+      if (!mappingState) return;
+      var mapping = mappingState.serialize();
+      mapping.targets.push(propertyPath);
+      view.sendCommand(&#039;updateMapping&#039;, {
+        mapping: mapping
+      });
+      helper.detach();
+    }).fill(mappings.map(function(state) { return state.name; }));
+  },
+
+  _showMapping: function() {
+    var mapping = this.mapping;
+    this.rootView.regionRight.focusTab(&#039;Mappings&#039;);
+    this.rootView.mappingsView.mappingsList.views.forEach(function(view) {
+      if (view.model === mapping) {
+        view.el.scrollIntoView();
+        view.blink();
+      }
+    });
   }
 });
+
+
+
+var LayerDetailsView = DetailsView.extend({
+  template: `
+    &lt;section&gt;
+      &lt;header&gt;
+        &lt;div class=&quot;columns&quot;&gt;
+          &lt;h3 class=&quot;column&quot;&gt;Details for &lt;span data-hook=&quot;name&quot;&gt;&lt;/span&gt; &lt;small data-hook=&quot;type&quot;&gt;&lt;/small&gt;&lt;/h3&gt;
+          &lt;div class=&quot;column no-grow&quot;&gt;&lt;button class=&quot;vfi-eye&quot; name=&quot;show-origin&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;h5 data-hook=&quot;object-path&quot;&gt;&lt;/h5&gt;
+      &lt;/header&gt;
+
+      &lt;div class=&quot;row columns&quot;&gt;
+        &lt;div class=&quot;columns&quot;&gt;&lt;input type=&quot;text&quot; name=&quot;style-prop-name&quot; placeholder=&quot;--css-var-name&quot; /&gt;&lt;/div&gt;
+        &lt;div class=&quot;columns&quot;&gt;&lt;input type=&quot;text&quot; name=&quot;style-prop-default&quot; placeholder=&quot;2px, 100%, &quot; /&gt;&lt;/div&gt;
+        &lt;div class=&quot;columns no-grow&quot;&gt;&lt;button name=&quot;style-prop-add&quot; class=&quot;vfi-plus&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;row style-props&quot; &gt;&lt;/div&gt;
+      &lt;hr/&gt;
+      &lt;div class=&quot;row mappings props&quot;&gt;&lt;/div&gt;
+    &lt;/section&gt;
+  `,
+
+
+  events: assign(DetailsView.prototype.events, {
+    &#039;click [name=show-origin]&#039;: &#039;_showOrigin&#039;,
+    &#039;click [name=style-prop-add]&#039;: &#039;addStyleProperty&#039;
+  }),
+
+  _showOrigin: function() {
+    this.rootView.trigger(&#039;blink&#039;, this.modelPath);
+  },
+
+  addStyleProperty: function() {
+    var val = this.query(&#039;[name=style-prop-default]&#039;).value;
+    var props = this.model.styleProperties.serialize();
+    props.push({
+      name: this.query(&#039;[name=style-prop-name]&#039;).value,
+      default: val,
+      value: val
+    });
+    this.rootView.sendCommand(&#039;propChange&#039;, {
+      path: &#039;layers.&#039; + this.model.getId(),
+      property: &#039;styleProperties&#039;,
+      value: props
+    });
+  },
+
+  render: function() {
+    DetailsView.prototype.render.apply(this, arguments);
+
+    if (this.styleProperties) {
+      this.styleProperties.remove();
+    }
+
+    if (this.model.styleProperties) {
+      this.styleProperties = this.renderCollection(this.model.styleProperties, StylePropertyView, &#039;.style-props&#039;);
+    }
+
+    return this;
+  }
+});
+
+LayerDetailsView.types = {};
+
 module.exports = LayerDetailsView;</textarea>
   </div>
 </div>

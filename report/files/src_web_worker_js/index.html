@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">73.33</p>
+      <p class="stat">68.68</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">273</p>
+      <p class="stat">383</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">26.73</p>
+      <p class="stat">48.27</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.80</p>
+      <p class="stat">2.95</p>
     </div>
   </div>
 </div>
@@ -91,87 +91,60 @@
   <div class="row">
     <textarea id="file-source" class="col-md-12">/* jshint worker:true */
 &#039;use strict&#039;;
-
 var worker = self;
-// module.exports = worker;
-var deps = worker.VFDeps = {};
+require.ensure([
+  &#039;ramda&#039;,
+  &#039;lodash.assign&#039;,
+  &#039;ampersand-state&#039;,
+  &#039;ampersand-collection&#039;
+], function() {
+require.ensure([
+  &#039;./mapping/data&#039;,
+], function() {
+require.ensure([
+  &#039;./layer/state&#039;,
+  &#039;./layer/svg/state&#039;,
+  &#039;./layer/img/state&#039;,
+  &#039;./layer/txt/state&#039;,
+  &#039;./layer/video/state&#039;,
+  &#039;./layer/canvas/state&#039;,
+], function() {
+require.ensure([
+  &#039;./screen/state&#039;,
+], function() {
+require.ensure([
+  &#039;./resolve&#039;,
+  &#039;./signal/collection&#039;
+], function() {
+// ---------------------------------------------------------------
+var resolve = require(&#039;./resolve&#039;);
 
-// require.ensure([&#039;ampersand-state&#039;], function(require) {
-// require.ensure([&#039;ampersand-collection&#039;], function(require) {
-// require.ensure([&#039;localforage&#039;, &#039;txml&#039;], function(require) {
-
-var localForage = deps.localForage = require(&#039;localforage&#039;);
-localForage.config({
-  // driver      : localforage.WEBSQL, // Force WebSQL; same as using setDriver()
-  name        : &#039;visualFiha&#039;,
-  version     : 1.0,
-  size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
-  storeName   : &#039;keyvaluepairs&#039;, // Should be alphanumeric, with underscores.
-  description : &#039;Visual Fiha storage&#039;
-});
-deps.State = require(&#039;ampersand-state&#039;);
-deps.Collection = require(&#039;ampersand-collection&#039;);
-
-
-var mappings = require(&#039;./mapping/state&#039;);
-
-// var tXML = require(&#039;txml&#039;);
-// function loadSVG(url, done) {
-//   done = done || function(err, obj) {
-//     console.info(&#039;loadSVG&#039;, err ? err.stack : obj);
-//   };
-
-//   fetch(url)
-//     .then(function(res) {
-//       return res.text();
-//     })
-//     .then(function(string) {
-//       var styles = {};
-
-//       try {
-//         tXML(string, {
-//           filter: function(child) {
-//             return child.attributes &amp;&amp; child.attributes.id &amp;&amp; child.attributes.style;
-//           }
-//         }).forEach(function(node) {
-//           styles[node.attributes.id] = node.attributes.style;
-//         });
-//       }
-//       catch (e) {
-//         return done(e);
-//       }
-
-//       done(null, {
-//         source: string,
-//         styles: styles
-//       });
-//     })
-//     .catch(done);
-// }
-
-
-// loadSVG(&#039;assets/zeropaper-fat.svg&#039;);
-
+var Mappings = require(&#039;./mapping/data&#039;);
 
 var ScreenState = require(&#039;./screen/state&#039;);
-var workerScreen = new ScreenState();
+worker.screen = new ScreenState();
 
-
+worker.layers = worker.screen.layers;
 
 var SignalCollection = require(&#039;./signal/collection&#039;);
-var workerSignals = new SignalCollection();
-workerSignals.parent = workerScreen;
+worker.signals = new SignalCollection({
+  parent: worker.screen
+});
 
 
 
-// function snapshot() {
-//   localForage.setItem(&#039;snapshot&#039;, {
-//     screen: workerScreen.serialize(),
-//     signals: workerSignals.serialize()
-//   });//.then(console.info.bind(console), console.error.bind(console));
-// }
+var __dataContext = {
+  frametime: 0,
+  firstframetime: 0,
+  audio: {},
+  layers: worker.layers,
+  signals: worker.signals
+};
 
-// setInterval(snapshot, 5000);
+
+worker.mappings = new Mappings([], {
+  context: __dataContext
+});
 
 
 function signature(fn) {
@@ -199,17 +172,94 @@ function registerCommand(commandName, command) {
 
 
 
+function emitCommand(name, payload) {
+  worker.postMessage({
+    command: name,
+    payload: payload
+  });
+}
 
 
 var screens = {};
 var channel = new BroadcastChannel(&#039;spike&#039;);
 function broadcastCommand(name, payload) {
-  // console.info(&#039;%cworker broadcast command &quot;%s&quot;&#039;, &#039;color:purple&#039;, name);
   channel.postMessage({
     command: name,
     payload: payload
   });
 }
+
+
+
+/******************************************************\
+ * Worker   clock                                     *
+\******************************************************/
+var _fps = 45;
+var _prev = performance.now();
+var _frameMillis = 1000 / _fps;
+var _internalTimeout;
+var _frameCounter = 0;
+var _samplesCount = _fps * 2;
+var _prevSamples = _prev;
+var _animationStartTime = performance.now();
+
+function _animate() {
+  worker.screen.frametime = __dataContext.frametime = performance.now() - _animationStartTime;
+  worker.signals.trigger(&#039;frametime&#039;, __dataContext.frametime);
+
+  emitCommand(&#039;updateSignals&#039;, {
+    signals: worker.signals.serialize().filter(o =&gt; o.name)
+  });
+
+  broadcastCommand(&#039;updateLayers&#039;, {
+    frametime: __dataContext.frametime,
+    audio: worker.audio,
+    layers: worker.layers.serialize().filter(o =&gt; o.name)
+  });
+
+
+  var _now = performance.now();
+  var elapsed = _now - _prev;
+  var timeDiff = _frameMillis - (elapsed - _frameMillis);
+  _prev = _now;
+  _internalTimeout = setTimeout(_animate, timeDiff);
+
+  _frameCounter++;
+  if (_frameCounter === _samplesCount) {
+    // inform the controller of the health of the worker
+    emitCommand(&#039;health&#039;, {
+      frametime: worker.screen.frametime,
+      elapsed: _now - _prevSamples,
+      fps: _fps,
+      frameCounter: _frameCounter,
+      samplesCount: _samplesCount
+    });
+
+    _frameCounter = 0;
+    _prevSamples = _now;
+  }
+}
+_internalTimeout = setTimeout(_animate, _frameMillis);
+
+
+// var _bootstrapTime = Date.now();
+// var _executedCommands = [];
+// var _previousCommandIndex = 0;
+
+// setInterval(function() {
+//   if (_previousCommandIndex &lt; _executedCommands.length) {
+//     console.info(&#039;send %s timelineCommands&#039;, _executedCommands.length - _previousCommandIndex);
+//     emitCommand(&#039;timelineCommands&#039;, {
+//       commands: _executedCommands.slice(_previousCommandIndex, _executedCommands.length)
+//     });
+//     _previousCommandIndex = _executedCommands.length;
+//   }
+// }, 100);
+
+
+/******************************************************\
+ * Screen registration                                *
+\******************************************************/
 channel.addEventListener(&#039;message&#039;, function(evt) {
   var command = evt.data.command;
   if (command !== &#039;register&#039;) return;
@@ -220,104 +270,145 @@ channel.addEventListener(&#039;message&#039;, function(evt) {
   }
 
   screens[payload.id] = payload.id;
-  broadcastCommand(&#039;resetLayers&#039;, {
-    layers: workerScreen.layers.serialize()
-  });
-}, false);
+});
 
+
+
+/******************************************************\
+ * Worker commands                                    *
+\******************************************************/
 var commands = {
-  setup: function(state) {
-    workerScreen.set(state);
+  bootstrap: function(layers, signals, mappings) {
+    worker.layers.set(layers);
+    worker.signals.set(signals);
+    worker.mappings.import(mappings, true);
 
-    broadcastCommand(&#039;setup&#039;, {
-      state: state
+    broadcastCommand(&#039;bootstrap&#039;, {
+      signals: worker.signals.serialize(),
+      mappings: worker.mappings.export(),
+      layers: worker.layers.serialize()
     });
   },
-  midi: function(name, value) {
-    console.info(&#039;midi event &quot;%s&quot;, %s&#039;, name, value);
+
+
+  midi: function(deviceName, property, velocity) {
+    worker.mappings.processMIDI(deviceName, property, velocity);
   },
+
+
+
   heartbeat: function(frametime, audio) {
-    workerScreen.frametime = frametime;
-    workerScreen.audioFrequency = audio.frequency;
-    workerScreen.audioTimeDomain = audio.timeDomain;
-
-    broadcastCommand(&#039;heartbeat&#039;, {
-      frametime: frametime,
-      audio: audio
-    });
+    worker.frametime = frametime;
+    worker.audio = audio;
   },
 
-  addMapping: function(info) {
-    mappings.add(info);
+
+
+  propChange: function(path, property, value) {
+    var obj = resolve(path, __dataContext);
+    if (!obj) return;
+    if (obj[property] &amp;&amp; obj[property].isCollection) {
+      return obj[property].set(Array.isArray(value) ? value : [value]);
+    }
+    obj.set(property, value);
   },
-  updateMapping: function(info) {
-    var state = mappings.find(function(mapping) {
-      return info.id === mapping.id;
-    });
-    state.set(info);
+
+
+
+  addMapping: function(mapping) {
+    worker.mappings.add(mapping);
+    emitCommand(&#039;addMapping&#039;, {mapping: mapping});
   },
+  updateMapping: function(mapping) {
+    var state = worker.mappings.get(mapping.name);
+    if (state) state.set(mapping);
+    emitCommand(&#039;updateMapping&#039;, {mapping: mapping});
+  },
+  removeMapping: function(name) {
+    worker.mappings.remove(name);
+    emitCommand(&#039;removeMapping&#039;, {name: name});
+  },
+  resetMappings: function(mappings) {
+    worker.mappings.import(mappings, true);
+  },
+
+
+
+
 
   resetSignals: function(signals) {
-    workerSignals.reset(signals);
+    worker.signals.reset(signals);
+    emitCommand(&#039;resetSignals&#039;, {
+      signals: signals
+    });
   },
   addSignal: function(signal) {
-    workerSignals.add(signal);
+    worker.signals.add(signal);
+    emitCommand(&#039;addSignal&#039;, {
+      signal: signal
+    });
   },
   removeSignal: function(signalName) {
-    workerSignals.remove(workerSignals.get(signalName));
+    var collection = worker.signals;
+    collection.remove(collection.get(signalName));
+    emitCommand(&#039;removeSignal&#039;, {
+      signalName: signalName
+    });
   },
   updateSignal: function(signal, signalName) {
-    workerSignals.get(signalName).set(signal);
+    var state = worker.signals.get(signalName);
+    state.set(signal);
+    emitCommand(&#039;updateSignal&#039;, {
+      signalName: signalName,
+      signal: signal
+    });
+  },
+  updateSignals: function(signals) {
+    worker.signals.set(signals);
+    emitCommand(&#039;updateSignals&#039;, {
+      signals: signals
+    });
   },
 
+
+
+
+
   resetLayers: function(layers) {
+    worker.layers.reset(layers);
+
     broadcastCommand(&#039;resetLayers&#039;, {
       layers: layers
     });
-    workerScreen.layers.reset(layers);
   },
   addLayer: function(layer) {
-    var collection = workerScreen.layers;
+    worker.layers.add(layer);
+
     broadcastCommand(&#039;addLayer&#039;, {
       layer: layer
     });
-
-    collection.add(layer);
-
-    var state = collection.get(layer.name);
-    function filter(serialized) {
-      var filtered = {};
-      var obj = state.changedAttributes();
-      Object.keys(obj).forEach(function(key) {
-        if (typeof serialized[key] !== &#039;function&#039;) filtered[key] = serialized[key];
-      });
-      return filtered;
-    }
-
-    state.on(&#039;change&#039;, function() {
-      broadcastCommand(&#039;updateLayer&#039;, {
-        layer: filter(state.serialize()),
-        layerName: layer.name
-      });
-    });
-
-    collection.add(layer);
   },
   removeLayer: function(layerName) {
-    var collection = workerScreen.layers;
+    var collection = worker.layers;
+    collection.remove(collection.get(layerName));
+
     broadcastCommand(&#039;removeLayer&#039;, {
       layerName: layerName
     });
-    collection.remove(collection.get(layerName));
   },
-  updateLayer: function(layer, layerName) {
-    var state = workerScreen.layers.get(layerName);
+  updateLayer: function(layer, broadcast) {
+    var state = worker.layers.get(layer.name);
     state.set(layer);
+    if (broadcast) broadcastCommand(&#039;updateLayer&#039;, {layer: layer});
   }
 };
 
 
+
 Object.keys(commands).forEach(registerCommand);
+
+
+
 
 
 worker.addEventListener(&#039;message&#039;, function(evt) {
@@ -326,7 +417,6 @@ worker.addEventListener(&#039;message&#039;, function(evt) {
   var commandName = evt.data.command;
   var command = commands[commandName];
 
-  // console.info(&#039;%cworker recieved command &quot;%s&quot;&#039;, &#039;color:red&#039;, commandName);
 
   if (typeof command !== &#039;function&#039;) {
     return worker.postMessage({
@@ -350,6 +440,13 @@ worker.addEventListener(&#039;message&#039;, function(evt) {
     return evt.data.payload[argName];
   });
 
+  if ([&#039;heartbeat&#039;].indexOf(commandName) &lt; 0) {
+    // _executedCommands.push({
+    //   time: Date.now(),
+    //   command: commandName,
+    //   payload: evt.data.payload
+    // });
+  }
   var result = command.apply(worker, commandArgs);
   if (!eventId) return;
   worker.postMessage({
@@ -358,10 +455,23 @@ worker.addEventListener(&#039;message&#039;, function(evt) {
     payload: result,
     eventId: eventId
   });
-}, false);
-// });
-// });
-// });</textarea>
+}, {
+  passive: true,
+  capture: false
+});
+
+worker.layers.on(&#039;emitCommand&#039;, function(...args) {
+  emitCommand(...args);
+});
+worker.layers.on(&#039;broadcastCommand&#039;, function(...args) {
+  broadcastCommand(...args);
+});
+// --------------------------------------------------------------
+}, &#039;worker-deps&#039;);
+}, &#039;screen-state&#039;);
+}, &#039;layer-state&#039;);
+}, &#039;mapping-data&#039;);
+}, &#039;ampersand-data&#039;);</textarea>
   </div>
 </div>
 

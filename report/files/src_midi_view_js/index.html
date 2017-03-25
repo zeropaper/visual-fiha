@@ -48,7 +48,7 @@
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">55</p>
+      <p class="stat">50</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">8.61</p>
+      <p class="stat">8.25</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.26</p>
+      <p class="stat">0.25</p>
     </div>
   </div>
 </div>
@@ -90,8 +90,7 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var VFDeps = window.VFDeps;
-var View = VFDeps.View;
+var View = require(&#039;./../controller/control-view&#039;);
 var MIDIView = View.extend({
   template: [
     &#039;&lt;li class=&quot;gutter&quot;&gt;&#039;,
@@ -122,10 +121,6 @@ var MIDIAccessView = View.extend({
         &#039;&lt;div class=&quot;gutter&quot;&gt;Inputs&lt;/div&gt;&#039; +
         &#039;&lt;ul&gt;&lt;/ul&gt;&#039; +
       &#039;&lt;/div&gt;&#039; +
-    //   &#039;&lt;div class=&quot;midi-outputs&quot;&gt;&#039; +
-    //     &#039;&lt;div class=&quot;gutter&quot;&gt;Outputs&lt;/div&gt;&#039; +
-    //     &#039;&lt;ul&gt;&lt;/ul&gt;&#039; +
-    //   &#039;&lt;/div&gt;&#039; +
     &#039;&lt;/div&gt;&#039;,
 
   render: function() {

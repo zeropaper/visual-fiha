@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">70.81</p>
+      <p class="stat">69.00</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">356</p>
+      <p class="stat">372</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">23.52</p>
+      <p class="stat">14.11</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.66</p>
+      <p class="stat">0.85</p>
     </div>
   </div>
 </div>
@@ -90,359 +90,375 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-
+/*global store, width, height, layer, grid, beginPath, closePath, dot, circle, polygone, moveTo, lineTo, fillStyle, stroke, strokeStyle, lineWidth, clearRect, timeDomain, frequency, bufferLength, restoreContexts, cacheContext*/
 window.VF = window.VF || {};
 
 var canvasLayers = [
-  {
-    name: &#039;background&#039;,
-    weight: 0,
-    drawFunction: function(ctx) {
-      ctx.fillStyle = this.colorA;
-      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    },
-    props: {
-      colorA: [&#039;string&#039;, true, &#039;#bbb&#039;]
-    }
-  },
+//   {
+//     name: &#039;levels&#039;,
+//     active: false,
+//     zIndex: 0,
+//     props: {
+//       levelA: [&#039;number&#039;, true, 30],
+//       levelB: [&#039;number&#039;, true, 120]
+//     },
+//     drawFunction: function () {
+//   lineWidth(1);
+//   strokeStyle(&#039;#fff&#039;);
+
+//   beginPath();
+//   moveTo(0, height - layer.levelA);
+//   lineTo(width, height - layer.levelA);
+//   stroke();
+
+//   beginPath();
+//   moveTo(0, height - layer.levelB);
+//   lineTo(width, height - layer.levelB);
+//   stroke();
+
+//   // -----------------------------------
+//   var length = bufferLength();
+//   var barWidth = (width / length) - 1;
+//   var f = 0;
+//   var alpha;
+//   lineWidth(barWidth);
+
+//   grid(length, 1, function(x) {
+//     var td = timeDomain(f) * 1;
+//     var freq = frequency(f);
+
+//     alpha = td &gt; layer.levelA &amp;&amp; td &lt; layer.levelB ? 0.7 : 0;
+//     strokeStyle(&#039;rgba(160,122,122,&#039; + alpha + &#039;)&#039;);
+//     beginPath();
+//     moveTo(x, height);
+//     lineTo(x, height - td);
+//     stroke();
+
+//     alpha = freq &gt; layer.levelA &amp;&amp; freq &lt; layer.levelB ? 0.7 : 0;
+//     strokeStyle(&#039;rgba(122,122,160,&#039; + alpha + &#039;)&#039;);
+//     beginPath();
+//     moveTo(x, height);
+//     lineTo(x, height - freq);
+//     stroke();
+//     f++;
+//   });
+// }.toString()
+//   },
+//   {
+//     name: &#039;audio1&#039;,
+//     active: false,
+//     zIndex: 0,
+//     props: {
+//       colorA: [&#039;string&#039;, true, &#039;#A581FF&#039;],
+//       widthA: [&#039;number&#039;, true, 1],
+//       colorB: [&#039;string&#039;, true, &#039;#66D9EF&#039;],
+//       widthB: [&#039;number&#039;, true, 1]
+//     },
+//     drawFunction: function () {
+//   var x = width * 0.5;
+//   var y = height * 0.5;
+//   var r = Math.min(x, y) - 20;
+//   var rad = Math.PI * 2;
+//   var length = bufferLength();
+//   var shift1 = Math.PI * 0.5;
+//   var shift2 = Math.PI * 1.5;
+
+//   var i, a, f, td, lx, ly;
+
+//   // -----------------------------
+
+//   strokeStyle(layer.colorA);
+//   lineWidth(layer.widthA);
+//   beginPath();
+//   for (i = 0; i &lt; length; i++) {
+//     a = ((rad / length) * i) - shift1;
+//     f = (r / 100) * (frequency(i) / 2);
+//     lx = Math.round(x + Math.cos(a) * f);
+//     ly = Math.round(y + Math.sin(a) * f);
+//     lineTo(lx, ly);
+//   }
+//   stroke();
+
+//   beginPath();
+//   i = 0;
+//   lineTo(0, height * 0.5);
+//   lineTo(width, height * 0.5);
+//   stroke();
+
+//   beginPath();
+//   grid(length, 1, function(x, y){
+//     lineTo(x, y + (frequency(i) * 0.5));
+//     i++;
+//   });
+//   stroke();
+
+//   // -----------------------------
+
+//   strokeStyle(layer.colorB);
+//   lineWidth(layer.widthB);
+//   beginPath();
+//   for (i = 0; i &lt; length; i++) {
+//     a = ((rad / length) * i) - shift2;
+//     td = (r / 100) * (timeDomain(i) / 2);
+//     lx = Math.round(x + Math.cos(a) * td);
+//     ly = Math.round(y + Math.sin(a) * td);
+//     lineTo(lx, ly);
+//   }
+//   stroke();
+
+//   beginPath();
+//   i = 0;
+//   lineTo(0, height * 0.5);
+//   lineTo(width, height * 0.5);
+//   stroke();
+
+//   beginPath();
+//   grid(length, 1, function(x, y){
+//     lineTo(x, y + (timeDomain(i) * 0.5));
+//     i++;
+//   });
+//   stroke();
+// }.toString()
+//   },
+
 
   {
-    name: &#039;vidA&#039;,
-    weight: 10,
-    active: false,
-    drawFunction: function(ctx) {
-      var url = this.src;
-      window.VF.canvas.loaders.video(url, function(err, video) {
-        if (!video) return;
-        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, ctx.canvas.width, ctx.canvas.height);
-      });
-    },
-    props: {
-      reverse: [&#039;boolean&#039;, true, false],
-      src: [&#039;string&#039;, true, &#039;./assets/kd/fire.mp4&#039;]
-    }
-  },
-
-  // {
-  //   name: &#039;imgA&#039;,
-  //   weight: 20,
-  //   active: false,
-  //   drawFunction: function(ctx) {
-  //     var url = &#039;./assets/kd/kd_logo_final.svg&#039;;
-  //     window.VF.canvas.loaders.img(url, function(err, img) {
-  //       if (!img) return;
-  //       var is = Math.min(img.width, img.height);
-  //       var cs = Math.min(ctx.canvas.width, ctx.canvas.height);
-  //       var s = Math.min(is, cs);
-  //       var x = (ctx.canvas.width - s) * 0.5;
-  //       var y = (ctx.canvas.height - s) * 0.5;
-  //       ctx.drawImage(img, x, y, s, s);
-  //     });
-  //   },
-  //   props: {
-  //     colorA: [&#039;string&#039;, true, &#039;#bbb&#039;]
-  //   }
-  // },
-
-  {
-    name: &#039;panorama&#039;,
-    weight: 20,
-    active: false,
-    drawFunction: function(ctx) {
-      var url = this.src;
-      var shift = this.shift;
-      var frametime = this.screenState.frametime || 0;
-      window.VF.canvas.loaders.img(url, function(err, img) {
-        if (!img) return;
-        var iw = img.width;
-        var ih = img.height;
-        var cw = ctx.canvas.width;
-        var ch = ctx.canvas.height;
-        var fh = ch / ih;
-        var fw = cw / iw;
-        var sx = (frametime % (iw - (cw * fh)) + shift);
-        var dw = cw / fw;
-        var dh = ch / fh;
-
-        ctx.drawImage(img, sx, 0, iw, ih, 0, 0, dw, dh);
-      });
-    },
-    props: {
-      src: [&#039;string&#039;, true, &#039;./assets/panorma-karl-marx-allee.jpg&#039;],
-      shift: [&#039;number&#039;, true, 0]
-    },
-  },
-
-  {
-    name: &#039;grid&#039;,
+    name: &#039;lines&#039;,
     active: true,
-    weight: 40,
-    drawFunction: window.VF.canvas.lines.grid,
+    zIndex: 50,
     props: {
-      lineColor: [&#039;string&#039;, true, &#039;#fff&#039;],
-      lineWidth: [&#039;number&#039;, true, 1],
-      randFactor: [&#039;number&#039;, true, 0],
-      pointRows: [&#039;number&#039;, true, 8],
-      pointRadius: [&#039;number&#039;, true, 1],
-      pointsCount: [&#039;number&#039;, true, 40]
+      text:[&#039;string&#039;, true, &#039;Hello World!&#039;],
+      toggleA: [&#039;boolean&#039;, true, false],
+      knobA: [&#039;number&#039;, true, 127],
+      knobB: [&#039;number&#039;, true, 127],
+      knobC: [&#039;number&#039;, true, 127]
     },
-  },
+    drawFunction: function () {
+  var l = bufferLength();
 
-  // {
-  //   name: &#039;loungeA&#039;,
-  //   active: false,
-  //   weight: 40,
-  //   drawFunction: function(ctx) {
-  //     var cw = ctx.canvas.width;
-  //     var ch = ctx.canvas.height;
-  //     var bw = Math.max(1, this.barWidth);
-  //     var bbw = this.borderWidth;
-  //     var sh = (bw - (ch % bw)) * 0.5;
-  //     var c = (ch / Math.max(2, bw)) + bw;
-  //     var s = this.frametime % cw;
-  //     var dl = window.VF.canvasTools.drawLine;
-  //     var b, l, r, y;
+  // var str = layer.text || &#039;&#039;;
+  // var letters = str.length &lt;= l ? repeat(&#039;&#039;, Math.round((l - str.length) / 2))
+  //               .concat(str.split(&#039;&#039;)) : str.split(&#039;&#039;);
+  var f = 0;
+  var k = Math.round(layer.knobA * 0.05);
+  var p = Math.max(1, k);
+  var d = Math.pow(2, p);
 
-  //     ctx.fillStyle = this.barColor;
-  //     ctx.strokeStyle = this.borderColor;
+  // textAlign(&#039;center&#039;);
+  // textBaseline(&#039;middle&#039;);
 
+  grid(l, l / d, function(...args) {
+    fillStyle(&#039;black&#039;);
+    fillStyle(&#039;hsl(&#039;+(timeDomain(f) * 3)+&#039;, &#039;+layer.knobB+&#039;%, &#039;+layer.knobB+&#039;%)&#039;);
+    strokeStyle(&#039;hsl(&#039;+(timeDomain(f) * 3)+&#039;, &#039;+layer.knobB+&#039;%, &#039;+layer.knobB+&#039;%)&#039;);
 
-  //     for (b = 0; b &lt; c; b++) {
-  //       if (b % 2) {
-  //         l = s - cw;
-  //         r = l + cw;
-  //         y = (b * bw) - sh;
-  //         dl(ctx, l, y, r, y, bw, bbw);
-  //       }
-  //       else {
-  //         l = s + cw;
-  //         r = l - cw;
-  //         y = (b * bw) - sh;
-  //         dl(ctx, r, y, l, y, bw, bbw);
-  //       }
-  //     }
-  //   },
-  //   props: {
-  //     borderWidth: [&#039;number&#039;, true, 0],
-  //     barWidth: [&#039;number&#039;, true, 50],
-  //     barColor: [&#039;string&#039;, true, &#039;rgb(234, 105, 41)&#039;],
-  //     borderColor: [&#039;string&#039;, true, &#039;rgb(236, 183, 156)&#039;],
-  //     beat: [&#039;number&#039;, true, 100]
-  //   },
-  // },
-
-  // {
-  //   name: &#039;lines&#039;,
-  //   active: false,
-  //   weight: 50,
-  //   drawFunction: function(ctx) {
-  //     var h;
-  //     var w;
-  //     var vh;
-  //     var vw;
-  //     var cw = ctx.canvas.width;
-  //     var ch = ctx.canvas.height;
-  //     var hcw = cw * 0.5;
-  //     var hch = ch * 0.5;
-  //     var bw = Math.max(1, this.barWidth || 0);
-  //     var bbw = bw * 0.25;
-  //     var dl = window.VF.canvasTools.drawLine;
-  //     // dl(ctx, 100, 100, 200, 100, 50, 2);
-
-  //     // dl(ctx, 100, 200, 200, 350, 50, 2);
-
-  //     var _ca = 100 - this.arbitraryA;
-  //     var _cb = 100 - this.arbitraryB;
-  //     var dbw = bw * 2;
-  //     ctx.barColor = this.barColor;
-  //     // ctx.lineWidth = bw;
-
-  //     vh = (ch / 200) * _ca;
-  //     for (w = (hcw - (Math.floor(hcw / dbw) * dbw)); w &lt;= cw; w += dbw) {
-  //       dl(ctx, w, vh, w, ch - vh, bw, bbw);
-  //     }
-
-  //     vw = (cw / 200) * _cb;
-  //     for (h = (hch - (Math.floor(hcw / dbw) * dbw)); h &lt;= ch; h += dbw) {
-  //       dl(ctx, vw, h, cw - vw, h, bw, bbw, true);
-  //     }
-  //   },
-  //   props: {
-  //     barWidth: [&#039;number&#039;, true, 50],
-  //     barColor: [&#039;string&#039;, true, &#039;#fff&#039;],
-  //     borderColor: [&#039;string&#039;, true, &#039;#fff&#039;],
-  //     arbitraryA: [&#039;number&#039;, true, 10],
-  //     arbitraryB: [&#039;number&#039;, true, 10]
-  //   },
-  // },
-
-  {
-    name: &#039;frametime&#039;,
-    active: false,
-    weight: 60,
-    drawFunction: window.VF.canvas.utils.frametime
-  },
-
-  {
-    name: &#039;audio&#039;,
-    active: false,
-    weight: 30,
-    drawFunction: window.VF.canvas.lines.roundFrequencies
-  },
-
-  {
-    name: &#039;fps&#039;,
-    active: false,
-    weight: 60,
-    drawFunction: window.VF.canvas.utils.fps
+    // circle(...args, timeDomain(f) * 0.1);
+    polygone(...args, timeDomain(f) * layer.knobC * 0.05);
+    // font(&#039;20px monospace&#039;);
+    // font(&#039;20px monospace&#039;);
+    // txt(letters[f], ...args);
+    f++;
+  });
+}.toString()
   }
 ];
 
 window.VF._defaultSetup = {
   mappings: [
     {
-      source: &#039;frametime&#039;,
-      target: &#039;signals.beat:a.frametime&#039;,
-      transform: &#039;function (v) {\n  return v * 0.5;\n}&#039;
+      targets: [
+        &#039;layers.no-signal.opacity&#039;
+      ],
+      transformFunction: &#039;function (value) {\n  return value &gt; 90 ? 100 : 15;\n}&#039;,
+      name: &#039;beatOpacity&#039;,
+      source: &#039;signals.beatA.result&#039;
     },
     {
-      source: &#039;midi.inputs.nk2.slider1&#039;,
-      target: &#039;signals.color:a.lightness&#039;,
-      transform: &#039;function (v) {\n  return (v /127) * 100;\n}&#039;
+      targets: [
+        &#039;layers.no-signal.active&#039;
+      ],
+      transformFunction: &#039;function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}&#039;,
+      name: &#039;nk2.r1&#039;,
+      source: &#039;midi:nk2.r1&#039;
+    },
+    // {
+    //   targets: [
+    //     &#039;layers.Sky-1-back.opacity&#039;,
+    //     &#039;layers.Sky-1-front.opacity&#039;
+    //   ],
+    //   transformFunction: &#039;function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}&#039;,
+    //   name: &#039;nk2.slider2&#039;,
+    //   source: &#039;midi:nk2.slider2&#039;
+    // },
+    // {
+    //   targets: [
+    //     &#039;layers.Sky-1-back.active&#039;
+    //   ],
+    //   transformFunction: &#039;function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}&#039;,
+    //   name: &#039;nk2.r2&#039;,
+    //   source: &#039;midi:nk2.r2&#039;
+    // },
+    // {
+    //   targets: [
+    //     &#039;layers.Sky-1-front.active&#039;
+    //   ],
+    //   transformFunction: &#039;function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}&#039;,
+    //   name: &#039;nk2.m2&#039;,
+    //   source: &#039;midi:nk2.m2&#039;
+    // },
+    {
+      targets: [
+        &#039;layers.canvas.canvasLayers.lines.knobA&#039;
+      ],
+      transformFunction: &#039;function (value) {\n  return value;\n}&#039;,
+      name: &#039;nk2.knob1&#039;,
+      source: &#039;midi:nk2.knob1&#039;
     },
     {
-      source: &#039;signals.beat:a.result&#039;,
-      target: &#039;signals.color:a.hue&#039;
+      targets: [
+        &#039;layers.canvas.canvasLayers.lines.knobB&#039;
+      ],
+      transformFunction: &#039;function (value) {\n  return value;\n}&#039;,
+      name: &#039;nk2.knob2&#039;,
+      source: &#039;midi:nk2.knob2&#039;
     },
     {
-      source: &#039;frametime&#039;,
-      target: &#039;layers.canvas.canvasLayers.background.opacity&#039;,
-      transform: &#039;function (v) {\n  return v % 100;\n}&#039;
+      targets: [
+        &#039;layers.canvas.canvasLayers.lines.knobC&#039;
+      ],
+      transformFunction: &#039;function (value) {\n  return value;\n}&#039;,
+      name: &#039;nk2.knob3&#039;,
+      source: &#039;midi:nk2.knob3&#039;
+    },
+    // {
+    //   targets: [
+    //     &#039;layers.zeropaper.opacity&#039;
+    //   ],
+    //   transformFunction: &#039;function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}&#039;,
+    //   name: &#039;nk2.slider6&#039;,
+    //   source: &#039;midi:nk2.slider6&#039;
+    // },
+    // {
+    //   targets: [
+    //     &#039;layers.zeropaper.active&#039;
+    //   ],
+    //   transformFunction: &#039;function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}&#039;,
+    //   name: &#039;nk2.r6&#039;,
+    //   source: &#039;midi:nk2.r6&#039;
+    // },
+    // {
+    //   targets: [
+    //     &#039;layers.vf.opacity&#039;
+    //   ],
+    //   transformFunction: &#039;function (value) {\n  return Math.max(value - 1, 0) * (100 / 126);\n}&#039;,
+    //   name: &#039;nk2.slider7&#039;,
+    //   source: &#039;midi:nk2.slider7&#039;
+    // },
+    // {
+    //   targets: [
+    //     &#039;layers.vf.active&#039;
+    //   ],
+    //   transformFunction: &#039;function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}&#039;,
+    //   name: &#039;nk2.r7&#039;,
+    //   source: &#039;midi:nk2.r7&#039;
+    // },
+    {
+      targets: [
+        &#039;layers.ar.styleProperties.--beat.value&#039;,
+        &#039;layers.vf.styleProperties.--beat.value&#039;
+      ],
+      transformFunction: &#039;function (value) {\n  return (value % 100).toString();\n}&#039;,
+      name: &#039;beatNum20Str&#039;,
+      source: &#039;signals.beatA.result&#039;
     },
     {
-      source: &#039;midi.inputs.nk2.r1&#039;,
-      target: &#039;layers.canvas.canvasLayers.background.active&#039;,
-      transform: &#039;function (v) {\n  return !!v;\n}&#039;
+      targets: [
+        &#039;signals.beatA.input&#039;
+      ],
+      transformFunction: &#039;function (value) {\n  return value + 63;\n}&#039;,
+      name: &#039;beatKnob&#039;,
+      source: &#039;midi:nk2.knob8&#039;
     },
-    {
-      source: &#039;signals.color:a.result&#039;,
-      target: &#039;layers.canvas.canvasLayers.background.colorA&#039;
-    },
-    {
-      source: &#039;midi.inputs.nk2.slider2&#039;,
-      target: &#039;layers.canvas.canvasLayers.grid.lineWidth&#039;
-    },
-    {
-      source: &#039;midi.inputs.nk2.knob2&#039;,
-      target: &#039;layers.canvas.canvasLayers.grid.randFactor&#039;
-    },
-    {
-      source: &#039;midi.inputs.nk2.slider3&#039;,
-      target: &#039;layers.canvas.canvasLayers.grid.pointRadius&#039;
-    }
+    // {
+    //   targets: [
+    //     &#039;signals.colorA.hue&#039;
+    //   ],
+    //   transformFunction: &#039;function (newVal, prevVal) {\n  return newVal;\n}&#039;,
+    //   name: &#039;slider8Hue&#039;,
+    //   source: &#039;midi:nk2.slider8&#039;
+    // }
   ],
 
 
   signals: [
     {
-      type: &#039;hslaSignal&#039;,
+      type: &#039;hsla&#039;,
       defaultValue: &#039;180,50%,50%,1&#039;,
-      name: &#039;color:a&#039;,
+      name: &#039;colorA&#039;,
       hue: 180,
-      saturation: 100,
+      saturation: 50,
       lightness: 50,
       alpha: 100,
     },
     {
-      type: &#039;hslaSignal&#039;,
-      defaultValue: &#039;190,50%,50%,1&#039;,
-      name: &#039;color:b&#039;,
-      hue: 180,
-      saturation: 100,
-      lightness: 30,
-      alpha: 100,
-    },
-    // {
-    //   type: &#039;rgbaSignal&#039;,
-    //   defaultValue: &#039;122,122,122,0.5&#039;,
-    //   name: &#039;color:b&#039;,
-    // },
-    {
-      type: &#039;beatSignal&#039;,
-      name: &#039;beat:a&#039;,
-      input: 125
-    },
-    {
-      type: &#039;default&#039;,
-      name: &#039;padX*3.6&#039;,
-      transformations: [
-        {
-          name: &#039;math.multiply&#039;,
-          arguments: [3.6]
-        }
-      ],
-    },
-    {
-      type: &#039;default&#039;,
-      name: &#039;beat:a*3.6&#039;,
-      transformations: [
-        {
-          name: &#039;math.multiply&#039;,
-          arguments: [3.6]
-        }
-      ],
+      type: &#039;beat&#039;,
+      name: &#039;beatA&#039;,
+      input: 120
     }
   ],
 
 
   layers: [
-    {
-      type: &#039;img&#039;,
-      name: &#039;no-signal&#039;,
-      active: true,
-      src: &#039;./assets/no-signal.jpg&#039;
-    },
-    {
-      type: &#039;img&#039;,
-      name: &#039;Sky-1-back&#039;,
-      active: false,
-      src: &#039;./assets/sky1/sky1-back-grey.png&#039;
-    },
-
-    {
-      type: &#039;SVG&#039;,
-      name: &#039;zeropaper&#039;,
-      active: false,
-      src: &#039;./assets/zeropaper-fat.svg&#039;
-    },
-
-    {
-      type: &#039;SVG&#039;,
-      name: &#039;vf&#039;,
-      active: false,
-      src: &#039;./assets/visual-fiha.svg&#039;
-    },
-
-    {
-      type: &#039;SVG&#039;,
-      name: &#039;KD&#039;,
-      active: false,
-      src: &#039;./assets/kd/kd_logo_final.svg&#039;
-    },
+    // {
+    //   type: &#039;img&#039;,
+    //   name: &#039;no-signal&#039;,
+    //   active: false,
+    //   src: &#039;./assets/no-signal.jpg&#039;
+    // },
+    // {
+    //   type: &#039;img&#039;,
+    //   name: &#039;Sky-1-back&#039;,
+    //   active: false,
+    //   src: &#039;./assets/sky1/sky1-back-grey.png&#039;
+    // },
 
     {
       type: &#039;canvas&#039;,
       name: &#039;canvas&#039;,
       active: true,
-      canvasLayers: canvasLayers
+      mixBlendingMode: &#039;soft-light&#039;,
+      canvasLayers: canvasLayers,
+    },
+
+    // {
+    //   type: &#039;SVG&#039;,
+    //   name: &#039;zeropaper&#039;,
+    //   active: true,
+    //   src: &#039;./assets/zeropaper-fat.svg&#039;,
+    //   mixBlendingMode: &#039;overlay&#039;
+    // },
+
+    {
+      type: &#039;SVG&#039;,
+      name: &#039;ar&#039;,
+      active: true,
+      src: &#039;./assets/algorave/algorave-stroke.svg&#039;
     },
 
     {
-      type: &#039;img&#039;,
-      name: &#039;Sky-1-front&#039;,
-      active: false,
-      src: &#039;./assets/sky1/sky1-front-grey.png&#039;
-    }
+      type: &#039;SVG&#039;,
+      name: &#039;vf&#039;,
+      active: true,
+      src: &#039;./assets/visual-fiha.svg&#039;
+    },
+
+    // {
+    //   type: &#039;img&#039;,
+    //   name: &#039;Sky-1-front&#039;,
+    //   active: false,
+    //   src: &#039;./assets/sky1/sky1-front-grey.png&#039;,
+    //   opacity: 0
+    // }
   ]
 };</textarea>
   </div>

@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">5.58</p>
+      <p class="stat">5.76</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.10</p>
+      <p class="stat">0.11</p>
     </div>
   </div>
 </div>
@@ -92,12 +92,12 @@
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
 
 var ScreenLayerView = require(&#039;./../view&#039;);
-module.exports = ScreenLayerView.video = ScreenLayerView.extend({
+module.exports = ScreenLayerView.types.video = ScreenLayerView.extend({
   template: function() {
-    return &#039;&lt;video layer-id=&quot;&#039; + this.model.cid + &#039;&quot; view-id=&quot;&#039; + this.cid + &#039;&quot; autoplay loop muted&gt;&lt;/video&gt;&#039;;
+    return &#039;&lt;video id=&quot;&#039; + this.model.cid + &#039;&quot; view-id=&quot;&#039; + this.cid + &#039;&quot; autoplay loop muted&gt;&lt;/video&gt;&#039;;
   },
 
-  bindings: VFDeps.assign({
+  bindings: require(&#039;lodash.assign&#039;)({
     &#039;model.src&#039;: {
       type: &#039;attribute&#039;,
       name: &#039;src&#039;

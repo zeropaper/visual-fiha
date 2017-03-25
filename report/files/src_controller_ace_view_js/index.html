@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">66.86</p>
+      <p class="stat">68.39</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">172</p>
+      <p class="stat">232</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">25.26</p>
+      <p class="stat">34.36</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.47</p>
+      <p class="stat">1.85</p>
     </div>
   </div>
 </div>
@@ -90,125 +90,141 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var View = window.VFDeps.View;
+var View = require(&#039;ampersand-view&#039;);
+var canvasCompleter = require(&#039;./../layer/canvas/canvas-completer&#039;);
+
 var AceEditor = View.extend({
-  edit: function(target, propName, targetName) {
-    if (!this.editor) this.render();
-    this.unset(&#039;done&#039;);
-    this.set({
-      model: target,
-      targetProperty: propName,
-      targetName: targetName || ((target.name || &#039;&#039;) + propName)
-    });
-    this.script = this.original;
-    this.editor.setValue(this.original);
+  editCode: function(options) {
+    options.autoApply = !!options.autoApply;
+    if (options.autoApply &amp;&amp; typeof options.onvalidchange !== &#039;function&#039;) throw new Error(&#039;Missing onvalidchange function option&#039;);
+    if (!options.autoApply &amp;&amp; typeof options.onapply !== &#039;function&#039;) throw new Error(&#039;Missing onapply function option&#039;);
+    options.original = options.script = options.script.toString();
+    this._cleanup().set(options).render();
   },
 
-  editCode: function(str, done) {
-    if (!this.editor) this.render();
-    this.unset([&#039;model&#039;, &#039;targetProperty&#039;, &#039;targetName&#039;]);
-    this.editor.setValue(str);
-    this.done = done;
-  },
+  template: `
+    &lt;section class=&quot;row code-editor rows&quot;&gt;
+      &lt;header&gt;
+        &lt;div class=&quot;columns&quot;&gt;
+          &lt;h3 class=&quot;column&quot;&gt;&lt;span data-hook=&quot;editor-title&quot;&gt;&lt;/span&gt; &lt;small data-hook=&quot;editor-language&quot;&gt;&lt;/small&gt;&lt;/h3&gt;
+          &lt;div class=&quot;column no-grow show-origin&quot;&gt;&lt;button class=&quot;vfi-eye&quot; name=&quot;show-origin&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/header&gt;
 
-  template:
-    &#039;&lt;section class=&quot;row code-editor rows&quot;&gt;&#039; +
-      &#039;&lt;header&gt;&#039; +
-        &#039;&lt;h3&gt;&lt;/h3&gt;&#039; +
-      &#039;&lt;/header&gt;&#039; +
-      &#039;&lt;div class=&quot;ace-editor row grow-xl&quot;&gt;&lt;/div&gt;&#039; +
-      &#039;&lt;div class=&quot;ace-controls row no-grow gutter columns&quot;&gt;&#039; +
-        &#039;&lt;div class=&quot;column&quot;&gt;&lt;/div&gt;&#039; +
-        &#039;&lt;div class=&quot;column no-grow gutter-right&quot;&gt;&#039; +
-          &#039;&lt;button class=&quot;no&quot; name=&quot;cancel&quot;&gt;Cancel&lt;/button&gt;&#039; +
-        &#039;&lt;/div&gt;&#039; +
-        &#039;&lt;div class=&quot;column gutter-left text-right&quot;&gt;&#039; +
-          &#039;&lt;button class=&quot;yes&quot; name=&quot;apply&quot;&gt;Apply&lt;/button&gt;&#039; +
-        &#039;&lt;/div&gt;&#039; +
-      &#039;&lt;/div&gt;&#039; +
-    &#039;&lt;/section&gt;&#039;,
+      &lt;div class=&quot;ace-editor row grow-xl&quot;&gt;&lt;/div&gt;
+
+      &lt;div class=&quot;ace-controls row no-grow gutter columns&quot;&gt;
+        &lt;div class=&quot;column&quot;&gt;&lt;/div&gt;
+        &lt;div class=&quot;column no-grow gutter-right&quot;&gt;
+          &lt;button class=&quot;no&quot; name=&quot;cancel&quot;&gt;Cancel&lt;/button&gt;
+          &lt;button class=&quot;yes&quot; name=&quot;apply&quot;&gt;Apply&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  `,
 
   session: {
+    title: &#039;string&#039;,
+    language: {
+      type: &#039;string&#039;,
+      values: [&#039;javascript&#039;, &#039;yaml&#039;, &#039;css&#039;],
+      required: true,
+      default: &#039;javascript&#039;
+    },
+    autoApply: &#039;boolean&#039;,
+    errors: &#039;array&#039;,
     editor: &#039;any&#039;,
+    original: [&#039;string&#039;, true, &#039;&#039;],
     script: [&#039;string&#039;, true, &#039;&#039;],
-    targetName: &#039;string&#039;,
-    targetProperty: &#039;string&#039;,
-    done: &#039;any&#039;
+    onshoworigin: &#039;any&#039;,
+    onvalidchange: &#039;any&#039;,
+    onapply: &#039;any&#039;,
+    validator: &#039;any&#039;
   },
 
   derived: {
-    original: {
-      deps: [&#039;model&#039;, &#039;targetProperty&#039;],
+    pristine: {
+      deps: [&#039;script&#039;, &#039;original&#039;],
       fn: function() {
-        return (this.model ? this.model[this.targetProperty] || &#039;&#039; : &#039;&#039;).toString();
-      }
-    },
-    changed: {
-      deps: [&#039;original&#039;, &#039;script&#039;],
-      fn: function() {
-        return this.original != this.script;
+        return this.script === this.original;
       }
     }
   },
 
   bindings: {
-    targetName: &#039;header&gt;h3&#039;,
-    changed: {
+    script: {
+      type: function() {
+        if (!this.editor) return;
+        this.editor.setValue(this.script);
+      }
+    },
+
+    pristine: [
+      {
+          type: &#039;booleanClass&#039;,
+          name: &#039;pristine&#039;
+      },
+      {
+        selector: &#039;[name=cancel]&#039;,
+        type: &#039;booleanAttribute&#039;,
+        name: &#039;disabled&#039;
+      },
+      {
+        selector: &#039;[name=apply]&#039;,
+        type: &#039;booleanAttribute&#039;,
+        name: &#039;disabled&#039;
+      }
+    ],
+
+    autoApply: {
+      type: &#039;booleanClass&#039;,
+      name: &#039;autoapply&#039;
+    },
+
+    onshoworigin: {
       type: &#039;toggle&#039;,
-      selector: &#039;button&#039;
-    }
+      selector: &#039;.show-origin&#039;
+    },
+
+    title: &#039;[data-hook=editor-title]&#039;,
+    language: &#039;[data-hook=editor-language]&#039;
   },
 
   events: {
-    &#039;click [name=cancel]&#039;: &#039;_handleCancel&#039;,
-    &#039;click [name=apply]&#039;: &#039;_handleApply&#039;
+    &#039;click [name=show-origin]&#039;: &#039;_showOrigin&#039;,
+    &#039;click [name=&quot;cancel&quot;]&#039;: &#039;_cancel&#039;,
+    &#039;click [name=&quot;apply&quot;]&#039;: &#039;_apply&#039;
   },
 
-  _cleanup: function(trigger) {
+  _showOrigin: function() {
+    var fn = this.onshoworigin;
+    if (typeof fn === &#039;function&#039;) fn();
+  },
+
+  setPristine: function() {
+    if (this.original != this.script) this.original = this.script;
+    return this;
+  },
+
+  _cleanup: function() {
     delete this._cache.changed;
     delete this._cache.original;
-    if (trigger) {
-      this.trigger(&#039;change:changed&#039;);
-      this.trigger(&#039;change:original&#039;);
+
+    if (typeof this.onvalidchange === &#039;function&#039;) {
+      this.unset(&#039;onvalidchange&#039;);
     }
+    if (typeof this.validator === &#039;function&#039;) {
+      this.unset(&#039;validator&#039;);
+    }
+
+    return this;
   },
 
-  _handleCancel: function(evt) {
-    evt.preventDefault();
-    if (this.done) {
-      this.editor.setValue(&#039;&#039;);
-      this._cleanup();
-      this.script = &#039;&#039;;
-      return this.unset(&#039;done&#039;);
+  validateScript: function(script) {
+    var validator = this.validator;
+    if (typeof validator === &#039;function&#039;) {
+      return validator.call(this, script);
     }
-    if (!this.model || !this.targetProperty || !this.editor) return;
-
-    this.editor.setValue(this.original);
-  },
-
-  _handleApply: function(evt) {
-    evt.preventDefault();
-    if (this.done) {
-      this._cleanup(true);
-      return this.done(this.script);
-    }
-    if (!this.model || !this.targetProperty || !this.editor) return;
-
-
-    try {
-      eval(&#039;var fn = &#039; + this.script +&#039;;&#039;);// jshint ignore:line
-    }
-    catch (err) {
-      console.info(&#039;script error!&#039;, err.stack, err.message, err.line);
-      return;
-    }
-
-    this.model.set(this.targetProperty, this.script);
-
-    this._cleanup();
-    this.model.trigger(&#039;change:&#039; + this.targetProperty);
-    this.trigger(&#039;change:changed&#039;);
-    this.trigger(&#039;change:original&#039;);
   },
 
   getErrors: function() {
@@ -220,44 +236,88 @@ var AceEditor = View.extend({
       });
   },
 
-  render: function() {
-    if (this.editor) { return this; }
+  _cancel: function() {},
+
+  _apply: function() {
     var view = this;
-    view.renderWithTemplate();
+    var editor = view.editor;
+    var str = editor.getValue();
+    if (typeof view.onapply === &#039;function&#039;) {
+      view.onapply(str);
+    }
+    view.set(&#039;script&#039;, str, {silent: true});
+    view.set(&#039;original&#039;, str, {silent: true});
+    delete view._cache.pristine;
+    view.trigger(&#039;change:pristine&#039;, view, view.script === view.original);
+  },
 
+  _makeEditor: function() {
+    var view = this;
     var ace = window.ace;
-    var editor = view.editor = ace.edit(view.query(&#039;.ace-editor&#039;));
-    ace.require(&#039;ace/ext/language_tools&#039;);
-    editor.setOptions({
-      enableBasicAutocompletion: true,
-      enableSnippets: true,
-      enableLiveAutocompletion: false
-    });
+    if (view.editor) view.editor.destroy();
 
-    editor.$blockScrolling = Infinity;
-    editor.on(&#039;change&#039;, function() {
+    var hasAnnotations = [&#039;javascript&#039;, &#039;css&#039;].indexOf(view.language) &gt; -1;
+    var editor = view.editor = ace.edit(view.query(&#039;.ace-editor&#039;));
+
+    function changed() {
       var errors = view.getErrors();
       if (errors.length) {
-        console.info(&#039;errors in the code&#039;, errors);
         return;
       }
+
       var str = editor.getValue();
-      view.set(&#039;script&#039;, str);
-    });
+      if (view.autoApply &amp;&amp; typeof view.onvalidchange === &#039;function&#039; &amp;&amp; view.script !== str) {
+        view.onvalidchange(str);
+      }
+      view.set(&#039;script&#039;, str, {silent: true});
+      delete view._cache.pristine;
+      view.trigger(&#039;change:pristine&#039;, view, view.script === view.original);
+    }
+
+    editor.$blockScrolling = Infinity;
     editor.setTheme(&#039;ace/theme/monokai&#039;);
     editor.setShowInvisibles();
+    editor.setFontSize(16);
+
+    if (view.language === &#039;javascript&#039;) {
+      var languageTools = ace.require(&#039;ace/ext/language_tools&#039;);
+      editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: false
+      });
+      languageTools.addCompleter(canvasCompleter);
+    }
 
     var session = editor.getSession();
-    session.setMode(&#039;ace/mode/javascript&#039;);
+    session.setMode(&#039;ace/mode/&#039; + view.language);
     session.setUseSoftTabs(true);
     session.setTabSize(2);
     session.setUseWrapMode(true);
 
-    if (view.original) {
-      editor.setValue(view.original);
+    if (hasAnnotations) {
+      session.on(&#039;changeAnnotation&#039;, changed);
+    }
+    else {
+      session.on(&#039;change&#039;, changed);
     }
 
+    editor.setValue(view.script || view.original || &#039;&#039;);
+
+    return view;
+  },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+
+    this._makeEditor();
+
     return this;
+  },
+
+  remove: function() {
+    this.editor.destroy();
+    return View.prototype.remove.apply(this, arguments);
   }
 });
 module.exports = AceEditor;</textarea>

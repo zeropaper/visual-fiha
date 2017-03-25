@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">77.85</p>
+      <p class="stat">73.80</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">212</p>
+      <p class="stat">386</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">21.00</p>
+      <p class="stat">37.26</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.51</p>
+      <p class="stat">3.55</p>
     </div>
   </div>
 </div>
@@ -90,25 +90,298 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var View = VFDeps.View;
+var Collection = require(&#039;ampersand-collection&#039;);
+var State = require(&#039;ampersand-state&#039;);
+var View = require(&#039;./../controller/control-view&#039;);
+var uniq = require(&#039;lodash.uniq&#039;);
 
-var ItemView = View.extend({
-  template: &#039;&lt;div class=&quot;columns&quot;&gt;&#039; +
-      &#039;&lt;div class=&quot;column no-grow&quot;&gt;&lt;button class=&quot;remove vfi-trash-empty&quot;&gt;&lt;/button&gt;&lt;/div&gt;&#039;+
+function filterEmpty(v) { return !!v; }
 
-      &#039;&lt;div class=&quot;column source-path&quot;&gt;&#039; +
-        &#039;&lt;input type=&quot;text&quot; name=&quot;source-path&quot; /&gt;&#039; +
-      &#039;&lt;/div&gt;&#039; +
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
+function sourceSuggestions(origin) {
+  var results = [];
+  if (!origin || typeof origin !== &#039;object&#039;) return results;
 
-      &#039;&lt;div class=&quot;column gutter-vertical no-grow&quot;&gt;&amp;raquo;&lt;/div&gt;&#039;+
-      &#039;&lt;div class=&quot;column no-grow&quot;&gt;&lt;button class=&quot;edit-transform-function vfi-cog-alt&quot;&gt;&lt;/button&gt;&lt;/div&gt;&#039;+
-      &#039;&lt;div class=&quot;column gutter-vertical no-grow&quot;&gt;&amp;raquo;&lt;/div&gt;&#039;+
+  var kepts = [];
+  if (origin.mappable &amp;&amp; origin.mappable.source) {
+    kepts = (origin.mappable.source || []);
+  }
 
-      &#039;&lt;div class=&quot;column target-path&quot;&gt;&#039; +
-        &#039;&lt;input type=&quot;text&quot; name=&quot;target-path&quot; /&gt;&#039; +
-      &#039;&lt;/div&gt;&#039; +
-    &#039;&lt;/div&gt;&#039;,
+  function filterKeys(key) {
+    var excluded = [
+      &#039;mappable&#039;,
+      &#039;parent&#039;,
+      &#039;collection&#039;,
+      origin.idAttribute,
+      origin.typeAttribute
+    ];
+    return excluded.indexOf(key) &lt; 0 &amp;&amp; kepts.indexOf(key) &gt; -1;
+  }
 
+  var proto = origin.constructor &amp;&amp; origin.constructor.prototype ? origin.constructor.prototype : {};
+  var propNames = Object.keys(proto._definition || {});
+  var derivedNames = Object.keys(proto._derived || {});
+  var childNames = Object.keys(proto._children || {});
+  var collectionNames = Object.keys(proto._collections || {});
+
+  propNames.concat(derivedNames, childNames)
+    .filter(filterKeys)
+    .forEach(function(key) {
+      var sub = sourceSuggestions(origin[key]);
+      if (!sub.length) {
+        if (childNames.indexOf(key) &lt; 0) {
+          results.push(key);
+        }
+        return;
+      }
+
+      results = results.concat(sub.map(function(name) {
+        return key + &#039;.&#039; + name;
+      }));
+    });
+
+  kepts.concat(collectionNames)
+    .filter(filterKeys)
+    .forEach(function(collectionName) {
+      if (!origin[collectionName] || typeof origin[collectionName].forEach !== &#039;function&#039;) return;
+
+      origin[collectionName].forEach(function(model) {
+        var id = model.getId();
+        var suggestions = sourceSuggestions(model);
+        results = results.concat(suggestions.filter(filterEmpty).map(function(name) {
+          return collectionName + &#039;.&#039; + id + &#039;.&#039; + name;
+        }));
+      });
+    });
+
+  return uniq(results);
+}
+
+
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
+function targetSuggestions(origin) {
+  var results = [];
+  if (!origin || typeof origin !== &#039;object&#039;) return results;
+  var kepts = [];
+  if (origin.mappable &amp;&amp; origin.mappable.target) {
+    kepts = (origin.mappable.target || []);
+  }
+
+  function filterKeys(key) {
+    var excluded = [
+      &#039;mappable&#039;,
+      &#039;parent&#039;,
+      &#039;collection&#039;,
+      origin.idAttribute,
+      origin.typeAttribute
+    ];
+    return excluded.indexOf(key) &lt; 0 &amp;&amp; kepts.indexOf(key) &gt; -1;
+  }
+
+  var proto = origin.constructor &amp;&amp; origin.constructor.prototype ? origin.constructor.prototype : {};
+  var propNames = Object.keys(proto._definition || {});
+  var childNames = Object.keys(proto._children || {});
+  var collectionNames = Object.keys(proto._collections || {});
+
+  propNames.concat(childNames)
+    .filter(filterKeys)
+    .forEach(function(key) {
+      var sub = targetSuggestions(origin[key]);
+      if (!sub.length) {
+        if (childNames.indexOf(key) &lt; 0) {
+          results.push(key);
+        }
+        return;
+      }
+
+      results = results.concat(sub.map(function(name) {
+        return key + &#039;.&#039; + name;
+      }));
+    });
+
+  kepts.concat(collectionNames)
+    .filter(filterKeys)
+    .forEach(function(collectionName) {
+      if (!origin[collectionName] || typeof origin[collectionName].forEach !== &#039;function&#039;) return;
+
+      origin[collectionName].forEach(function(model) {
+        var id = model.getId();
+        var suggestions = targetSuggestions(model);
+        results = results.concat(suggestions.filter(filterEmpty).map(function(name) {
+          return collectionName + &#039;.&#039; + id + &#039;.&#039; + name;
+        }));
+      });
+    });
+
+  return uniq(results);
+}
+
+
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
+var EmitterTargetView = View.extend({
+  template: `&lt;div class=&quot;mapping-emitter-target-view columns&quot;&gt;
+  &lt;div class=&quot;column&quot;&gt;&lt;input type=&quot;text&quot; name=&quot;target-path&quot; /&gt;&lt;/div&gt;
+  &lt;div class=&quot;column no-grow&quot;&gt;&lt;button name=&quot;remove-target&quot; class=&quot;vfi-trash-empty&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+&lt;/div&gt;`,
+
+  bindings: {
+    &#039;model.path&#039;: {
+      type: &#039;value&#039;,
+      selector: &#039;[name=&quot;target-path&quot;]&#039;
+    }
+  },
+
+  events: {
+    &#039;focus [name=&quot;target-path&quot;]&#039;: &#039;_handleTargetPathFocus&#039;,
+    &#039;change [name=&quot;target-path&quot;]&#039;: &#039;_handleTargetPathChange&#039;,
+    &#039;click [name=&quot;remove-target&quot;]&#039;: &#039;_handleRemoveTarget&#039;
+  },
+
+  _handleTargetPathFocus: function(evt) {
+    var targetView = this;
+    var rootView = targetView.rootView;
+    var suggestions = targetSuggestions({layers: rootView.model.layers, signals: rootView.signals, mappable: {target: [&#039;layers&#039;, &#039;signals&#039;]}});
+    var index = targetView.collection.indexOf(targetView.model);
+    var mapping = targetView.parent.model;
+    rootView.suggestionHelper.attach(evt.target, function(selected) {
+      mapping.targets[index] = selected;
+      targetView.parent.updateWorkerMapping();
+      rootView.suggestionHelper.detach();
+    }).fill(suggestions);
+  },
+
+  _handleTargetPathChange: function(evt) {
+    this.model.path = evt.target.value;
+    this.parent.updateWorkerMapping();
+  },
+
+  _handleRemoveTarget: function() {
+    this.collection.remove(this.model);
+    this.parent.updateWorkerMapping();
+  }
+});
+
+
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
+var EmitterView = View.extend({
+  initialize: function() {
+    this.listenToAndRun(this.model, &#039;change:targets&#039;, function() {
+      this.targets.reset((this.model.targets || []).map(function(path) {
+        return {path: path};
+      }));
+    });
+  },
+
+  collections: {
+    targets: Collection.extend({
+      model: State.extend({
+        props: {
+          path: &#039;string&#039;
+        }
+      })
+    })
+  },
+
+  template: `&lt;section class=&quot;mapping-emitter-view&quot;&gt;
+  &lt;header class=&quot;columns&quot;&gt;
+    &lt;div class=&quot;column emitter-name gutter&quot;&gt;&lt;/div&gt;
+    &lt;div class=&quot;column no-grow&quot;&gt;&lt;button name=&quot;edit-transform-function&quot; class=&quot;vfi-code&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+    &lt;div class=&quot;column&quot;&gt;&lt;input type=&quot;text&quot; name=&quot;emitter-source&quot; /&gt;&lt;/div&gt;
+    &lt;div class=&quot;column no-grow&quot;&gt;&lt;button name=&quot;remove-emitter&quot; class=&quot;vfi-trash-empty&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+  &lt;/header&gt;
+  &lt;div class=&quot;columns&quot;&gt;
+    &lt;div class=&quot;column&quot;&gt;&lt;input type=&quot;text&quot; name=&quot;new-emitter-target&quot; placeholder=&quot;new target path&quot; /&gt;&lt;/div&gt;
+    &lt;div class=&quot;column no-grow&quot;&gt;&lt;button name=&quot;add-emitter-target&quot; class=&quot;vfi-plus&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;items&quot;&gt;&lt;/div&gt;
+&lt;/section&gt;`,
+
+  bindings: {
+    &#039;model.name&#039;: &#039;.emitter-name&#039;,
+    &#039;model.source&#039;: {
+      type: &#039;value&#039;,
+      selector: &#039;[name=&quot;emitter-source&quot;]&#039;
+    }
+  },
+
+  events: {
+    &#039;click [name=&quot;remove-emitter&quot;]&#039;: &#039;_handleRemoveEmitter&#039;,
+    &#039;focus [name=&quot;new-emitter-target&quot;]&#039;: &#039;_handleEmitterTargetPathFocus&#039;,
+    &#039;click [name=&quot;add-emitter-target&quot;]&#039;: &#039;_handleAddEmitterTarget&#039;,
+    &#039;click [name=&quot;edit-transform-function&quot;]&#039;: &#039;_handleEditEmitterTransform&#039;
+  },
+
+  _handleRemoveEmitter: function() {
+    this.rootView.sendCommand(&#039;removeMapping&#039;, {name: this.model.getId()});
+  },
+
+  updateWorkerMapping: function(serialized) {
+    if (!serialized) {
+      serialized = this.model.serialize();
+      serialized.targets = this.targets.serialize().map(function(obj) { return obj.path; });
+    }
+    this.rootView.sendCommand(&#039;updateMapping&#039;, {mapping: serialized});
+  },
+
+  _handleEmitterTargetPathFocus: function(evt) {
+    var view = this;
+    var rootView = view.rootView;
+    var suggestions = targetSuggestions({layers: rootView.model.layers, signals: rootView.signals, mappable: {target: [&#039;layers&#039;, &#039;signals&#039;]}});
+
+    rootView.suggestionHelper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      view._handleAddEmitterTarget();
+      rootView.suggestionHelper.detach();
+    }).fill(suggestions);
+  },
+
+  _handleAddEmitterTarget: function() {
+    var el = this.query(&#039;[name=&quot;new-emitter-target&quot;]&#039;);
+    if (this.model.targets.indexOf(el.value) &lt; 0) {
+      this.targets.add({path: el.value});
+      this.updateWorkerMapping();
+    }
+    el.value = &#039;&#039;;
+  },
+
+  _handleEditEmitterTransform: function() {
+    var mappingView = this;
+    var rootView = this.rootView;
+    var editor = rootView.getEditor();
+    var model = this.model;
+    editor.editCode({
+      script: (model.transformFunction || function(val) { return val; }).toString(),
+      autoApply: true,
+      language: &#039;javascript&#039;,
+      onvalidchange: function doneEditingTransformFunction(str) {
+        var mapping = model.serialize();
+        mapping.transformFunction = str;
+        mappingView.updateWorkerMapping(mapping);
+      }
+    });
+  },
+
+  subviews: {
+    mappingsList: {
+      waitFor: &#039;targets&#039;,
+      selector: &#039;.items&#039;,
+      prepareView: function(el) {
+        return this.renderCollection(this.targets, EmitterTargetView, el);
+      }
+    }
+  },
 
   derived: {
     codeEditor: {
@@ -116,129 +389,74 @@ var ItemView = View.extend({
       fn: function () {
         return this.rootView.codeEditor;
       }
-    },
-    suggestionHelper: {
-      deps: [&#039;rootView&#039;],
-      fn: function () {
-        return this.rootView.suggestionHelper;
-      }
     }
-  },
-
-  bindings: {
-    &#039;model.uiState&#039;: {
-      type: &#039;class&#039;
-    },
-    &#039;model.sourcePath&#039;: {
-      type: &#039;value&#039;,
-      selector: &#039;[name=source-path]&#039;
-    },
-    &#039;model.targetPath&#039;: {
-      type: &#039;value&#039;,
-      selector: &#039;[name=target-path]&#039;
-    }
-  },
-
-  events: {
-    &#039;focus [name=source-path]&#039;: &#039;_handleSourcePathFocus&#039;,
-    &#039;focus [name=target-path]&#039;: &#039;_handleTargetPathFocus&#039;,
-    &#039;blur [name=source-path]&#039;: &#039;_handlePathBlur&#039;,
-    &#039;blur [name=target-path]&#039;: &#039;_handlePathBlur&#039;,
-
-    &#039;click .remove&#039;: &#039;_handleRemove&#039;,
-    &#039;click .edit-transform-function&#039;: &#039;_handleEditTransformFunction&#039;,
-    &#039;change [name=target-path]&#039;: &#039;_handleTargetPathChange&#039;
-  },
-
-  _handleSourcePathFocus: function(evt) {
-    var helper = this.suggestionHelper;
-    var screenState = this.parent.model;
-    var mappingState = this.model;
-
-    helper.attach(evt.target, function(selected) {
-      mappingState.updateInfo(&#039;source&#039;, selected, screenState);
-      evt.target.value = selected;
-      helper.detach();
-    }).fill(this.collection.sourceSuggestions(screenState));
-  },
-  _handleTargetPathFocus: function(evt) {
-    var helper = this.suggestionHelper;
-    var screenState = this.parent.model;
-    var mappingState = this.model;
-
-    helper.attach(evt.target, function(selected) {
-      mappingState.updateInfo(&#039;target&#039;, selected, screenState);
-      evt.target.value = selected;
-      helper.detach();
-    }).fill(this.collection.targetSuggestions(screenState));
-  },
-
-  _handlePathBlur: function(evt) {
-    evt.preventDefault();
-  },
-
-  _handleRemove: function() {
-    this.model.collection.remove(this.model);
-  },
-
-  _handleEditTransformFunction: function() {
-    var editor = this.codeEditor;
-    if (!editor.changed) {
-      editor.edit(this.model, &#039;transformation&#039;, this.model.targetPath);
-    }
-    else {
-      console.warn(&#039;A function is already being edited&#039;);
-    }
-  },
-
-  _handleTargetPathChange: function(evt) {
-    console.info(evt);
   }
 });
 
 
-
-
-
-
-
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
 var MappingsControlView = View.extend({
-  template: &#039;&lt;section class=&quot;mappings-view&quot;&gt;&#039; +
-      &#039;&lt;header&gt;&#039; +
-        &#039;&lt;div class=&quot;add-form columns&quot;&gt;&#039; +
-          &#039;&lt;div class=&quot;column add-form--source-path&quot;&gt;&#039; +
-            &#039;&lt;input placeholder=&quot;Source&quot; name=&quot;new-source-path&quot; /&gt;&#039; +
-          &#039;&lt;/div&gt;&#039; +
+  template: `&lt;section class=&quot;mappings-view&quot;&gt;
+  &lt;header&gt;
+    &lt;div class=&quot;add-form columns&quot;&gt;
+      &lt;div class=&quot;column add-form--name&quot;&gt;
+        &lt;input placeholder=&quot;new mapping name&quot; name=&quot;new-source-name&quot; /&gt;
+      &lt;/div&gt;
 
-          &#039;&lt;div class=&quot;column gutter no-grow&quot;&gt;&amp;raquo;&lt;/div&gt;&#039; +
+      &lt;div class=&quot;column add-form--source-path&quot;&gt;
+        &lt;input placeholder=&quot;new source event&quot; name=&quot;new-source-path&quot; /&gt;
+      &lt;/div&gt;
 
-          &#039;&lt;div class=&quot;column add-form--target-path&quot;&gt;&#039; +
-            &#039;&lt;input placeholder=&quot;Target&quot; name=&quot;new-target-path&quot; /&gt;&#039; +
-          &#039;&lt;/div&gt;&#039; +
+      &lt;div class=&quot;column no-grow&quot;&gt;
+        &lt;button name=&quot;add-mapping&quot; class=&quot;vfi-plus&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/header&gt;
 
-          &#039;&lt;div class=&quot;column no-grow&quot;&gt;&#039; +
-            &#039;&lt;button name=&quot;add-mapping&quot;&gt;Add&lt;/button&gt;&#039; +
-          &#039;&lt;/div&gt;&#039; +
-        &#039;&lt;/div&gt;&#039; +
-      &#039;&lt;/header&gt;&#039; +
+  &lt;div class=&quot;items&quot;&gt;&lt;/div&gt;
+&lt;/section&gt;`,
 
-      &#039;&lt;div class=&quot;items&quot;&gt;&lt;/div&gt;&#039; +
-    &#039;&lt;/section&gt;&#039;,
-
-
-  validatePath: function(pathValue) {
-    return typeof this.collection.resolve(pathValue, this.model) !== &#039;undefined&#039;;
+  events: {
+    &#039;focus [name=new-source-path]&#039;: &#039;_handleSourceFocus&#039;,
   },
 
-  subviews: {
-    mappingsList: {
-      waitFor: &#039;collection&#039;,
-      selector: &#039;.items&#039;,
-      prepareView: function(el) {
-        return this.renderCollection(this.collection, ItemView, el);
+  _handleSourceFocus: function(evt) {
+    var rootView = this.rootView;
+    var helper = rootView.suggestionHelper;
+    var midiSources = this.rootView.midiSources();
+
+    var results = [];
+    rootView.signals.forEach(function(model) {
+      var id = model.getId();
+      results = results.concat(sourceSuggestions(model).filter(filterEmpty).map(function(name) {
+        return &#039;signals.&#039; + id + &#039;.&#039; + name;
+      }));
+    });
+
+    results = midiSources.concat(results);
+
+    helper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(results);
+  },
+
+  commands:{
+    &#039;click [name=&quot;add-mapping&quot;]&#039;: &#039;addMapping _handleAddMapping&#039;
+  },
+
+  _handleAddMapping: function() {
+    return {
+      mapping: {
+        name: this.query(&#039;[name=&quot;new-source-name&quot;]&#039;).value,
+        source: this.query(&#039;[name=&quot;new-source-path&quot;]&#039;).value
       }
-    }
+    };
   },
+
 
   derived: {
     suggestionHelper: {
@@ -249,56 +467,12 @@ var MappingsControlView = View.extend({
     }
   },
 
-  events: {
-    &#039;focus [name=new-source-path]&#039;: &#039;_handleSourceFocus&#039;,
-    &#039;focus [name=new-target-path]&#039;: &#039;_handleTargetFocus&#039;,
-    &#039;click [name=&quot;add-mapping&quot;]&#039;: &#039;_handleAddMapping&#039;
-  },
-
-  _handleSourceFocus: function(evt) {
-    var helper = this.suggestionHelper;
-    helper.attach(evt.target, function(selected) {
-      evt.target.value = selected;
-      helper.detach();
-    }).fill(this.collection.sourceSuggestions(this.model));
-  },
-
-  _handleTargetFocus: function(evt) {
-    var helper = this.suggestionHelper;
-    helper.attach(evt.target, function(selected) {
-      evt.target.value = selected;
-      helper.detach();
-    }).fill(this.collection.targetSuggestions(this.model));
-  },
-
-
-
-  _handleAddMapping: function(evt) {
-    evt.preventDefault();
-
-    var source = this.query(&#039;[name=&quot;new-source-path&quot;]&#039;);
-    var target = this.query(&#039;[name=&quot;new-target-path&quot;]&#039;);
-
-    if (!this.validatePath(source.value)) {
-      console.warn(&#039;&quot;%s&quot; cannot be used as source path&#039;, source.value);
-      return;
-    }
-
-    if(target.value &amp;&amp; !this.validatePath(target.value)) {
-      console.warn(&#039;&quot;%s&quot; cannot be used as target path&#039;, target.value);
-      return;
-    }
-
-    this.collection.import([{
-      source: source.value,
-      target: target.value
-    }], this.model);
-
-    source.value = &#039;&#039;;
-    target.value = &#039;&#039;;
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+    this.mappingsList = this.renderCollection(this.collection, EmitterView, this.query(&#039;.items&#039;));
+    return this;
   }
 });
-
 
 module.exports = MappingsControlView;</textarea>
   </div>
