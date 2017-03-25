@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">70.14</p>
+      <p class="stat">71.25</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">219</p>
+      <p class="stat">175</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">27.97</p>
+      <p class="stat">34.47</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.52</p>
+      <p class="stat">1.42</p>
     </div>
   </div>
 </div>
@@ -90,70 +90,28 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var State = VFDeps.State;
-var Collection = VFDeps.Collection;
+var State = require(&#039;ampersand-state&#039;);
+var Collection = require(&#039;ampersand-collection&#039;);
 var ScreenLayerState = require(&#039;./../state&#039;);
+var mockedCtx = require(&#039;./mocked-canvas-2d-context&#039;);
+var compileFunction = require(&#039;./compile-draw-function&#039;);
+function drawLayerCtx() {
+  /*
+    You can access the canvas 2d context with the global ctx
+  */
+}
 
 var CanvasLayer = State.extend({
+  scripts: require(&#039;./scripts&#039;),
+
   idAttribute: &#039;name&#039;,
-
-  initialize: function() {
-    State.prototype.initialize.apply(this, arguments);
-    var canvasLayer = this;
-    var screenLayer = canvasLayer.collection.parent;
-
-    canvasLayer.on(&#039;change&#039;, function() {
-      // trigger change on the screen layer
-      screenLayer._changed = {
-        canvasLayers: screenLayer.canvasLayers.serialize()
-      };
-      screenLayer.trigger(&#039;change&#039;);
-    });
-  },
-
   cache: {},
 
   props: {
-    duration: [&#039;number&#039;, true, 1000],
-    fps: [&#039;number&#039;, true, 16],
-    weight: [&#039;number&#039;, true, 0],
+    zIndex: [&#039;number&#039;, true, 0],
     name: [&#039;string&#039;, true, null],
     active: [&#039;boolean&#039;, true, true],
-    opacity: [&#039;number&#039;, true, 100],
-    /*
-    shadowOffsetX: [&#039;number&#039;, true, 0],
-    shadowOffsetY: [&#039;number&#039;, true, 0],
-    shadowBlur: [&#039;number&#039;, true, 0],
-    shadowColor: [&#039;string&#039;, true, &#039;rgba(0,0,0,0.5)&#039;],
-    */
-    blending: {
-      type: &#039;string&#039;,
-      required: true,
-      default: &#039;source-over&#039;,
-      values: [
-        &#039;source-over&#039;,
-        &#039;source-in&#039;,
-        &#039;source-out&#039;,
-        &#039;source-atop&#039;,
-        &#039;destination-over&#039;,
-        &#039;destination-in&#039;,
-        &#039;destination-out&#039;,
-        &#039;destination-atop&#039;,
-        &#039;lighter&#039;,
-        &#039;copy&#039;,
-        &#039;xor&#039;
-      ]
-    },
-    drawFunction: &#039;any&#039;
-  },
-
-  session: {
-    uiState: {
-      type: &#039;string&#039;,
-      values: [&#039;&#039;, &#039;dependency&#039;, &#039;dependent&#039;, &#039;focus&#039;, &#039;highlighted&#039;],
-      default: &#039;&#039;,
-      required: true
-    }
+    drawFunction: [&#039;any&#039;, true, function() { return drawLayerCtx; }]
   },
 
   serialize: function() {
@@ -163,22 +121,6 @@ var CanvasLayer = State.extend({
 
 
     var props = this.serializationProps.props || [];
-    /*
-    if (props.length) {
-      returned.props = {};
-      props.forEach(function(propName) {
-        returned.props[propName] = obj[propName];
-      });
-    }
-
-    for (propName in obj) {
-      if (props.indexOf(propName) &lt; 0) {
-        returned[propName] = obj[propName];
-      }
-    }
-    */
-
-    // better like that??
     if (props.length) {
       returned.props = {};
     }
@@ -186,17 +128,13 @@ var CanvasLayer = State.extend({
     // var propName;
     var def = this.constructor.prototype._definition;
     for (propName in obj) {
-      // if (props.indexOf(propName) &lt; 0) {
       returned[propName] = obj[propName];
-      // }
-      // else {
-      //   returned.props[propName] = obj[propName];
-      // }
+
       if (props.indexOf(propName) &gt; -1) {
         returned.props[propName] = def[propName];
       }
     }
-    // returned.props = def;
+
     var type = typeof this.drawFunction;
     if (type === &#039;function&#039;) {
       returned.drawFunction = this.drawFunction.toString();
@@ -205,8 +143,11 @@ var CanvasLayer = State.extend({
       returned.drawFunction = this.drawFunction;
     }
     returned.name = this.name;
-    delete returned.uiState;
     return returned;
+  },
+
+  toJSON: function(...args) {
+    return this.serialize(...args);
   },
 
   derived: {
@@ -216,7 +157,6 @@ var CanvasLayer = State.extend({
         var mappable = ScreenLayerState.prototype._derived.mappable.fn.apply(this, arguments);
         var targets = mappable.target.filter(function(key) {
           return [
-            &#039;uiState&#039;,
             &#039;drawFunction&#039;,
             &#039;screenState&#039;, // would make a circular reference if not excluded!
             &#039;draw&#039;
@@ -233,9 +173,27 @@ var CanvasLayer = State.extend({
     screenState: {
       deps: [],
       fn: function() {
-        return this.collection.parent.collection.parent;
+        return this.collection.parent.screenState;
       }
     },
+
+    frametime: {
+      cache: false,
+      deps: [&#039;screenState&#039;],
+      fn: function() {
+        if (!this.screenState) return 0;
+        return this.screenState.frametime || 0;
+      }
+    },
+    audio: {
+      cache: false,
+      deps: [&#039;screenState&#039;],
+      fn: function() {
+        if (!this.screenState) return {};
+        return this.screenState.audio || {};
+      }
+    },
+
     width: {
       deps: [&#039;screenState&#039;, &#039;screenState.width&#039;],
       fn: function() {
@@ -251,16 +209,23 @@ var CanvasLayer = State.extend({
     draw: {
       deps: [&#039;drawFunction&#039;],
       fn: function() {
-        var fn = this.drawFunction;
-        if (typeof fn === &#039;string&#039;) {
-          try {
-            eval(&#039;fn = (function() { return &#039; + this.drawFunction + &#039;; })()&#039;);// jshint ignore:line
-          }
-          catch(err) {
-            console.warn(&#039;draw function error&#039;, err);
-          }
+        var fn, result, err;
+
+        try {
+          fn = compileFunction(this.drawFunction);
+          result = fn.call(this, mockedCtx);
+          err = result instanceof Error ? result : null;
         }
-        return (typeof fn === &#039;function&#039; ? fn : function() {}).bind(this);
+        catch(e) {
+          err = e;
+        }
+
+        if (err) {
+          console.warn(&#039;draw function error&#039;, err.stack);
+          fn = function() { return err; };
+        }
+
+        return fn.bind(this);
       }
     }
   }
@@ -270,40 +235,31 @@ var _CanvasLayersCache = {};
 var CanvasLayers = Collection.extend({
   mainIndex: CanvasLayer.prototype.idAttribute,
 
-  comparator: &#039;weight&#039;,
+  comparator: &#039;zIndex&#039;,
 
   model: function (attrs, options) {
     var def = {
       props: attrs.props || {},
-      // session: attrs.session || {},
-      // derived: attrs.derived || {},
       serializationProps: {
         props: [].concat([
           &#039;active&#039;,
-          &#039;blending&#039;,
-          &#039;opacity&#039;,
-          &#039;shadowBlur&#039;,
-          &#039;shadowColor&#039;,
-          &#039;shadowOffsetX&#039;,
-          &#039;shadowOffsetY&#039;
         ], Object.keys(attrs.props || {})),
-        // session: Object.keys(attrs.session),
-        // derived: Object.keys(attrs.prderived)
       }
     };
     var Constructor = _CanvasLayersCache[attrs.name] || CanvasLayer.extend(def);
     _CanvasLayersCache[attrs.name] = Constructor;
     var inst =  new Constructor(attrs, options);
-    inst.on(&#039;change:weight&#039;, function() {
-      inst.collection.sort();
-    });
     if (options.init === false) inst.initialize();
     return inst;
   }
 });
 
 
-module.exports = ScreenLayerState.canvas = ScreenLayerState.extend({
+module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
+  props: {
+    clear: [&#039;number&#039;, true, 1]
+  },
+
   collections: {
     canvasLayers: CanvasLayers
   }

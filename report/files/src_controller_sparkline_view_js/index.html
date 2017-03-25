@@ -90,7 +90,7 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-module.exports = VFDeps.View.extend({
+module.exports = require(&#039;ampersand-view&#039;).extend({
   autoRender: true,
   template: &#039;&lt;canvas width=&quot;120&quot; height=&quot;29&quot;&gt;&lt;/canvas&gt;&#039;,
   session: {

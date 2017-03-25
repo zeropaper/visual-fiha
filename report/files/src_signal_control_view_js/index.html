@@ -62,7 +62,7 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">10.85</p>
+      <p class="stat">10.95</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
@@ -90,7 +90,7 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var View = window.VFDeps.View;
+var View = require(&#039;./../controller/control-view&#039;);
 var SignalDetailsView = require(&#039;./details-view&#039;);
 var SignalControlView = View.extend({
   template: &#039;&lt;section class=&quot;rows signal&quot;&gt;&#039; +
@@ -118,7 +118,7 @@ var SignalControlView = View.extend({
 
   derived: {
     result: {
-      deps: [&#039;input&#039;, &#039;model&#039;, &#039;model.transformations&#039;],
+      deps: [&#039;input&#039;, &#039;model&#039;/*, &#039;model.transformations&#039;*/],
       fn: function() {
         return this.model.computeSignal(this.input);
       }
@@ -140,7 +140,7 @@ var SignalControlView = View.extend({
   _showDetails: function () {
     this.rootView.showDetails(new SignalDetailsView({
       parent: this,
-      model: this.model,
+      model: this.model
     }));
   },
 

@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">70.46</p>
+      <p class="stat">70.42</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">168</p>
+      <p class="stat">170</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">23.85</p>
+      <p class="stat">24.11</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.23</p>
+      <p class="stat">1.24</p>
     </div>
   </div>
 </div>
@@ -89,12 +89,10 @@
 
 <div class="container">
   <div class="row">
-    <textarea id="file-source" class="col-md-12">/* global VFDeps, require, console, module */
-&#039;use strict&#039;;
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
 
-var throttle = VFDeps.throttle;
-var State = VFDeps.State;
-var Collection = VFDeps.Collection;
+var State = require(&#039;ampersand-state&#039;);
+var Collection = require(&#039;ampersand-collection&#039;);
 
 var midiMappings = {
   &#039;KORG INC.&#039;: {
@@ -138,16 +136,16 @@ function getMappings(manufacturer, name) {
 
 
 function handleMIDIMessage(accessState, model) {
-  var setThrottled = throttle(function(name, velocity) {
-    model.set(name, velocity);
-  }, 1000 / 16);
+  // var setThrottled = throttle(function(name, velocity) {
+  //   model.set(name, velocity);
+  // }, 1000 / 16);
   var _mappings = getMappings(model.manufacturer, model.name);
 
   return function(MIDIMessageEvent) {
     if (!model.active) { return; }
-
     var info = _mappings(MIDIMessageEvent.data);
-    if (info.name) setThrottled(info.name, info.velocity);
+    // if (info.name) setThrottled(info.name, info.velocity);
+    if (model.collection.parent &amp;&amp; info.name) model.collection.parent.trigger(&#039;midi:change&#039;, model.id, info.name, info.velocity);
   };
 }
 
@@ -159,10 +157,11 @@ var MIDIAccessState = State.extend({
   },
 
   registerInput: function(info) {
+    var accessState = this;
     var _mappings = getMappings(info.manufacturer, info.name);
     if (!_mappings) {
       if (info.name !== &#039;Midi Through Port-0&#039;) {
-        console.warn(&#039;Unrecognized MIDI controller %s from %s&#039;, info.name, info.manufacturer);
+        // console..warn(&#039;Unrecognized MIDI controller %s from %s&#039;, info.name, info.manufacturer);
       }
       return;
     }
@@ -197,7 +196,11 @@ var MIDIAccessState = State.extend({
       info.onmidimessage = handleMIDIMessage(this, model);
     }
 
-    this.inputs.add(model);
+    model.on(&#039;all&#039;, function(evtName, name, velocity) {
+      if (evtName.slice(0, 5) === &#039;midi:&#039;) accessState.trigger(name, velocity);
+    });
+
+    accessState.inputs.add(model);
   },
 
   initialize: function(options) {
@@ -219,7 +222,6 @@ var MIDIAccessState = State.extend({
 
     if (typeof options.MIDIAccess === &#039;undefined&#039;) {
       if (!navigator.requestMIDIAccess) {
-        console.warn(&#039;No WebMIDI API support&#039;);
         accessState.MIDIAccess = false;
         return;
       }

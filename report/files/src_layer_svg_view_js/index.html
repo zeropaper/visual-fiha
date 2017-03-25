@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">78.57</p>
+      <p class="stat">76.97</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">83</p>
+      <p class="stat">66</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">14.12</p>
+      <p class="stat">21.61</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.49</p>
+      <p class="stat">0.72</p>
     </div>
   </div>
 </div>
@@ -90,86 +90,69 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var _ids = 0;
 var ScreenLayerView = require(&#039;./../view&#039;);
-module.exports = ScreenLayerView.SVG = ScreenLayerView.extend({
+
+module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
   autoRender: true,
 
   template: function() {
-    return &#039;&lt;div class=&quot;layer-svg&quot; layer-id=&quot;&#039; + this.model.cid + &#039;&quot; view-id=&quot;&#039; + this.cid + &#039;&quot;&gt;&lt;/div&gt;&#039;;
+    return &#039;&lt;div class=&quot;layer-svg&quot; id=&quot;&#039; + this.model.getId() + &#039;&quot; view-id=&quot;&#039; + this.cid + &#039;&quot;&gt;&lt;/div&gt;&#039;;
   },
 
-  // bindings: VFDeps.assign({
-  // }, ScreenLayerView.prototype.bindings),
-
-
-  // derived: {
-  //   styleEl: {
-  //     deps: [&#039;model.src&#039;],
-  //     fn: function() {
-  //       var el = document.createElement(&#039;style&#039;);
-  //       el.id = this.cid;
-  //       document.head.appendChild(el);
-  //       return el;
-  //     }
-  //   }
-  // },
-
-  extractStyles: function() {
-    var self = this;
-    this.queryAll(&#039;[style]&#039;).forEach(function(el) {
-      if (!el.id) {
-        _ids++;
-        el.id = &#039;auto-svg-id-&#039; + _ids;
+  derived: {
+    svg: {
+      deps: [&#039;el&#039;, &#039;model.content&#039;],
+      fn: function() {
+        return this.el &amp;&amp; this.model.content ? this.query(&#039;svg&#039;) || false : false;
       }
+    }
+  },
 
-      self.addRule(&#039;#&#039; + el.id, el.getAttribute(&#039;style&#039;));
-      el.removeAttribute(&#039;style&#039;);
-    });
+  updateStyles: function() {
+    if (!this.model.active || !this.el) return this;
+    var selectors = Object.keys(this.model.svgStyles);
+    selectors.forEach(function(selector) {
+      this.addRule(selector, this.model.svgStyles[selector]);
+    }, this);
     return this;
   },
 
-  editStyles: function() {
-
+  updateProperties: function() {
+    if (!this.model.active || !this.el) return this;
+    this.model.styleProperties.forEach(function(styleProp) {
+      this.setProperty(styleProp.name, styleProp.value);
+    }, this);
+    return this;
   },
 
-  loadSVG: function() {
-    var view = this;
-    var src = view.model.src;
-    var el = view.el;
-    if (!src || !el) {
-      return;
-    }
+  updateContent: function() {
+    if (!this.el || this.el.innerHTML === this.model.content) return this;
 
-    fetch(src)
-    .then(function(response) {
-      return response.text();
-    })
-    .then(function(txt) {
-      el.innerHTML = txt;
-      view.extractStyles();
-    });
+    this.el.innerHTML = this.model.content;
+    this.updateStyles().updateProperties();
   },
 
   initialize: function() {
     ScreenLayerView.prototype.initialize.apply(this, arguments);
-    this.on(&#039;change:rendered&#039;, this.loadSVG);
-    this.listenToAndRun(this.model, &#039;change:src&#039;, this.loadSVG);
+    this.updateContent().updateStyles().updateProperties();
+
+    this.listenTo(this.model, &#039;change:content&#039;, this.updateContent);
+    this.on(&#039;change:el&#039;, this.updateContent);
+
+    this.listenToAndRun(this.model, &#039;change:svgStyles&#039;, this.updateStyles);
+    this.listenToAndRun(this.model.styleProperties, &#039;add remove change&#039;, this.updateProperties);
+  },
+
+  addRule: function(selector, properties) {
+    selector = &#039;svg &#039; + selector;
+    ScreenLayerView.prototype.addRule.call(this, selector, properties);
+    return this;
   },
 
   remove: function() {
     var style = this.styleEl;
-    style.parentNode.removeChild(style);
+    if (style &amp;&amp; style.parentNode) style.parentNode.removeChild(style);
     ScreenLayerView.prototype.remove.apply(this, arguments);
-  },
-
-  render: function() {
-    if (this.el) {
-      return this;
-    }
-
-    this.renderWithTemplate();
-    return this;
   }
 });</textarea>
   </div>

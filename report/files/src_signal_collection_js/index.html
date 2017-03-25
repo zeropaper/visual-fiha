@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">81.49</p>
+      <p class="stat">75.14</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">15</p>
+      <p class="stat">31</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">7.73</p>
+      <p class="stat">12.13</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.10</p>
+      <p class="stat">0.19</p>
     </div>
   </div>
 </div>
@@ -90,7 +90,8 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var Collection = VFDeps.Collection;
+var assign = require(&#039;lodash.assign&#039;);
+var Collection = require(&#039;ampersand-collection&#039;);
 var SignalState = require(&#039;./state&#039;);
 require(&#039;./beat/state&#039;);
 require(&#039;./hsla/state&#039;);
@@ -100,7 +101,22 @@ var SignalCollection = Collection.extend({
   mainIndex: &#039;name&#039;,
   model: function(attrs, opts) {
     var Constructor = SignalState.types[attrs.type] || SignalState;
-    return new Constructor(attrs, opts);
+    var state = new Constructor(attrs, opts);
+    return state;
+  },
+
+  toJSON: function () {
+    return this.map(function (model) {
+      if (model.toJSON) {
+        return model.toJSON();
+      }
+      else {
+        var out = {};
+        assign(out, model);
+        delete out.collection;
+        return out;
+      }
+    });
   }
 });
 module.exports = SignalCollection;</textarea>

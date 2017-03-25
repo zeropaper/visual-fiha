@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">91.48</p>
+      <p class="stat">73.17</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">31</p>
+      <p class="stat">77</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">9.00</p>
+      <p class="stat">21.09</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.25</p>
+      <p class="stat">0.72</p>
     </div>
   </div>
 </div>
@@ -90,35 +90,81 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-
 var ScreenLayerView = require(&#039;./../view&#039;);
-module.exports = ScreenLayerView.img = ScreenLayerView.extend({
+var _cacheImgs = {};
+function loadImg(url, done) {
+  if (_cacheImgs[url]) {
+    return done(null, _cacheImgs[url]);
+  }
+
+  var img = new Image();
+  _cacheImgs[url] = img;
+  img.onload = function() {
+    console.info(&#039;loaded&#039;, url);
+    done(null, img);
+  };
+  img.onerror = function() {
+  };
+  img.src = url;
+  return done(null, _cacheImgs[url]);
+}
+
+module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
   template: function() {
-    return &#039;&lt;div class=&quot;layer-image&quot; layer-id=&quot;&#039; + this.model.cid + &#039;&quot; view-id=&quot;&#039; + this.cid + &#039;&quot;&gt;&lt;/div&gt;&#039;;
+    return &#039;&lt;div class=&quot;layer-image&quot; id=&quot;&#039; + this.model.getId() + &#039;&quot; view-id=&quot;&#039; + this.cid + &#039;&quot;&gt;&lt;canvas&gt;&lt;/canvas&gt;&lt;/div&gt;&#039;;
   },
 
-  bindings: VFDeps.assign({
-    &#039;model.src&#039;: {
-      type: function() {
-        this.el.style.backgroundImage = &#039;url(&#039; + this.model.src + &#039;)&#039;;
-      }
-    },
-    &#039;model.backgroundSize&#039;: {
-      type: function() {
-        this.el.style.backgroundSize = this.model.backgroundSize;
-      }
-    },
-    &#039;model.backgroundPosition&#039;: {
-      type: function() {
-        this.el.style.backgroundPosition = this.model.backgroundPosition;
-      }
-    },
-    &#039;model.backgroundRepeat&#039;: {
-      type: function() {
-        this.el.style.backgroundRepeat = this.model.backgroundRepeat;
+  initialize: function() {
+    var view = this;
+    ScreenLayerView.prototype.initialize.apply(view, arguments);
+
+
+    function load() {
+      var src = view.model.src;
+      if (!src) return view.clearImage();
+      loadImg(src, function(err, img) {
+        view.drawImage(img);
+      });
+    }
+
+    view.on(&#039;change:width change:height&#039;, load);
+    view.model.on(&#039;change:src&#039;, load);
+    load();
+  },
+
+  derived: {
+    ctx: {
+      deps: [&#039;el&#039;],
+      fn: function() {
+        if (!this.el) return;
+        return this.query(&#039;canvas&#039;).getContext(&#039;2d&#039;);
       }
     }
-  }, ScreenLayerView.prototype.bindings)
+  },
+
+  _resizeCanvas: function() {
+    if (!this.el || !this.el.parentNode) return this;
+    var cnv = this.query(&#039;canvas&#039;);
+    var dw = this.el.parentNode.clientWidth;
+    var dh = this.el.parentNode.clientHeight;
+    if (cnv.width != dw) cnv.width = dw;
+    if (cnv.height != dh) cnv.height = dh;
+    return this;
+  },
+
+  clearImage: function() {
+    var ctx = this.ctx;
+    if (!ctx) return this;
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    return this;
+  },
+
+  drawImage: function(img) {
+    var ctx = this._resizeCanvas().clearImage().ctx;
+    if (!ctx) return this;
+    ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
+    return this;
+  }
 });</textarea>
   </div>
 </div>

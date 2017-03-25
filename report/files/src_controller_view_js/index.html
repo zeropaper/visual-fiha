@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">67.92</p>
+      <p class="stat">69.84</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">527</p>
+      <p class="stat">562</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">34.17</p>
+      <p class="stat">44.75</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">4.87</p>
+      <p class="stat">5.20</p>
     </div>
   </div>
 </div>
@@ -89,98 +89,53 @@
 
 <div class="container">
   <div class="row">
-    <textarea id="file-source" class="col-md-12">/* global VFDeps, require, module */
-&#039;use strict&#039;;
-var View = VFDeps.View;
-var ViewSwitcher = VFDeps.ViewSwitcher;
-var ScreenState = require(&#039;./../screen/state&#039;);
-var MIDIAccessState = require(&#039;./../midi/state&#039;);
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var View = require(&#039;./control-view&#039;);
+var ViewSwitcher = require(&#039;ampersand-view-switcher&#039;);
 var MIDIAccessView = require(&#039;./../midi/view&#039;);
-var SignalsView = require(&#039;./signals-view&#039;);
-var LayersView = require(&#039;./layers-view&#039;);
+var SignalsView = require(&#039;./../signal/signals-view&#039;);
+var LayersView = require(&#039;./../layer/layers-view&#039;);
 var SuggestionView = require(&#039;./suggestion-view&#039;);
-var SparklineView = require(&#039;./sparkline-view&#039;);
 var AudioSource = require(&#039;./audio-source-view&#039;);
 var AceEditor = require(&#039;./ace-view&#039;);
 var RegionView = require(&#039;./region-view&#039;);
 var GistView = require(&#039;./gist-view&#039;);
-
-var mappings = require(&#039;./../mapping/state&#039;);
 var MappingsControlView = require(&#039;./../mapping/control-view&#039;);
-
-var controllerMixin = {};
-controllerMixin.initializeController = function initializeController() {
-  this.worker = new Worker(&#039;web-worker-build.js&#039;);
-};
-
-// almost unique id
-function auid() {
-  return parseInt((Math.random() + &#039;.&#039; + performance.now()).replace(/\./g, &#039;&#039;), 10);
-}
-controllerMixin.sendCommand = function sendCommand(name, payload, callback) {
-  // console.info(&#039;%ccontroller send command &quot;%s&quot;&#039;, &#039;color:green&#039;, name);
-  var worker = this.worker;
-  var message = {
-    command: name,
-    payload: payload
-  };
-
-  function makeListener(id, done) {
-    function eventListener(evt) {
-      if (evt.data.eventId !== id) return;
-      done(null, evt.data.payload);
-      worker.removeEventListener(&#039;message&#039;, eventListener);
-    }
-    return eventListener;
-  }
-
-  if (callback) {
-    message.eventId = auid();
-    worker.addEventListener(&#039;message&#039;, makeListener(message.eventId, callback), false);
-  }
-  worker.postMessage(message);
-};
+var ControlScreenControls = require(&#039;./control-screen-controls-view&#039;);
+var LocalforageView = require(&#039;./localforage-view&#039;);
+var objectPath = require(&#039;./../object-path&#039;);
+// var Timeline = require(&#039;./timeline-view&#039;);
 
 
-var ControllerView = View.extend(controllerMixin, {
-  _workerInit: false,
+
+
+
+var ControllerView = View.extend({
   initialize: function(options) {
     var controllerView = this;
-    controllerView.initializeController();
-
-    controllerView.model = controllerView.model || new ScreenState({}, {
-      parent: controllerView
-    });
-    if (controllerView.model.parent !== controllerView) {
-      controllerView.model.parent = controllerView;
+    this.signals = options.signals;
+    this.midi = options.midi;
+    this.mappings = options.mappings;
+    if (!this.router) {
+      throw new Error(&#039;Missing router options for ControllerView&#039;);
     }
 
-    controllerView.worker.addEventListener(&#039;message&#039;, function() {
-      if (controllerView._workerInit) return;
-      controllerView._workerInit = true;
-
-      controllerView.sendCommand(&#039;resetLayers&#039;, {
-        layers: controllerView.model.layers.serialize()
-      });
-
-      controllerView.sendCommand(&#039;resetSignals&#039;, {
-        signals: controllerView.model.signals.serialize()
-      });
-    }, false);
-
-
-
-
-    controllerView._bindLayerEvents();
-    controllerView.model.set({
-      signals: options.signals,
-      layers: options.layers,
-      midi: controllerView.midi
+    this.listenTo(this.router, &#039;all&#039;, function(...args) {
+      if (args[0].indexOf(&#039;app:&#039;) === 0) this.trigger(...args);
     });
 
-    controllerView.listenToAndRun(controllerView.midi, &#039;change:inputs&#039;, function() {
-      mappings.import(options.mappings, controllerView.model, true);
-    });
+    [
+      &#039;minDecibels&#039;,
+      &#039;maxDecibels&#039;,
+      &#039;smoothingTimeConstant&#039;,
+      &#039;fftSize&#039;
+    ].forEach(function(name) {
+      controllerView.on(&#039;change:&#039; + name, function () {
+        if (!controllerView.audioAnalyser) return;
+        controllerView.audioAnalyser[name] = controllerView[name];
+      });
+    }, controllerView);
+
 
     controllerView._animate();
 
@@ -194,49 +149,28 @@ var ControllerView = View.extend(controllerMixin, {
     else {
       controllerView.once(&#039;change:el&#039;, controllerView._attachSuggestionHelper);
     }
+
+    controllerView.listenTo(controllerView.model.layers, &#039;sendCommand&#039;, function(...args) {
+      controllerView.sendCommand(...args);
+    });
+
+    this._animate();
   },
 
-  _bindLayerEvents: function() {
-    var controllerView = this;
-
-    controllerView.listenTo(controllerView.model.layers, &#039;add&#039;, function(state) {
-      var data = state.serialize();
-      delete data.uiState;
-      if (!data) {
-        console.warn(&#039;addLayer no layer data&#039;);
-      }
-      controllerView.sendCommand(&#039;addLayer&#039;, {
-        layer: data
-      });
+  midiSources: function() {
+    var eventNames = [];
+    this.midi.inputs.forEach(function(midiInput) {
+      var id = midiInput.getId();
+      eventNames = eventNames.concat(midiInput.mappable.source.map(function(property) {
+        return &#039;midi:&#039; + id + &#039;.&#039; + property;
+      }));
     });
+    return eventNames;
+  },
 
-    controllerView.listenTo(controllerView.model.layers, &#039;remove&#039;, function(state) {
-      var layerName = state.name;
-      if (!layerName) {
-        console.warn(&#039;removeLayer no layer data&#039;);
-      }
-      controllerView.sendCommand(&#039;removeLayer&#039;, {
-        layerName: layerName
-      });
-    });
-
-    controllerView.listenTo(controllerView.model.layers, &#039;change:layer&#039;, function(state) {
-      if (!state) return;
-
-      var changed = state.changedAttributes();
-      delete changed.uiState;
-      if (!Object.keys(changed).length) {
-        changed = state.serialize();
-      }
-      delete changed.uiState;
-      if (!Object.keys(changed).length) return;
-
-      controllerView.sendCommand(&#039;updateLayer&#039;, {
-        layer: changed,
-        layerName: state.name
-      });
-    });
-
+  sendCommand: function(name, payload, callback) {
+    if (!this.router || !this.router.worker) return;
+    this.router.sendCommand(name, payload, callback);
     return this;
   },
 
@@ -249,22 +183,19 @@ var ControllerView = View.extend(controllerMixin, {
       this.audioSource.update();
     }
 
-    if (this.playing) {
-      this.model.frametime = timestamp - this.model.firstframetime;
-
-      this.update();
-    }
+    this.model.frametime = timestamp - this.model.firstframetime;
+    this.update();
 
     this._arId = window.requestAnimationFrame(this._animate.bind(this));
   },
 
   update: function() {
-    var analyser = this.audioSource.audioAnalyser;
+    var analyser = this.audioAnalyser;
 
-    var freqArray = this.audioSource.audioFrequencyArray;
+    var freqArray = this.audioFrequencyArray;
     analyser.getByteFrequencyData(freqArray);
 
-    var timeDomainArray = this.audioSource.audioTimeDomainArray;
+    var timeDomainArray = this.audioTimeDomainArray;
     analyser.getByteTimeDomainData(timeDomainArray);
 
     var command = {
@@ -280,6 +211,38 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   derived: {
+    audioContext: {
+      deps: [],
+      fn: function() {
+        return new window.AudioContext();
+      }
+    },
+    audioAnalyser: {
+      deps: [&#039;audioContext&#039;],
+      fn: function() {
+        var analyser = this.audioContext.createAnalyser();
+        try {
+          analyser.minDecibels = this.minDecibels;
+          analyser.maxDecibels = this.maxDecibels;
+          analyser.smoothingTimeConstant = this.smoothingTimeConstant;
+          analyser.fftSize = this.fftSize;
+        }
+        catch (e) {}
+        return analyser;
+      }
+    },
+    audioFrequencyArray: {
+      deps: [&#039;audioAnalyser&#039;, &#039;fftSize&#039;],
+      fn: function () {
+        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
+      }
+    },
+    audioTimeDomainArray: {
+      deps: [&#039;audioAnalyser&#039;, &#039;fftSize&#039;],
+      fn: function () {
+        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
+      }
+    },
     computedStyle: {
       deps: [&#039;el&#039;],
       fn: function() {
@@ -288,16 +251,20 @@ var ControllerView = View.extend(controllerMixin, {
     }
   },
 
-  children: {
-    midi: MIDIAccessState
-  },
-
   session: {
-    playing: [&#039;boolean&#039;, true, false],
-    broadcastId: [&#039;string&#039;, true, &#039;vfBus&#039;],
-    showControlScreen: [&#039;boolean&#039;, true, false],
     _arId: &#039;number&#039;,
-    currentDetails: &#039;state&#039;
+    broadcastId: [&#039;string&#039;, true, &#039;vfBus&#039;],
+    currentDetails: &#039;state&#039;,
+    fftSize: [&#039;number&#039;, true, 256],
+    maxDecibels: [&#039;number&#039;, true, -10],
+    minDecibels: [&#039;number&#039;, true, -90],
+    playing: [&#039;boolean&#039;, true, false],
+    router: &#039;any&#039;,
+    showControlScreen: [&#039;boolean&#039;, true, false],
+    controlScreenWidth: [&#039;number&#039;, true, 33],
+    controlScreenHeight: [&#039;number&#039;, true, 33],
+    smoothingTimeConstant: [&#039;number&#039;, true, 0.85],
+    workerPerformance: &#039;string&#039;
   },
 
   play: function() {
@@ -318,42 +285,109 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   subviews: {
+    controlScreenControls: {
+      waitFor: &#039;el&#039;,
+      selector: &#039;.control-screen-controls&#039;,
+      prepareView: function(el) {
+        if (this.router) {
+          this.set({
+            showControlScreen: this.router.settings.get(&#039;showControlScreen&#039;, true),
+            controlScreenWidth: this.router.settings.get(&#039;controlScreenWidth&#039;, 45),
+            controlScreenHeight: this.router.settings.get(&#039;controlScreenHeight&#039;, 45)
+          });
+        }
+
+        var view = new ControlScreenControls({
+          el: el,
+          active: this.showControlScreen,
+          width: this.controlScreenWidth,
+          height: this.controlScreenHeight,
+          parent: this
+        });
+
+        this.listenToAndRun(view, &#039;change:active&#039;, function() {
+          this.showControlScreen = view.active;
+          if (this.router) {
+            this.router.settings.set(&#039;showControlScreen&#039;, this.showControlScreen);
+          }
+        });
+        this.listenToAndRun(view, &#039;change:width&#039;, function() {
+          this.controlScreenWidth = view.width;
+          if (this.router) {
+            this.router.settings.set(&#039;controlScreenWidth&#039;, this.controlScreenWidth);
+          }
+        });
+        this.listenToAndRun(view, &#039;change:height&#039;, function() {
+          this.controlScreenHeight = view.height;
+          if (this.router) {
+            this.router.settings.set(&#039;controlScreenHeight&#039;, this.controlScreenHeight);
+          }
+        });
+        return view;
+      }
+    },
+
     regionRight: {
       waitFor: &#039;el&#039;,
       selector: &#039;.region-right&#039;,
       prepareView: function(el) {
-        this.layersView = new LayersView({
-          collection: this.model.layers,
-          parent: this
+        var parent = this;
+        function buildLayers() {
+          if (parent.layersView &amp;&amp; parent.layersView.remove) {
+            parent.layersView.remove();
+            parent.stopListening(parent.layersView);
+          }
+          parent.layersView = new LayersView({
+            collection: parent.model.layers,
+            parent: parent,
+            model: parent.model
+          });
+          return parent.layersView;
+        }
+
+        parent.mappingsView = new MappingsControlView({
+          collection: parent.mappings,
+          parent: parent,
+          model: parent.model
         });
 
-        this.signalsView = new SignalsView({
-          collection: this.model.signals,
-          parent: this
-        });
+        function buildSignals() {
+          if (parent.signalsView &amp;&amp; parent.signalsView.remove) {
+            parent.signalsView.remove();
+            parent.stopListening(parent.signalsView);
+          }
+          parent.signalsView = new SignalsView({
+            collection: parent.signals,
+            parent: parent,
+            model: parent.model
+          });
+          return parent.signalsView;
+        }
 
-        this.codeEditor = new AceEditor({
-          parent: this
-        });
+        function buildCodeEditor() {
+          if (parent.codeEditor) {
+            parent.stopListening(parent.codeEditor);
+          }
+          parent.codeEditor = new AceEditor({
+            parent: parent
+          });
+          return parent.codeEditor;
+        }
 
         var view = new RegionView({
-          parent: this,
+          parent: parent,
           el: el,
-          currentView: this.layersView,
           tabs: [
-            {name: &#039;Layers&#039;, view: this.layersView, pinned: true, active: true},
-            {name: &#039;Signals&#039;, view: this.signalsView, pinned: true},
-            {name: &#039;Editor&#039;, view: this.codeEditor, pinned: true}
+            {name: &#039;Layers&#039;, rebuild: buildLayers, pinned: true, active: true},
+            {name: &#039;Signals&#039;, rebuild: buildSignals, pinned: true},
+            {name: &#039;Mappings&#039;, view: parent.mappingsView, pinned: true},
+            {name: &#039;Editor&#039;, rebuild: buildCodeEditor, pinned: true}
           ]
         });
 
         view.el.classList.add(&#039;region-right&#039;);
         view.el.classList.add(&#039;column&#039;);
         view.el.classList.add(&#039;rows&#039;);
-
-        this.listenTo(this.codeEditor, &#039;change:original&#039;, function() {
-          view.focusTabIndex(2);
-        });
 
         return view;
       }
@@ -363,38 +397,56 @@ var ControllerView = View.extend(controllerMixin, {
       waitFor: &#039;el&#039;,
       selector: &#039;.region-left-bottom&#039;,
       prepareView: function(el) {
-        var styles = window.getComputedStyle(el);
+        var parent = this;
+        var styles = this.computedStyle;
 
-        this.audioSource = new AudioSource({
-          audioAnalyser: this.audioAnalyser,
-          parent: this,
-          color: styles.color
-        });
+        function buildAudioSource() {
+          parent.audioSource = new AudioSource({
+            audioAnalyser: parent.audioAnalyser,
+            parent: parent,
+            color: styles.color
+          });
+          return parent.audioSource;
+        }
+        buildAudioSource();
 
-        this.MIDIAccess = new MIDIAccessView({
-          parent: this,
-          model: this.midi
-        });
+        if (parent.midi) {
+          parent.MIDIAccess = new MIDIAccessView({
+            parent: parent,
+            model: parent.midi
+          });
+        }
 
-        this.mappingsView = new MappingsControlView({
-          collection: mappings,
-          parent: this,
-          model: this.model
-        });
+        // parent.timeline = new Timeline({
+        //   parent: this,
+        //   entries: []
+        // });
 
         var view = new RegionView({
-          parent: this,
+          parent: parent,
           el: el,
-          currentView: this.mappingsView,
+          currentView: parent.mappingsView,
           tabs: [
-            {name: &#039;Mappings&#039;, view: this.mappingsView, pinned: true, active: true},
-            {name: &#039;MIDI&#039;, view: this.MIDIAccess, pinned: true},
-            {name: &#039;Audio&#039;, view: this.audioSource, pinned: true}
+            {name: &#039;MIDI&#039;, view: parent.MIDIAccess, pinned: true, active: true},
+            {name: &#039;Audio&#039;, rebuild: buildAudioSource, pinned: true},
+            // {name: &#039;Timeline&#039;, view: parent.timeline, pinned: true, active: true}
           ]
         });
 
         view.el.classList.add(&#039;row&#039;);
+        view.el.classList.add(&#039;grow-l&#039;);
+        view.el.classList.add(&#039;region-left-bottom&#039;);
 
+        return view;
+      }
+    },
+
+    localforageView: {
+      waitFor: &#039;el&#039;,
+      selector: &#039;.controller &gt; .header&#039;,
+      prepareView: function(el) {
+        var view = new LocalforageView({parent: this, model: this.model});
+        el.appendChild(view.render().el);
         return view;
       }
     },
@@ -405,21 +457,6 @@ var ControllerView = View.extend(controllerMixin, {
       prepareView: function(el) {
         var view = new GistView({parent: this, model: this.model});
         el.appendChild(view.render().el);
-        return view;
-      }
-    },
-
-    controllerSparkline: {
-      waitFor: &#039;el&#039;,
-      selector: &#039;.sparkline-controller&#039;,
-      prepareView: function(el) {
-        var styles = window.getComputedStyle(el);
-        var view = new SparklineView({
-          parent: this,
-          color: styles.color,
-          font: styles.fontSize + &#039; &#039; + styles.fontFamily.split(&#039; &#039;).pop()
-        });
-        el.appendChild(view.el);
         return view;
       }
     }
@@ -437,20 +474,34 @@ var ControllerView = View.extend(controllerMixin, {
   },
 
   bindings: {
+    workerPerformance: &#039;.worker-performance&#039;,
     showControlScreen: [
+      {
+        selector: &#039;.control-screen&#039;,
+        type: &#039;toggle&#039;
+      },
       {
         selector: &#039;.control-screen&#039;,
         type: function(el, val) {
           el.src = !val ? &#039;&#039; : &#039;./screen.html#&#039; + this.broadcastId;
         }
-      },
-      {
-        selector: &#039;button[name=control-screen]&#039;,
-        type: &#039;booleanClass&#039;,
-        yes: &#039;yes&#039;,
-        no: &#039;no&#039;
       }
     ],
+    controlScreenWidth: {
+      selector: &#039;.region-left&#039;,
+      type: function(el, val) {
+        el.style.width = val +&#039;%&#039;;
+      }
+    },
+    controlScreenHeight: {
+      selector: &#039;.region-left-top&#039;,
+      type: function(el, val) {
+        var parentNode = el.parentNode;
+        var height = ((Math.max(100, parentNode.clientHeight) / 100) * val) +&#039;px&#039;;
+        el.style.maxHeight = height;
+        el.style.minHeight = height;
+      }
+    },
     playing: [
       {
         type: &#039;toggle&#039;,
@@ -464,13 +515,14 @@ var ControllerView = View.extend(controllerMixin, {
     ]
   },
 
-  events: {
+  commands: {
     &#039;click [name=&quot;play&quot;]&#039;: &#039;play&#039;,
     &#039;click [name=&quot;pause&quot;]&#039;: &#039;pause&#039;,
-    &#039;click [name=&quot;stop&quot;]&#039;: &#039;stop&#039;,
-    &#039;click [name=&quot;resize&quot;]&#039;: &#039;resizeScreen&#039;,
+    &#039;click [name=&quot;stop&quot;]&#039;: &#039;stop&#039;
+  },
+
+  events: {
     &#039;click [name=&quot;screen&quot;]&#039;: &#039;_openScreen&#039;,
-    &#039;click [name=&quot;control-screen&quot;]&#039;: &#039;_toggleControlScreen&#039;,
     &#039;click [name=&quot;setup-editor&quot;]&#039;: &#039;_setupEditor&#039;
   },
 
@@ -478,59 +530,45 @@ var ControllerView = View.extend(controllerMixin, {
     window.open(&#039;./screen.html#&#039; + this.broadcastId, &#039;screen&#039;, &#039;width=800,height=600,location=no&#039;);
   },
 
-  _toggleControlScreen: function() {
-    this.toggle(&#039;showControlScreen&#039;);
-  },
-
   toJSON: function() {
-    var obj = this.model.toJSON();
-    obj.mappings = mappings.export();
-    return obj;
+    return {
+      signals: this.signals.toJSON(),
+      mappings: this.mappings.toJSON(),
+      layers: this.model.layers.toJSON()
+    };
   },
 
   fromJSON: function(obj) {
-    this.model.set({
-      layers: obj.layers || [],
-      signals: obj.signals || []
-    });
-    mappings.import(obj.mappings || [], this.model, true);
+    this.router._sendBootstrap(obj);
+    return this;
+  },
 
-    this.sendCommand(&#039;resetLayers&#039;, {
-      layers: obj.layers
-    });
 
-    this.sendCommand(&#039;resetSignals&#039;, {
-      signals: obj.signals
-    });
+
+  getEditor: function() {
+    this.regionRight.focusTab(&#039;Editor&#039;);
+    return this.codeEditor;
   },
 
   _setupEditor: function() {
     var view = this;
-    var str = JSON.stringify(view.toJSON(), null, 2);
-    view.regionRight.focusTab(&#039;Editor&#039;);
-    view.codeEditor.editCode(str, function updateSetup(newStr) {
-      var obj;
-      try {
-        eval(&#039;obj = &#039; + newStr + &#039;;&#039;);// jshint ignore:line
-      }
-      catch(e) {
-        console.warn(e);
-      }
-      view.fromJSON(obj);
-    });
-  },
+    var editor = view.getEditor();
 
-  addMultiMapping: function(mappingModel) {
-    this.mappingsView.mappings.add({
-      targetModel: mappingModel.targetModel,
-      targetProperty: mappingModel.targetProperty
+    editor.editCode({
+      autoApply: false,
+      title: &#039;Setup&#039;,
+      script: view.gistView.toYaml(),
+      language: &#039;yaml&#039;,
+      onapply: function(str) {
+        view.router._sendBootstrap(view.gistView.fromYaml(str), view._setupEditor.bind(view));
+      }
     });
   },
 
   showDetails: function (view) {
     if (view === this.currentDetails) return this;
     var tabs = this.regionLeftBottom.tabs;
-    var tabName = this.mappingsView.collection.objectPath(view.model);
+    var tabName = view.modelPath || objectPath(view.model);
     var found = tabs.get(tabName);
     if (!found) {
       found = tabs.add({name: tabName, view: view});
@@ -540,7 +578,7 @@ var ControllerView = View.extend(controllerMixin, {
     }
 
     this.regionLeftBottom.focusTab(tabName);
-
+    found.view.blink();
     return this;
   },
 
@@ -569,51 +607,48 @@ var ControllerView = View.extend(controllerMixin, {
   /*
   :sout=#http{dst=:8080/stream} :sout-keep
   */
-  template: &#039;&lt;div class=&quot;controller rows&quot;&gt;&#039;+
-    &#039;&lt;div class=&quot;row columns gutter-horizontal header&quot;&gt;&#039;+
-      &#039;&lt;div class=&quot;column no-grow gutter-right&quot;&gt;Visual Fiha&lt;/div&gt;&#039;+
+  template: `
+    &lt;div class=&quot;controller rows&quot;&gt;
+      &lt;div class=&quot;row columns gutter-horizontal header&quot;&gt;
+        &lt;div class=&quot;column no-grow gutter-right&quot;&gt;Visual Fiha&lt;/div&gt;
 
-      &#039;&lt;div class=&quot;column columns&quot;&gt;&#039;+
-        &#039;&lt;span class=&quot;column columns no-grow button-group&quot;&gt;&#039;+
-          &#039;&lt;button class=&quot;column gutter-horizontal&quot; name=&quot;play&quot;&gt;&lt;span class=&quot;vfi-play&quot;&gt;&lt;/span&gt;&lt;/button&gt;&#039;+
-          &#039;&lt;button class=&quot;column gutter-horizontal&quot; name=&quot;pause&quot;&gt;&lt;span class=&quot;vfi-pause&quot;&gt;&lt;/span&gt;&lt;/button&gt;&#039;+
-          &#039;&lt;button class=&quot;column gutter-horizontal&quot; name=&quot;stop&quot;&gt;&lt;span class=&quot;vfi-stop&quot;&gt;&lt;/span&gt;&lt;/button&gt;&#039;+
-        &#039;&lt;/span&gt;&#039;+
+        &lt;div class=&quot;column columns&quot;&gt;
+          &lt;!-- &lt;span class=&quot;column columns no-grow button-group&quot;&gt;
+            &lt;button class=&quot;column gutter-horizontal&quot; name=&quot;play&quot;&gt;&lt;span class=&quot;vfi-play&quot;&gt;&lt;/span&gt;&lt;/button&gt;
+            &lt;button class=&quot;column gutter-horizontal&quot; name=&quot;pause&quot;&gt;&lt;span class=&quot;vfi-pause&quot;&gt;&lt;/span&gt;&lt;/button&gt;
+            &lt;button class=&quot;column gutter-horizontal&quot; name=&quot;stop&quot;&gt;&lt;span class=&quot;vfi-stop&quot;&gt;&lt;/span&gt;&lt;/button&gt;
+          &lt;/span&gt; --&gt;
 
-        &#039;&lt;div class=&quot;column no-grow&quot;&gt;&#039;+
-          &#039;&lt;button name=&quot;screen&quot;&gt;Open screen&lt;/button&gt;&#039;+
-        &#039;&lt;/div&gt;&#039;+
+          &lt;div class=&quot;column&quot;&gt;&lt;/div&gt;
 
-        &#039;&lt;div class=&quot;column no-grow&quot;&gt;&#039;+
-          &#039;&lt;button name=&quot;control-screen&quot;&gt;Control screen&lt;/button&gt;&#039;+
-        &#039;&lt;/div&gt;&#039;+
+          &lt;div class=&quot;column worker-performance&quot;&gt;&lt;/div&gt;
 
-        &#039;&lt;div class=&quot;column gutter-horizontal no-grow columns performance&quot;&gt;&#039;+
-          // &#039;SCL &lt;span title=&quot;Screen Communication Latency&quot; class=&quot;column sparkline-latency&quot;&gt;&lt;/span&gt;&#039;+
-          &#039;Controller &lt;span class=&quot;column sparkline-controller&quot;&gt;&lt;/span&gt;&#039;+
-        &#039;&lt;/div&gt;&#039;+
+          &lt;div class=&quot;column no-grow control-screen-controls&quot;&gt;&lt;/div&gt;
 
-        &#039;&lt;div class=&quot;column&quot;&gt;&lt;/div&gt;&#039;+
+          &lt;div class=&quot;column no-grow&quot;&gt;
+            &lt;button name=&quot;screen&quot;&gt;Open screen&lt;/button&gt;
+          &lt;/div&gt;
 
-        &#039;&lt;div class=&quot;column no-grow&quot;&gt;&#039;+
-          &#039;&lt;button name=&quot;setup-editor&quot;&gt;Setup editor&lt;/button&gt;&#039;+
-        &#039;&lt;/div&gt;&#039;+
-      &#039;&lt;/div&gt;&#039;+
-    &#039;&lt;/div&gt;&#039;+
+          &lt;div class=&quot;column&quot;&gt;&lt;/div&gt;
 
-    &#039;&lt;div class=&quot;row columns body&quot;&gt;&#039;+
-      &#039;&lt;div class=&quot;region-left column no-grow rows&quot;&gt;&#039;+
-        &#039;&lt;iframe class=&quot;region-left-top row grow-l control-screen&quot;&gt;&lt;/iframe&gt;&#039;+
+          &lt;div class=&quot;column no-grow&quot;&gt;
+            &lt;button name=&quot;setup-editor&quot;&gt;Setup editor&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
 
-        &#039;&lt;div class=&quot;region-left-bottom row rows&quot;&gt;&lt;/div&gt;&#039;+
-      &#039;&lt;/div&gt;&#039;+
+      &lt;div class=&quot;row columns body&quot;&gt;
+        &lt;div class=&quot;region-left column no-grow rows&quot;&gt;
+          &lt;iframe class=&quot;region-left-top row control-screen&quot;&gt;&lt;/iframe&gt;
 
-      &#039;&lt;div class=&quot;region-right column rows settings&quot;&gt;&#039;+
+          &lt;div class=&quot;region-left-bottom row grow-l rows&quot;&gt;&lt;/div&gt;
+        &lt;/div&gt;
 
-
-      &#039;&lt;/div&gt;&#039;+
-    &#039;&lt;/div&gt;&#039;+
-  &#039;&lt;/div&gt;&#039;
+        &lt;div class=&quot;region-right column rows settings&quot;&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  `
 });
 module.exports = ControllerView;</textarea>
   </div>

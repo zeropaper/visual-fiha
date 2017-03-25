@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">73.57</p>
+      <p class="stat">69.68</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">281</p>
+      <p class="stat">269</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">33.32</p>
+      <p class="stat">46.42</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">2.36</p>
+      <p class="stat">2.71</p>
     </div>
   </div>
 </div>
@@ -90,13 +90,13 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-var View = window.VFDeps.View;
+var View = require(&#039;ampersand-view&#039;);
 var LayerView = require(&#039;./../layer/view&#039;);
 require(&#039;./../layer/canvas/view&#039;);
 require(&#039;./../layer/svg/view&#039;);
 require(&#039;./../layer/video/view&#039;);
 require(&#039;./../layer/img/view&#039;);
-
+require(&#039;./../layer/txt/view&#039;);
 
 
 function signature(fn) {
@@ -125,62 +125,23 @@ function registerCommand(commandName, command) {
 
 
 
-var commands = {};
-commands.setup = function setup(state) {
-  this.update(state);
-};
-commands.resetLayers = function resetLayers(layers) {
-  var triggerChange;
-  var collection = this.model.layers;
-
-  function findLayer(name) {
-    return layers.find(function () {
-      return function(lo) {
-        return lo.name === name;
-      };
-    });
-  }
-
-  layers.forEach(function(layer) {
-    triggerChange = true;
-    var state = collection.get(layer.name);
+var commands = {
+  bootstrap: function bootstrap(state) {
+    this.update(state || {});
+  },
+  updateLayer: function(layer) {
+    var state = this.model.layers.get(layer.name);
     if (state) {
       state.set(layer);
     }
     else {
-      collection.add(layer);
+      state = this.model.layers.add(layer);
     }
-  });
-
-  collection.forEach(function(layer) {
-    var found = findLayer(layer.name);
-    if (!found) {
-      triggerChange = true;
-      collection.remove(layer);
-    }
-  });
-
-  if (triggerChange) {
-    this.trigger(&#039;change:layers&#039;, collection);
+  },
+  updateLayers: function(layers, audio) {
+    if (audio) this.model.audio = audio;
+    this.model.layers.set(layers);
   }
-
-  this.resize();
-};
-commands.addLayer = function addLayer(layer) {
-  var collection = this.model.layers;
-  collection.add(layer);
-};
-commands.removeLayer = function removeLayer(layerName) {
-  var collection = this.model.layers;
-  collection.remove(collection.get(layerName));
-};
-commands.updateLayer = function updateLayer(layer, layerName) {
-  this.model.layers.get(layerName).set(layer);
-};
-
-commands.heartbeat = function heartbeat(frametime, audio) {
-  this.model.frametime = frametime;
-  this.model.audio = audio;
 };
 
 Object.keys(commands).forEach(registerCommand);
@@ -204,21 +165,12 @@ clientMixin.initializeClient = function initializeClient() {
       return;
     }
 
-    // console.info(&#039;%cscreen command &quot;%s&quot;&#039;, &#039;color:blue&#039;, commandName);
-
     commandArgs = signatures[commandName].map(function(argName) {
       if (argName === &#039;timeStamp&#039;) return evt.timeStamp;
       return evt.data.payload[argName];
     });
 
     command.apply(follower, commandArgs);
-  }, false);
-
-  channel.postMessage({
-    command: &#039;register&#039;,
-    payload: {
-      id: &#039;screen&#039; + performance.now()
-    }
   });
 
   this.channel = channel;
@@ -255,6 +207,60 @@ var ScreenView = View.extend(clientMixin, {
     this.initializeClient();
   },
 
+  derived: {
+    styleEl: {
+      deps: [&#039;el&#039;],
+      fn: function() {
+        var el = document.getElementById(&#039;vf-screen-styles&#039;);
+        if (!el) {
+          el = document.createElement(&#039;style&#039;);
+          el.id = &#039;vf-screen-styles&#039;;
+          el.appendChild(document.createTextNode(&#039;&#039;));
+          document.head.appendChild(el);
+        }
+        return el;
+      }
+    },
+    sheet: {
+      deps: [&#039;styleEl&#039;],
+      fn: function() {
+        return this.styleEl.sheet;
+      }
+    },
+    cssRule: {
+      deps: [&#039;sheet&#039;],
+      fn: function() {
+        if (this.sheet.cssRules.length === 0) {
+          this.addRule(&#039;&#039;, &#039;opacity:1&#039;);
+        }
+        return this.sheet.cssRules[0];
+      }
+    }
+  },
+
+  addRule: function(selector, properties) {
+    var sheet = this.sheet;
+    this.el.id = this.el.id || &#039;vf-screen-&#039; + this.cid;
+    var prefix = &#039;#&#039;+ this.el.id +&#039; &#039;;
+    var index = sheet.cssRules.length;
+    selector = (prefix + selector).trim();
+    for (var i = index - 1; i &gt;= 0; i--) {
+      if (sheet.cssRules[i].selectorText === selector) {
+        sheet.deleteRule(i);
+      }
+    }
+
+
+    index = sheet.cssRules.length;
+
+    sheet.insertRule(selector + &#039; { &#039; + properties + &#039; } &#039;, index);
+    return this;
+  },
+
+  setProperty: function(...args) {
+    this.cssRule.style.setProperty(...args);
+  },
+
   remove: function() {
     if (this.channel) {
       this.channel.close();
@@ -264,11 +270,14 @@ var ScreenView = View.extend(clientMixin, {
 
   resize: function () {
     if (!this.el) { return this; }
-    this.el.style.position = &#039;fixed&#039;;
-    this.el.top = 0;
-    this.el.left = 0;
-    this.el.style.width = &#039;100%&#039;;
-    this.el.style.height = &#039;100%&#039;;
+    this.setProperty(&#039;position&#039;, &#039;fixed&#039;);
+    this.setProperty(&#039;top&#039;, 0);
+    this.setProperty(&#039;left&#039;, 0);
+    this.setProperty(&#039;width&#039;, &#039;100%&#039;);
+    this.setProperty(&#039;height&#039;, &#039;100%&#039;);
+    if (!this.el || !this.el.parentNode) {
+      return this;
+    }
     this.width = this.el.parentNode.clientWidth;
     this.height = this.el.parentNode.clientHeight;
     return this._resizeLayers();
@@ -294,7 +303,7 @@ var ScreenView = View.extend(clientMixin, {
     if (!this.layersView) {
       this.layersView = this.renderCollection(this.model.layers, function(opts) {
         var type = opts.model.getType();
-        var ScreenLayerConstructor = LayerView[type] || LayerView;
+        var ScreenLayerConstructor = LayerView.types[type] || LayerView;
         return new ScreenLayerConstructor(opts);
       }, this.el, {parent: this});
       this._updateLayers();
@@ -314,45 +323,6 @@ var ScreenView = View.extend(clientMixin, {
 
     this.model.set(options);
 
-    function findLayer(name) {
-      return function(lo) {
-        return lo.name === name;
-      };
-    }
-
-    var triggerChange;
-    var collection = this.model.layers;
-    if (options.layers) {
-      options.layers.forEach(function(layer) {
-        triggerChange = true;
-        var state = collection.get(layer.name);
-        if (state) {
-          state.set(layer, {
-            silent: true
-          });
-        }
-        else {
-          collection.add(layer, {
-            silent: true
-          });
-        }
-      });
-
-      collection.forEach(function(layer) {
-        var found = options.layers.find(findLayer(layer.name));
-        if (!found) {
-          triggerChange = true;
-          collection.remove(layer, {
-            silent: true
-          });
-        }
-      });
-
-      if (triggerChange) {
-        this.trigger(&#039;change:layers&#039;, collection);
-      }
-    }
-
     return this;
   },
 
@@ -364,8 +334,26 @@ var ScreenView = View.extend(clientMixin, {
   },
 
   _updateLayers: function() {
+    this.setProperty(&#039;--frametime&#039;, this.model.frametime);
+
+    var audio = this.model.audio;
+    if (audio &amp;&amp; audio.frequency &amp;&amp; audio.timeDomain) {
+      var length = audio.frequency.length;
+      var l, li = 0, af = 0, av = 0, ll = length / 16;
+
+      for (l = 0; l &lt; length; l += ll) {
+        li++;
+        af += audio.frequency[l];
+        av += audio.timeDomain[l];
+        this.setProperty(&#039;--freq&#039; + li, audio.frequency[l]);
+        this.setProperty(&#039;--vol&#039; + li, audio.timeDomain[l]);
+      }
+      this.setProperty(&#039;--freqAvg&#039;, af / length);
+      this.setProperty(&#039;--volAvg&#039;, av / length);
+    }
+
     this.layersView.views.forEach(function(subview) {
-      subview.update();
+      if (subview.model.active) subview.update();
     });
   }
 });

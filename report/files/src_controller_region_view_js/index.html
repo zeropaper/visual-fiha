@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">77.55</p>
+      <p class="stat">73.44</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">139</p>
+      <p class="stat">140</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">19.42</p>
+      <p class="stat">23.30</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.01</p>
+      <p class="stat">1.07</p>
     </div>
   </div>
 </div>
@@ -90,11 +90,11 @@
 <div class="container">
   <div class="row">
     <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
-/* global VFDeps*/
-var State = VFDeps.State;
-var View = VFDeps.View;
-var Collection = VFDeps.Collection;
-var ViewSwitcher = VFDeps.ViewSwitcher;
+var State = require(&#039;ampersand-state&#039;);
+// var View = require(&#039;./control-view&#039;);
+var View = require(&#039;ampersand-view&#039;);
+var Collection = require(&#039;ampersand-collection&#039;);
+var ViewSwitcher = require(&#039;ampersand-view-switcher&#039;);
 
 var TabView = View.extend({
   template: &#039;&lt;li class=&quot;columns&quot;&gt;&#039; +
@@ -118,13 +118,7 @@ var TabView = View.extend({
   selectTab: function() {
     var itemView = this;
     var item = itemView.model;
-
-    if (item.active) return;
-    item.collection.forEach(function(state) {
-      state.active = item === state;
-    });
-
-    itemView.parent.currentView = item.view;
+    itemView.parent._focus(item);
   },
 
   closeTab: function() {
@@ -134,10 +128,6 @@ var TabView = View.extend({
 });
 
 var RegionView = View.extend({
-  session: {
-    currentView: &#039;state&#039;
-  },
-
   collections: {
     tabs: Collection.extend({
       mainIndex: &#039;name&#039;,
@@ -155,17 +145,11 @@ var RegionView = View.extend({
           pinned: &#039;boolean&#039;,
           active: &#039;boolean&#039;,
           name: &#039;string&#039;,
-          view: &#039;state&#039;
+          view: &#039;state&#039;,
+          rebuild: &#039;any&#039;
         }
       })
     })
-  },
-
-  initialize: function() {
-    this.listenToAndRun(this, &#039;change:currentView&#039;, function() {
-      if (!this.currentView) return;
-      this.render().regionSwitcher.set(this.currentView);
-    });
   },
 
   autoRender: true,
@@ -175,47 +159,64 @@ var RegionView = View.extend({
               &#039;&lt;div class=&quot;region-content&quot;&gt;&lt;/div&gt;&#039; +
             &#039;&lt;/div&gt;&#039;,
 
+  activeIndex: function() {
+    if (!this.tabs.models.length) return -2;
+    for (var i = 0; i &lt; this.tabs.models.length; i++) {
+      if (this.tabs.models[i].active) return i;
+    }
+    return -1;
+  },
+
   render: function() {
     if (this.rendered) return this;
 
-    this.renderWithTemplate();
-    var options = {
-      // waitForRemove: true,
-      // hide: function(oldView, done) {
-      //   console.info(&#039;hide&#039;, oldView, done);
-      //   done();
-      // },
+    View.prototype.render.apply(this, arguments);
 
-      // empty: function() {
-      //   console.info(&#039;empty region&#039;);
-      // },
+    this.regionSwitcher = new ViewSwitcher(this.query(&#039;.region-content&#039;), {});
 
-      show: function(newView) {
-        // This should fix some rendering issues with the region-view
-        var bindings = newView.constructor.prototype.bindings || {};
-        Object.keys(bindings).forEach(function(key) {
-          newView.trigger(&#039;change:&#039; + key);
-        }, newView);
-      }
-    };
-    if (this.currentView) {
-      options.view = this.currentView;
-    }
-    this.regionSwitcher = new ViewSwitcher(this.query(&#039;.region-content&#039;), options);
     this.renderCollection(this.tabs, TabView, &#039;.region-tabs&#039;);
+
+    this.listenToAndRun(this.tabs, &#039;reset add remove&#039;, function() {
+      var activeIndex = this.activeIndex();
+      if (activeIndex &gt; -2) {
+        this.focusTabIndex(activeIndex &gt; -1 ? activeIndex : 0);
+      }
+    });
+
     return this;
   },
 
-  _focus: function(tabState) {
-    if (!tabState || tabState.active) return;
+  _setView: function(view) {
+    if (!view) return;
+    this.regionSwitcher.set(view);
+    return view;
+  },
 
-    tabState.collection.forEach(function(state) {
+  _focus: function(tabState) {
+    if (!tabState) return;
+    this.tabs.forEach(function(state) {
       state.active = tabState === state;
     });
 
-    this.currentView = tabState.view;
+    var view = tabState.view;
+    if (typeof tabState.rebuild === &#039;function&#039;) {
+      view = tabState.rebuild();
+    }
+    if (typeof tabState.Constructor === &#039;function&#039;) {
+      view = new tabState.Constructor({
+        parent: this
+      });
 
-    tabState.view.trigger(&#039;change:model&#039;);
+    }
+    // else {
+    //   view.trigger(&#039;change:model&#039;, view, view.model, {});
+    //   view.trigger(&#039;change&#039;, view, view, {});
+    //   var bindings = view.constructor.prototype.bindings || {};
+    //   Object.keys(bindings).forEach(function(key) {
+    //     view.trigger(&#039;change:&#039; + key);
+    //   }, view);
+    // }
+    this._setView(view);
   },
 
   focusTabIndex: function(index) {
