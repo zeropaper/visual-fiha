@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/controller/region-view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/controller/region-view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">73.44</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">140</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">23.30</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.07</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var State = require(&#039;ampersand-state&#039;);
+// var View = require(&#039;./control-view&#039;);
+var View = require(&#039;ampersand-view&#039;);
+var Collection = require(&#039;ampersand-collection&#039;);
+var ViewSwitcher = require(&#039;ampersand-view-switcher&#039;);
+
+var TabView = View.extend({
+  template: &#039;&lt;li class=&quot;columns&quot;&gt;&#039; +
+    &#039;&lt;div class=&quot;column gutter name&quot;&gt;&lt;/div&gt;&#039; +
+    &#039;&lt;div class=&quot;column no-grow&quot;&gt;&#039; +
+      &#039;&lt;button class=&quot;vfi-minus-squared-alt&quot;&gt;&lt;/button&gt;&#039; +
+    &#039;&lt;/div&gt;&#039; +
+  &#039;&lt;/li&gt;&#039;,
+
+  bindings: {
+    &#039;model.name&#039;: &#039;.name&#039;,
+    &#039;model.active&#039;: {type: &#039;booleanClass&#039;, name: &#039;active&#039;},
+    &#039;model.pinned&#039;: {type: &#039;toggle&#039;, selector: &#039;button&#039;, invert: true}
+  },
+
+  events: {
+    &#039;click .name&#039;: &#039;selectTab&#039;,
+    &#039;click button&#039;: &#039;closeTab&#039;
+  },
+
+  selectTab: function() {
+    var itemView = this;
+    var item = itemView.model;
+    itemView.parent._focus(item);
+  },
+
+  closeTab: function() {
+    this.parent.focusTabIndex(0);
+    this.model.collection.remove(this.model);
+  }
+});
+
+var RegionView = View.extend({
+  collections: {
+    tabs: Collection.extend({
+      mainIndex: &#039;name&#039;,
+
+      find: function(fn) {
+        for (var i = 0; i &lt; this.length; i++) {
+          if (fn(this.models[i])) return this.models[i];
+        }
+      },
+
+      model: State.extend({
+        idAttribute: &#039;name&#039;,
+
+        session: {
+          pinned: &#039;boolean&#039;,
+          active: &#039;boolean&#039;,
+          name: &#039;string&#039;,
+          view: &#039;state&#039;,
+          rebuild: &#039;any&#039;
+        }
+      })
+    })
+  },
+
+  autoRender: true,
+
+  template: &#039;&lt;div class=&quot;region&quot;&gt;&#039; +
+              &#039;&lt;ul class=&quot;region-tabs tabs&quot;&gt;&lt;/ul&gt;&#039;+
+              &#039;&lt;div class=&quot;region-content&quot;&gt;&lt;/div&gt;&#039; +
+            &#039;&lt;/div&gt;&#039;,
+
+  activeIndex: function() {
+    if (!this.tabs.models.length) return -2;
+    for (var i = 0; i &lt; this.tabs.models.length; i++) {
+      if (this.tabs.models[i].active) return i;
+    }
+    return -1;
+  },
+
+  render: function() {
+    if (this.rendered) return this;
+
+    View.prototype.render.apply(this, arguments);
+
+    this.regionSwitcher = new ViewSwitcher(this.query(&#039;.region-content&#039;), {});
+
+    this.renderCollection(this.tabs, TabView, &#039;.region-tabs&#039;);
+
+    this.listenToAndRun(this.tabs, &#039;reset add remove&#039;, function() {
+      var activeIndex = this.activeIndex();
+      if (activeIndex &gt; -2) {
+        this.focusTabIndex(activeIndex &gt; -1 ? activeIndex : 0);
+      }
+    });
+
+    return this;
+  },
+
+  _setView: function(view) {
+    if (!view) return;
+    this.regionSwitcher.set(view);
+    return view;
+  },
+
+  _focus: function(tabState) {
+    if (!tabState) return;
+    this.tabs.forEach(function(state) {
+      state.active = tabState === state;
+    });
+
+    var view = tabState.view;
+    if (typeof tabState.rebuild === &#039;function&#039;) {
+      view = tabState.rebuild();
+    }
+    if (typeof tabState.Constructor === &#039;function&#039;) {
+      view = new tabState.Constructor({
+        parent: this
+      });
+
+    }
+    // else {
+    //   view.trigger(&#039;change:model&#039;, view, view.model, {});
+    //   view.trigger(&#039;change&#039;, view, view, {});
+    //   var bindings = view.constructor.prototype.bindings || {};
+    //   Object.keys(bindings).forEach(function(key) {
+    //     view.trigger(&#039;change:&#039; + key);
+    //   }, view);
+    // }
+    this._setView(view);
+  },
+
+  focusTabIndex: function(index) {
+    this._focus(this.tabs.at(index));
+  },
+
+  focusTab: function(name) {
+    this._focus(this.tabs.get(name));
+  }
+});
+
+module.exports = RegionView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/midi/state.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/midi/state.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">70.42</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">170</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">24.11</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.24</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+
+var State = require(&#039;ampersand-state&#039;);
+var Collection = require(&#039;ampersand-collection&#039;);
+
+var midiMappings = {
+  &#039;KORG INC.&#039;: {
+    &#039;KP3 MIDI 1&#039;: require(&#039;./devices/korg/kp3&#039;),
+    &#039;nanoKONTROL2 MIDI 1&#039;: require(&#039;./devices/korg/nk2&#039;)
+  },
+  &#039;AKAI professional LLC&#039;: {
+    &#039;LPD8 MIDI 1&#039;: require(&#039;./devices/akai/lpd8&#039;)
+  },
+  &#039;Focusrite A.E. Ltd&#039;: {
+    &#039;Launchpad Mini MIDI 1&#039;: require(&#039;./devices/novation/lpm&#039;)
+  }
+};
+
+
+var MIDIState = State.extend({
+  props: {
+    manufacturer: &#039;string&#039;,
+    name: &#039;string&#039;
+  },
+
+  session: {
+    active: [&#039;boolean&#039;, true, true],
+    connection: &#039;string&#039;,
+    state: &#039;string&#039;,
+    type: &#039;string&#039;,
+    id: &#039;string&#039;,
+    version: &#039;string&#039;
+  }
+});
+
+
+
+function getMappings(manufacturer, name) {
+  var m = midiMappings || {};
+  if (!m[manufacturer] || !m[manufacturer][name]) {
+    return;
+  }
+  return m[manufacturer][name] || function(){};
+}
+
+
+function handleMIDIMessage(accessState, model) {
+  // var setThrottled = throttle(function(name, velocity) {
+  //   model.set(name, velocity);
+  // }, 1000 / 16);
+  var _mappings = getMappings(model.manufacturer, model.name);
+
+  return function(MIDIMessageEvent) {
+    if (!model.active) { return; }
+    var info = _mappings(MIDIMessageEvent.data);
+    // if (info.name) setThrottled(info.name, info.velocity);
+    if (model.collection.parent &amp;&amp; info.name) model.collection.parent.trigger(&#039;midi:change&#039;, model.id, info.name, info.velocity);
+  };
+}
+
+
+var MIDIAccessState = State.extend({
+  mappable: {
+    source: [&#039;inputs&#039;],
+    target: []
+  },
+
+  registerInput: function(info) {
+    var accessState = this;
+    var _mappings = getMappings(info.manufacturer, info.name);
+    if (!_mappings) {
+      if (info.name !== &#039;Midi Through Port-0&#039;) {
+        // console..warn(&#039;Unrecognized MIDI controller %s from %s&#039;, info.name, info.manufacturer);
+      }
+      return;
+    }
+
+    var props = {};
+    var sources = [];
+
+    Object.keys(_mappings.note || {}).forEach(function(key) {
+      sources.push(_mappings.note[key]);
+      props[_mappings.note[key]] = [&#039;number&#039;, true, 0];
+    });
+
+    var Constructor = MIDIState.extend({
+      mappable: {
+        source: sources,
+        target: []
+      },
+      props: props
+    });
+
+    var model = new Constructor({
+      connection: info.connection,
+      state: info.state,
+      type: info.type,
+      id: _mappings.prefix,//info.id,
+      manufacturer: info.manufacturer,
+      name: info.name,
+      version: info.version
+    });
+
+    if (typeof info.onmidimessage !== &#039;undefined&#039;) {
+      info.onmidimessage = handleMIDIMessage(this, model);
+    }
+
+    model.on(&#039;all&#039;, function(evtName, name, velocity) {
+      if (evtName.slice(0, 5) === &#039;midi:&#039;) accessState.trigger(name, velocity);
+    });
+
+    accessState.inputs.add(model);
+  },
+
+  initialize: function(options) {
+    options = options || {};
+    var accessState = this;
+
+
+    function MIDIAccessChanged() {
+      if (!accessState.MIDIAccess) {
+        accessState.inputs.reset([]);
+        return;
+      }
+      accessState.inputs.reset();
+      accessState.MIDIAccess.inputs.forEach(accessState.registerInput, accessState);
+      accessState.trigger(&#039;change:inputs&#039;);
+    }
+
+    accessState.on(&#039;change:MIDIAccess&#039;, MIDIAccessChanged);
+
+    if (typeof options.MIDIAccess === &#039;undefined&#039;) {
+      if (!navigator.requestMIDIAccess) {
+        accessState.MIDIAccess = false;
+        return;
+      }
+
+      navigator.requestMIDIAccess()
+        .then(function(MIDIAccess) {
+          accessState.MIDIAccess = MIDIAccess;
+          accessState.MIDIAccess.onstatechange = function(evt) {
+            accessState.MIDIAccess = evt.currentTarget;
+            MIDIAccessChanged();
+          };
+        }, function() {
+          accessState.MIDIAccess = false;
+        });
+    }
+  },
+
+  session: {
+    MIDIAccess: {
+      type: &#039;any&#039;,
+      default: false
+    }
+  },
+
+  collections: {
+    inputs: Collection.extend({
+    })
+  },
+
+  toJSON: function() {
+    var obj = {};
+    obj.inputs = this.inputs.toJSON();
+    return obj;
+  }
+});
+
+module.exports = MIDIAccessState;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

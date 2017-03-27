@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/layer/canvas/compile-draw-function.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/layer/canvas/compile-draw-function.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">67.60</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">298</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">61.77</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">2.26</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+function noop() {}
+var mockedCtx = require(&#039;./mocked-canvas-2d-context&#039;);
+
+
+var utils = {};
+utils.random = function random(multi = 100) {
+  return Math.random() * multi;
+};
+
+utils.between = function between(val, min, max) {
+  return Math.max(min, Math.min(max, val));
+};
+
+
+utils.log = function log(ctx, ...args) {
+  console.info(...args);
+};
+
+/**
+ * txt
+ * @param [text]
+ * @param [x]
+ * @param [y]
+ */
+utils.txt = function txt(ctx, ...args) {
+  var text, x, y;
+  [
+    text = &#039;&#039;,
+    x = ctx.canvas.width / 2,
+    y = ctx.canvas.height / 2,
+  ] = args;
+  ctx.fillText(text, x, y);
+};
+
+/**
+ * dot
+ * @param [x]
+ * @param [y]
+ * @param [radius]: 10
+ * @param [start]: 0
+ * @param [end]: 360
+ */
+utils.dot = function dot(ctx, ...args) {
+  var x, y, radius, start, end;
+  [
+    x = ctx.canvas.width / 2,
+    y = ctx.canvas.height / 2,
+    radius = 10,
+    start = 0,
+    end = Math.PI * 2
+  ] = args;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, start, end);
+  ctx.closePath();
+  ctx.fill();
+};
+
+/**
+ * circle
+ * @param [x]: &lt;center&gt;
+ * @param [y]: &lt;center&gt;
+ * @param [radius]: 10
+ * @param [start]: 0
+ * @param [end]: 360
+ */
+utils.circle = function circle(ctx, ...args) {
+  var x, y, radius, start, end;
+  [
+    x = ctx.canvas.width / 2,
+    y = ctx.canvas.height / 2,
+    radius = 10,
+    start = 0,
+    end = Math.PI * 2
+  ] = args;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, start, end);
+  ctx.closePath();
+  ctx.stroke();
+};
+
+
+utils.line = function line(ctx, ...args) {
+  ctx.beginPath();
+  if (typeof args[0] === &#039;string&#039;) {
+    ctx.strokeStyle = args.shift();
+  }
+  if (typeof args[0] === &#039;number&#039;) {
+    ctx.lineWidth = args.shift();
+  }
+  if (!args.length) return;
+  var point = args.shift();
+  ctx.moveTo(point[0], point[1]);
+  args.forEach(function(point) {
+    ctx.lineTo(point[0], point[1]);
+  });
+  ctx.stroke();
+};
+
+/**
+ * polygone
+ * @param [x]: &lt;center&gt;
+ * @param [y]: &lt;center&gt;
+ * @param [size]: 30
+ * @param [sides]: 3
+ */
+utils.polygone = function polygone(ctx, ...args) {
+  ctx.beginPath();
+  var sides, angle, i, x, y, lx, ly, size;
+  [
+    x,
+    y,
+    size = 30,
+    sides = 3
+  ] = args;
+  var shift = Math.PI * 0.5;
+  var rad = (Math.PI * 2) / sides;
+  for (i = 0; i &lt; sides; i++) {
+    angle = rad * i + shift;
+    lx = Math.round(x + Math.cos(angle) * size);
+    ly = Math.round(y + Math.sin(angle) * size);
+    if (!i) {
+      ctx.beginPath();
+    }
+    ctx.lineTo(lx, ly);
+  }
+
+  ctx.closePath();
+  ctx.stroke();
+};
+
+
+utils.grid = function grid(width, height, itemsCount, rowsCount, process) {
+  process = typeof process === &#039;function&#039; ? process : noop;
+  var r = 0,
+      c = 0,
+      xy = [0,0],
+      rowHeight = height / rowsCount,
+      columnsCount = itemsCount / rowsCount,
+      columnWidth = width / columnsCount
+  ;
+
+  // var args = [].slice.apply(arguments).map(item =&gt; typeof item);
+  // console.info(...args);
+  for (r = 0; r &lt; rowsCount; r++) {
+    for (c = 0; c &lt; columnsCount; c++) {
+      xy[1] = rowHeight * (r + 0.5);
+      xy[0] = columnWidth * (c + 0.5);
+      process(...xy);
+    }
+  }
+};
+
+
+/*
+function () {
+  var cx = width / 2;
+  var cy = height / 2;
+  var i = 0;
+  var r;
+  var s = -10;
+  fillStyle(&#039;#fff&#039;);
+  distribute(cx, cy, 12, cy, (layer.frametime % (360 * s)) / s, function(x, y, a) {
+    r = (cy / 12) * i;
+    fillText(a.toFixed(2), cx + (Math.cos(a) * r), cy + (Math.sin(a) * r));
+    i++;
+  });
+}
+*/
+utils.distribute = function distribute(x, y, itemsCount, r, tilt, process) {
+  itemsCount = itemsCount || 2;
+  tilt = tilt || 0;
+  process = typeof process === &#039;function&#039; ? process : noop;
+  var i, a, args;
+  var rad = Math.PI * 2;
+  for (i = 0; i &lt; itemsCount; i++) {
+    a = ((rad / itemsCount) * i) - Math.PI + ((rad / 360) * tilt);
+    args = [
+      x + (Math.cos(a) * r),
+      y + (Math.sin(a) * r),
+      a
+    ];
+    process(...args);
+  }
+};
+
+
+
+utils.repeat = function repeat(times, process, ...args) {
+  process = typeof process === &#039;function&#039; ? process : noop;
+  for (var i = 0; i &lt; times; i++) {
+    process(i, ...args);
+  }
+};
+
+
+utils.cacheContext = function cacheContext(ctx, cache, max) {
+  max = max || 0;
+  if (!max) return;
+
+  var w = ctx.canvas.width;
+  var h = ctx.canvas.height;
+  cache.unshift(ctx.getImageData(0, 0, w, h));
+  if (cache.length &gt;= max) cache.pop();
+};
+
+utils.restoreContexts = function restoreContexts(ctx, cache, count, preprocess, postprocess) {
+  count = count || 1;
+  preprocess = preprocess || noop;
+  postprocess = postprocess || noop;
+  // console.info(cache.length);
+  for (var c = 1; c &lt; count &amp;&amp; c &lt; cache.length; c++) {
+    if (cache[c] instanceof ImageData) {
+      try {
+        ctx.putImageData(preprocess(cache[c]), 0, 0);
+        postprocess();
+      }
+      catch (e) {
+        console.info(e.message, cache[c] instanceof ImageData);
+      }
+    }
+  }
+};
+
+
+// proxy the method and properties of the canvas context
+var ctxProperties = &#039;&#039;;
+mockedCtx._.methods
+  .forEach(function(name) {
+    ctxProperties += &#039;\nvar &#039; + name + &#039; = function(...args) { try { ctx.&#039; + name + &#039;(...args); } catch(e){} };&#039;;
+  });
+mockedCtx._.properties
+  .forEach(function(name) {
+    if (name !== &#039;canvas&#039;) ctxProperties += &#039;\nvar &#039; + name + &#039; = function(val) { if (val !== undefined) { ctx.&#039; + name + &#039; = val; } return ctx.&#039; + name + &#039;; };&#039;;
+  });
+
+
+// proxy the ramda functions
+var ramdaMethods = &#039;&#039;;
+var ramda = require(&#039;ramda&#039;);
+Object.keys(ramda)
+  .filter(function(name) {
+    return name.length &gt; 1 &amp;&amp; typeof ramda[name] === &#039;function&#039;;
+  })
+  .forEach(function(name) {
+    ramdaMethods += &#039;\nvar &#039; + name + &#039; = ramda.&#039; + name + &#039;;&#039;;
+  });
+
+
+function compileFunction(drawFunction) {
+  var fn;// jshint ignore:line
+
+  var evaled = `fn = (function() {
+  // override some stuff that should not be used
+  var navigator, window, global, document, module, exports;
+
+  return function(ctx) {
+    var width = (ctx.canvas || {}).width || 400;
+    var height = (ctx.canvas || {}).height || 300;
+    var layer = this;
+    var store = layer.cache;
+    var frametime = layer ? layer.frametime : 0;
+    var audio = layer ? layer.audio : {};
+    var bufferLength = function() { return ((layer.audio || {}).bufferLength) || 128; };
+    var frequency = function(x) {
+      return ((layer.audio || {}).frequency || [])[x] || 0;
+    };
+    var timeDomain = function(x) {
+      return ((layer.audio || {}).timeDomain || [])[x] || 0;
+    };
+
+    ${ ctxProperties }
+    /*
+    ${ ramdaMethods }
+    */
+    var random = utils.random;
+    var between = utils.between;
+    var grid = function(...args) { utils.grid(width, height, ...args); };
+    var distribute = function(...args) { utils.distribute(...args); };
+    var repeat = function(...args) { utils.repeat(...args); };
+    var log = function(...args) { utils.log(ctx, ...args); };
+    var txt = function(...args) { utils.txt(ctx, ...args); };
+    var dot = function(...args) { utils.dot(ctx, ...args); };
+    var circle = function(...args) { utils.circle(ctx, ...args); };
+    var polygone = function(...args) { utils.polygone(ctx, ...args); };
+    var line = function(...args) { utils.line(ctx, ...args); };
+    var cacheContext = function(...args) { utils.cacheContext(ctx, ...args); };
+    var restoreContexts = function(...args) { utils.restoreContexts(ctx, ...args); };
+
+
+    return (${ drawFunction.toString() })(ctx);
+  };
+})();`;
+  eval(evaled);// jshint ignore:line
+  return fn;
+}
+
+module.exports = compileFunction;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

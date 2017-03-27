@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/controller/gist-view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/controller/gist-view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">74.30</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">146</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">22.21</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.05</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/* global Request */
+&#039;use strict&#039;;
+var View = require(&#039;./control-view&#039;);
+var jsYAML = require(&#039;js-yaml&#039;);
+
+function resToJSON(res) {
+  return res.json();
+}
+
+function toObj(arr) {
+  var obj = {};
+  arr.forEach(function(o) {
+    obj[o.name] = o;
+    delete obj[o.name].name;
+  });
+  return obj;
+}
+
+function toArr(obj) {
+  var keys = Object.keys(obj);
+  return keys.map(function(key) {
+    obj[key].name = key;
+    return obj[key];
+  });
+}
+
+
+var GistView = View.extend({
+  template: `
+    &lt;div class=&quot;columns&quot;&gt;
+      &lt;div class=&quot;column&quot;&gt;&lt;input placeholder=&quot;Gist ID&quot; name=&quot;gist-id&quot;/&gt;&lt;/div&gt;
+      &lt;div class=&quot;column no-grow&quot;&gt;&lt;button name=&quot;save-gist&quot;&gt;Save gist&lt;/button&gt;&lt;/div&gt;
+      &lt;a target=&quot;_blank&quot;&gt;Open on GH&lt;/a&gt;
+    &lt;/div&gt;
+  `,
+
+  events: {
+    &#039;change [name=&quot;gist-id&quot;]&#039;: &#039;_loadGist&#039;,
+    &#039;click [name=&quot;save-gist&quot;]&#039;: &#039;_saveGist&#039;
+  },
+
+  session: {
+    gistId: &#039;string&#039;,
+    revision: &#039;any&#039;
+  },
+
+  derived: {
+    url: {
+      deps: [&#039;gistId&#039;],
+      fn: function() {
+        return this.gistId ? &#039;https://gist.github.com/&#039; + this.gistId : false;
+      }
+    }
+  },
+
+  bindings: {
+    gistId: [
+      {
+        type: &#039;value&#039;,
+        selector: &#039;[name=&quot;gist-id&quot;]&#039;
+      }
+    ],
+    url: [
+      {
+        type: &#039;attribute&#039;,
+        name: &#039;href&#039;,
+        selector: &#039;a&#039;
+      },
+      {
+        type: &#039;toggle&#039;,
+        selector: &#039;a&#039;
+      }
+    ]
+  },
+
+  _loadGist: function(done) {
+    var view = this;
+    if (!view.gistId) return done(new Error(&#039;No Gist ID&#039;));
+    done = typeof done === &#039;function&#039; ? done : function(err) { console.error(&#039;gist loading error&#039;, err.message); };
+
+    fetch(&#039;https://api.github.com/gists/&#039; + view.gistId)
+      .then(resToJSON)
+      .then(function(json) {
+        var content = json.files[&#039;visual-fiha-setup.yml&#039;].content;
+        done(null, view.fromYaml(content));
+      }, done)
+      .catch(done);
+  },
+
+  fromYaml: function(newStr) {
+    var obj = {};
+    try {
+      obj = jsYAML.safeLoad(newStr);
+      obj.signals = toArr(obj.signals || {});
+      obj.layers = toArr(obj.layers || {});
+      obj.mappings = toArr(obj.mappings || {});
+    }
+    catch(e) {
+      console.warn(e);
+    }
+    return obj;
+  },
+
+  toYaml: function() {
+    var setup = this.parent.toJSON();
+    setup.signals = toObj(setup.signals || []);
+    setup.layers = toObj(setup.layers || []);
+    setup.mappings = toObj(setup.mappings || []);
+    return jsYAML.safeDump(JSON.parse(JSON.stringify(setup)));
+  },
+
+  _saveGist: function(evt) {
+    console.info(&#039;_saveGist&#039;);
+    evt.preventDefault();
+    var method = &#039;POST&#039;;
+    var url = &#039;https://api.github.com/gists&#039;;
+    var view = this;
+
+    // we can&#039;t update an anonymous gist... :/
+    // var id = this.gistId;
+    // if (id) {
+    //   url += &#039;/&#039; + id;
+    //   method = &#039;PATCH&#039;;
+    // }
+
+    var req = new Request(url, {
+      method: method,
+      body: JSON.stringify({
+        description: &#039;This gist is a setup information for https://zeropaper.github.io/visual-fiha&#039;,
+        public: true,
+        files: {
+          &#039;visual-fiha-setup.yml&#039;: {
+            content: view.toYaml()
+          }
+        }
+      })
+    });
+
+    fetch(req)
+      .then(resToJSON)
+      .then(function(json) {
+        view.gistId = json.id;
+      });
+  }
+});
+module.exports = GistView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

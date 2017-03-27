@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/controller/property-view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/controller/property-view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">74.94</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">350</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">32.45</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">2.40</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var assign = require(&#039;lodash.assign&#039;);
+var View = require(&#039;./control-view&#039;);
+var objectPath = require(&#039;./../object-path&#039;);
+
+var PropertyView = View.extend({
+  template: `
+    &lt;div class=&quot;columns object-prop prop-type-default&quot;&gt;
+      &lt;div class=&quot;column gutter text-right prop-name&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;column no-grow prop-value-reset&quot;&gt;
+        &lt;button class=&quot;vfi-cancel&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-value&quot;&gt;
+        &lt;input name=&quot;value&quot; type=&quot;text&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-mapping-clear no-grow&quot;&gt;
+        &lt;button class=&quot;vfi-unlink&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-mapping-name&quot;&gt;
+        &lt;input name=&quot;mapping-name&quot; type=&quot;text&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column no-grow&quot;&gt;
+        &lt;button class=&quot;mapping-details&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  `,
+
+  initialize: function() {
+    View.prototype.initialize.apply(this, arguments);
+
+    this.listenToAndRun(this.parent.model, &#039;change:&#039; + this.model.name, function() {
+      this.trigger(&#039;change:model&#039;, this.model);
+    });
+  },
+
+  derived: {
+    suggestionHelper: {
+      cache: false,
+      fn: function() {
+        var view = this.parent;
+        while (view) {
+          if (view.suggestionHelper) return view.suggestionHelper;
+          view = view.parent;
+        }
+        return false;
+      }
+    },
+
+    value: {
+      deps: [
+        &#039;model&#039;,
+        &#039;model.name&#039;,
+        &#039;parent.model&#039;
+      ],
+      fn: function() {
+        return this.parent.model.get(this.model.name);
+      }
+    },
+
+    propertyPath: {
+      deps: [],
+      fn: function() {
+        return this.parent.modelPath + &#039;.&#039; + this.model.name;
+      }
+    },
+
+    mapping: {
+      deps: [],
+      fn: function() {
+        return this.rootView.mappings.findMappingByTarget(this.propertyPath);
+      }
+    }
+  },
+
+  bindings: {
+    &#039;model.name&#039;: {
+      type: &#039;text&#039;,
+      selector: &#039;.prop-name&#039;
+    },
+
+    value: {
+      type: function(el, val) {
+        if (el === document.activeElement) return;
+        el.value = val;
+      },
+      selector: &#039;input[name=value]&#039;,
+    },
+
+    &#039;mapping.name&#039;: [
+      {
+        type: &#039;booleanAttribute&#039;,
+        selector: &#039;.prop-mapping-clear button&#039;,
+        name: &#039;disabled&#039;,
+        invert: true
+      },
+      {
+        type: &#039;value&#039;,
+        selector: &#039;[name=&quot;mapping-name&quot;]&#039;
+      },
+      {
+        type: &#039;booleanClass&#039;,
+        selector: &#039;.mapping-details&#039;,
+        yes: &#039;vfi-eye&#039;,
+        no: &#039;vfi-eye-off&#039;
+      },
+      {
+        type: &#039;booleanAttribute&#039;,
+        selector: &#039;.mapping-details&#039;,
+        name: &#039;disabled&#039;,
+        invert: true
+      },
+      {
+        type: &#039;booleanAttribute&#039;,
+        selector: &#039;.prop-value-reset button&#039;,
+        name: &#039;disabled&#039;
+      }
+    ]
+  },
+
+  commands: {
+    &#039;click .prop-mapping-clear button&#039;: &#039;updateMapping _handleRemoveMappingTarget&#039;,
+    &#039;change [name=&quot;value&quot;]&#039;: &#039;propChange _handleChange&#039;,
+    // &#039;click .prop-value-reset button&#039;: &#039;resetProp _handleReset&#039;,
+  },
+
+  _handleRemoveMappingTarget: function() {
+    var propertyPath = this.propertyPath;
+    var mapping = this.mapping.serialize();
+    mapping.targets = mapping.targets.filter(function(target) {
+      return target !== propertyPath;
+    });
+    return {mapping: mapping};
+  },
+
+  _handleChange: function() {
+    var parent = this.model.collection.parent.model;
+    return {
+      path: parent.modelPath || objectPath(parent),
+      property: this.model.name,
+      value: this.query(&#039;[name=&quot;value&quot;]&#039;).value
+    };
+  },
+
+  // _handleReset: function() {
+  //   this.parent.model.unset(this.model.name);
+  // },
+
+  events: {
+    &#039;focus [name=&quot;mapping-name&quot;]&#039;: &#039;_suggestMapping&#039;,
+    &#039;focus [type=&quot;text&quot;][name=&quot;value&quot;]&#039;: &#039;_suggestValues&#039;,
+    &#039;click button.mapping-details&#039;: &#039;_showMapping&#039;
+  },
+
+  _suggestMapping: function(evt) {
+    var view = this;
+    var helper = view.suggestionHelper;
+    var mappings = this.rootView.mappings;
+    var propertyPath = this.propertyPath;
+
+    helper.attach(evt.target, function(selected) {
+      var mappingState = mappings.get(selected);
+      if (!mappingState) return;
+      var mapping = mappingState.serialize();
+      mapping.targets.push(propertyPath);
+      view.sendCommand(&#039;updateMapping&#039;, {
+        mapping: mapping
+      });
+      helper.detach();
+    }).fill(mappings.map(function(state) { return state.name; }));
+  },
+
+  _suggestValues: function(evt) {
+    var view = this;
+    var helper = view.suggestionHelper;
+    if (!helper || !view.model.values || !view.model.values.length) return;
+
+    var model = view.model;
+    var parent = model.collection.parent.model;
+    var el = evt.target;
+    helper.attach(el, function(selected) {
+      // console.info(&#039;set %s . %s = %s&#039;, objectPath(parent), model.name, selected, el.value !== selected);
+
+      view.sendCommand(&#039;propChange&#039;, {
+        path: objectPath(parent),
+        property: model.name,
+        value: selected
+      });
+
+      el.value = selected;
+      helper.detach();
+    }).fill(model.values);
+  },
+
+  _showMapping: function() {
+    var mapping = this.mapping;
+    var rootView = this.rootView;
+    rootView.regionRight.focusTab(&#039;Mappings&#039;);
+    rootView.mappingsView.mappingsList.views.forEach(function(view) {
+      if (view.model === mapping) {
+        view.el.scrollIntoView();
+        view.blink();
+      }
+    });
+  }
+});
+
+
+
+PropertyView.types = {};
+
+PropertyView.types.boolean = PropertyView.extend({
+  template: `
+    &lt;div class=&quot;columns object-prop prop-type-boolean&quot;&gt;
+      &lt;div class=&quot;column gutter text-right prop-name&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;column no-grow prop-value-reset&quot;&gt;
+        &lt;button class=&quot;vfi-cancel&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-value&quot;&gt;
+        &lt;button class=&quot;prop-toggle-btn&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-mapping-clear no-grow&quot;&gt;
+        &lt;button class=&quot;vfi-unlink&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-mapping-name&quot;&gt;
+        &lt;input name=&quot;mapping-name&quot; type=&quot;text&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column no-grow&quot;&gt;
+        &lt;button class=&quot;mapping-details&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  `,
+
+  bindings: assign({}, PropertyView.prototype.bindings, {
+    value: {
+      selector: &#039;button.prop-toggle-btn&#039;,
+      type: &#039;booleanClass&#039;,
+      yes: &#039;vfi-toggle-on&#039;,
+      no: &#039;vfi-toggle-off&#039;
+    }
+  }),
+
+  events: {
+    &#039;focus [name=&quot;mapping-name&quot;]&#039;: &#039;_suggestMapping&#039;,
+    &#039;click button.prop-toggle-btn&#039;: &#039;_handleChange&#039;
+  },
+
+  _handleChange: function() {
+    var parent = this.model.collection.parent.model;
+    this.sendCommand(&#039;propChange&#039;, {
+      path: objectPath(parent),
+      property: this.model.name,
+      value: !parent[this.model.name]
+    });
+  }
+});
+
+PropertyView.types.number = PropertyView.extend({
+  template: `
+    &lt;div class=&quot;columns object-prop prop-type-number&quot;&gt;
+      &lt;div class=&quot;column gutter text-right prop-name&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;column no-grow prop-value-reset&quot;&gt;
+        &lt;button class=&quot;vfi-cancel&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-value&quot;&gt;
+        &lt;input name=&quot;value&quot; type=&quot;number&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-mapping-clear no-grow&quot;&gt;
+        &lt;button class=&quot;vfi-unlink&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column prop-mapping-name&quot;&gt;
+        &lt;input name=&quot;mapping-name&quot; type=&quot;text&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;column no-grow&quot;&gt;
+        &lt;button class=&quot;mapping-details&quot;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  `,
+
+  bindings: assign({}, PropertyView.prototype.bindings, {
+    min: [
+      {
+        selector: &#039;[name=value]&#039;,
+        type: function(el, val) {
+          if (val !== null &amp;&amp; typeof val !== &#039;undefined&#039;) {
+            el.setAttribute(&#039;min&#039;, val);
+          }
+          else {
+            el.removeAttribute(&#039;min&#039;);
+          }
+        }
+      }
+    ],
+    max: [
+      {
+        selector: &#039;[name=value]&#039;,
+        type: function(el, val) {
+          if (val !== null &amp;&amp; typeof val !== &#039;undefined&#039;) {
+            el.setAttribute(&#039;max&#039;, val);
+          }
+          else {
+            el.removeAttribute(&#039;max&#039;);
+          }
+        }
+      }
+    ],
+  }),
+
+  session: {
+    min: [&#039;number&#039;, false, null],
+    max: [&#039;number&#039;, false, null]
+  },
+
+  _handleChange: function() {
+    var payload = PropertyView.prototype._handleChange.apply(this, arguments);
+    payload.value = Number(payload.value);
+    return payload;
+  }
+});
+
+
+
+
+
+
+
+
+
+PropertyView.names = {};
+
+PropertyView.names.active = PropertyView.types.boolean.extend({});
+
+PropertyView.names.opacity = PropertyView.types.number.extend({
+  session: {
+    min: [&#039;number&#039;, false, 0],
+    max: [&#039;number&#039;, false, 100]
+  }
+});
+
+PropertyView.names.skewX =
+PropertyView.names.skewY =
+PropertyView.names.rotateX =
+PropertyView.names.rotateY =
+PropertyView.names.rotateZ = PropertyView.types.number.extend({
+  session: {
+    min: [&#039;number&#039;, false, -360],
+    max: [&#039;number&#039;, false, 360]
+  }
+});
+
+module.exports = PropertyView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

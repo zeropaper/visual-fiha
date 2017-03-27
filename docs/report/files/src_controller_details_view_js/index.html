@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/controller/details-view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/controller/details-view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">78.23</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">120</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">17.80</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.86</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var assign = require(&#039;lodash.assign&#039;);
+var Collection = require(&#039;ampersand-collection&#039;);
+var State = require(&#039;ampersand-state&#039;);
+var View = require(&#039;./control-view&#039;);
+var objectPath = require(&#039;./../object-path&#039;);
+
+var PropertyView = require(&#039;./property-view&#039;);
+
+var DetailsView = View.extend({
+  template: `
+    &lt;section class=&quot;row rows&quot;&gt;
+      &lt;header class=&quot;row no-grow&quot;&gt;
+        &lt;div class=&quot;columns&quot;&gt;
+          &lt;h3 class=&quot;column&quot;&gt;Details for &lt;span data-hook=&quot;name&quot;&gt;&lt;/span&gt; &lt;small data-hook=&quot;type&quot;&gt;&lt;/small&gt;&lt;/h3&gt;
+        &lt;/div&gt;
+        &lt;h5 data-hook=&quot;object-path&quot;&gt;&lt;/h5&gt;
+      &lt;/header&gt;
+
+      &lt;div class=&quot;row items&quot;&gt;&lt;/div&gt;
+    &lt;/section&gt;
+  `,
+
+  initialize: function() {
+    this.listenToAndRun(this, &#039;change:definition&#039;, function() {
+      this.properties.reset(this.definition);
+    });
+
+    this.listenTo(this.rootView, &#039;all&#039;, function(evtName) {
+      if (evtName.indexOf(&#039;app:&#039;) === 0 &amp;&amp; evtName.indexOf(&#039;Mapping&#039;) &gt; 0) {
+        this.trigger(&#039;change:model&#039;, this.model);
+      }
+      else if (evtName === &#039;blink&#039;) {
+        if(this.modelPath === arguments[1]) this.blink();
+      }
+    });
+  },
+
+  derived: {
+    propNames: {
+      deps: [&#039;model&#039;],
+      fn: function() {
+        var def = this.model.constructor.prototype._definition;
+        return Object.keys(def)
+          .filter(function(key) {
+            return [
+              &#039;drawFunction&#039;,
+
+              &#039;name&#039;,
+              &#039;type&#039;
+            ].indexOf(key) &lt; 0;
+          });
+      }
+    },
+
+    definition: {
+      deps: [&#039;propNames&#039;],
+      fn: function() {
+        var def = this.model.constructor.prototype._definition;
+        return this.propNames
+          .map(function(name) {
+            return assign({name: name}, def[name]);
+          });
+      }
+    },
+
+    modelPath: {
+      deps: [&#039;model&#039;],
+      fn: function() {
+        return objectPath(this.model);
+      }
+    }
+  },
+
+  collections: {
+    properties: Collection.extend({
+      mainIndex: &#039;name&#039;,
+
+      model: State.extend({
+        idAttribute: &#039;name&#039;,
+
+        session: {
+          name: &#039;string&#039;,
+          allowNull: &#039;boolean&#039;,
+          default: &#039;any&#039;,
+          required: &#039;boolean&#039;,
+          test: &#039;any&#039;,
+          type: &#039;string&#039;,
+          values: &#039;array&#039;
+        }
+      })
+    })
+  },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+
+    if (this.propertiesView) {
+      this.propertiesView.remove();
+    }
+
+    this.propertiesView = this.renderCollection(this.properties, function (opts) {
+      var Constructor = (PropertyView.names[opts.model.name] || PropertyView.types[opts.model.type] || PropertyView);
+      // console.info(&#039;property name: %s (%s), type: %s (%s)&#039;, opts.model.name, !!PropertyView.names[opts.model.name], opts.model.type, !!PropertyView.types[opts.model.type]);
+      return new Constructor(opts);
+    }, &#039;.items&#039;);
+
+    this.trigger(&#039;change:model&#039;);
+    this.trigger(&#039;change:model.name&#039;);
+    this.trigger(&#039;change:modelPath&#039;);
+    return this;
+  },
+
+  bindings: {
+    &#039;model.name&#039;: &#039;[data-hook=name]&#039;,
+    &#039;model.type&#039;: &#039;[data-hook=type]&#039;,
+    modelPath: &#039;[data-hook=&quot;object-path&quot;]&#039;
+  }
+});
+module.exports = DetailsView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/controller/timeline-view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/controller/timeline-view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">65.08</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">245</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">45.97</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">2.33</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var View = require(&#039;./control-view&#039;);
+var Collection = require(&#039;ampersand-collection&#039;);
+var State = require(&#039;ampersand-state&#039;);
+
+var Entry = State.extend({
+  props: {
+    time: &#039;date&#039;,
+    command: &#039;string&#039;,
+    payload: &#039;any&#039;
+  },
+
+  derived: {
+    timeFromStart: {
+      deps: [&#039;collection&#039;, &#039;collection.parent&#039;, &#039;collection.parent.starttime&#039;],
+      fn: function() {
+        return this.collection.parent.starttime - this.time;
+      }
+    }
+  }
+});
+
+var Entries = Collection.extend({
+  model: Entry
+});
+
+var TimelineView = View.extend({
+  template: `&lt;div class=&quot;timeline rows&quot;&gt;
+  &lt;div class=&quot;row no-grow columns&quot;&gt;
+    &lt;div class=&quot;column no-grow&quot;&gt;&lt;button value=&quot;play&quot; class=&quot;vfi-play&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+    &lt;div class=&quot;column no-grow&quot;&gt;&lt;button value=&quot;stop&quot; class=&quot;vfi-stop&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+    &lt;div class=&quot;column no-grow&quot;&gt;&lt;button value=&quot;pause&quot; class=&quot;vfi-pause&quot;&gt;&lt;/button&gt;&lt;/div&gt;
+
+    &lt;div class=&quot;column&quot;&gt;&lt;/div&gt;
+
+    &lt;div class=&quot;column no-grow&quot;&gt;
+      &lt;label&gt;Elapsed time&lt;/label&gt;
+      &lt;span class=&quot;elapsedtime&quot;&gt;&lt;/span&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;column&quot;&gt;&lt;/div&gt;
+
+    &lt;div class=&quot;column no-grow&quot;&gt;
+      &lt;label&gt;Entries count&lt;/label&gt;
+      &lt;span class=&quot;entries-count&quot;&gt;&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;row canvas-wrapper&quot;&gt;
+    &lt;canvas&gt;&lt;/canvas&gt;
+  &lt;/div&gt;
+&lt;/div&gt;`,
+
+  addEntries: function(...args) {
+    this.entries.add(...args);
+    this.trigger(&#039;change:entries&#039;);
+  },
+
+  initialize: function() {
+    this.on(&#039;change:entries&#039;, function() {
+      if (this.starttime &gt; this.firsttime) this.starttime = this.firsttime;
+      this.update();
+    });
+  },
+
+  session: {
+    playstate: &#039;string&#039;,
+    starttime: [&#039;date&#039;, true, Date.now],
+    canvasPadding: [&#039;number&#039;, true, 10]
+  },
+
+  collections: {
+    entries: Entries
+  },
+
+  bindings: {
+    elapsedtime: {
+      selector: &#039;.elapsedtime&#039;,
+      type: function(el, value) {
+        var sec = value * 0.001;
+        var min = Math.floor(sec / 60);
+        sec -= min * 60;
+        var hr = Math.floor(min / 60);
+        min -= hr * 60;
+        el.textContent = (hr ? hr + &#039;h&#039; : &#039;&#039;) + (min ? min + &#039;m&#039; : &#039;&#039;) + Math.round(sec) +&#039;s&#039;;
+      }
+    },
+    entries: [
+      {
+        type: function(el) {
+          el.textContent = this.entries.length;
+        },
+        selector: &#039;.entries-count&#039;
+      }
+    ]
+  },
+
+  derived: {
+    firsttime: {
+      deps: [&#039;entries&#039;],
+      fn: function() {
+        if (!this.entries.models.length) return Date.now();
+        return this.entries.models[0].time;
+      }
+    },
+    lasttime: {
+      deps: [&#039;entries&#039;],
+      fn: function() {
+        if (!this.entries.models.length) return Date.now();
+        return this.entries.models[this.entries.models.length - 1].time;
+      }
+    },
+    ctx: {
+      cache: false,
+      deps: [&#039;el&#039;],
+      fn: function() {
+        if (!this.el) return false;
+        var canvas = this.query(&#039;canvas&#039;);
+        if (canvas.width !== canvas.parentNode.clientWidth || canvas.height !== canvas.parentNode.clientHeight) {
+          canvas.width = canvas.parentNode.clientWidth;
+          canvas.height = canvas.parentNode.clientHeight;
+        }
+        return canvas.getContext(&#039;2d&#039;);
+      }
+    },
+    elapsedtime: {
+      deps: [&#039;starttime&#039;, &#039;lasttime&#039;],
+      fn: function() {
+        return this.lasttime - this.starttime;
+      }
+    },
+    msPerPx: {
+      deps: [&#039;ctx&#039;, &#039;elapsedtime&#039;],
+      fn: function() {
+        if (!this.ctx) return 0;
+        return (this.ctx.canvas.width - (this.canvasPadding * 2)) / this.elapsedtime;
+      }
+    },
+    stats: {
+      deps: [&#039;entries&#039;],
+      fn: function() {
+        var entries = this.entries.models;
+        var obj = {
+          firsttime: this.firsttime,
+          lasttime: this.lasttime,
+          commands: {}
+        };
+        var command;
+
+        for (var i = 0; i &lt; entries.length; i++) {
+          command = entries[i].command;
+          obj.commands[command] = obj.commands[command] || 0;
+          obj.commands[command]++;
+        }
+
+        return obj;
+      }
+    }
+  },
+
+  _drawGrid: function() {
+    var ctx = this.ctx;
+    if (!ctx) return this;
+
+    var padding = this.canvasPadding;
+    var xMax = ctx.canvas.width - (padding * 2);
+    var xStep = xMax / 10;
+    var yBot = 0;
+    var yTop = padding;
+    var c;
+    var label;
+    var rad = Math.PI * - 0.5;
+    var x = 0;
+    var count = 10;
+    var timestep = this.elapsedtime / (count * 1000);
+
+    ctx.fillStyle = &#039;#fff&#039;;
+    ctx.strokeStyle = &#039;rgba(255, 255, 255, 0.3)&#039;;
+    ctx.lineWidth = 1;
+    ctx.textBaseline = &#039;middle&#039;;
+    ctx.textAlign = &#039;right&#039;;
+
+    var items = [];
+    for (c = 0; c &lt;= count; c++) {
+      label = Math.round(timestep * c) + &#039;s&#039;;
+      yBot = Math.max(yBot, ctx.measureText(label).width);
+      items.push({
+        label: label,
+        x: Math.round(x + padding) + 0.5
+      });
+      x += xStep;
+    }
+
+    yBot += padding * 2;
+    yBot = ctx.canvas.height - yBot;
+
+    for (c = 0; c &lt;= count; c++) {
+      ctx.beginPath();
+      ctx.moveTo(items[c].x, yBot);
+      ctx.lineTo(items[c].x, yTop);
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(items[c].x, yBot);
+      ctx.rotate(rad);
+      ctx.fillText(items[c].label, 0 - padding, 0);
+      ctx.restore();
+    }
+
+    return this;
+  },
+
+  update: function() {
+    var ctx = this.ctx;
+    if (!ctx) return this;
+
+    var width = ctx.canvas.width;
+    var height = ctx.canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    this._drawGrid();
+
+    var padding = this.canvasPadding;
+    var msPerPx = this.msPerPx;
+    var starttime = this.starttime;
+    var entries = this.entries.models;
+
+    function x(entry) {
+      return (msPerPx * (entry.time - starttime)) + padding;
+    }
+
+    ctx.fillStyle = &#039;#fff&#039;;
+    // ctx.strokeStyle = &#039;red&#039;;
+
+    for (var e = 0; e &lt; entries.length; e++) {
+      ctx.beginPath();
+      ctx.arc(x(entries[e]), height * 0.5, 2, 0, Math.PI * 2);
+      ctx.fill();
+      // ctx.stroke();
+    }
+
+    return this;
+  }
+});
+module.exports = TimelineView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

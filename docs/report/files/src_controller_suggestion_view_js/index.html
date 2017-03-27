@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/controller/suggestion-view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/controller/suggestion-view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">65.38</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">385</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">64.19</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">4.33</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+// var View = require(&#039;./control-view&#039;);
+var View = require(&#039;ampersand-view&#039;);
+var Collection = require(&#039;ampersand-collection&#039;);
+var State = require(&#039;ampersand-state&#039;);
+
+function sharedStart(array) {
+  var A = array.concat().sort(),
+      a1 = A[0],
+      a2 = A[A.length-1],
+      L = a1.length,
+      i = 0;
+  while(i &lt; L &amp;&amp; a1.charAt(i) === a2.charAt(i)) i++;
+  return a1.substring(0, i);
+}
+
+var SuggestionItem = View.extend({
+  template: &#039;&lt;li&gt;&lt;/li&gt;&#039;,
+  derived: {
+    shortText: {
+      deps: [&#039;model.text&#039;, &#039;model.collection.parent&#039;],
+      fn: function() {
+        return this.model.text.substring(this.model.collection.parent.commonStart.length);
+      }
+    }
+  },
+  bindings: {
+    &#039;model.active&#039;: {type: &#039;booleanClass&#039;, name: &#039;active&#039;},
+    shortText: {type: &#039;text&#039;}
+  },
+  events: {
+    click: &#039;_handleClick&#039;
+  },
+  _handleClick: function (evt) {
+    evt.preventDefault();
+    this.parent.trigger(&#039;selected&#039;, this.model.value || this.model.text);
+  }
+});
+
+var SuggestionView = View.extend({
+  autoRender: true,
+
+  attach: function (el, selectCb, newCollection) {
+    this.inputEl = typeof el === &#039;string&#039; ? this.parent.query(el) : el;
+    selectCb = selectCb || function(selected) { this.inputEl.value = selected; this.detach(); }.bind(this);
+    this.off(&#039;selected&#039;);
+    this.once(&#039;selected&#039;, selectCb);
+
+    this._makeHintEl();
+
+    if (newCollection) {
+      if (newCollection.isCollection) {
+        this.collection = newCollection;
+      }
+      else {
+        this.collection.reset(newCollection);
+      }
+    }
+
+    this.filterCollection();
+
+    return this;
+  },
+
+  fill: function (arr) {
+    arr = typeof arr === &#039;function&#039; ? arr(this.inputEl.value) : arr;
+    this.collection.reset(arr.map(function (v) { return {text:v}; }));
+    return this.filterCollection();
+  },
+
+  detach: function (done) {
+    done = done || function(){};
+    this._removeHintEl();
+    this.off(&#039;selected&#039;);
+    this.unset(&#039;inputEl&#039;);
+    this.collection.reset([]);
+    done();
+    return this;
+  },
+
+  filterCollection: function () {
+    var update = [];
+    if (!this.inputEl) {
+      update = this.collection.models;
+    }
+    else {
+      var inputElVal = this.inputEl.value || this.inputEl.value;
+
+      if (!inputElVal) {
+        update = this.collection.models;
+      }
+      else {
+        update = this.collection.filter(function (suggestion) {
+          return suggestion.text.indexOf(inputElVal) === 0;
+        });
+      }
+    }
+
+    if (update.length &gt; 1) {
+      this.commonStart = sharedStart(update.map(function(state) { return state.text; }));
+    }
+    else if (update.length/* === 1*/) {
+      this.commonStart = update[0].text;
+      if (this.commonStart === this.inputEl.value) {
+        update = [];
+      }
+    }
+    else {
+      this.commonStart = &#039;&#039;;
+      update = [];
+    }
+    this.suggestions.reset(update);
+    this.hasSuggestions = !!update.length;
+    if (this.hasSuggestions) this.suggestions.at(0).toggle(&#039;active&#039;);
+    return this;
+  },
+
+  derived: {
+    // creates an event listener with correct scope (ideal for add/removeEventListener)
+    _handleHintClick: {
+      deps: [],
+      fn: function() {
+        var view = this;
+        return function() {
+          if (!view.inputEl || !view.commonStart) return;
+          view.inputEl.value = view.commonStart;
+        };
+      }
+    },
+    styles: {
+      deps:[&#039;inputEl&#039;],
+      fn: function() {
+        if (!this.inputEl) return {};
+        return window.getComputedStyle(this.inputEl);
+      }
+    }
+  },
+
+  session: {
+    hasSuggestions: &#039;boolean&#039;,
+    commonStart: &#039;string&#039;,
+    inputEl: &#039;element&#039;
+  },
+
+  bindings: {
+    hasSuggestions: {
+      type: &#039;toggle&#039;
+    },
+    commonStart: {
+      type: function() {
+        var el = this.suggestionHint;
+        if (!el) return;
+        el.textContent = this.commonStart;
+      }
+    }
+  },
+
+  _handleInput: function(evt) {
+    var suggestions = this.suggestions;
+    var activeState = suggestions.filter(function(state) {
+      return state.active;
+    })[0];
+    var activeIndex = activeState ? suggestions.indexOf(activeState) : -1;
+    var inputElVal = this.inputEl.value;
+
+
+    if (evt.type === &#039;keydown&#039;) {
+      // that way, autocomplete can be done using the Tab keyup
+      if (evt.key === &#039;Tab&#039; &amp;&amp; this.commonStart !== inputElVal) {
+        evt.preventDefault();
+      }
+      else if (evt.key === &#039;Enter&#039;) {
+        if (this.items.views[activeIndex]) {
+          this.items.views[activeIndex]._handleClick(evt);
+        }
+        else {
+          this.trigger(&#039;selected&#039;, inputElVal);
+        }
+      }
+      return;
+    }
+
+    // keyup
+    switch (evt.key) {
+      case &#039;ArrowRight&#039;:
+      case &#039;Tab&#039;:
+        this._handleHintClick();
+        break;
+      case &#039;ArrowUp&#039;:
+      case &#039;ArrowDown&#039;:
+        activeIndex += evt.key === &#039;ArrowDown&#039; ? 1 : -1;
+
+        if (activeIndex &lt; 0) {
+          activeIndex = suggestions.length - 1;
+        }
+        else if (activeIndex &gt;= suggestions.length) {
+          activeIndex = 0;
+        }
+
+        suggestions.forEach(function(state, index) {
+          state.active = index === activeIndex;
+        });
+
+        this.query(&#039;li.active&#039;).scrollIntoView();
+        break;
+      default:
+        this.filterCollection();
+    }
+  },
+
+  _makeHintEl: function() {
+    var parentNode = this.inputEl.parentNode;
+    if (!parentNode) return this;
+    this._removeHintEl();
+
+    var div = this.suggestionHint = document.createElement(&#039;div&#039;);
+    div.className = &#039;suggestion--hint&#039;;
+    [
+      &#039;display&#039;,
+      &#039;paddingTop&#039;,
+      &#039;paddingBottom&#039;,
+      &#039;paddingLeft&#039;,
+      &#039;paddingRight&#039;,
+      &#039;marginTop&#039;,
+      &#039;marginBottom&#039;,
+      &#039;marginLeft&#039;,
+      &#039;marginRight&#039;,
+      &#039;top&#039;,
+      &#039;bottom&#039;,
+      &#039;left&#039;,
+      &#039;right&#039;,
+      &#039;borderWidth&#039;,
+      &#039;borderStyle&#039;,
+      &#039;lineHeight&#039;,
+      &#039;fontSize&#039;,
+      &#039;fontFamily&#039;,
+      &#039;textAlign&#039;,
+      &#039;color&#039;
+    ].forEach(function(copy) {
+      div.style[copy] = this.styles[copy];
+    }, this);
+
+    div.style.cursor = &#039;pointer&#039;;
+    div.style.pointerEvents = &#039;none&#039;;
+    div.style.borderColor = &#039;transparent&#039;;
+    div.style.position = &#039;absolute&#039;;
+    div.style.zIndex = this.styles.zIndex + 1;
+    div.style.opacity = 0.5;
+
+    parentNode.appendChild(div);
+    this.inputEl.addEventListener(&#039;click&#039;, this._handleHintClick);
+  },
+
+  _removeHintEl: function() {
+    if (!this.suggestionHint || !this.suggestionHint.parentNode) return this;
+
+    this.inputEl.removeEventListener(&#039;click&#039;, this._handleHintClick);
+    this.suggestionHint.parentNode.removeChild(this.suggestionHint);
+    this.suggestionHint = null;
+    return this;
+  },
+
+  resetPosition: function() {
+    var view = this;
+    if (!view.el || !view.el.parentNode || !view.inputEl) { return view; }
+    view.el.style.visibility = &#039;hidden&#039;;
+
+    setTimeout(function () {
+      if (!view.el || !view.el.parentNode || !view.inputEl) { return; }
+      var ipos = view.inputEl.getBoundingClientRect();
+      var bpos = view.el.getBoundingClientRect();
+
+      if (ipos.top &gt; view.el.parentNode.clientHeight * 0.5) {
+        view.el.style.maxHeight = Math.min(ipos.top, view.el.parentNode.clientHeight * 0.33) + &#039;px&#039;;
+        view.el.style.top = ((ipos.top - view.el.clientHeight) - 3) + &#039;px&#039;;
+      }
+      else {
+        view.el.style.maxHeight = Math.min(ipos.bottom, view.el.parentNode.clientHeight * 0.33) + &#039;px&#039;;
+        view.el.style.top = (ipos.bottom + 3) + &#039;px&#039;;
+      }
+
+      var s = window.getComputedStyle(view.inputEl);
+      var exceed = view.el.parentNode &amp;&amp; (bpos.left + bpos.width) &gt; view.el.parentNode.clientWidth;
+      view.el.style.textAlign = s.textAlign;
+      if (s.textAlign === &#039;right&#039; || exceed) {
+        view.el.style.left = (ipos.left - (bpos.width - ipos.width)) + &#039;px&#039;;
+      }
+      else {
+        view.el.style.left = (ipos.left) + &#039;px&#039;;
+      }
+
+      view.el.style.visibility = &#039;visible&#039;;
+    });
+
+    return view;
+  },
+
+  initialize: function () {
+    if (!this.parent) { throw new Error(&#039;Suggestion view need a parent view&#039;); }
+
+    this.collection = this.collection || new Collection([], {parent: this});
+
+    this.on(&#039;change:collection&#039;, function () {
+      this.listenToAndRun(this.collection, &#039;add remove reset&#039;, this.filterCollection);
+    });
+
+    this.listenTo(this.suggestions, &#039;add remove reset&#039;, this.resetPosition);
+
+    var _handleInput = this._handleInput.bind(this);
+
+    this.on(&#039;change:inputEl&#039;, function() {
+      var previous = this.previousAttributes();
+      if (previous.inputEl) {
+        previous.inputEl.removeEventListener(&#039;keydown&#039;, _handleInput);
+        previous.inputEl.removeEventListener(&#039;keyup&#039;, _handleInput);
+      }
+
+      var list = this.el;
+      var holderEl = this.parent.el;
+      var inputEl = this.inputEl;
+
+      if (!inputEl) {
+        if (this.el &amp;&amp; this.el.parentNode === holderEl) {
+          holderEl.removeChild(this.el);
+        }
+        return;
+      }
+
+      if (!list || !holderEl) { return; }
+      if (list.parentNode !== holderEl) {
+
+        var holderElStyle = window.getComputedStyle(holderEl);
+        if (holderElStyle.position === &#039;static&#039;) {
+          holderEl.style.position = &#039;relative&#039;;
+        }
+
+        holderEl.appendChild(list);
+      }
+
+      this.resetPosition();
+      inputEl.addEventListener(&#039;keydown&#039;, _handleInput, false);
+      inputEl.addEventListener(&#039;keyup&#039;, _handleInput, false);
+    });
+
+    var _handleHolderClick = function (evt) {
+      evt.preventDefault();
+      if (evt.target !== this.inputEl &amp;&amp; !this.el.contains(evt.target)) {
+        this.detach();
+      }
+    }.bind(this);
+
+    this.listenToAndRun(this.parent, &#039;change:el&#039;, function() {
+      var previous = this.parent.previousAttributes();
+      if (previous.el) {
+        previous.el.removeEventListener(&#039;click&#039;, _handleHolderClick);
+      }
+      if (this.parent.el) {
+        this.parent.el.addEventListener(&#039;click&#039;, _handleHolderClick, false);
+      }
+    });
+  },
+
+  collections: {
+    suggestions: Collection.extend({
+      model: State.extend({
+        props: {
+          active: &#039;boolean&#039;,
+          text: [&#039;string&#039;, true, &#039;&#039;],
+          value: [&#039;any&#039;, false, null]
+        }
+      })
+    })
+  },
+
+  template: &#039;&lt;ul class=&quot;suggestion-view&quot;&gt;&lt;/ul&gt;&#039;,
+
+  render: function () {
+    this.renderWithTemplate();
+
+    this.items = this.renderCollection(this.suggestions, SuggestionItem, this.el);
+
+    return this;
+  }
+});
+module.exports = SuggestionView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

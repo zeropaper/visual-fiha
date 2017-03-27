@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - src/layer/view.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>src/layer/view.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">79.34</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">133</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">28.18</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.20</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">&#039;use strict&#039;;
+var View = require(&#039;ampersand-view&#039;);
+
+var LayerView = View.extend({
+  template: function() {
+    return `
+      &lt;div id=&quot;${this.model.getId()}&quot; view-id=&quot;${this.cid}&quot; class=&quot;missing-layer-view&quot; style=&quot;will-change:transform, opacity, backfaceVisibility;width:100%;height:100%;display:table&quot;&gt;
+        &lt;div style=&quot;display:table-cell;color:#a66;vertical-align:middle;text-align:center;font-weight:700;font-size:30px;text-shadow:0 0 4px #000&quot;&gt;
+          Missing
+          &lt;span data-hook=&quot;type&quot;&gt;&lt;/span&gt; for
+          &lt;span data-hook=&quot;name&quot;&gt;&lt;/span&gt;
+          layer view
+          &lt;br/&gt;
+          &lt;span data-hook=&quot;frametime&quot;&gt;&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    `;
+  },
+
+  initialize: function() {
+    var view = this;
+    view.model.styleProperties.on(&#039;change&#039;, function(prop) {
+      view.setProperty(prop.name, prop.value);
+    });
+  },
+
+  derived: {
+    styleEl: {
+      deps: [&#039;el&#039;],
+      fn: function() {
+        var el = document.getElementById(&#039;style-&#039; + this.model.getId());
+        if (!el) {
+          el = document.createElement(&#039;style&#039;);
+          el.id = &#039;style-&#039; + this.model.getId();
+          el.appendChild(document.createTextNode(&#039;&#039;));
+          document.head.appendChild(el);
+        }
+        return el;
+      }
+    },
+    sheet: {
+      deps: [&#039;styleEl&#039;],
+      fn: function() {
+        return this.styleEl.sheet;
+      }
+    },
+    cssRule: {
+      deps: [&#039;sheet&#039;, &#039;model.layerStyles&#039;],
+      fn: function() {
+        if (this.sheet.cssRules.length === 0) {
+          this.addRule(&#039;&#039;, this.model.layerStyles);
+        }
+        return this.sheet.cssRules[0];
+      }
+    },
+    layerStyleObj: {
+      deps: [&#039;model&#039;, &#039;model.layerStyles&#039;],
+      fn: function() {
+        var exp = /[\s]*([^:]+)[\s]*:[\s]*([^;]+)[\s]*;[\s]*/gim;
+        return ((this.model.layerStyles || &#039;&#039;).match(exp) || [])
+          .map(s =&gt; s
+            .trim()
+            .split(&#039;:&#039;)
+              .map(ss =&gt; ss
+                .replace(&#039;;&#039;, &#039;&#039;)
+                .trim()));
+      }
+    }
+  },
+
+  session: {
+    width: [&#039;number&#039;, true, 400],
+    height: [&#039;number&#039;, true, 300]
+  },
+
+  bindings: {
+    &#039;model.type&#039;: &#039;[data-hook=type]&#039;,
+    &#039;model.name&#039;: &#039;[data-hook=name]&#039;,
+    &#039;model.active&#039;: {type: &#039;toggle&#039;},
+    &#039;model.layerStyles&#039;: {
+      type: function() {
+        var style = this.cssRule.style;
+        this.layerStyleObj.forEach(function(arr) {
+          style[arr[0]] = arr[1];
+        });
+      }
+    },
+    &#039;model.opacity&#039;: {
+      type: function(el, val) {
+        this.cssRule.style.opacity = val * 0.01;
+      }
+    },
+    &#039;model.zIndex&#039;: {
+      type: function(el, val) {
+        this.cssRule.style.zIndex = val;
+      }
+    }
+  },
+
+  setProperty: function(...args) {
+    this.cssRule.style.setProperty(...args);
+  },
+
+  addRule: function(selector, properties) {
+    var sheet = this.sheet;
+    var prefix = &#039;#&#039;+ this.model.getId() +&#039; &#039;;
+    var index = sheet.cssRules.length;
+    selector = (selector.indexOf(&#039;@&#039;) === 0 ? selector : prefix + selector).trim();
+    for (var i = index - 1; i &gt;= 0; i--) {
+      if (sheet.cssRules[i].selectorText === selector) {
+        sheet.deleteRule(i);
+      }
+    }
+
+
+    index = sheet.cssRules.length;
+
+    sheet.insertRule(selector + &#039; { &#039; + properties + &#039; } &#039;, index);
+    return this;
+  },
+
+  remove: function() {
+    var styleEl = this.styleEl;
+    if (styleEl &amp;&amp; styleEl.parentNode) {
+      styleEl.parentNode.removeChild(styleEl);
+    }
+    return View.prototype.remove.apply(this, arguments);
+  },
+
+  update: function() {}
+});
+LayerView.types = {};
+module.exports = LayerView;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>
