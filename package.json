@@ -23,9 +23,8 @@
     "run:wdio": "wdio ./test-e2e/wdio.conf.js",
     "run:dev": "npm-run-all --parallel run:webpack run:karma",
     "test:e2e": "npm-run-all build run:wdio",
-    "_update-report": "plato -r -q -d report src",
-    "prestage-master": "npm-run-all --parallel build _update-report",
-    "stage-master": "git add docs && git commit --allow-empty -m \"update builds\" && git rebase -i"
+    "prestage-master": "npm run build",
+    "stage-master": "git add docs/ && git commit --allow-empty -m \"update builds\" && git rebase -i"
   },
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",
@@ -36,7 +35,6 @@
     "karma-mocha": "^1.3.0",
     "karma-webpack": "^2.0.1",
     "marked": "^0.3.6",
-    "plato": "^1.7.0",
     "wdio": "latest",
     "wdio-mocha-framework": "^0.5.8",
     "wdio-selenium-standalone-service": "latest",
