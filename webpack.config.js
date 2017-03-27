@@ -182,6 +182,7 @@ module.exports = function(env) {
     devServer: {
       clientLogLevel: 'error',
       host: 'localhost',
+      contentBase: destPath,// needed for the plugins
       inline: true
     }
   };
