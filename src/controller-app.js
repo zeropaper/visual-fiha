@@ -48,6 +48,7 @@ var ControllerView = require('./controller/view');
 var ScreenState = require('./screen/state');
 var MIDIAccessState = require('./midi/state');
 var Mappings = require('./mapping/data');
+var Tour = require('./controller/tour/index');
 
 
 var DetailsView = require('./layer/details-view');
@@ -255,7 +256,38 @@ var AppRouter = require('ampersand-router').extend({
 
   routes: {
     '': 'loadSetup',
-    'setup/:setupId': 'loadSetup'
+    'setup/:setupId': 'loadSetup',
+    'tour': 'tour',
+    'tour/': 'tour',
+    'tour/:step': 'tour'
+  },
+
+  tour: function(step) {
+    var router = this;
+    var steps = require('./controller/tour/steps')(router.view).map(function(item, i) {
+      item.index = i;
+      return item;
+    });
+
+    function tourReady() {
+      if (!router.tourView) {
+        router.tourView = new Tour({
+          parent: router,
+          steps: steps,
+          onstepchange: function(step) {
+            router.navigate('tour/' + step.name, {});
+          }
+        });
+        document.body.appendChild(router.tourView.el);
+        router.tourView.update();
+      }
+
+      router.tourView.step = step;
+      router._tourBotstrapped = true;
+    }
+
+    if (router._tourBotstrapped) return tourReady();
+    router._sendBootstrap(router.defaultSetup, tourReady);
   },
 
   _sendBootstrap: function(setup, done) {

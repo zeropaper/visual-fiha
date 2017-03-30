@@ -835,3 +835,119 @@ browser support
   transform-origin: center;
   will-change: opacity, transformation;
 }
+
+/*******************\
+ *                 *
+\*******************/
+
+.tour {
+  position: absolute;
+  display: block;
+  overflow: visible;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  --arrow-size: calc(var(--spacing) * 2);
+  transition: top 0.532s ease,
+              left 0.532s ease;
+}
+
+
+.tour:before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  position: absolute;
+  z-index: 10;
+}
+
+.tour.up:before {
+  border-left: var(--arrow-size) solid transparent;
+  border-right: var(--arrow-size) solid transparent;
+
+  border-bottom: var(--arrow-size) solid var(--highlight-color);
+
+  top: 0;
+  left: 50%;
+  bottom: auto;
+  right: auto;
+  margin: 0 0 0 calc(var(--arrow-size) * -1);
+}
+
+.tour.down:before {
+  border-left: var(--arrow-size) solid transparent;
+  border-right: var(--arrow-size) solid transparent;
+
+  border-top: var(--arrow-size) solid var(--highlight-color);
+
+  top: auto;
+  left: 50%;
+  bottom: 0;
+  right: auto;
+  margin: 0 0 0 calc(var(--arrow-size) * -1);
+}
+
+.tour.right:before {
+  border-top: var(--arrow-size) solid transparent;
+  border-bottom: var(--arrow-size) solid transparent;
+
+  border-left: var(--arrow-size) solid var(--highlight-color);
+
+  top: 50%;
+  left: auto;
+  bottom: auto;
+  right: 0;
+  margin: calc(var(--arrow-size) * -1) 0 0 0;
+}
+
+.tour.left:before {
+  border-top: var(--arrow-size) solid transparent;
+  border-bottom: var(--arrow-size) solid transparent;
+
+  border-right: var(--arrow-size) solid var(--highlight-color);
+
+  top: 50%;
+  left: 0;
+  bottom: auto;
+  right: auto;
+  margin: calc(var(--arrow-size) * -1) 0 0 0;
+}
+
+.tour .wrapper {
+  position: relative;
+  color: var(--text-color);
+  background-color: var(--highlight-color);
+  border-radius: calc(var(--spacing) * 0.5);
+  min-width: 10vmax;
+  max-width: 30vmax;
+  margin: 0;
+  transition: margin 0.532s ease;
+  z-index: 9;
+}
+.tour.up .wrapper {
+  margin: var(--arrow-size) 0 0 0;
+}
+.tour.down .wrapper {
+  margin: 0 0 var(--arrow-size) 0;
+}
+.tour.right .wrapper {
+  margin: 0 var(--arrow-size) 0 0;
+}
+.tour.left .wrapper {
+  margin: 0 0 0 var(--arrow-size);
+}
+.tour h3 {
+  margin: 0;
+  padding: var(--spacing);
+}
+.tour .text {
+  font-size: 1.5rem;
+  max-height: 20vmin;
+  overflow: auto;
+  padding: var(--spacing);
+}
+.tour .index {
+  padding: var(--spacing);
+  text-align: center;
+}
