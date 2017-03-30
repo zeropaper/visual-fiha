@@ -58,6 +58,7 @@ var Tour = View.extend({
   props: {
     onstepchange: ['any', false, null],
     step: ['string', false, null],
+    active: ['boolean', true, true]
   },
 
   collections: {
@@ -125,6 +126,10 @@ var Tour = View.extend({
     }
   },
 
+  bindings: {
+    active: {type: 'toggle'}
+  },
+
   events: {
     'click button.close': '_closeTour',
     'click button.previous': '_goPrevious',
@@ -132,6 +137,7 @@ var Tour = View.extend({
   },
 
   _closeTour: function() {
+    this.active = false;
   },
 
   _goPrevious: function() {
