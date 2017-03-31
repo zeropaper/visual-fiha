@@ -9,19 +9,19 @@ var StylePropertyView = View.extend({
     <div class="columns object-prop prop-type-default">
       <div class="column gutter text-right prop-name"></div>
       <div class="column no-grow prop-value-reset">
-        <button class="vfi-cancel"></button>
+        <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
       <div class="column prop-value">
         <input name="value" type="text" />
       </div>
       <div class="column prop-mapping-clear no-grow">
-        <button class="vfi-unlink"></button>
+        <button title="Remove mapping" class="vfi-unlink"></button>
       </div>
       <div class="column prop-mapping-name">
-        <input name="mapping-name" type="text" />
+        <input placeholder="mappingName" name="mapping-name" type="text" />
       </div>
       <div class="column no-grow">
-        <button class="mapping-details"></button>
+        <button title="Mapping details" class="mapping-details"></button>
       </div>
     </div>
   `,

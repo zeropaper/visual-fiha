@@ -38,7 +38,6 @@ var ControlView = View.extend({
     view.on('change:el', initCommands);
 
     view.listenTo(view.rootView, 'blink', function(modelPath) {
-      console.info('blink', view.modelPath, view.modelPath && view.modelPath === modelPath);
       if (view.modelPath && view.modelPath === modelPath) view.blink();
     });
   },
