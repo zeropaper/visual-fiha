@@ -193,15 +193,23 @@ input:not([type=radio]):not([type=checkbox]) {
 blinking
 */
 .blink {
-  animation-duration: 1s;
+  animation-duration: 1.2s;
   animation-name: blink;
 }
 @keyframes blink {
-  from {
+  0% {
     box-shadow: 0 0 var(--spacing) var(--spacing) var(--highlight-color) inset;
   }
 
-  to {
+  33% {
+    box-shadow: 0 0 0 0 var(--highlight-color) inset;
+  }
+
+  66% {
+    box-shadow: 0 0 calc(var(--spacing) * 0.5) calc(var(--spacing) * 0.5) var(--highlight-color) inset;
+  }
+
+  100% {
     box-shadow: 0 0 0 0 var(--highlight-color) inset;
   }
 }
