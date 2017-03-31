@@ -100,6 +100,9 @@ input:not([type=checkbox]):not([type=radio]) {
   padding: var(--spacing);
   box-shadow: 0 0 1px 0 currentColor inset;
 }
+button.no-border {
+  box-shadow: none;
+}
 select,
 textarea,
 [contenteditable=true],
