@@ -45,18 +45,14 @@ var LayersView = View.extend({
     };
   },
 
-  subviews: {
-    items: {
-      selector: '.items',
-      waitFor: 'el',
-      prepareView: function(el) {
-        return this.renderCollection(this.collection, function (opts) {
-          var type = opts.model.getType();
-          var Constructor = LayerControlView.types[type] || LayerControlView;
-          return new Constructor(opts);
-        }, el);
-      }
-    }
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+    this.items = this.renderCollection(this.collection, function (opts) {
+      var type = opts.model.getType();
+      var Constructor = LayerControlView.types[type] || LayerControlView;
+      return new Constructor(opts);
+    }, '.items');
+    return this;
   },
 
   template: `
