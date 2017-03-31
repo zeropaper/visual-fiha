@@ -32,7 +32,7 @@ var Tour = View.extend({
             <h3></h3>
           </div>
           <div class="column no-grow">
-            <button class="close vfi-cancel"></button>
+            <button title="Leave the tour" class="no-border close vfi-cancel"></button>
           </div>
         </div>
 
@@ -42,13 +42,13 @@ var Tour = View.extend({
 
         <div class="row columns">
           <div class="column no-grow">
-            <button class="previous vfi-ccw"></button>
+            <button title="Previous step" class="no-border previous vfi-left-open"></button>
           </div>
 
           <div class="column index"></div>
 
           <div class="column no-grow">
-            <button class="next vfi-ok"></button>
+            <button title="Next step" class="no-border next vfi-right-open"></button>
           </div>
         </div>
       </div>
@@ -160,14 +160,15 @@ var Tour = View.extend({
     window.tour = this;
   },
 
-  setPosition: function() {
-    if (!this.el || !this.currentStep || !this.focusedEl) {
+  setPosition: function(el) {
+    el = el && el.getBoundingClientRect ? el : this.focusedEl;
+    if (!this.el || !this.currentStep || !el) {
       return this;
     }
 
     var style = this.el.style;
     var bdy = document.body;
-    var focusedBox = this.focusedEl.getBoundingClientRect();
+    var focusedBox = el.getBoundingClientRect();
     var top = focusedBox.top;
     var left = focusedBox.left;
     var right = bdy.clientWidth - focusedBox.right;
@@ -207,10 +208,11 @@ var Tour = View.extend({
     return this;
   },
 
-  blinkFocused: function() {
-    if (!this.focusedEl) return this;
-    var classes = this.focusedEl.classList;
-    this.focusedEl.addEventListener('animationend', function() {
+  blinkFocused: function(el) {
+    el = el && el.classList ? el : this.focusedEl;
+    if (!el) return this;
+    var classes = el.classList;
+    el.addEventListener('animationend', function() {
       classes.remove('blink');
     });
     if (!classes.contains('blink')) {

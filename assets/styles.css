@@ -930,8 +930,8 @@ browser support
   color: var(--text-color);
   background-color: var(--highlight-color);
   border-radius: calc(var(--spacing) * 0.5);
-  min-width: 10vmax;
-  max-width: 30vmax;
+  min-width: 5vmax;
+  max-width: 45vmin;
   margin: 0;
   transition: margin 0.532s ease;
   z-index: 9;
@@ -951,9 +951,10 @@ browser support
 .tour h3 {
   margin: 0;
   padding: var(--spacing);
+  font-weight: 400;
 }
 .tour .text {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   max-height: 20vmin;
   overflow: auto;
   padding: var(--spacing);
