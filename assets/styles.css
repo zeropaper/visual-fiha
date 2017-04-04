@@ -772,13 +772,19 @@ UI state
   overflow-y: auto;
 }
 
-.mapping-emitter-view .items {
+.mapping-emitter-view {
+  padding: 0 0 var(--spacing) 0;
+}
+.mapping-emitter-view > div {
   margin: 0 calc(var(--spacing) * 2);
   border: 1px solid var(--text-color-disabled);
-  border-width: 0 1px;
-  padding: 0 var(--spacing) var(--spacing) var(--spacing);
+  border-width: 1px 1px 0 3px;
 }
-.mapping-emitter-view .items:empty {
+.mapping-emitter-view > .items {
+  border: 1px solid var(--text-color-disabled);
+  border-width: 0 1px 1px 3px;
+}
+.mapping-emitter-view > .items:empty {
   display: none;
 }
 
