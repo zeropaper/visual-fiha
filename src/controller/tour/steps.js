@@ -65,7 +65,8 @@ module.exports = function(controllerView) {
       title: 'Signals',
       name: 'signals',
       selector: '.region-right .region-content',
-      text: 'Using signals allow to create complex variables which can be used to control the layer transformations.',
+      text: 'Using signals allow to create complex variables which can be used to control the layer transformations.<br/>' +
+      'Just like layers, click the name of a signal to display its details and manipulate their properties.',
       prepare: function() {
         controllerView.regionRight.focusTab('Signals');
       }
@@ -80,36 +81,24 @@ module.exports = function(controllerView) {
       }
     },
     {
+      title: 'Add a mapping',
+      name: 'mapping-add',
+      selector: '.mappings-view .add-form',
+      text: 'Give a name, select a source and click the <span class="vfi-plus"></span> to create a new mapping.<br/>' +
+      'You will probably edit the transformation function (by clicking on <span class="vfi-code"></span>),.<br/>' +
+      'After that, you can use the mapping in the layers or signals.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Mappings');
+      }
+    },
+    {
       title: 'MIDI',
       name: 'midi',
       selector: '.region-left-bottom .region-content',
-      text: 'If you have a (supported) MIDI controller, plug it in you are ready map its events to your signal or layer variables.',
+      text: 'If you have a (supported) MIDI controller, plug it in you are ready map its events to your signal or layer variables.<br/>' +
+      'Read more about <a target="_blank" href="https://github.com/zeropaper/visual-fiha/wiki/MIDI-Devices">MIDI devices</a>.',
       prepare: function() {
         controllerView.regionLeftBottom.focusTab('MIDI');
-      }
-    },
-    {
-      title: 'Audio',
-      name: 'audio',
-      selector: '.region-left-bottom .region-content',
-      text: 'Audio settings description',
-      prepare: function() {
-        controllerView.regionLeftBottom.focusTab('Audio');
-      }
-    },
-    {
-      name: 'setup-editor-button',
-      selector: '[name=setup-editor]',
-      text: 'Setup editor button description',
-      prepare: function() {
-      }
-    },
-    {
-      name: 'setup-editor',
-      selector: '.region-right .region-content',
-      text: 'Setup editor description',
-      prepare: function() {
-        controllerView._setupEditor();
       }
     }
   ];
