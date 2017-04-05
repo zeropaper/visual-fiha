@@ -6,7 +6,7 @@ webpackJsonp([3,5],{
 "use strict";
 
 
-var resolve = __webpack_require__(654);
+var resolve = __webpack_require__(656);
 var assign = __webpack_require__(33);
 var State = __webpack_require__(27);
 var Collection = __webpack_require__(34);
@@ -287,14 +287,14 @@ var Collection = __webpack_require__(34);
 
 var midiMappings = {
   'KORG INC.': {
-    'KP3 MIDI 1': __webpack_require__(692),
-    'nanoKONTROL2 MIDI 1': __webpack_require__(693)
+    'KP3 MIDI 1': __webpack_require__(694),
+    'nanoKONTROL2 MIDI 1': __webpack_require__(695)
   },
   'AKAI professional LLC': {
-    'LPD8 MIDI 1': __webpack_require__(691)
+    'LPD8 MIDI 1': __webpack_require__(693)
   },
   'Focusrite A.E. Ltd': {
-    'Launchpad Mini MIDI 1': __webpack_require__(694)
+    'Launchpad Mini MIDI 1': __webpack_require__(696)
   }
 };
 
@@ -459,8 +459,8 @@ module.exports = MIDIAccessState;
 
 "use strict";
 
-var View = __webpack_require__(648);
-var SignalDetailsView = __webpack_require__(696);
+var View = __webpack_require__(650);
+var SignalDetailsView = __webpack_require__(698);
 var SignalControlView = View.extend({
   template: '<section class="rows signal">' +
     '<header class="row">' +
@@ -539,28 +539,28 @@ module.exports = SignalControlView;
 "use strict";
 
 var assign = __webpack_require__(33);
-var DetailsView = __webpack_require__(655);
-var View = __webpack_require__(648);
-var objectPath = __webpack_require__(651);
+var DetailsView = __webpack_require__(657);
+var View = __webpack_require__(650);
+var objectPath = __webpack_require__(653);
 
 var StylePropertyView = View.extend({
   template: `
     <div class="columns object-prop prop-type-default">
       <div class="column gutter text-right prop-name"></div>
       <div class="column no-grow prop-value-reset">
-        <button class="vfi-cancel"></button>
+        <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
       <div class="column prop-value">
         <input name="value" type="text" />
       </div>
       <div class="column prop-mapping-clear no-grow">
-        <button class="vfi-unlink"></button>
+        <button title="Remove mapping" class="vfi-unlink"></button>
       </div>
       <div class="column prop-mapping-name">
-        <input name="mapping-name" type="text" />
+        <input placeholder="mappingName" name="mapping-name" type="text" />
       </div>
       <div class="column no-grow">
-        <button class="mapping-details"></button>
+        <button title="Mapping details" class="mapping-details"></button>
       </div>
     </div>
   `,
@@ -814,7 +814,7 @@ module.exports = HSLASignalControlView;
 
 "use strict";
 
-var View = __webpack_require__(648);
+var View = __webpack_require__(650);
 var MIDIView = View.extend({
   template: [
     '<li class="gutter">',
@@ -1021,20 +1021,394 @@ module.exports = function() {
 
 "use strict";
 
-var View = __webpack_require__(648);
+var State = __webpack_require__(27);
+var View = __webpack_require__(35);
+var Collection = __webpack_require__(34);
+function noop() {}
+
+var Step = State.extend({
+  idAttribute: 'name',
+  props: {
+    title: ['string', false, null],
+    name: ['string', true, null],
+    text: ['string', true, null],
+    selector: ['string', false, null],
+    index: ['number', true, 0],
+    prepare: ['any', false, function(){ return noop; }]
+  }
+});
+
+var Steps = Collection.extend({
+  model: Step,
+  comparator: 'index'
+});
+
+var Tour = View.extend({
+  autoRender: true,
+
+  template: `
+    <div class="tour">
+      <div class="wrapper rows">
+        <div class="row columns">
+          <div class="column">
+            <h3></h3>
+          </div>
+          <div class="column no-grow">
+            <button title="Leave the tour" class="no-border close vfi-cancel"></button>
+          </div>
+        </div>
+
+        <div class="row text"></div>
+
+        <div class="row view"></div>
+
+        <div class="row columns">
+          <div class="column no-grow">
+            <button title="Previous step" class="no-border previous vfi-left-open"></button>
+          </div>
+
+          <div class="column index"></div>
+
+          <div class="column no-grow">
+            <button title="Next step" class="no-border next vfi-right-open"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+
+  props: {
+    onstepchange: ['any', false, null],
+    step: ['string', false, null],
+    active: ['boolean', true, true]
+  },
+
+  collections: {
+    steps: Steps
+  },
+
+  derived: {
+    currentStep: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.steps.get(this.step) || this.steps.at(0);
+      }
+    },
+    currentSelector: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentStep ? this.currentStep.selector : null;
+      }
+    },
+    currentTitle: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentStep ? this.currentStep.title : null;
+      }
+    },
+    currentText: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentStep ? this.currentStep.text : null;
+      }
+    },
+    currentIndex: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.steps.indexOf(this.currentStep);
+      }
+    },
+
+    previousStep: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentIndex > 0 ? this.steps.at(this.currentIndex - 1) : false;
+      }
+    },
+    nextStep: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.steps.length > this.currentIndex ? this.steps.at(this.currentIndex + 1) : false;
+      }
+    },
+
+    focusedEl: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentSelector ? document.querySelector(this.currentSelector) : false;
+      }
+    }
+  },
+
+  bindings: {
+    active: {type: 'toggle'}
+  },
+
+  events: {
+    'click button.close': '_closeTour',
+    'click button.previous': '_goPrevious',
+    'click button.next': '_goNext'
+  },
+
+  _closeTour: function() {
+    this.active = false;
+  },
+
+  _goPrevious: function() {
+    var state = this.steps.at(this.currentIndex - 1);
+    this.step = state ? state.name : null;
+  },
+
+  _goNext: function() {
+    var state = this.steps.at(this.currentIndex === -1 ? 1 : this.currentIndex + 1);
+    this.step = state ? state.name : null;
+  },
+
+  initialize: function(options) {
+    this.step = options.step;
+    if (!this.step && this.currentStep) {
+      this.set('step', this.currentStep.name);
+    }
+    this.listenToAndRun(this, 'change:step', this.update);
+    this.listenToAndRun(this, 'change:rendered', this.setPosition);
+    window.tour = this;
+  },
+
+  setPosition: function(el) {
+    el = el && el.getBoundingClientRect ? el : this.focusedEl;
+    if (!this.el || !this.currentStep || !el) {
+      return this;
+    }
+
+    var style = this.el.style;
+    var bdy = document.body;
+    var focusedBox = el.getBoundingClientRect();
+    var top = focusedBox.top;
+    var left = focusedBox.left;
+    var right = bdy.clientWidth - focusedBox.right;
+    var bottom = bdy.clientHeight - focusedBox.bottom;
+    var vertical = Math.max(top, bottom);
+    var horizontal = Math.max(left, right);
+    var screenRatio = bdy.clientWidth / bdy.clientHeight;
+
+    var classList = this.el.classList;
+    classList.remove('up');
+    classList.remove('down');
+    classList.remove('left');
+    classList.remove('right');
+
+    if (horizontal < (vertical * screenRatio)) {
+      if (top >= bottom) {
+        style.top = (top - this.el.clientHeight) +'px';
+        classList.add('down');
+      }
+      else {
+        style.top = focusedBox.bottom +'px';
+        classList.add('up');
+      }
+      style.left = ((left + (focusedBox.width * 0.5)) - (this.el.clientWidth * 0.5)) +'px';
+    }
+    else {
+      if (left >= right) {
+        style.left = (left - this.el.clientWidth) +'px';
+        classList.add('right');
+      }
+      else {
+        style.left = focusedBox.right +'px';
+        classList.add('left');
+      }
+      style.top = ((top + (focusedBox.height * 0.5)) - (this.el.clientHeight * 0.5)) +'px';
+    }
+    return this;
+  },
+
+  blinkFocused: function(el) {
+    el = el && el.classList ? el : this.focusedEl;
+    if (!el) return this;
+    var classes = el.classList;
+    el.addEventListener('animationend', function() {
+      classes.remove('blink');
+    });
+    if (!classes.contains('blink')) {
+      classes.add('blink');
+    }
+    return this;
+  },
+
+  update: function() {
+    if (!this.el) return this;
+    var view = this;
+    var step = view.currentStep;
+    if (!step) {
+      view.el.style.display = 'none';
+      return view;
+    }
+    view.el.style.display = null;
+
+    view.query('.text').innerHTML = step.text;
+
+    var titleEl = view.query('h3');
+    titleEl.style.display = view.currentTitle ? null : 'none';
+    titleEl.textContent = view.currentTitle;
+
+    view.query('button.next').style.visibility = view.nextStep ? null : 'hidden';
+
+    view.query('button.previous').style.visibility = view.previousStep ? null : 'hidden';
+
+    view.query('.index').textContent = (view.currentIndex + 1) + ' / ' + view.steps.length;
+
+    if (typeof step.prepare === 'function') {
+      step.prepare.call(view, step);
+    }
+    if (typeof view.onstepchange === 'function') {
+      view.onstepchange.call(view, step);
+    }
+    return view.setPosition().blinkFocused();
+  },
+});
+module.exports = Tour;
+
+/***/ }),
+
+/***/ 645:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+module.exports = function(controllerView) {
+  return [
+    {
+      title: 'Screen layers',
+      name: 'layers',
+      selector: '.region-right .region-content',
+      text: 'The layers provide a way to compose an screen with different types of media.<br/>'+
+        'The aspect of a layer can be influenced by preset or custom variables.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Layers');
+      }
+    },
+    {
+      title: 'Adding a layer',
+      name: 'layer-add',
+      selector: 'section.layers header',
+      text: 'You can add a layer here by giving it a name, choosing its type and clicking on the <span class="vfi-plus"></span> button.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Layers');
+      }
+    },
+    {
+      title: 'Layer details',
+      name: 'layer-details',
+      selector: 'section.layers>.items .svg-layer-control:nth-child(2) .layer-name',
+      text: 'Click on a layer name to open its details.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Layers');
+        controllerView.layersView.items.views[1]._showDetails();
+      }
+    },
+    {
+      title: 'Layer variables',
+      name: 'layer-variables',
+      selector: '.style-props',
+      text: 'The CSS variables defined here can then be used in the style editor.<br/>'+
+        'Try adding a variable name "<code>--rotation</code>" with its value "<code>calc(0.05deg * var(--frametime))</code>".<br/>'+
+        'The "<code>--frametime</code>" variable is a "screen" variable (and is available to all layers).',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Layers');
+        setTimeout(function() {
+          controllerView.layersView.items.views[1]._showDetails();
+        }, 100);
+      }
+    },
+    {
+      title: 'Layer styles',
+      name: 'layer-styles',
+      selector: 'section.layers>.items .svg-layer-control:nth-child(2) .edit-css',
+      text: 'Each layer can be styled with CSS. To do so, click the <span class="vfi-code"></span> button in the layers tab.<br/>'+
+        'Try adding<br/>'+
+        ' "<code>transform: rotate(var(--rotation));</code>" between the brakets.',
+      prepare: function() {
+        var tour = this;
+        controllerView.regionRight.focusTab('Layers');
+        setTimeout(function() {
+          controllerView.layersView.items.views[1]._editLayerStyles();
+          var editorEl = document.querySelector('.region-right .region-content');
+          tour.setPosition(editorEl).blinkFocused(editorEl);
+        }, 2000);
+      }
+    },
+    {
+      title: 'Signals',
+      name: 'signals',
+      selector: '.region-right .region-content',
+      text: 'Using signals allow to create complex variables which can be used to control the layer transformations.<br/>' +
+      'Just like layers, click the name of a signal to display its details and manipulate their properties.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Signals');
+      }
+    },
+    {
+      title: 'Mappings',
+      name: 'mappings',
+      selector: '.region-right .region-content',
+      text: 'Mappings are the glue to connect signal outputs to layer variables.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Mappings');
+      }
+    },
+    {
+      title: 'Add a mapping',
+      name: 'mapping-add',
+      selector: '.mappings-view .add-form',
+      text: 'Give a name, select a source and click the <span class="vfi-plus"></span> to create a new mapping.<br/>' +
+      'You will probably edit the transformation function (by clicking on <span class="vfi-code"></span>),.<br/>' +
+      'After that, you can use the mapping in the layers or signals.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Mappings');
+      }
+    },
+    {
+      title: 'MIDI',
+      name: 'midi',
+      selector: '.region-left-bottom .region-content',
+      text: 'If you have a (supported) MIDI controller, plug it in you are ready map its events to your signal or layer variables.<br/>' +
+      'Read more about <a target="_blank" href="https://github.com/zeropaper/visual-fiha/wiki/MIDI-Devices">MIDI devices</a>.',
+      prepare: function() {
+        controllerView.regionLeftBottom.focusTab('MIDI');
+      }
+    }
+  ];
+};
+
+/***/ }),
+
+/***/ 646:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(650);
 var ViewSwitcher = __webpack_require__(45);
 var MIDIAccessView = __webpack_require__(274);
-var SignalsView = __webpack_require__(699);
-var LayersView = __webpack_require__(681);
-var SuggestionView = __webpack_require__(664);
-var AudioSource = __webpack_require__(658);
-var AceEditor = __webpack_require__(656);
-var RegionView = __webpack_require__(663);
-var GistView = __webpack_require__(660);
-var MappingsControlView = __webpack_require__(690);
-var ControlScreenControls = __webpack_require__(659);
-var LocalforageView = __webpack_require__(661);
-var objectPath = __webpack_require__(651);
+var SignalsView = __webpack_require__(701);
+var LayersView = __webpack_require__(683);
+var SuggestionView = __webpack_require__(666);
+var AudioSource = __webpack_require__(660);
+var AceEditor = __webpack_require__(658);
+var RegionView = __webpack_require__(665);
+var GistView = __webpack_require__(662);
+var MappingsControlView = __webpack_require__(692);
+var ControlScreenControls = __webpack_require__(661);
+var LocalforageView = __webpack_require__(663);
+var objectPath = __webpack_require__(653);
 // var Timeline = require('./timeline-view');
 
 
@@ -1585,17 +1959,17 @@ module.exports = ControllerView;
 
 /***/ }),
 
-/***/ 646:
+/***/ 648:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
 var Collection = __webpack_require__(34);
-var SignalState = __webpack_require__(652);
-__webpack_require__(695);
+var SignalState = __webpack_require__(654);
 __webpack_require__(697);
-__webpack_require__(698);
+__webpack_require__(699);
+__webpack_require__(700);
 
 var SignalCollection = Collection.extend({
   mainIndex: 'name',
@@ -1624,7 +1998,7 @@ module.exports = SignalCollection;
 
 /***/ }),
 
-/***/ 648:
+/***/ 650:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1668,7 +2042,6 @@ var ControlView = View.extend({
     view.on('change:el', initCommands);
 
     view.listenTo(view.rootView, 'blink', function(modelPath) {
-      console.info('blink', view.modelPath, view.modelPath && view.modelPath === modelPath);
       if (view.modelPath && view.modelPath === modelPath) view.blink();
     });
   },
@@ -1783,14 +2156,14 @@ module.exports = ControlView;
 
 /***/ }),
 
-/***/ 649:
+/***/ 651:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var View = __webpack_require__(648);
+var View = __webpack_require__(650);
 var LayerDetailsView = __webpack_require__(266);
-var objectPath = __webpack_require__(651);
+var objectPath = __webpack_require__(653);
 
 var LayerControlView = View.extend({
   template: `
@@ -1912,7 +2285,7 @@ module.exports = LayerControlView;
 
 /***/ }),
 
-/***/ 651:
+/***/ 653:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1981,7 +2354,7 @@ module.exports = objectPath;
 
 /***/ }),
 
-/***/ 652:
+/***/ 654:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2032,7 +2405,7 @@ module.exports = SignalState;
 
 /***/ }),
 
-/***/ 654:
+/***/ 656:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2065,7 +2438,7 @@ module.exports = resolve;
 
 /***/ }),
 
-/***/ 655:
+/***/ 657:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2073,10 +2446,10 @@ module.exports = resolve;
 var assign = __webpack_require__(33);
 var Collection = __webpack_require__(34);
 var State = __webpack_require__(27);
-var View = __webpack_require__(648);
-var objectPath = __webpack_require__(651);
+var View = __webpack_require__(650);
+var objectPath = __webpack_require__(653);
 
-var PropertyView = __webpack_require__(662);
+var PropertyView = __webpack_require__(664);
 
 var DetailsView = View.extend({
   template: `
@@ -2193,13 +2566,13 @@ module.exports = DetailsView;
 
 /***/ }),
 
-/***/ 656:
+/***/ 658:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(35);
-var canvasCompleter = __webpack_require__(665);
+var canvasCompleter = __webpack_require__(667);
 
 var AceEditor = View.extend({
   editCode: function(options) {
@@ -2432,7 +2805,7 @@ module.exports = AceEditor;
 
 /***/ }),
 
-/***/ 657:
+/***/ 659:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2603,13 +2976,13 @@ module.exports = __webpack_require__(35).extend({
 
 /***/ }),
 
-/***/ 658:
+/***/ 660:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var View = __webpack_require__(648);
-var AudioMonitor = __webpack_require__(657);
+var View = __webpack_require__(650);
+var AudioMonitor = __webpack_require__(659);
 var AudioSource = View.extend({
   autoRender: true,
 
@@ -2730,7 +3103,7 @@ module.exports = AudioSource;
 
 /***/ }),
 
-/***/ 659:
+/***/ 661:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2787,13 +3160,13 @@ module.exports = ControlScreenControls;
 
 /***/ }),
 
-/***/ 660:
+/***/ 662:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* global Request */
 
-var View = __webpack_require__(648);
+var View = __webpack_require__(650);
 var jsYAML = __webpack_require__(147);
 
 function resToJSON(res) {
@@ -2941,7 +3314,7 @@ module.exports = GistView;
 
 /***/ }),
 
-/***/ 661:
+/***/ 663:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3031,33 +3404,33 @@ module.exports = LocalforageView;
 
 /***/ }),
 
-/***/ 662:
+/***/ 664:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
-var View = __webpack_require__(648);
-var objectPath = __webpack_require__(651);
+var View = __webpack_require__(650);
+var objectPath = __webpack_require__(653);
 
 var PropertyView = View.extend({
   template: `
     <div class="columns object-prop prop-type-default">
       <div class="column gutter text-right prop-name"></div>
       <div class="column no-grow prop-value-reset">
-        <button class="vfi-cancel"></button>
+        <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
       <div class="column prop-value">
         <input name="value" type="text" />
       </div>
       <div class="column prop-mapping-clear no-grow">
-        <button class="vfi-unlink"></button>
+        <button title="Remove mapping" class="vfi-unlink"></button>
       </div>
       <div class="column prop-mapping-name">
-        <input name="mapping-name" type="text" />
+        <input placeholder="mappingName" name="mapping-name" type="text" />
       </div>
       <div class="column no-grow">
-        <button class="mapping-details"></button>
+        <button title="Mapping details" class="mapping-details"></button>
       </div>
     </div>
   `,
@@ -3250,19 +3623,19 @@ PropertyView.types.boolean = PropertyView.extend({
     <div class="columns object-prop prop-type-boolean">
       <div class="column gutter text-right prop-name"></div>
       <div class="column no-grow prop-value-reset">
-        <button class="vfi-cancel"></button>
+        <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
       <div class="column prop-value">
         <button class="prop-toggle-btn"></button>
       </div>
       <div class="column prop-mapping-clear no-grow">
-        <button class="vfi-unlink"></button>
+        <button title="Remove mapping" class="vfi-unlink"></button>
       </div>
       <div class="column prop-mapping-name">
-        <input name="mapping-name" type="text" />
+        <input placeholder="mappingName" name="mapping-name" type="text" />
       </div>
       <div class="column no-grow">
-        <button class="mapping-details"></button>
+        <button title="Mapping details" class="mapping-details"></button>
       </div>
     </div>
   `,
@@ -3296,19 +3669,19 @@ PropertyView.types.number = PropertyView.extend({
     <div class="columns object-prop prop-type-number">
       <div class="column gutter text-right prop-name"></div>
       <div class="column no-grow prop-value-reset">
-        <button class="vfi-cancel"></button>
+        <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
       <div class="column prop-value">
         <input name="value" type="number" />
       </div>
       <div class="column prop-mapping-clear no-grow">
-        <button class="vfi-unlink"></button>
+        <button title="Remove mapping" class="vfi-unlink"></button>
       </div>
       <div class="column prop-mapping-name">
-        <input name="mapping-name" type="text" />
+        <input placeholder="mappingName" name="mapping-name" type="text" />
       </div>
       <div class="column no-grow">
-        <button class="mapping-details"></button>
+        <button title="Mapping details" class="mapping-details"></button>
       </div>
     </div>
   `,
@@ -3388,7 +3761,7 @@ module.exports = PropertyView;
 
 /***/ }),
 
-/***/ 663:
+/***/ 665:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3535,7 +3908,7 @@ module.exports = RegionView;
 
 /***/ }),
 
-/***/ 664:
+/***/ 666:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3927,14 +4300,14 @@ module.exports = SuggestionView;
 
 /***/ }),
 
-/***/ 665:
+/***/ 667:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 // http://plnkr.co/edit/6MVntVmXYUbjR0DI82Cr
 
-var mockedCtx = __webpack_require__(653);
+var mockedCtx = __webpack_require__(655);
 var ramda = __webpack_require__(36);
 
 var entries = [].concat(mockedCtx._.properties, mockedCtx._.methods);
@@ -4011,15 +4384,15 @@ module.exports = canvasCompleter;
 
 /***/ }),
 
-/***/ 667:
+/***/ 669:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var LayerControlView = __webpack_require__(649);
+var LayerControlView = __webpack_require__(651);
 var LayerDetailsView = __webpack_require__(266);
 var assign = __webpack_require__(33);
-var objectPath = __webpack_require__(651);
+var objectPath = __webpack_require__(653);
 
 var CanvasLayerDetailsView = LayerDetailsView.extend({
   template: `
@@ -4194,31 +4567,31 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
 
 /***/ }),
 
-/***/ 679:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var ScreenLayerControlView = __webpack_require__(649);
-module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.extend({
-});
-
-/***/ }),
-
 /***/ 681:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var View = __webpack_require__(649);
 
-var LayerControlView = __webpack_require__(649);
-__webpack_require__(667);
-__webpack_require__(682);
-__webpack_require__(679);
+var ScreenLayerControlView = __webpack_require__(651);
+module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.extend({
+});
+
+/***/ }),
+
+/***/ 683:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(651);
+
+var LayerControlView = __webpack_require__(651);
+__webpack_require__(669);
+__webpack_require__(684);
+__webpack_require__(681);
+__webpack_require__(690);
 __webpack_require__(688);
-__webpack_require__(686);
 
 var LayersView = View.extend({
   commands: {
@@ -4257,18 +4630,14 @@ var LayersView = View.extend({
     };
   },
 
-  subviews: {
-    items: {
-      selector: '.items',
-      waitFor: 'el',
-      prepareView: function(el) {
-        return this.renderCollection(this.collection, function (opts) {
-          var type = opts.model.getType();
-          var Constructor = LayerControlView.types[type] || LayerControlView;
-          return new Constructor(opts);
-        }, el);
-      }
-    }
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+    this.items = this.renderCollection(this.collection, function (opts) {
+      var type = opts.model.getType();
+      var Constructor = LayerControlView.types[type] || LayerControlView;
+      return new Constructor(opts);
+    }, '.items');
+    return this;
   },
 
   template: `
@@ -4292,14 +4661,14 @@ module.exports = LayersView;
 
 /***/ }),
 
-/***/ 682:
+/***/ 684:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
-var ScreenLayerControlView = __webpack_require__(649);
-var SVGDetailsView = __webpack_require__(683);
+var ScreenLayerControlView = __webpack_require__(651);
+var SVGDetailsView = __webpack_require__(685);
 
 module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
   template: `
@@ -4376,7 +4745,7 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
 
 /***/ }),
 
-/***/ 683:
+/***/ 685:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4411,27 +4780,15 @@ module.exports = SVGDetailsView;
 
 /***/ }),
 
-/***/ 686:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var LayerControlView = __webpack_require__(649);
-var TxtLayerControlView = LayerControlView.types.txt = LayerControlView.extend({
-});
-module.exports = TxtLayerControlView;
-
-/***/ }),
-
 /***/ 688:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-
-var ScreenLayerControlView = __webpack_require__(649);
-module.exports = ScreenLayerControlView.types.video = ScreenLayerControlView.extend({
+var LayerControlView = __webpack_require__(651);
+var TxtLayerControlView = LayerControlView.types.txt = LayerControlView.extend({
 });
+module.exports = TxtLayerControlView;
 
 /***/ }),
 
@@ -4440,9 +4797,21 @@ module.exports = ScreenLayerControlView.types.video = ScreenLayerControlView.ext
 
 "use strict";
 
+
+var ScreenLayerControlView = __webpack_require__(651);
+module.exports = ScreenLayerControlView.types.video = ScreenLayerControlView.extend({
+});
+
+/***/ }),
+
+/***/ 692:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var Collection = __webpack_require__(34);
 var State = __webpack_require__(27);
-var View = __webpack_require__(648);
+var View = __webpack_require__(650);
 var uniq = __webpack_require__(152);
 
 function filterEmpty(v) { return !!v; }
@@ -4828,7 +5197,7 @@ module.exports = MappingsControlView;
 
 /***/ }),
 
-/***/ 691:
+/***/ 693:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4907,7 +5276,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 692:
+/***/ 694:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5089,7 +5458,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 693:
+/***/ 695:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5208,7 +5577,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 694:
+/***/ 696:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5344,12 +5713,12 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 695:
+/***/ 697:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(652);
+var SignalState = __webpack_require__(654);
 
 var BeatState = SignalState.types.beat = SignalState.extend({
   initialize: function() {
@@ -5400,13 +5769,13 @@ module.exports = BeatState;
 
 /***/ }),
 
-/***/ 696:
+/***/ 698:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
-var DetailsView = __webpack_require__(655);
+var DetailsView = __webpack_require__(657);
 var SignalDetailsView = DetailsView.extend({
   derived: {
     modelPath: {
@@ -5425,12 +5794,12 @@ module.exports = SignalDetailsView;
 
 /***/ }),
 
-/***/ 697:
+/***/ 699:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(652);
+var SignalState = __webpack_require__(654);
 
 var _360 = {
   type: 'number',
@@ -5486,12 +5855,12 @@ module.exports = HSLASignalState;
 
 /***/ }),
 
-/***/ 698:
+/***/ 700:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(652);
+var SignalState = __webpack_require__(654);
 var _255 = {
   type: 'number',
   required: true,
@@ -5544,12 +5913,12 @@ module.exports = RGBASignalState;
 
 /***/ }),
 
-/***/ 699:
+/***/ 701:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var View = __webpack_require__(648);
+var View = __webpack_require__(650);
 
 var SignalControlView = __webpack_require__(265);
 __webpack_require__(275);

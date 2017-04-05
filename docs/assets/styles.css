@@ -100,6 +100,9 @@ input:not([type=checkbox]):not([type=radio]) {
   padding: var(--spacing);
   box-shadow: 0 0 1px 0 currentColor inset;
 }
+button.no-border {
+  box-shadow: none;
+}
 select,
 textarea,
 [contenteditable=true],
@@ -193,15 +196,23 @@ input:not([type=radio]):not([type=checkbox]) {
 blinking
 */
 .blink {
-  animation-duration: 1s;
+  animation-duration: 1.2s;
   animation-name: blink;
 }
 @keyframes blink {
-  from {
+  0% {
     box-shadow: 0 0 var(--spacing) var(--spacing) var(--highlight-color) inset;
   }
 
-  to {
+  33% {
+    box-shadow: 0 0 0 0 var(--highlight-color) inset;
+  }
+
+  66% {
+    box-shadow: 0 0 calc(var(--spacing) * 0.5) calc(var(--spacing) * 0.5) var(--highlight-color) inset;
+  }
+
+  100% {
     box-shadow: 0 0 0 0 var(--highlight-color) inset;
   }
 }
@@ -761,13 +772,19 @@ UI state
   overflow-y: auto;
 }
 
-.mapping-emitter-view .items {
+.mapping-emitter-view {
+  padding: 0 0 var(--spacing) 0;
+}
+.mapping-emitter-view > div {
   margin: 0 calc(var(--spacing) * 2);
   border: 1px solid var(--text-color-disabled);
-  border-width: 0 1px;
-  padding: 0 var(--spacing) var(--spacing) var(--spacing);
+  border-width: 1px 1px 0 3px;
 }
-.mapping-emitter-view .items:empty {
+.mapping-emitter-view > .items {
+  border: 1px solid var(--text-color-disabled);
+  border-width: 0 1px 1px 3px;
+}
+.mapping-emitter-view > .items:empty {
   display: none;
 }
 
@@ -834,4 +851,121 @@ browser support
   height: 100%;
   transform-origin: center;
   will-change: opacity, transformation;
+}
+
+/*******************\
+ *                 *
+\*******************/
+
+.tour {
+  position: absolute;
+  display: block;
+  overflow: visible;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  --arrow-size: calc(var(--spacing) * 2);
+  transition: top 0.532s ease,
+              left 0.532s ease;
+}
+
+
+.tour:before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  position: absolute;
+  z-index: 10;
+}
+
+.tour.up:before {
+  border-left: var(--arrow-size) solid transparent;
+  border-right: var(--arrow-size) solid transparent;
+
+  border-bottom: var(--arrow-size) solid var(--highlight-color);
+
+  top: 0;
+  left: 50%;
+  bottom: auto;
+  right: auto;
+  margin: 0 0 0 calc(var(--arrow-size) * -1);
+}
+
+.tour.down:before {
+  border-left: var(--arrow-size) solid transparent;
+  border-right: var(--arrow-size) solid transparent;
+
+  border-top: var(--arrow-size) solid var(--highlight-color);
+
+  top: auto;
+  left: 50%;
+  bottom: 0;
+  right: auto;
+  margin: 0 0 0 calc(var(--arrow-size) * -1);
+}
+
+.tour.right:before {
+  border-top: var(--arrow-size) solid transparent;
+  border-bottom: var(--arrow-size) solid transparent;
+
+  border-left: var(--arrow-size) solid var(--highlight-color);
+
+  top: 50%;
+  left: auto;
+  bottom: auto;
+  right: 0;
+  margin: calc(var(--arrow-size) * -1) 0 0 0;
+}
+
+.tour.left:before {
+  border-top: var(--arrow-size) solid transparent;
+  border-bottom: var(--arrow-size) solid transparent;
+
+  border-right: var(--arrow-size) solid var(--highlight-color);
+
+  top: 50%;
+  left: 0;
+  bottom: auto;
+  right: auto;
+  margin: calc(var(--arrow-size) * -1) 0 0 0;
+}
+
+.tour .wrapper {
+  position: relative;
+  color: var(--text-color);
+  background-color: var(--highlight-color);
+  border-radius: calc(var(--spacing) * 0.5);
+  min-width: 5vmax;
+  max-width: 45vmin;
+  margin: 0;
+  transition: margin 0.532s ease;
+  z-index: 9;
+}
+.tour.up .wrapper {
+  margin: var(--arrow-size) 0 0 0;
+}
+.tour.down .wrapper {
+  margin: 0 0 var(--arrow-size) 0;
+}
+.tour.right .wrapper {
+  margin: 0 var(--arrow-size) 0 0;
+}
+.tour.left .wrapper {
+  margin: 0 0 0 var(--arrow-size);
+}
+.tour h3 {
+  margin: 0;
+  padding: var(--spacing);
+  font-weight: 400;
+}
+.tour .text {
+  font-size: 1.2rem;
+  max-height: 20vmin;
+  overflow: auto;
+  padding: var(--spacing);
+}
+.tour .index {
+  padding: var(--spacing);
+  text-align: center;
 }

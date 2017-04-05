@@ -6,12 +6,12 @@ webpackJsonp([4],{
 "use strict";
 
 var View = __webpack_require__(35);
-var LayerView = __webpack_require__(650);
-__webpack_require__(677);
-__webpack_require__(685);
-__webpack_require__(689);
-__webpack_require__(680);
+var LayerView = __webpack_require__(652);
+__webpack_require__(679);
 __webpack_require__(687);
+__webpack_require__(691);
+__webpack_require__(682);
+__webpack_require__(689);
 
 
 function signature(fn) {
@@ -276,7 +276,7 @@ module.exports = ScreenView;
 
 /***/ }),
 
-/***/ 650:
+/***/ 652:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -416,14 +416,14 @@ module.exports = LayerView;
 
 /***/ }),
 
-/***/ 677:
+/***/ 679:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
 
-var ScreenLayerView = __webpack_require__(650);
+var ScreenLayerView = __webpack_require__(652);
 module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
   template: function() {
     return '<canvas id="' + this.model.getId() + '" view-id="' + this.cid + '"></canvas>';
@@ -500,12 +500,12 @@ module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 680:
+/***/ 682:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ScreenLayerView = __webpack_require__(650);
+var ScreenLayerView = __webpack_require__(652);
 var _cacheImgs = {};
 function loadImg(url, done) {
   if (_cacheImgs[url]) {
@@ -584,12 +584,12 @@ module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 685:
+/***/ 687:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ScreenLayerView = __webpack_require__(650);
+var ScreenLayerView = __webpack_require__(652);
 
 module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
   autoRender: true,
@@ -658,13 +658,13 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 687:
+/***/ 689:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
-var LayerView = __webpack_require__(650);
+var LayerView = __webpack_require__(652);
 var TxtLayerView = LayerView.types.txt = LayerView.extend({
   autoRender: true,
 
@@ -680,13 +680,13 @@ module.exports = TxtLayerView;
 
 /***/ }),
 
-/***/ 689:
+/***/ 691:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var ScreenLayerView = __webpack_require__(650);
+var ScreenLayerView = __webpack_require__(652);
 module.exports = ScreenLayerView.types.video = ScreenLayerView.extend({
   template: function() {
     return '<video id="' + this.model.cid + '" view-id="' + this.cid + '" autoplay loop muted></video>';

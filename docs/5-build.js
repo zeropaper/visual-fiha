@@ -6,7 +6,7 @@ webpackJsonp([5],{
 "use strict";
 
 
-var resolve = __webpack_require__(654);
+var resolve = __webpack_require__(656);
 var assign = __webpack_require__(33);
 var State = __webpack_require__(27);
 var Collection = __webpack_require__(34);
@@ -236,7 +236,7 @@ module.exports = Mappings;
 
 /***/ }),
 
-/***/ 654:
+/***/ 656:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

@@ -123,10 +123,10 @@ module.exports = LayerState;
 
 
 module.exports = {
-  lines: __webpack_require__(669),
-  loaders: __webpack_require__(671),
-  text: __webpack_require__(672),
-  utils: __webpack_require__(676)
+  lines: __webpack_require__(671),
+  loaders: __webpack_require__(673),
+  text: __webpack_require__(674),
+  utils: __webpack_require__(678)
 };
 
 if (typeof window !== 'undefined') {
@@ -145,8 +145,8 @@ if (typeof window !== 'undefined') {
 var State = __webpack_require__(27);
 var Collection = __webpack_require__(34);
 var ScreenLayerState = __webpack_require__(264);
-var mockedCtx = __webpack_require__(653);
-var compileFunction = __webpack_require__(666);
+var mockedCtx = __webpack_require__(655);
+var compileFunction = __webpack_require__(668);
 function drawLayerCtx() {
   /*
     You can access the canvas 2d context with the global ctx
@@ -343,7 +343,7 @@ module.exports = ScreenLayerState.types.img = ScreenLayerState.extend({
 "use strict";
 
 var ScreenLayerState = __webpack_require__(264);
-var Extractor = __webpack_require__(684);
+var Extractor = __webpack_require__(686);
 
 module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   props: {
@@ -494,7 +494,7 @@ var ScreenState = State.extend({
   },
 
   collections: {
-    layers: __webpack_require__(678)
+    layers: __webpack_require__(680)
   },
 
   derived: {
@@ -536,7 +536,7 @@ module.exports = ScreenState;
 
 /***/ }),
 
-/***/ 653:
+/***/ 655:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -619,13 +619,13 @@ module.exports = mockedCtx;
 
 /***/ }),
 
-/***/ 666:
+/***/ 668:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 function noop() {}
-var mockedCtx = __webpack_require__(653);
+var mockedCtx = __webpack_require__(655);
 
 
 var utils = {};
@@ -924,7 +924,7 @@ module.exports = compileFunction;
 
 /***/ }),
 
-/***/ 668:
+/***/ 670:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1009,20 +1009,20 @@ module.exports = function lineGrid(ctx) {
 
 /***/ }),
 
-/***/ 669:
+/***/ 671:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  grid: __webpack_require__(668),
-  roundFrequencies: __webpack_require__(670)
+  grid: __webpack_require__(670),
+  roundFrequencies: __webpack_require__(672)
 };
 
 /***/ }),
 
-/***/ 670:
+/***/ 672:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1090,7 +1090,7 @@ module.exports = function roundFrequencies(ctx) {
 
 /***/ }),
 
-/***/ 671:
+/***/ 673:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1153,19 +1153,19 @@ module.exports = {
 
 /***/ }),
 
-/***/ 672:
+/***/ 674:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  wrap: __webpack_require__(673)
+  wrap: __webpack_require__(675)
 };
 
 /***/ }),
 
-/***/ 673:
+/***/ 675:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1194,7 +1194,7 @@ module.exports = function wrapText(context, text, x, y, maxWidth, lineHeight) {
 
 /***/ }),
 
-/***/ 674:
+/***/ 676:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1222,7 +1222,7 @@ module.exports = function fps(ctx) {
 
 /***/ }),
 
-/***/ 675:
+/***/ 677:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1243,20 +1243,20 @@ module.exports = function frametime(ctx) {
 
 /***/ }),
 
-/***/ 676:
+/***/ 678:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  fps: __webpack_require__(674),
-  frametime: __webpack_require__(675)
+  fps: __webpack_require__(676),
+  frametime: __webpack_require__(677)
 };
 
 /***/ }),
 
-/***/ 678:
+/***/ 680:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1299,7 +1299,7 @@ module.exports = Collection.extend({
 
 /***/ }),
 
-/***/ 684:
+/***/ 686:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

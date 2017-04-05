@@ -1,5 +1,5 @@
 *.log
-ignore
 wiki
 node_modules
-assets/kd
+assets/local
+docs/assets/local

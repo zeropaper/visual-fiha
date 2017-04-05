@@ -21,16 +21,17 @@ function auid() {
   return parseInt((Math.random() + '.' + performance.now()).replace(/\./g, ''), 10);
 }
 var LoadedWorker = __webpack_require__(642);
-var ControllerView = __webpack_require__(644);
+var ControllerView = __webpack_require__(646);
 var ScreenState = __webpack_require__(32);
 var MIDIAccessState = __webpack_require__(144);
 var Mappings = __webpack_require__(142);
+var Tour = __webpack_require__(644);
 
 
 var DetailsView = __webpack_require__(266);
 var Settings = __webpack_require__(143);
 
-var SignalCollection = __webpack_require__(646);
+var SignalCollection = __webpack_require__(648);
 
 var signals = new SignalCollection([]);
 
@@ -232,7 +233,38 @@ var AppRouter = __webpack_require__(95).extend({
 
   routes: {
     '': 'loadSetup',
-    'setup/:setupId': 'loadSetup'
+    'setup/:setupId': 'loadSetup',
+    'tour': 'tour',
+    'tour/': 'tour',
+    'tour/:step': 'tour'
+  },
+
+  tour: function(step) {
+    var router = this;
+    var steps = __webpack_require__(645)(router.view).map(function(item, i) {
+      item.index = i;
+      return item;
+    });
+
+    function tourReady() {
+      if (!router.tourView) {
+        router.tourView = new Tour({
+          parent: router,
+          steps: steps,
+          onstepchange: function(step) {
+            router.navigate('tour/' + step.name, {});
+          }
+        });
+        document.body.appendChild(router.tourView.el);
+        router.tourView.update();
+      }
+
+      router.tourView.step = step;
+      router._tourBotstrapped = true;
+    }
+
+    if (router._tourBotstrapped) return tourReady();
+    router._sendBootstrap(router.defaultSetup, tourReady);
   },
 
   _sendBootstrap: function(setup, done) {
