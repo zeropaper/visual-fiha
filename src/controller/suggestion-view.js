@@ -343,7 +343,6 @@ var SuggestionView = View.extend({
     });
 
     var _handleHolderClick = function (evt) {
-      evt.preventDefault();
       if (evt.target !== this.inputEl && !this.el.contains(evt.target)) {
         this.detach();
       }

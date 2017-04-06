@@ -969,3 +969,58 @@ browser support
   padding: var(--spacing);
   text-align: center;
 }
+
+
+/*******************\
+ *                 *
+\*******************/
+.vf-app-name {
+  display: block;
+}
+.vf-app-menu,
+.vf-app-menu > .underlay,
+.vf-app-menu > .inner {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+.vf-app-menu,
+.vf-app-menu > .underlay {
+  will-change: transform;
+  transition: transform 0.218s ease;
+}
+
+.vf-app-menu {
+  --menu-width: 45vw;
+  width: var(--menu-width);
+  transform: translateX(calc(0px - var(--menu-width)));
+  z-index: 1000;
+}
+.vf-app-menu > .underlay {
+  content: '';
+  background-color: rgba(0, 0, 0, .75);
+  width: 100vw;
+  transform: translateX(-100vw);
+  z-index: 800;
+}
+
+.vf-app-menu.opened,
+.vf-app-menu.opened > .underlay {
+  transform: translateX(0);
+}
+
+.vf-app-menu > button.vfi-cancel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+}
+.vf-app-menu > .inner {
+  overflow: auto;
+  padding: 30px calc(var(--spacing) * 2) calc(var(--spacing) * 2) calc(var(--spacing) * 2);
+  right: 0;
+  z-index: 900;
+  background-color: var(--bg-color);
+  border-right: 1px solid var(--border-color);
+}

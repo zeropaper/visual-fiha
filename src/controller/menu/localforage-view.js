@@ -1,19 +1,19 @@
 'use strict';
 
-var localForage = require('./../storage');
+var localForage = require('./../../storage');
 
 var View = require('ampersand-view');
 var LocalforageView = View.extend({
   template: `
-    <div class="columns localforage-view">
-      <div class="column columns no-grow">
-        <div class="column"><button name="snapshot-save" title="Take snapshot">Snapshot</button></div>
-        <div class="column"><button name="snapshot-restore" class="vfi-ccw" title="Restore snapshot"></button></div>
+    <div class="rows localforage-view">
+      <div class="row columns no-grow">
+        <div class="column no-grow"><button name="snapshot-save" title="Take snapshot">Snapshot</button></div>
+        <div class="column no-grow"><button name="snapshot-restore" class="vfi-ccw" title="Restore snapshot"></button></div>
       </div>
-      <div class="column columns">
+      <div class="row columns">
         <div class="column"><input placeholder="Local ID" name="local-id"/></div>
         <div class="column no-grow"><button name="save">Save</button></div>
-        <div class="column"><button name="restore" class="vfi-ccw" title="Reload"></button></div>
+        <div class="column no-grow"><button name="restore" class="vfi-ccw" title="Reload"></button></div>
       </div>
     </div>
   `,

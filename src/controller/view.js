@@ -8,10 +8,8 @@ var SuggestionView = require('./suggestion-view');
 var AudioSource = require('./audio-source-view');
 var AceEditor = require('./ace-view');
 var RegionView = require('./region-view');
-var GistView = require('./gist-view');
 var MappingsControlView = require('./../mapping/control-view');
-var ControlScreenControls = require('./control-screen-controls-view');
-var LocalforageView = require('./localforage-view');
+var MenuView = require('./menu/view');
 var objectPath = require('./../object-path');
 // var Timeline = require('./timeline-view');
 
@@ -194,43 +192,13 @@ var ControllerView = View.extend({
   },
 
   subviews: {
-    controlScreenControls: {
+    menuView: {
       waitFor: 'el',
-      selector: '.control-screen-controls',
+      selector: '.vf-app-menu',
       prepareView: function(el) {
-        if (this.router) {
-          this.set({
-            showControlScreen: this.router.settings.get('showControlScreen', true),
-            controlScreenWidth: this.router.settings.get('controlScreenWidth', 45),
-            controlScreenHeight: this.router.settings.get('controlScreenHeight', 45)
-          });
-        }
-
-        var view = new ControlScreenControls({
-          el: el,
-          active: this.showControlScreen,
-          width: this.controlScreenWidth,
-          height: this.controlScreenHeight,
-          parent: this
-        });
-
-        this.listenToAndRun(view, 'change:active', function() {
-          this.showControlScreen = view.active;
-          if (this.router) {
-            this.router.settings.set('showControlScreen', this.showControlScreen);
-          }
-        });
-        this.listenToAndRun(view, 'change:width', function() {
-          this.controlScreenWidth = view.width;
-          if (this.router) {
-            this.router.settings.set('controlScreenWidth', this.controlScreenWidth);
-          }
-        });
-        this.listenToAndRun(view, 'change:height', function() {
-          this.controlScreenHeight = view.height;
-          if (this.router) {
-            this.router.settings.set('controlScreenHeight', this.controlScreenHeight);
-          }
+        var view = new MenuView({
+          parent: this,
+          el: el
         });
         return view;
       }
@@ -348,26 +316,6 @@ var ControllerView = View.extend({
 
         return view;
       }
-    },
-
-    localforageView: {
-      waitFor: 'el',
-      selector: '.controller > .header',
-      prepareView: function(el) {
-        var view = new LocalforageView({parent: this, model: this.model});
-        el.appendChild(view.render().el);
-        return view;
-      }
-    },
-
-    gistView: {
-      waitFor: 'el',
-      selector: '.controller > .header',
-      prepareView: function(el) {
-        var view = new GistView({parent: this, model: this.model});
-        el.appendChild(view.render().el);
-        return view;
-      }
     }
   },
 
@@ -431,8 +379,14 @@ var ControllerView = View.extend({
   },
 
   events: {
+    'click .vf-app-name': '_openMenu',
     'click [name="screen"]': '_openScreen',
     'click [name="setup-editor"]': '_setupEditor'
+  },
+
+  _openMenu: function(evt) {
+    evt.preventDefault();
+    this.menuView.open();
   },
 
   _openScreen: function() {
@@ -462,14 +416,14 @@ var ControllerView = View.extend({
   _setupEditor: function() {
     var view = this;
     var editor = view.getEditor();
-
+    var gistView = view.menuView.gistView;
     editor.editCode({
       autoApply: false,
       title: 'Setup',
-      script: view.gistView.toYaml(),
+      script: gistView.toYaml(),
       language: 'yaml',
       onapply: function(str) {
-        view.router._sendBootstrap(view.gistView.fromYaml(str), view._setupEditor.bind(view));
+        view.router._sendBootstrap(gistView.fromYaml(str), view._setupEditor.bind(view));
       }
     });
   },
@@ -518,8 +472,9 @@ var ControllerView = View.extend({
   */
   template: `
     <div class="controller rows">
-      <div class="row columns gutter-horizontal header">
-        <div class="column no-grow gutter-right">Visual Fiha</div>
+      <div class="vf-app-menu"></div>
+      <div class="row columns gutter-left header">
+        <a href class="column no-grow vf-app-name">Visual Fiha</a>
 
         <div class="column columns">
           <!-- <span class="column columns no-grow button-group">
@@ -528,9 +483,7 @@ var ControllerView = View.extend({
             <button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>
           </span> -->
 
-          <div class="column"></div>
-
-          <div class="column worker-performance"></div>
+          <div class="column gutter-left worker-performance"></div>
 
           <div class="column no-grow control-screen-controls"></div>
 

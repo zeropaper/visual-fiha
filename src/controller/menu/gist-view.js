@@ -1,6 +1,6 @@
 /* global Request */
 'use strict';
-var View = require('./control-view');
+var View = require('./../control-view');
 var jsYAML = require('js-yaml');
 
 function resToJSON(res) {
