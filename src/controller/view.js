@@ -381,7 +381,8 @@ var ControllerView = View.extend({
   events: {
     'click .vf-app-name': '_openMenu',
     'click [name="screen"]': '_openScreen',
-    'click [name="setup-editor"]': '_setupEditor'
+    'click [name="setup-editor"]': '_setupEditor',
+    'click [name="start-tour"]': '_startTour'
   },
 
   _openMenu: function(evt) {
@@ -426,6 +427,10 @@ var ControllerView = View.extend({
         view.router._sendBootstrap(gistView.fromYaml(str), view._setupEditor.bind(view));
       }
     });
+  },
+
+  _startTour: function() {
+    this.router.navigate('tour');
   },
 
   showDetails: function (view) {
@@ -495,6 +500,12 @@ var ControllerView = View.extend({
 
           <div class="column no-grow">
             <button name="setup-editor">Setup editor</button>
+          </div>
+
+          <div class="column"></div>
+
+          <div class="column no-grow">
+            <button name="start-tour" class="vfi-info-circled"></button>
           </div>
         </div>
       </div>
