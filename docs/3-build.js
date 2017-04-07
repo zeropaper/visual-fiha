@@ -287,14 +287,14 @@ var Collection = __webpack_require__(34);
 
 var midiMappings = {
   'KORG INC.': {
-    'KP3 MIDI 1': __webpack_require__(694),
-    'nanoKONTROL2 MIDI 1': __webpack_require__(695)
+    'KP3 MIDI 1': __webpack_require__(695),
+    'nanoKONTROL2 MIDI 1': __webpack_require__(696)
   },
   'AKAI professional LLC': {
-    'LPD8 MIDI 1': __webpack_require__(693)
+    'LPD8 MIDI 1': __webpack_require__(694)
   },
   'Focusrite A.E. Ltd': {
-    'Launchpad Mini MIDI 1': __webpack_require__(696)
+    'Launchpad Mini MIDI 1': __webpack_require__(697)
   }
 };
 
@@ -460,7 +460,7 @@ module.exports = MIDIAccessState;
 "use strict";
 
 var View = __webpack_require__(650);
-var SignalDetailsView = __webpack_require__(698);
+var SignalDetailsView = __webpack_require__(699);
 var SignalControlView = View.extend({
   template: '<section class="rows signal">' +
     '<header class="row">' +
@@ -1398,17 +1398,16 @@ module.exports = function(controllerView) {
 var View = __webpack_require__(650);
 var ViewSwitcher = __webpack_require__(45);
 var MIDIAccessView = __webpack_require__(274);
-var SignalsView = __webpack_require__(701);
-var LayersView = __webpack_require__(683);
-var SuggestionView = __webpack_require__(666);
+var SignalsView = __webpack_require__(702);
+var LayersView = __webpack_require__(684);
+var SuggestionView = __webpack_require__(667);
 var AudioSource = __webpack_require__(660);
 var AceEditor = __webpack_require__(658);
-var RegionView = __webpack_require__(665);
-var GistView = __webpack_require__(662);
-var MappingsControlView = __webpack_require__(692);
-var ControlScreenControls = __webpack_require__(661);
-var LocalforageView = __webpack_require__(663);
+var RegionView = __webpack_require__(666);
+var MappingsControlView = __webpack_require__(693);
+var MenuView = __webpack_require__(664);
 var objectPath = __webpack_require__(653);
+var ControlScreenControls = __webpack_require__(661);
 // var Timeline = require('./timeline-view');
 
 
@@ -1566,8 +1565,8 @@ var ControllerView = View.extend({
     playing: ['boolean', true, false],
     router: 'any',
     showControlScreen: ['boolean', true, false],
-    controlScreenWidth: ['number', true, 33],
-    controlScreenHeight: ['number', true, 33],
+    controlScreenWidth: ['number', true, 400],
+    controlScreenHeight: ['number', true, 300],
     smoothingTimeConstant: ['number', true, 0.85],
     workerPerformance: 'string'
   },
@@ -1593,40 +1592,55 @@ var ControllerView = View.extend({
     controlScreenControls: {
       waitFor: 'el',
       selector: '.control-screen-controls',
-      prepareView: function(el) {
-        if (this.router) {
-          this.set({
-            showControlScreen: this.router.settings.get('showControlScreen', true),
-            controlScreenWidth: this.router.settings.get('controlScreenWidth', 45),
-            controlScreenHeight: this.router.settings.get('controlScreenHeight', 45)
+      prepareView: function() {
+        var controllerView = this;
+        var router = controllerView.router;
+        var settings = router.settings;
+
+        if (router) {
+          controllerView.set({
+            showControlScreen: settings.get('showControlScreen', true),
+            controlScreenWidth: settings.get('controlScreenWidth', 400),
+            controlScreenHeight: settings.get('controlScreenHeight', 300)
           });
         }
 
         var view = new ControlScreenControls({
-          el: el,
-          active: this.showControlScreen,
-          width: this.controlScreenWidth,
-          height: this.controlScreenHeight,
-          parent: this
+          active: controllerView.showControlScreen,
+          width: controllerView.controlScreenWidth,
+          height: controllerView.controlScreenHeight,
+          parent: controllerView
         });
 
         this.listenToAndRun(view, 'change:active', function() {
-          this.showControlScreen = view.active;
-          if (this.router) {
-            this.router.settings.set('showControlScreen', this.showControlScreen);
+          controllerView.showControlScreen = view.active;
+          if (router) {
+            settings.set('showControlScreen', controllerView.showControlScreen);
           }
         });
         this.listenToAndRun(view, 'change:width', function() {
-          this.controlScreenWidth = view.width;
-          if (this.router) {
-            this.router.settings.set('controlScreenWidth', this.controlScreenWidth);
+          controllerView.controlScreenWidth = view.width;
+          if (router) {
+            settings.set('controlScreenWidth', controllerView.controlScreenWidth);
           }
         });
         this.listenToAndRun(view, 'change:height', function() {
-          this.controlScreenHeight = view.height;
-          if (this.router) {
-            this.router.settings.set('controlScreenHeight', this.controlScreenHeight);
+          controllerView.controlScreenHeight = view.height;
+          if (router) {
+            settings.set('controlScreenHeight', controllerView.controlScreenHeight);
           }
+        });
+        return view;
+      }
+    },
+
+    menuView: {
+      waitFor: 'el',
+      selector: '.vf-app-menu',
+      prepareView: function(el) {
+        var view = new MenuView({
+          parent: this,
+          el: el
         });
         return view;
       }
@@ -1744,26 +1758,6 @@ var ControllerView = View.extend({
 
         return view;
       }
-    },
-
-    localforageView: {
-      waitFor: 'el',
-      selector: '.controller > .header',
-      prepareView: function(el) {
-        var view = new LocalforageView({parent: this, model: this.model});
-        el.appendChild(view.render().el);
-        return view;
-      }
-    },
-
-    gistView: {
-      waitFor: 'el',
-      selector: '.controller > .header',
-      prepareView: function(el) {
-        var view = new GistView({parent: this, model: this.model});
-        el.appendChild(view.render().el);
-        return view;
-      }
     }
   },
 
@@ -1795,14 +1789,13 @@ var ControllerView = View.extend({
     controlScreenWidth: {
       selector: '.region-left',
       type: function(el, val) {
-        el.style.width = val +'%';
+        el.style.width = val +'px';
       }
     },
     controlScreenHeight: {
       selector: '.region-left-top',
       type: function(el, val) {
-        var parentNode = el.parentNode;
-        var height = ((Math.max(100, parentNode.clientHeight) / 100) * val) +'px';
+        var height = val +'px';
         el.style.maxHeight = height;
         el.style.minHeight = height;
       }
@@ -1827,8 +1820,15 @@ var ControllerView = View.extend({
   },
 
   events: {
+    'click .vf-app-name': '_openMenu',
     'click [name="screen"]': '_openScreen',
-    'click [name="setup-editor"]': '_setupEditor'
+    'click [name="setup-editor"]': '_setupEditor',
+    'click [name="start-tour"]': '_startTour'
+  },
+
+  _openMenu: function(evt) {
+    evt.preventDefault();
+    this.menuView.open();
   },
 
   _openScreen: function() {
@@ -1858,16 +1858,20 @@ var ControllerView = View.extend({
   _setupEditor: function() {
     var view = this;
     var editor = view.getEditor();
-
+    var gistView = view.menuView.gistView;
     editor.editCode({
       autoApply: false,
       title: 'Setup',
-      script: view.gistView.toYaml(),
+      script: gistView.toYaml(),
       language: 'yaml',
       onapply: function(str) {
-        view.router._sendBootstrap(view.gistView.fromYaml(str), view._setupEditor.bind(view));
+        view.router._sendBootstrap(gistView.fromYaml(str), view._setupEditor.bind(view));
       }
     });
+  },
+
+  _startTour: function() {
+    this.router.navigate('tour');
   },
 
   showDetails: function (view) {
@@ -1914,8 +1918,9 @@ var ControllerView = View.extend({
   */
   template: `
     <div class="controller rows">
-      <div class="row columns gutter-horizontal header">
-        <div class="column no-grow gutter-right">Visual Fiha</div>
+      <div class="vf-app-menu"></div>
+      <div class="row columns gutter-left header">
+        <a href class="column no-grow vf-app-name">Visual Fiha <span class="hamburger-menu"><span></span></span></a>
 
         <div class="column columns">
           <!-- <span class="column columns no-grow button-group">
@@ -1924,9 +1929,7 @@ var ControllerView = View.extend({
             <button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>
           </span> -->
 
-          <div class="column"></div>
-
-          <div class="column worker-performance"></div>
+          <div class="column gutter-left worker-performance"></div>
 
           <div class="column no-grow control-screen-controls"></div>
 
@@ -1938,6 +1941,12 @@ var ControllerView = View.extend({
 
           <div class="column no-grow">
             <button name="setup-editor">Setup editor</button>
+          </div>
+
+          <div class="column"></div>
+
+          <div class="column no-grow">
+            <button name="start-tour" class="vfi-info-circled"></button>
           </div>
         </div>
       </div>
@@ -1967,9 +1976,9 @@ module.exports = ControllerView;
 var assign = __webpack_require__(33);
 var Collection = __webpack_require__(34);
 var SignalState = __webpack_require__(654);
-__webpack_require__(697);
-__webpack_require__(699);
+__webpack_require__(698);
 __webpack_require__(700);
+__webpack_require__(701);
 
 var SignalCollection = Collection.extend({
   mainIndex: 'name',
@@ -2449,7 +2458,7 @@ var State = __webpack_require__(27);
 var View = __webpack_require__(650);
 var objectPath = __webpack_require__(653);
 
-var PropertyView = __webpack_require__(664);
+var PropertyView = __webpack_require__(665);
 
 var DetailsView = View.extend({
   template: `
@@ -2572,7 +2581,7 @@ module.exports = DetailsView;
 "use strict";
 
 var View = __webpack_require__(35);
-var canvasCompleter = __webpack_require__(667);
+var canvasCompleter = __webpack_require__(668);
 
 var AceEditor = View.extend({
   editCode: function(options) {
@@ -3117,43 +3126,47 @@ var ControlScreenControls = View.extend({
     </div>
 
     <div class="column no-grow columns control-screen-size">
-      <div class="column">
-        <input type="number" min="25" max="75" name="control-screen-width" />
-      </div>
-
-      <div class="column">
-        <input type="number" min="25" max="75" name="control-screen-height" />
-      </div>
+      <input type="text" placeholder="400x300" name="control-screen-size" />
     </div>
   </div>`,
 
   props: {
     active: ['boolean', true, true],
-    width: ['number', true, 33],
-    height: ['number', true, 33],
-  },
-
-  bindings: {
-    'width': {type: 'value', selector: '[name="control-screen-width"]'},
-    'height': {type: 'value', selector: '[name="control-screen-height"]'}
+    width: ['number', true, 400],
+    height: ['number', true, 300],
   },
 
   events: {
     'click [name="control-screen"]': 'toggleActive',
-    'change [name="control-screen-width"]': 'setWidth',
-    'change [name="control-screen-height"]': 'setHeight'
+    'change [name="control-screen-size"]': '_handleChange'
+  },
+
+  bindings: {
+    width: {
+      type: function(el) {
+        if (document.activeElement === el) return;
+        el.value = this.width + 'x' + this.height;
+      },
+      selector: '[name=control-screen-size]'
+    },
+    height: {
+      type: function(el) {
+        if (document.activeElement === el) return;
+        el.value = this.width + 'x' + this.height;
+      },
+      selector: '[name=control-screen-size]'
+    }
   },
 
   toggleActive: function() {
     this.toggle('active');
   },
 
-  setWidth: function(evt) {
-    this.width = Number(evt.target.value);
-  },
-
-  setHeight: function(evt) {
-    this.height = Number(evt.target.value);
+  _handleChange: function(evt) {
+    var parts = (evt.target.value || '400x300').split('x').map(v => Number(v));
+    this.width = parts[0] || 400;
+    this.height = parts[1] || 300;
+    return this;
   }
 });
 module.exports = ControlScreenControls;
@@ -3325,15 +3338,15 @@ var localForage = __webpack_require__(277);
 var View = __webpack_require__(35);
 var LocalforageView = View.extend({
   template: `
-    <div class="columns localforage-view">
-      <div class="column columns no-grow">
-        <div class="column"><button name="snapshot-save" title="Take snapshot">Snapshot</button></div>
-        <div class="column"><button name="snapshot-restore" class="vfi-ccw" title="Restore snapshot"></button></div>
+    <div class="rows localforage-view">
+      <div class="row columns no-grow">
+        <div class="column no-grow"><button name="snapshot-save" title="Take snapshot">Snapshot</button></div>
+        <div class="column no-grow"><button name="snapshot-restore" class="vfi-ccw" title="Restore snapshot"></button></div>
       </div>
-      <div class="column columns">
+      <div class="row columns">
         <div class="column"><input placeholder="Local ID" name="local-id"/></div>
         <div class="column no-grow"><button name="save">Save</button></div>
-        <div class="column"><button name="restore" class="vfi-ccw" title="Reload"></button></div>
+        <div class="column no-grow"><button name="restore" class="vfi-ccw" title="Reload"></button></div>
       </div>
     </div>
   `,
@@ -3405,6 +3418,84 @@ module.exports = LocalforageView;
 /***/ }),
 
 /***/ 664:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(35);
+var GistView = __webpack_require__(662);
+var LocalforageView = __webpack_require__(663);
+
+var MenuView = View.extend({
+  template: `
+    <div class="vf-app-menu">
+      <button name="menu-close" class="vfi-cancel"></button>
+
+      <div class="inner rows">
+        <div class="row no-grow columns" data-hook="localforage"></div>
+        <div class="row no-grow columns" data-hook="gist"></div>
+
+        <div class="row columns"></div>
+
+        <div class="row columns">
+
+        </div>
+      </div>
+
+      <div class="underlay"></div>
+    </div>
+  `,
+
+  session: {
+    opened: ['boolean', true, false]
+  },
+
+  bindings: {
+    opened: {
+      type: 'booleanClass'
+    }
+  },
+
+  events: {
+    'click [name=menu-close]': 'close',
+    'click .underlay': 'close'
+  },
+
+  close: function() {
+    this.opened = false;
+  },
+
+  open: function() {
+    this.opened = true;
+  },
+
+  subviews: {
+    localforageView: {
+      waitFor: 'el',
+      selector: '[data-hook=localforage]',
+      prepareView: function() {
+        var controllerView = this.parent;
+        var view = new LocalforageView({parent: controllerView, model: controllerView.model});
+        return view;
+      }
+    },
+
+    gistView: {
+      waitFor: 'el',
+      selector: '[data-hook=gist]',
+      prepareView: function() {
+        var controllerView = this.parent;
+        var view = new GistView({parent: controllerView, model: controllerView.model});
+        return view;
+      }
+    }
+  }
+});
+module.exports = MenuView;
+
+/***/ }),
+
+/***/ 665:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3761,7 +3852,7 @@ module.exports = PropertyView;
 
 /***/ }),
 
-/***/ 665:
+/***/ 666:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3908,7 +3999,7 @@ module.exports = RegionView;
 
 /***/ }),
 
-/***/ 666:
+/***/ 667:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4257,7 +4348,6 @@ var SuggestionView = View.extend({
     });
 
     var _handleHolderClick = function (evt) {
-      evt.preventDefault();
       if (evt.target !== this.inputEl && !this.el.contains(evt.target)) {
         this.detach();
       }
@@ -4300,7 +4390,7 @@ module.exports = SuggestionView;
 
 /***/ }),
 
-/***/ 667:
+/***/ 668:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4384,7 +4474,7 @@ module.exports = canvasCompleter;
 
 /***/ }),
 
-/***/ 669:
+/***/ 670:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4567,7 +4657,7 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
 
 /***/ }),
 
-/***/ 681:
+/***/ 682:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4579,7 +4669,7 @@ module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.exten
 
 /***/ }),
 
-/***/ 683:
+/***/ 684:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4587,11 +4677,11 @@ module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.exten
 var View = __webpack_require__(651);
 
 var LayerControlView = __webpack_require__(651);
-__webpack_require__(669);
-__webpack_require__(684);
-__webpack_require__(681);
-__webpack_require__(690);
-__webpack_require__(688);
+__webpack_require__(670);
+__webpack_require__(685);
+__webpack_require__(682);
+__webpack_require__(691);
+__webpack_require__(689);
 
 var LayersView = View.extend({
   commands: {
@@ -4661,14 +4751,14 @@ module.exports = LayersView;
 
 /***/ }),
 
-/***/ 684:
+/***/ 685:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
 var ScreenLayerControlView = __webpack_require__(651);
-var SVGDetailsView = __webpack_require__(685);
+var SVGDetailsView = __webpack_require__(686);
 
 module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
   template: `
@@ -4745,7 +4835,7 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
 
 /***/ }),
 
-/***/ 685:
+/***/ 686:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4780,7 +4870,7 @@ module.exports = SVGDetailsView;
 
 /***/ }),
 
-/***/ 688:
+/***/ 689:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4792,7 +4882,7 @@ module.exports = TxtLayerControlView;
 
 /***/ }),
 
-/***/ 690:
+/***/ 691:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4804,7 +4894,7 @@ module.exports = ScreenLayerControlView.types.video = ScreenLayerControlView.ext
 
 /***/ }),
 
-/***/ 692:
+/***/ 693:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5197,7 +5287,7 @@ module.exports = MappingsControlView;
 
 /***/ }),
 
-/***/ 693:
+/***/ 694:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5276,7 +5366,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 694:
+/***/ 695:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5458,7 +5548,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 695:
+/***/ 696:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5577,7 +5667,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 696:
+/***/ 697:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5713,7 +5803,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 697:
+/***/ 698:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5769,7 +5859,7 @@ module.exports = BeatState;
 
 /***/ }),
 
-/***/ 698:
+/***/ 699:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5794,7 +5884,7 @@ module.exports = SignalDetailsView;
 
 /***/ }),
 
-/***/ 699:
+/***/ 700:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5855,7 +5945,7 @@ module.exports = HSLASignalState;
 
 /***/ }),
 
-/***/ 700:
+/***/ 701:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5913,7 +6003,7 @@ module.exports = RGBASignalState;
 
 /***/ }),
 
-/***/ 701:
+/***/ 702:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

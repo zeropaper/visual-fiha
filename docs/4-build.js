@@ -7,11 +7,11 @@ webpackJsonp([4],{
 
 var View = __webpack_require__(35);
 var LayerView = __webpack_require__(652);
-__webpack_require__(679);
-__webpack_require__(687);
-__webpack_require__(691);
-__webpack_require__(682);
-__webpack_require__(689);
+__webpack_require__(680);
+__webpack_require__(688);
+__webpack_require__(692);
+__webpack_require__(683);
+__webpack_require__(690);
 
 
 function signature(fn) {
@@ -416,7 +416,7 @@ module.exports = LayerView;
 
 /***/ }),
 
-/***/ 679:
+/***/ 680:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -500,7 +500,7 @@ module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 682:
+/***/ 683:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -584,7 +584,7 @@ module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 687:
+/***/ 688:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -658,7 +658,7 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 689:
+/***/ 690:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -680,7 +680,7 @@ module.exports = TxtLayerView;
 
 /***/ }),
 
-/***/ 691:
+/***/ 692:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

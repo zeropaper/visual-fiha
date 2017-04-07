@@ -123,10 +123,10 @@ module.exports = LayerState;
 
 
 module.exports = {
-  lines: __webpack_require__(671),
-  loaders: __webpack_require__(673),
-  text: __webpack_require__(674),
-  utils: __webpack_require__(678)
+  lines: __webpack_require__(672),
+  loaders: __webpack_require__(674),
+  text: __webpack_require__(675),
+  utils: __webpack_require__(679)
 };
 
 if (typeof window !== 'undefined') {
@@ -146,7 +146,7 @@ var State = __webpack_require__(27);
 var Collection = __webpack_require__(34);
 var ScreenLayerState = __webpack_require__(264);
 var mockedCtx = __webpack_require__(655);
-var compileFunction = __webpack_require__(668);
+var compileFunction = __webpack_require__(669);
 function drawLayerCtx() {
   /*
     You can access the canvas 2d context with the global ctx
@@ -343,7 +343,7 @@ module.exports = ScreenLayerState.types.img = ScreenLayerState.extend({
 "use strict";
 
 var ScreenLayerState = __webpack_require__(264);
-var Extractor = __webpack_require__(686);
+var Extractor = __webpack_require__(687);
 
 module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   props: {
@@ -494,7 +494,7 @@ var ScreenState = State.extend({
   },
 
   collections: {
-    layers: __webpack_require__(680)
+    layers: __webpack_require__(681)
   },
 
   derived: {
@@ -619,7 +619,7 @@ module.exports = mockedCtx;
 
 /***/ }),
 
-/***/ 668:
+/***/ 669:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -924,7 +924,7 @@ module.exports = compileFunction;
 
 /***/ }),
 
-/***/ 670:
+/***/ 671:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1009,20 +1009,20 @@ module.exports = function lineGrid(ctx) {
 
 /***/ }),
 
-/***/ 671:
+/***/ 672:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  grid: __webpack_require__(670),
-  roundFrequencies: __webpack_require__(672)
+  grid: __webpack_require__(671),
+  roundFrequencies: __webpack_require__(673)
 };
 
 /***/ }),
 
-/***/ 672:
+/***/ 673:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1090,7 +1090,7 @@ module.exports = function roundFrequencies(ctx) {
 
 /***/ }),
 
-/***/ 673:
+/***/ 674:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1153,19 +1153,19 @@ module.exports = {
 
 /***/ }),
 
-/***/ 674:
+/***/ 675:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  wrap: __webpack_require__(675)
+  wrap: __webpack_require__(676)
 };
 
 /***/ }),
 
-/***/ 675:
+/***/ 676:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1194,7 +1194,7 @@ module.exports = function wrapText(context, text, x, y, maxWidth, lineHeight) {
 
 /***/ }),
 
-/***/ 676:
+/***/ 677:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1222,7 +1222,7 @@ module.exports = function fps(ctx) {
 
 /***/ }),
 
-/***/ 677:
+/***/ 678:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1243,20 +1243,20 @@ module.exports = function frametime(ctx) {
 
 /***/ }),
 
-/***/ 678:
+/***/ 679:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  fps: __webpack_require__(676),
-  frametime: __webpack_require__(677)
+  fps: __webpack_require__(677),
+  frametime: __webpack_require__(678)
 };
 
 /***/ }),
 
-/***/ 680:
+/***/ 681:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1299,7 +1299,7 @@ module.exports = Collection.extend({
 
 /***/ }),
 
-/***/ 686:
+/***/ 687:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
