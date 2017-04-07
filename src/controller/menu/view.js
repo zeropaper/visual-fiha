@@ -1,7 +1,6 @@
 'use strict';
 var View = require('ampersand-view');
 var GistView = require('./gist-view');
-var ControlScreenControls = require('./control-screen-controls-view');
 var LocalforageView = require('./localforage-view');
 
 var MenuView = View.extend({
@@ -10,10 +9,6 @@ var MenuView = View.extend({
       <button name="menu-close" class="vfi-cancel"></button>
 
       <div class="inner rows">
-        <div class="row no-grow columns" data-hook="control-screen-controls"></div>
-
-        <div class="row columns"></div>
-
         <div class="row no-grow columns" data-hook="localforage"></div>
         <div class="row no-grow columns" data-hook="gist"></div>
 
@@ -52,51 +47,6 @@ var MenuView = View.extend({
   },
 
   subviews: {
-    controlScreenControls: {
-      waitFor: 'el',
-      selector: '[data-hook=control-screen-controls]',
-      prepareView: function() {
-        var controllerView = this.parent;
-        var router = controllerView.router;
-        var settings = router.settings;
-
-        if (router) {
-          controllerView.set({
-            showControlScreen: settings.get('showControlScreen', true),
-            controlScreenWidth: settings.get('controlScreenWidth', 45),
-            controlScreenHeight: settings.get('controlScreenHeight', 45)
-          });
-        }
-
-        var view = new ControlScreenControls({
-          active: controllerView.showControlScreen,
-          width: controllerView.controlScreenWidth,
-          height: controllerView.controlScreenHeight,
-          parent: controllerView
-        });
-
-        this.listenToAndRun(view, 'change:active', function() {
-          controllerView.showControlScreen = view.active;
-          if (router) {
-            settings.set('showControlScreen', controllerView.showControlScreen);
-          }
-        });
-        this.listenToAndRun(view, 'change:width', function() {
-          controllerView.controlScreenWidth = view.width;
-          if (router) {
-            settings.set('controlScreenWidth', controllerView.controlScreenWidth);
-          }
-        });
-        this.listenToAndRun(view, 'change:height', function() {
-          controllerView.controlScreenHeight = view.height;
-          if (router) {
-            settings.set('controlScreenHeight', controllerView.controlScreenHeight);
-          }
-        });
-        return view;
-      }
-    },
-
     localforageView: {
       waitFor: 'el',
       selector: '[data-hook=localforage]',

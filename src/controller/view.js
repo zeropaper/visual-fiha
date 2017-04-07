@@ -11,6 +11,7 @@ var RegionView = require('./region-view');
 var MappingsControlView = require('./../mapping/control-view');
 var MenuView = require('./menu/view');
 var objectPath = require('./../object-path');
+var ControlScreenControls = require('./control-screen-controls-view');
 // var Timeline = require('./timeline-view');
 
 
@@ -168,8 +169,8 @@ var ControllerView = View.extend({
     playing: ['boolean', true, false],
     router: 'any',
     showControlScreen: ['boolean', true, false],
-    controlScreenWidth: ['number', true, 33],
-    controlScreenHeight: ['number', true, 33],
+    controlScreenWidth: ['number', true, 400],
+    controlScreenHeight: ['number', true, 300],
     smoothingTimeConstant: ['number', true, 0.85],
     workerPerformance: 'string'
   },
@@ -192,6 +193,51 @@ var ControllerView = View.extend({
   },
 
   subviews: {
+    controlScreenControls: {
+      waitFor: 'el',
+      selector: '.control-screen-controls',
+      prepareView: function() {
+        var controllerView = this;
+        var router = controllerView.router;
+        var settings = router.settings;
+
+        if (router) {
+          controllerView.set({
+            showControlScreen: settings.get('showControlScreen', true),
+            controlScreenWidth: settings.get('controlScreenWidth', 400),
+            controlScreenHeight: settings.get('controlScreenHeight', 300)
+          });
+        }
+
+        var view = new ControlScreenControls({
+          active: controllerView.showControlScreen,
+          width: controllerView.controlScreenWidth,
+          height: controllerView.controlScreenHeight,
+          parent: controllerView
+        });
+
+        this.listenToAndRun(view, 'change:active', function() {
+          controllerView.showControlScreen = view.active;
+          if (router) {
+            settings.set('showControlScreen', controllerView.showControlScreen);
+          }
+        });
+        this.listenToAndRun(view, 'change:width', function() {
+          controllerView.controlScreenWidth = view.width;
+          if (router) {
+            settings.set('controlScreenWidth', controllerView.controlScreenWidth);
+          }
+        });
+        this.listenToAndRun(view, 'change:height', function() {
+          controllerView.controlScreenHeight = view.height;
+          if (router) {
+            settings.set('controlScreenHeight', controllerView.controlScreenHeight);
+          }
+        });
+        return view;
+      }
+    },
+
     menuView: {
       waitFor: 'el',
       selector: '.vf-app-menu',
@@ -347,14 +393,13 @@ var ControllerView = View.extend({
     controlScreenWidth: {
       selector: '.region-left',
       type: function(el, val) {
-        el.style.width = val +'%';
+        el.style.width = val +'px';
       }
     },
     controlScreenHeight: {
       selector: '.region-left-top',
       type: function(el, val) {
-        var parentNode = el.parentNode;
-        var height = ((Math.max(100, parentNode.clientHeight) / 100) * val) +'px';
+        var height = val +'px';
         el.style.maxHeight = height;
         el.style.minHeight = height;
       }
@@ -479,7 +524,7 @@ var ControllerView = View.extend({
     <div class="controller rows">
       <div class="vf-app-menu"></div>
       <div class="row columns gutter-left header">
-        <a href class="column no-grow vf-app-name">Visual Fiha</a>
+        <a href class="column no-grow vf-app-name">Visual Fiha <span class="hamburger-menu"><span></span></span></a>
 
         <div class="column columns">
           <!-- <span class="column columns no-grow button-group">
