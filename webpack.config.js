@@ -144,7 +144,7 @@ module.exports = function(env) {
       }),
 
       new CopyWebpackPlugin([
-        {from: resolve(__dirname, 'assets'), to: 'assets'},
+        {from: resolve(__dirname, 'assets/styles.css'), to: 'assets/styles.css'},
         {from: 'setup.js'},
         {from: 'controller.html'},
         {from: 'screen.html'},

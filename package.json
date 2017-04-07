@@ -14,7 +14,7 @@
   "scripts": {
     "test": "karma start ./test/karma.conf.js --single-run",
     "clean": "rimraf docs",
-    "prebuild": "npm run clean",
+    "prebuild": "npm run clean && mkdir docs && cp -r assets docs/",
     "build": "webpack --env.prod",
     "postinstall": "npm run build",
     "prerun:dev": "npm run prebuild",
