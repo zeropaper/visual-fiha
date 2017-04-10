@@ -1,6 +1,6 @@
 'use strict';
 var DetailsView = require('./../details-view');
-
+var propNamesExtractor = require('./../../prop-names');
 
 
 var SVGDetailsView = DetailsView.extend({
@@ -8,17 +8,11 @@ var SVGDetailsView = DetailsView.extend({
     propNames: {
       deps: ['model'],
       fn: function() {
-        var def = this.model.constructor.prototype._definition;
-        return Object.keys(def)
-          .filter(function(key) {
-            return [
-              'content',
-              'svgStyles',
-
-              'name',
-              'type'
-            ].indexOf(key) < 0;
-          });
+        return propNamesExtractor(this.model, [
+          'content',
+          'svgStyles',
+          'layerStyles'
+        ]);
       }
     }
   }
