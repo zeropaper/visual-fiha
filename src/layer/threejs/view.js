@@ -6,10 +6,39 @@ require('./OBJLoader');
 var ScreenLayerView = require('./../view');
 
 
+function compileFunction(func) {
+  var fn;
 
+  var evaled = `fn = (function() {
+  // override some stuff that should not be used
+  var navigator, window, global, document, module, exports;
 
+  return function() {
+    var layer = this;
+    var width = layer.width || 400;
+    var height = layer.height || 300;
+    var store = layer.cache = (layer.cache || {});
+    var frametime = layer ? layer.frametime : 0;
+    var audio = layer ? layer.audio : {};
+    var bufferLength = function() { return ((layer.audio || {}).bufferLength) || 128; };
+    var frequency = function(x) {
+      return ((layer.audio || {}).frequency || [])[x] || 0;
+    };
+    var timeDomain = function(x) {
+      return ((layer.audio || {}).timeDomain || [])[x] || 0;
+    };
+    var parameter = function (name, deflt) {
+      var val = layer.model.parameters.get(name);
+      return val ? val.value : deflt;
+    };
 
+    return (${ func.toString() })();
+  };
+})();`;
 
+  eval(evaled);// jshint ignore:line
+  return fn;
+}
 
 module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
   template: function() {
@@ -22,17 +51,6 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
     window.THREE = window.THREE || THREE;
     window['_threejsView' + view.cid] = view;
     view.on('change:width change:height', view.resize);
-
-
-    view.listenToAndRun(this, 'change:model.src', function() {
-      console.info('threejs layer model src changed', view.model.src);
-      if (!view.model.src) return;
-
-      view.objLoader.load(view.model.src, function (object) {
-        object.name = 'sceneSubject';
-        view.scene.add(object);
-      }, function onProgress() {}, function onError() {});
-    });
   },
 
   resize: function() {
@@ -44,13 +62,27 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
   },
 
   derived: {
+    renderFn: {
+      deps: ['model.renderFunction'],
+      fn: function() {
+        var fn = compileFunction(this.model.renderFunction);
+        return fn.bind(this);
+      }
+    },
+    updateFn: {
+      deps: ['model.updateFunction'],
+      fn: function() {
+        var fn = compileFunction(this.model.updateFunction);
+        return fn.bind(this);
+      }
+    },
     manager: {
       deps: [],
       fn: function() {
         var manager = new THREE.LoadingManager();
-        manager.onProgress = function ( item, loaded, total ) {
-          console.log( item, loaded, total );
-        };
+        // manager.onProgress = function ( item, loaded, total ) {
+        //   console.log( item, loaded, total );
+        // };
         return manager;
       }
     },
@@ -114,54 +146,30 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
     ScreenLayerView.prototype.render.apply(this, arguments);
     this.el.appendChild(this.renderer.domElement);
 
-    var view = this;
-    var material = this.material = new THREE.MeshLambertMaterial({color: 0xdddddd, shading: THREE.FlatShading});
-    var object = this.object = new THREE.Mesh(new THREE.SphereGeometry(45, 12, 7), material);
-    object.name = 'bla';
-    view.scene.add(object);
-
-    view.camera.position.set(150, 40, 20);
-    view.camera.lookAt(view.scene.position);
-
-    view.directionalLight.position.set(100, 30, 15);
-    view.directionalLight.lookAt(view.scene.position);
-
-
-    object = new THREE.DirectionalLightHelper(view.directionalLight);
-    object.name = 'directionalLightHelper';
-    view.scene.add(object);
-
-    object = new THREE.AxisHelper(20);
-    object.name = 'axisHelper';
-    view.scene.add(object);
-
-    object = new THREE.GridHelper(200);
-    object.name = 'gridHelper';
-    view.scene.add(object);
+    var fn = this.renderFn;
+    if (typeof fn === 'function') {
+      try {
+        fn.call(this);
+      }
+      catch(up) {
+        console.log('renderFunction', up.message);
+      }
+    }
 
     this.update();
     return this;
   },
 
   update: function() {
-    var screenState = this.model.screenState;
-    var audio = screenState.audio;
-    var freq = audio.frequency;
-    var vol = audio.timeDomain;
-
-    var bla = this.scene.getObjectByName('bla');
-    bla.scale.set(1 + (freq[12] * 0.01), 1 + (freq[24] * 0.01), 1 + (freq[36] * 0.01));
-
-    var directionalLightHelper = this.scene.getObjectByName('directionalLightHelper');
-    directionalLightHelper.position.set(this.directionalLight.position);
-    directionalLightHelper.lookAt(this.directionalLight.target.position);
-
-    var speed = 1000;
-    var dist = 200;
-    var deg = (screenState.frametime % (speed * 360) / speed);
-    this.camera.position.set(Math.cos(deg) * dist, 40 + (vol[12] * 0.1), Math.sin(deg) * dist);
-    this.camera.lookAt(this.scene.position);
-
+    var fn = this.updateFn;
+    if (typeof fn === 'function') {
+      try {
+        fn.call(this);
+      }
+      catch(up) {
+        console.log('updateFunction', up.message);
+      }
+    }
 
     this.renderer.render(this.scene, this.camera);
   }
