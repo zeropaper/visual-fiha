@@ -46,10 +46,17 @@ var StylePropertyView = View.extend({
       }
     },
 
-    propertyPath: {
-      deps: ['model.name', 'parent.modelPath'],
+    modelPath: {
+      deps: ['model'],
       fn: function() {
-        return this.parent.modelPath + '.styleProperties.' + this.model.name + '.value';
+        return objectPath(this.model);
+      }
+    },
+
+    propertyPath: {
+      deps: ['model.name', 'modelPath'],
+      fn: function() {
+        return this.modelPath + '.value';
       }
     },
 
@@ -200,6 +207,7 @@ var LayerDetailsView = DetailsView.extend({
       default: val,
       value: val
     });
+
     this.rootView.sendCommand('propChange', {
       path: 'layers.' + this.model.getId(),
       property: 'styleProperties',
