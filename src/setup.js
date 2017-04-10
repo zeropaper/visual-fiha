@@ -173,7 +173,7 @@ var canvasLayers = [
 ];
 
 window.VF._defaultSetup = {
-  // mappings: [
+  mappings: [
   //   {
   //     targets: [
   //       'layers.no-signal.opacity'
@@ -296,7 +296,15 @@ window.VF._defaultSetup = {
   //   //   name: 'slider8Hue',
   //   //   source: 'midi:nk2.slider8'
   //   // }
-  // ],
+    {
+      name: 'knobAStr',
+      source: 'midi:nk2.knob1',
+      transformFunction: 'function(val) { return (val * (1 / 127)).toString(); }',
+      targets: [
+        'layers.three.parameters.paramA.value'
+      ]
+    }
+  ],
 
 
   // signals: [
@@ -319,10 +327,141 @@ window.VF._defaultSetup = {
 
   layers: [
     {
+      opacity: 100,
+      zIndex: 1000,
       type: 'threejs',
       name: 'three',
       active: true,
-      src: './assets/zeropaper/zeropaper-logo.obj'
+      styleProperties: [
+        {
+          name: '--bla',
+          value: 'block'
+        }
+      ],
+      parameters: [
+        {
+          name: 'paramA',
+          value: '0.1'
+        }
+      ],
+
+
+      src: './assets/zeropaper/zeropaper-logo.obj',
+
+      renderFunction: `function() {
+  layer.material = new THREE.MeshLambertMaterial({
+    color: 0xffffff
+  });
+  layer.redWire = new THREE.MeshLambertMaterial({
+    color: 0xffffff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.5
+  });
+  layer.blueWire = new THREE.MeshLambertMaterial({
+    color: 0xffffff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.5
+  });
+
+  layer.listenToAndRun(layer, 'change:model.src', function() {
+    if (!layer.model.src || store.loaded) return;
+
+    layer.objLoader.load(layer.model.src, function loaded(object) {
+      object.name = 'sceneSubject';
+      layer.scene.add(object);
+      store.loaded = true;
+
+      object.traverse(function (child) {
+        if (child instanceof THREE.Mesh) {
+          child.material = layer.material;
+        }
+      });
+
+      var clone1 = object.clone();
+      clone1.name = 'clone1';
+      clone1.traverse(function (child) {
+        if (child instanceof THREE.Mesh) {
+          child.material = layer.redWire;
+        }
+      });
+      layer.scene.add(clone1);
+
+      var clone2 = object.clone();
+      clone2.name = 'clone2';
+      layer.scene.add(clone2);
+      clone2.traverse(function (child) {
+        if (child instanceof THREE.Mesh) {
+          child.material = layer.blueWire;
+        }
+      });
+    });
+  });
+
+  layer.camera.position.set(150, 40, 20);
+  layer.camera.lookAt(layer.scene.position);
+
+  layer.directionalLight.position.set(100, 30, 15);
+  layer.directionalLight.lookAt(layer.scene.position);
+
+  /*
+  var object = new THREE.DirectionalLightHelper(layer.directionalLight);
+  object.name = 'directionalLightHelper';
+  layer.scene.add(object);
+
+  object = new THREE.AxisHelper(20);
+  object.name = 'axisHelper';
+  layer.scene.add(object);
+
+  object = new THREE.GridHelper(200);
+  object.name = 'gridHelper';
+  layer.scene.add(object);
+  */
+}`,
+
+      updateFunction: `function() {
+  var screenState = layer.model.screenState;
+  var audio = screenState.audio;
+  var freq = audio.frequency;
+  var vol = audio.timeDomain;
+
+  var scale = Math.max(0.01, Math.min(1.6, Number(parameter('paramA'))));
+  var speed = 1000;
+  var dist = 200;
+  var deg = (screenState.frametime % (speed * 360) / speed);
+
+  var bla = layer.scene.getObjectByName('sceneSubject');
+  if (bla) {
+    bla.scale.set(1 + (vol[8] * scale), 1 + (vol[8] * scale), 1 + (vol[8] * scale));
+    bla.rotation.set(55, deg, -8);
+
+    var clone1 = layer.scene.getObjectByName('clone1');
+    if (clone1) {
+      layer.redWire.color = new THREE.Color('hsl('+ freq[12] +', 50%, 50%)');
+      clone1.scale.set(bla.scale.x, bla.scale.y, bla.scale.z);
+      clone1.rotation.set(bla.rotation.x, bla.rotation.y, bla.rotation.z);
+      clone1.position.set(bla.position.x - ((vol[8] - 60) * 0.5), bla.position.y, bla.position.z);
+    }
+
+    var clone2 = layer.scene.getObjectByName('clone2');
+    if (clone2) {
+      layer.blueWire.color = new THREE.Color('hsl('+ freq[12] +', 50%, 50%)');
+      clone2.scale.set(bla.scale.x, bla.scale.y, bla.scale.z);
+      clone2.rotation.set(bla.rotation.x, bla.rotation.y, bla.rotation.z);
+      clone2.position.set(bla.position.x + ((vol[8] - 60) * 0.5), bla.position.y, bla.position.z);
+    }
+  }
+
+  /*
+  var directionalLightHelper = layer.scene.getObjectByName('directionalLightHelper');
+  directionalLightHelper.position.set(layer.directionalLight.position);
+  directionalLightHelper.lookAt(layer.directionalLight.target.position);
+  */
+
+  layer.camera.position.set(Math.cos(deg) * dist, 40 + (vol[12] * 0.1), Math.sin(deg) * dist);
+  layer.camera.lookAt(layer.scene.position);
+}`
     },
     // {
     //   type: 'img',
@@ -345,13 +484,13 @@ window.VF._defaultSetup = {
     //   canvasLayers: canvasLayers,
     // },
 
-    // {
-    //   type: 'SVG',
-    //   name: 'zeropaper',
-    //   active: false,
-    //   src: './assets/zeropaper-fat.svg',
-    //   mixBlendingMode: 'overlay'
-    // },
+    {
+      zIndex: 1100,
+      type: 'SVG',
+      name: 'zeropaperLogo',
+      src: './assets/zeropaper/zeropaper-fat.svg',
+      mixBlendingMode: 'overlay'
+    },
 
     // {
     //   type: 'SVG',
@@ -361,9 +500,9 @@ window.VF._defaultSetup = {
     // },
 
     // {
+    //   zIndex: 1200,
     //   type: 'SVG',
     //   name: 'vf',
-    //   active: false,
     //   src: './assets/visual-fiha.svg'
     // },
 
