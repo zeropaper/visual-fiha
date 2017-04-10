@@ -28,10 +28,11 @@ var LayerView = View.extend({
     styleEl: {
       deps: ['el'],
       fn: function() {
-        var el = document.getElementById('style-' + this.model.getId());
+        var id = this.model.getId();
+        var el = document.getElementById('style-' + id);
         if (!el) {
           el = document.createElement('style');
-          el.id = 'style-' + this.model.getId();
+          el.id = 'style-' + id;
           el.appendChild(document.createTextNode(''));
           document.head.appendChild(el);
         }
