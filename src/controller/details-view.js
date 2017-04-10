@@ -4,6 +4,7 @@ var Collection = require('ampersand-collection');
 var State = require('ampersand-state');
 var View = require('./control-view');
 var objectPath = require('./../object-path');
+var propNamesExtractor = require('./../prop-names');
 
 var PropertyView = require('./property-view');
 
@@ -40,16 +41,7 @@ var DetailsView = View.extend({
     propNames: {
       deps: ['model'],
       fn: function() {
-        var def = this.model.constructor.prototype._definition;
-        return Object.keys(def)
-          .filter(function(key) {
-            return [
-              'drawFunction',
-
-              'name',
-              'type'
-            ].indexOf(key) < 0;
-          });
+        return propNamesExtractor(this.model, ['layerStyles']);
       }
     },
 

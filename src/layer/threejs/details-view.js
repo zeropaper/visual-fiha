@@ -2,6 +2,7 @@
 var DetailsView = require('./../details-view');
 var StylePropertyView = DetailsView.StylePropertyView;
 var assign = require('lodash.assign');
+var propNamesExtractor = require('./../../prop-names');
 
 
 var ThreeJSDetailsView = DetailsView.extend({
@@ -72,19 +73,11 @@ var ThreeJSDetailsView = DetailsView.extend({
     propNames: {
       deps: ['model'],
       fn: function() {
-        var def = this.model.constructor.prototype._definition;
-        return Object.keys(def)
-          .filter(function(key) {
-            return [
-              'content',
-              'renderFunction',
-              'updateFunction',
-              'layerStyles',
-
-              'name',
-              'type'
-            ].indexOf(key) < 0;
-          });
+        return propNamesExtractor(this.model, [
+          'renderFunction',
+          'updateFunction',
+          'layerStyles'
+        ]);
       }
     }
   }
