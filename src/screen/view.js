@@ -5,6 +5,7 @@ require('./../layer/canvas/view');
 require('./../layer/svg/view');
 require('./../layer/video/view');
 require('./../layer/img/view');
+require('./../layer/threejs/view');
 require('./../layer/txt/view');
 require('./../layer/threejs/view');
 

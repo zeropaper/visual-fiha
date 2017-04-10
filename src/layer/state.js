@@ -1,6 +1,5 @@
 'use strict';
 var State = require('ampersand-state');
-var State = require('ampersand-state');
 var Collection = require('ampersand-collection');
 
 var PropertyState = State.extend({
@@ -104,6 +103,8 @@ var LayerState = State.extend({
   }
 });
 
+LayerState.PropertyState = PropertyState;
+LayerState.PropertyCollection = PropertyCollection;
 LayerState.types = {};
 
 module.exports = LayerState;

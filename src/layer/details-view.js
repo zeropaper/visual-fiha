@@ -222,6 +222,7 @@ var LayerDetailsView = DetailsView.extend({
   }
 });
 
+LayerDetailsView.StylePropertyView = StylePropertyView;
 LayerDetailsView.types = {};
 
 module.exports = LayerDetailsView;
