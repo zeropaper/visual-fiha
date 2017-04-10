@@ -16,8 +16,7 @@ var SVGDetailsView = DetailsView.extend({
               'svgStyles',
 
               'name',
-              'type',
-              'zIndex'
+              'type'
             ].indexOf(key) < 0;
           });
       }

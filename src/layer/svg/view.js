@@ -21,7 +21,7 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     if (!this.model.active || !this.el) return this;
     var selectors = Object.keys(this.model.svgStyles);
     selectors.forEach(function(selector) {
-      this.addRule(selector, this.model.svgStyles[selector]);
+      this.addRule('>svg ' + selector, this.model.svgStyles[selector]);
     }, this);
     return this;
   },
@@ -53,7 +53,6 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
   },
 
   addRule: function(selector, properties) {
-    selector = 'svg ' + selector;
     ScreenLayerView.prototype.addRule.call(this, selector, properties);
     return this;
   },
