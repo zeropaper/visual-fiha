@@ -9,18 +9,16 @@ function loadImg(url, done) {
   var img = new Image();
   _cacheImgs[url] = img;
   img.onload = function() {
-    console.info('loaded', url);
     done(null, img);
   };
-  img.onerror = function() {
-  };
+  img.onerror = function() {};
   img.src = url;
   return done(null, _cacheImgs[url]);
 }
 
 module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
   template: function() {
-    return '<div class="layer-image" id="' + this.model.getId() + '" view-id="' + this.cid + '"><canvas></canvas></div>';
+    return '<canvas class="layer-image" id="' + this.model.getId() + '" view-id="' + this.cid + '"></canvas>';
   },
 
   initialize: function() {
@@ -46,16 +44,16 @@ module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
       deps: ['el'],
       fn: function() {
         if (!this.el) return;
-        return this.query('canvas').getContext('2d');
+        return this.el.getContext('2d');
       }
     }
   },
 
   _resizeCanvas: function() {
     if (!this.el || !this.el.parentNode) return this;
-    var cnv = this.query('canvas');
-    var dw = this.el.parentNode.clientWidth;
-    var dh = this.el.parentNode.clientHeight;
+    var cnv = this.el;
+    var dw = cnv.parentNode.clientWidth;
+    var dh = cnv.parentNode.clientHeight;
     if (cnv.width != dw) cnv.width = dw;
     if (cnv.height != dh) cnv.height = dh;
     return this;
