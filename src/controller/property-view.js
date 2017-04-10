@@ -336,15 +336,5 @@ PropertyView.names.opacity = PropertyView.types.number.extend({
   }
 });
 
-PropertyView.names.skewX =
-PropertyView.names.skewY =
-PropertyView.names.rotateX =
-PropertyView.names.rotateY =
-PropertyView.names.rotateZ = PropertyView.types.number.extend({
-  session: {
-    min: ['number', false, -360],
-    max: ['number', false, 360]
-  }
-});
 
 module.exports = PropertyView;
