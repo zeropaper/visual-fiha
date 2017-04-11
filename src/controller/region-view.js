@@ -33,6 +33,12 @@ var TabView = View.extend({
   closeTab: function() {
     this.parent.focusTabIndex(0);
     this.model.collection.remove(this.model);
+  },
+
+  initialize: function() {
+    if (!this.model.pinned && this.parent.parent.rootView) this.listenToOnce(this.parent.parent.rootView, 'app:broadcast:bootstrap', function() {
+      this.closeTab();
+    });
   }
 });
 
