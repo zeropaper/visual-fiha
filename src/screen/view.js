@@ -37,8 +37,9 @@ function registerCommand(commandName, command) {
 
 
 var commands = {
-  bootstrap: function bootstrap(state) {
-    this.update(state || {});
+  bootstrap: function bootstrap(layers) {
+    this.model.layers.reset(layers);
+    this.resize();
   },
   updateLayer: function(layer) {
     var state = this.model.layers.get(layer.name);
