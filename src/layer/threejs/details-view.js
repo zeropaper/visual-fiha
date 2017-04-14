@@ -1,8 +1,31 @@
 'use strict';
 var DetailsView = require('./../details-view');
 var StylePropertyView = DetailsView.StylePropertyView;
+var PropertyView = require('./../../controller/property-view');
 var assign = require('lodash.assign');
 var propNamesExtractor = require('./../../prop-names');
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+PropertyView.names.renderFunction =
+PropertyView.names.updateFunction = PropertyView.types.function.extend({});
+
+
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
 
 
 var ThreeJSDetailsView = DetailsView.extend({
@@ -74,8 +97,8 @@ var ThreeJSDetailsView = DetailsView.extend({
       deps: ['model'],
       fn: function() {
         return propNamesExtractor(this.model, [
-          'renderFunction',
-          'updateFunction',
+          // 'renderFunction',
+          // 'updateFunction',
           'layerStyles'
         ]);
       }
