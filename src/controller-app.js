@@ -105,6 +105,7 @@ var AppRouter = require('ampersand-router').extend({
         console.info('unrecognized broadcast command "%s"', command);
     }
     router.trigger('app:broadcast:' + command, payload);
+    screen.trigger('app:broadcast:' + command, payload);
   },
 
   _handleWorkerMessages: function(evt) {
@@ -171,6 +172,7 @@ var AppRouter = require('ampersand-router').extend({
         console.info('unrecognized worker command "%s"', command);
     }
     router.trigger('app:worker:' + command, payload);
+    screen.trigger('app:worker:' + command, payload);
   },
 
   initialize: function(options) {
