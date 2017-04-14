@@ -102,10 +102,12 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
         <div class="row columns">
           <div class="column no-grow"><button class="active prop-toggle"></button></div>
           <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
+          <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
           <h3 class="column layer-name" data-hook="name"></h3>
         </div>
 
         <div class="row columns new-layer">
+          <div class="column no-grow gutter"><label>New sub-layer</label></div>
           <div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>
           <div class="column"><input type="text" placeholder="propA, propB" data-hook="new-layer-props" /></div>
           <div class="column no-grow">

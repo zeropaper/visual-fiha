@@ -18,6 +18,8 @@ var LayersView = View.extend({
     'focus [data-hook="layer-type"]': '_suggestLayerType'
   },
 
+  bindings: {},
+
   _suggestLayerType: function() {
     var helper = this.parent.suggestionHelper;
     var el = this.queryByHook('layer-type');
@@ -59,8 +61,11 @@ var LayersView = View.extend({
   template: `
     <section class="row layers">
       <header class="columns">
+        <div class="column no-grow gutter">
+          <label for="new-layer-name">New layer</label>
+        </div>
         <div class="column">
-          <input data-hook="layer-name" placeholder="Name" type="text"/>
+          <input id="new-layer-name" data-hook="layer-name" placeholder="Name" type="text"/>
         </div>
         <div class="column">
           <input data-hook="layer-type" placeholder="Type" type="text"/>
