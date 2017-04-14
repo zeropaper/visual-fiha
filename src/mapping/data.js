@@ -6,7 +6,7 @@ var State = require('ampersand-state');
 var Collection = require('ampersand-collection');
 
 function cleanFnFromExport(item) {
-  item.transformFunction = item.transformFunction || item.fn.toString();
+  item.transformFunction = item.transformFunction || (item.fn || '').toString();
   delete item.fn;
   return item;
 }
@@ -56,7 +56,7 @@ var MappingEmitter = State.extend({
 
   props: {
     targets: ['array', true, function() { return []; }],
-    transformFunction: 'any',
+    transformFunction: ['string', true, 'function(val){return val;}'],
     source: ['string', false, ''],
     name: ['string', true, null]
   },
