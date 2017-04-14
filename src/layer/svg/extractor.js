@@ -7,9 +7,10 @@ var Extractor = State.extend({
 
   extractStyles: function() {
     var styles = {};
+    var existingStyles = this.model.svgStyles || {};
 
     this.svg.querySelectorAll('[style][id]').forEach(function(styledEl) {
-      styles['#' + styledEl.id] = styledEl.getAttribute('style');
+      styles['#' + styledEl.id] = existingStyles['#' + styledEl.id] || styledEl.getAttribute('style');
       styledEl.style = null;
     });
 
@@ -47,7 +48,9 @@ var Extractor = State.extend({
     }
 
     this.svg.style = null;
-    return props;
+
+    var previousProperties = this.model.styleProperties.serialize();
+    return props.concat(previousProperties);
   },
 
   extract: function() {

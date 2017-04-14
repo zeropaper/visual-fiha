@@ -18,15 +18,14 @@ var LayerView = View.extend({
   },
 
   initialize: function() {
-    var view = this;
-    view.model.styleProperties.on('change', function(prop) {
-      view.setProperty(prop.name, prop.value);
+    this.listenTo(this.model.styleProperties, 'change', function(prop) {
+      this.setProperty(prop.name, prop.value);
     });
   },
 
   derived: {
     styleEl: {
-      deps: ['el'],
+      deps: [],
       fn: function() {
         var id = this.model.getId();
         var el = document.getElementById('style-' + id);
@@ -121,10 +120,11 @@ var LayerView = View.extend({
   },
 
   remove: function() {
-    var styleEl = this.styleEl;
-    if (styleEl && styleEl.parentNode) {
-      styleEl.parentNode.removeChild(styleEl);
-    }
+    // they are some issues with bootstraping a new setup if the element is removed
+    // var styleEl = this.styleEl;
+    // if (styleEl && styleEl.parentNode) {
+    //   styleEl.parentNode.removeChild(styleEl);
+    // }
     return View.prototype.remove.apply(this, arguments);
   },
 

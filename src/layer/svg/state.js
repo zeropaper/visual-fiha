@@ -30,45 +30,54 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
     var svgState = this;
     ScreenLayerState.prototype.initialize.apply(svgState, arguments);
 
-    // only load SVG content on the worker
+    // load the svg string content from the worker only
     if (!svgState.hasDOM) {
       svgState.listenToAndRun(svgState, 'change:src', function() {
-        if (svgState.src) svgState.loadSVG();
+        svgState.set({content: ''}, {silent: true});
+        svgState.loadSVG();
       });
     }
+
     // only create an extractor for the state used in the controller
-    else if (svgState.isControllerState) {
-      svgState.extractor = new Extractor({
-        model: svgState
+    if (svgState.isControllerState) {
+      svgState.listenToAndRun(svgState, 'change:content', function() {
+        if (svgState.content) svgState.extractor = new Extractor({model: svgState});
       });
     }
+
+    svgState.listenTo(svgState.screenState, 'app:broadcast:bootstrap', function() {
+      svgState.loadSVG();
+    });
   },
 
   loadSVG: function(done) {
     var state = this;
     done = done || function(err/*, obj*/) {
       if (err) {
-        state.content = '';
-        console.warn(err.message);
+        // console.warn(err.message);
+        return;
       }
+      // console.info('loaded');
     };
 
-    if (!state.src) {
+    var src = state.src;
+    if (!src) {
       state.content = '';
-      return done(new Error('No src to load for ' + state.getId() + ' SVG layer'));
+      return done(new Error('No src to load for ' + state.getId() + ' SVG layer'), state);
     }
 
-    fetch(state.src)
+    fetch(src)
       .then(function(res) {
         return res.text();
       })
       .then(function(string) {
-        state.set({
-          content: string
-        });
+        state.content = string;
         done(null, state);
       })
-      .catch(done);
+      .catch(function(err) {
+        state.content = '';
+        done(err, state);
+      });
   },
 
   serialize: function() {

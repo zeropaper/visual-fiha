@@ -14,7 +14,21 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
       fn: function() {
         return this.el && this.model.content ? this.query('svg') || false : false;
       }
-    }
+    },
+    styleEl: {
+      deps: ['model.content'],
+      fn: function() {
+        var id = this.model.getId();
+        var el = document.getElementById('style-' + id);
+        if (!el) {
+          el = document.createElement('style');
+          el.id = 'style-' + id;
+          el.appendChild(document.createTextNode(''));
+          document.head.appendChild(el);
+        }
+        return el;
+      }
+    },
   },
 
   updateStyles: function() {
@@ -55,11 +69,5 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
   addRule: function(selector, properties) {
     ScreenLayerView.prototype.addRule.call(this, selector, properties);
     return this;
-  },
-
-  remove: function() {
-    var style = this.styleEl;
-    if (style && style.parentNode) style.parentNode.removeChild(style);
-    ScreenLayerView.prototype.remove.apply(this, arguments);
   }
 });

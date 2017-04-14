@@ -39,6 +39,7 @@ function registerCommand(commandName, command) {
 var commands = {
   bootstrap: function bootstrap(layers) {
     this.model.layers.reset(layers);
+    this.model.trigger('app:broadcast:bootstrap', {layers: layers});
     this.resize();
   },
   updateLayer: function(layer) {
