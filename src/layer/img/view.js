@@ -1,19 +1,19 @@
 'use strict';
 var ScreenLayerView = require('./../view');
 var _cacheImgs = {};
-function loadImg(url, done) {
+function loadImg(url, viewId, done) {
   if (_cacheImgs[url]) {
     return done(null, _cacheImgs[url]);
   }
 
   var img = new Image();
-  _cacheImgs[url] = img;
+  _cacheImgs[viewId+url] = img;
   img.onload = function() {
     done(null, img);
   };
   img.onerror = function() {};
   img.src = url;
-  return done(null, _cacheImgs[url]);
+  return done(null, _cacheImgs[viewId+url]);
 }
 
 module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
@@ -29,7 +29,7 @@ module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
     function load() {
       var src = view.model.src;
       if (!src) return view.clearImage();
-      loadImg(src, function(err, img) {
+      loadImg(src, view.getId(), function(err, img) {
         view.drawImage(img);
       });
     }
