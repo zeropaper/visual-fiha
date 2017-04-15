@@ -6,10 +6,6 @@ var View = require('ampersand-view');
 var LocalforageView = View.extend({
   template: `
     <div class="rows localforage-view">
-      <div class="row columns no-grow">
-        <div class="column no-grow"><button name="snapshot-save" title="Take snapshot">Snapshot</button></div>
-        <div class="column no-grow"><button name="snapshot-restore" class="vfi-ccw" title="Restore snapshot"></button></div>
-      </div>
       <div class="row columns">
         <div class="column"><input placeholder="Local ID" name="local-id"/></div>
         <div class="column no-grow"><button name="save">Save</button></div>
@@ -19,15 +15,12 @@ var LocalforageView = View.extend({
   `,
   events: {
     'focus [name=local-id]': '_suggestKeys',
-    'click [name=snapshot-restore]': '_restoreSnapshot',
-    'click [name=snapshot-save]': '_saveSnapshot',
     'click [name=restore]': '_restoreSetup',
     'click [name=save]': '_saveSetup'
   },
   _suggestKeys: function(evt) {
     var helper = this.parent.suggestionHelper;
     localForage.keys().then(function(keys) {
-
       helper
         .attach(evt.target, function(selected) {
           evt.target.value = selected;
@@ -51,18 +44,6 @@ var LocalforageView = View.extend({
               done();
             }, done)
             .catch(done);
-  },
-  _restoreSnapshot: function() {
-    var controlView = this.parent;
-    this.loadLocal('snapshot', function(err, setup) {
-      if (err) throw err;
-      controlView.fromJSON(setup);
-    });
-  },
-  _saveSnapshot: function() {
-    this.saveLocal('snapshot', function(err) {
-      if (err) throw err;
-    });
   },
   _restoreSetup: function() {
     var controlView = this.parent;
