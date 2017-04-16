@@ -1,6 +1,5 @@
 'use strict';
 var View = require('./control-view');
-var ViewSwitcher = require('ampersand-view-switcher');
 var MIDIAccessView = require('./../midi/view');
 var SignalsView = require('./../signal/signals-view');
 var LayersView = require('./../layer/layers-view');
@@ -162,6 +161,7 @@ var ControllerView = View.extend({
   session: {
     _arId: 'number',
     broadcastId: ['string', true, 'vfBus'],
+    currentEditor: 'state',
     currentDetails: 'state',
     fftSize: ['number', true, 256],
     maxDecibels: ['number', true, -10],
@@ -294,6 +294,19 @@ var ControllerView = View.extend({
           parent.codeEditor = new AceEditor({
             parent: parent
           });
+
+          var gistView = parent.menuView.gistView;
+          parent.codeEditor.editCode({
+            autoApply: false,
+            title: 'Setup',
+            script: gistView.toYaml(),
+            language: 'yaml',
+            onapply: function(str) {
+              parent.router._sendBootstrap(gistView.fromYaml(str), function() {
+                console.info('apply setup done');
+              });
+            }
+          });
           return parent.codeEditor;
         }
 
@@ -304,7 +317,7 @@ var ControllerView = View.extend({
             {name: 'Layers', rebuild: buildLayers, pinned: true, active: true},
             {name: 'Signals', rebuild: buildSignals, pinned: true},
             {name: 'Mappings', view: parent.mappingsView, pinned: true},
-            {name: 'Editor', rebuild: buildCodeEditor, pinned: true}
+            {name: 'Setup', rebuild: buildCodeEditor, pinned: true}
           ]
         });
 
@@ -453,29 +466,29 @@ var ControllerView = View.extend({
   },
 
 
-
-  getEditor: function() {
-    this.regionRight.focusTab('Editor');
-    return this.codeEditor;
-  },
-
-  _setupEditor: function() {
-    var view = this;
-    var editor = view.getEditor();
-    var gistView = view.menuView.gistView;
-    editor.editCode({
-      autoApply: false,
-      title: 'Setup',
-      script: gistView.toYaml(),
-      language: 'yaml',
-      onapply: function(str) {
-        view.router._sendBootstrap(gistView.fromYaml(str), view._setupEditor.bind(view));
-      }
-    });
-  },
-
   _startTour: function() {
     this.router.navigate('tour');
+  },
+
+
+
+  getEditor: function(options) {
+    var tabs = this.regionRight.tabs;
+    var tabName = options.tabName;
+    if (!tabName) throw Error('Missing tabName for getEditor');
+
+    var found = tabs.get(tabName);
+    if (!found) {
+      var editor = new AceEditor({
+        parent: this
+      });
+      this.registerSubview(editor);
+      found = tabs.add({name: tabName, view: editor});
+    }
+
+    this.regionRight.focusTab(tabName);
+    found.view.editCode(options);
+    return found.view;
   },
 
   showDetails: function (view) {
@@ -496,7 +509,6 @@ var ControllerView = View.extend({
   },
 
   render: function () {
-    var controllerView = this;
     this.renderWithTemplate();
 
     this.cacheElements({
@@ -506,11 +518,6 @@ var ControllerView = View.extend({
       detailsEl: '.details'
     });
 
-    this.detailsSwitcher = new ViewSwitcher(this.detailsEl, {
-      show: function (view) {
-        controllerView.currentDetails = view;
-      }
-    });
 
     return this;
   },
@@ -539,12 +546,6 @@ var ControllerView = View.extend({
 
           <div class="column no-grow">
             <button name="screen">Open screen</button>
-          </div>
-
-          <div class="column"></div>
-
-          <div class="column no-grow">
-            <button name="setup-editor">Setup editor</button>
           </div>
 
           <div class="column"></div>

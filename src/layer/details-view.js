@@ -172,20 +172,27 @@ var LayerDetailsView = DetailsView.extend({
       <header>
         <div class="columns">
           <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
-          <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+          <div class="column no-grow columns">
+            <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+          </div>
         </div>
         <h5 data-hook="object-path"></h5>
       </header>
 
-      <div class="row columns">
-        <div class="columns"><input type="text" name="style-prop-name" placeholder="--css-var-name" /></div>
-        <div class="columns"><input type="text" name="style-prop-default" placeholder="2px, 100%, " /></div>
-        <div class="columns no-grow"><button name="style-prop-add" class="vfi-plus"></button></div>
+      <div class="rows row param-section">
+        <h5>CSS variables</h5>
+        <div class="row columns">
+          <div class="columns"><input type="text" name="style-prop-name" placeholder="--css-var-name" /></div>
+          <div class="columns"><input type="text" name="style-prop-default" placeholder="2px, 100%, " /></div>
+          <div class="columns no-grow"><button name="style-prop-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row style-props" ></div>
       </div>
 
-      <div class="row style-props" ></div>
-      <hr/>
-      <div class="row mappings props"></div>
+      <div class="rows row param-section">
+        <h5>Layer properties</h5>
+        <div class="row mappings props"></div>
+      </div>
     </section>
   `,
 
@@ -212,6 +219,29 @@ var LayerDetailsView = DetailsView.extend({
       path: 'layers.' + this.model.getId(),
       property: 'styleProperties',
       value: props
+    });
+  },
+
+  editFunction: function(propName) {
+    var rootView = this.rootView;
+    var path = objectPath(this.model);
+    var script = this.model.get(propName) || ('function ' + propName + '() {\n}');
+    rootView.getEditor({
+      tabName: this.model.getId() + ' ' + propName,
+      script: script,
+      language: 'javascript',
+      title: path + '.' + propName,
+      onshoworigin: function() {
+        rootView.trigger('blink', path);
+      },
+      autoApply: true,
+      onvalidchange: function doneEditingFunction(str) {
+        rootView.sendCommand('propChange', {
+          path: path,
+          property: propName,
+          value: str
+        });
+      }
     });
   },
 

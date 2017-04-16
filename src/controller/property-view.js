@@ -350,61 +350,11 @@ PropertyView.types.number = PropertyView.extend({
 
 
 
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
 
 
-PropertyView.types.function = PropertyView.extend({
-  template: `
-    <div class="columns object-prop prop-type-boolean">
-      <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow prop-value-reset">
-        <button title="Reset to default value" class="vfi-cancel"></button>
-      </div>
-      <div class="column prop-value">
-        <button title="Edit function" class="vfi-cog-alt"></button>
-      </div>
-      <div class="column prop-mapping-clear no-grow">
-        <button title="Remove mapping" class="vfi-unlink"></button>
-      </div>
-      <div class="column no-grow">
-        <button title="Mapping details" class="mapping-details"></button>
-      </div>
-    </div>
-  `,
 
-  events: assign({}, PropertyView.prototype.events, {
-    'click .vfi-cog-alt': 'editFunction'
-  }),
 
-  editFunction: function() {
-    var propName = this.model.getId();
-    var rootView = this.rootView;
-    var path = objectPath(this.parent.model);
-    var editor = rootView.getEditor();
-    var script = this.parent.model.get(propName) || ('function ' + propName + '() {\n}');
 
-    editor.editCode({
-      script: script,
-      language: 'javascript',
-      title: path + '.' + propName,
-      onshoworigin: function() {
-        rootView.trigger('blink', path);
-      },
-      autoApply: true,
-      onvalidchange: function doneEditingFunction(str) {
-        rootView.sendCommand('propChange', {
-          path: path,
-          property: propName,
-          value: str
-        });
-      }
-    });
-  }
-});
 
 
 
