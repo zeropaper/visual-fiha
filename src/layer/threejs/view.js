@@ -11,6 +11,11 @@ require('three/examples/js/loaders/MTLLoader');
 require('three/examples/js/loaders/OBJLoader');
 
 
+var midiMinMax = require('./../../utils/midi-min-max');
+var midi2Rad = require('./../../utils/midi2rad');
+var midi2Prct = require('./../../utils/midi2prct');
+
+
 function noop() {}
 
 function compileFunction(func) {
@@ -27,17 +32,27 @@ function compileFunction(func) {
     var store = layer.cache = (layer.cache || {});
     var frametime = layer ? layer.frametime : 0;
     var audio = layer ? layer.audio : {};
-    var bufferLength = function() { return ((layer.audio || {}).bufferLength) || 128; };
+
+    var bufferLength = function() {
+      return ((layer.audio || {}).bufferLength) || 128;
+    };
+
     var frequency = function(x) {
       return ((layer.audio || {}).frequency || [])[x] || 0;
     };
+
     var timeDomain = function(x) {
       return ((layer.audio || {}).timeDomain || [])[x] || 0;
     };
+
     var parameter = function (name, deflt) {
       var val = layer.model.parameters.get(name);
       return val ? val.value : deflt;
     };
+
+    ${ midiMinMax.toString() }
+    ${ midi2Rad.toString() }
+    ${ midi2Prct.toString() }
 
     return (${ func.toString() })();
   };
@@ -185,7 +200,6 @@ var ThreeLoader = ThreeObject.extend({
     view.on('change:object', function() {
       var prev = view.previousAttributes();
       if (prev.object) {
-        console.info('previous object will be removed', prev.object);
         prev.object.remove();
       }
       view.scene.add(view.object);
@@ -373,7 +387,6 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
         }
 
         var camera = this.scene.getObjectByName(info.name);
-        console.info('currentCamera', model.currentCamera, info, !camera, this.model.cameras.map(m => m.name));
         if (!camera) {
           camera = new THREE.PerspectiveCamera(info.fov, this.width / this.height, info.near, info.far);
           camera.name = info.name;
