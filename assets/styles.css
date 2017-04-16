@@ -824,6 +824,13 @@ details
   overflow-y: auto;
 }
 
+.details .param-section {
+
+}
+.details .param-section > h5 {
+  padding: 0 var(--spacing);
+}
+
 /*
 SVG layer
 */

@@ -268,9 +268,9 @@ var EmitterView = View.extend({
   _handleEditEmitterTransform: function() {
     var mappingView = this;
     var rootView = this.rootView;
-    var editor = rootView.getEditor();
     var model = this.model;
-    editor.editCode({
+    rootView.getEditor({
+      tabName: this.model.getId() + ' transformation',
       script: (model.transformFunction || function(val) { return val; }).toString(),
       autoApply: true,
       language: 'javascript',

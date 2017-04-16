@@ -18,7 +18,10 @@ var DetailsView = View.extend({
         <h5 data-hook="object-path"></h5>
       </header>
 
-      <div class="row items"></div>
+      <div class="rows row param-section">
+        <h5>Properties</h5>
+        <div class="row items"></div>
+      </div>
     </section>
   `,
 
@@ -105,7 +108,19 @@ var DetailsView = View.extend({
 
   bindings: {
     'model.name': '[data-hook=name]',
-    'model.type': '[data-hook=type]',
+    'model.type': [
+      {
+        selector: '[data-hook=type]',
+        type: 'text'
+      },
+      {
+        type: function(el, val, prev) {
+          if (prev) el.classList.remove('details-' + prev);
+          el.classList.add('details');
+          el.classList.add('details-' + val);
+        }
+      }
+    ],
     modelPath: '[data-hook="object-path"]'
   }
 });

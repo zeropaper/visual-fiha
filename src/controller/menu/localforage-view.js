@@ -51,7 +51,6 @@ var LocalforageView = View.extend({
     this.loadLocal(id, function(err, setup) {
       if (err) throw err;
       controlView.fromJSON(setup);
-      controlView._setupEditor();
     });
   },
   _saveSetup: function() {

@@ -38,9 +38,9 @@ var LayerControlView = View.extend({
   _editLayerStyles: function () {
     var view = this;
     var rootView = view.rootView;
-    var editorView = rootView.getEditor();
     var id = view.model.getId();
-    editorView.editCode({
+    rootView.getEditor({
+      tabName: id + ' CSS',
       script: '#' + id + ' {\n' + this.model.layerStyles + '\n}',
       language: 'css',
       title: id + ' layer styles',

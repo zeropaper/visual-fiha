@@ -305,10 +305,8 @@ var AppRouter = require('ampersand-router').extend({
 
   _defaultBootstrap: function() {
     console.time();
-    var router = this;
     this._sendBootstrap(this.defaultSetup, function() {
       console.timeEnd();
-      router.view._setupEditor();
     });
   },
 
