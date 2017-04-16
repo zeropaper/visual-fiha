@@ -17,6 +17,11 @@ utils.log = function log(ctx, ...args) {
   console.info(...args);
 };
 
+
+utils.midiMinMax = require('./../../utils/midi-min-max');
+utils.midi2Rad = require('./../../utils/midi2rad');
+utils.midi2Prct = require('./../../utils/midi2prct');
+
 /**
  * txt
  * @param [text]

@@ -13,19 +13,6 @@ mockedCtx._.properties
     if (name !== 'canvas') ctxProperties += '\nvar ' + name + ' = function(val) { if (val !== undefined) { ctx.' + name + ' = val; } return ctx.' + name + '; };';
   });
 
-
-// proxy the ramda functions
-var ramdaMethods = '';
-var ramda = require('ramda');
-Object.keys(ramda)
-  .filter(function(name) {
-    return name.length > 1 && typeof ramda[name] === 'function';
-  })
-  .forEach(function(name) {
-    ramdaMethods += '\nvar ' + name + ' = ramda.' + name + ';';
-  });
-
-
 function compileFunction(drawFunction) {
   var fn;// jshint ignore:line
 
@@ -51,6 +38,10 @@ function compileFunction(drawFunction) {
     ${ ctxProperties }
     var random = utils.random;
     var between = utils.between;
+    var midiMinMax = utils.midiMinMax;
+    var midi2rad = utils.midi2rad;
+    var midi2prct = utils.midi2prct;
+
     var grid = function(...args) { utils.grid(width, height, ...args); };
     var distribute = function(...args) { utils.distribute(...args); };
     var repeat = function(...args) { utils.repeat(...args); };
