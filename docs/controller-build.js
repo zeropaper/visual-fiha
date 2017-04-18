@@ -1,17 +1,17 @@
-webpackJsonp([2],{
+webpackJsonp([3],{
 
-/***/ 643:
+/***/ 645:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 Promise.resolve().then((function() {
-__webpack_require__.e/* require.ensure */(0).then((function() {
-__webpack_require__.e/* require.ensure */(5).then((function() {
 Promise.resolve().then((function() {
-__webpack_require__.e/* require.ensure */(0/* duplicate */).then((function() {
-__webpack_require__.e/* require.ensure */(3).then((function(require) {
+__webpack_require__.e/* require.ensure */(1).then((function() {
+__webpack_require__.e/* require.ensure */(5).then((function() {
+__webpack_require__.e/* require.ensure */(0).then((function() {
+__webpack_require__.e/* require.ensure */(4).then((function(require) {
 // ---------------------------------------------------------------
 
 
@@ -20,18 +20,18 @@ __webpack_require__.e/* require.ensure */(3).then((function(require) {
 function auid() {
   return parseInt((Math.random() + '.' + performance.now()).replace(/\./g, ''), 10);
 }
-var LoadedWorker = __webpack_require__(642);
-var ControllerView = __webpack_require__(646);
+var LoadedWorker = __webpack_require__(644);
+var ControllerView = __webpack_require__(648);
 var ScreenState = __webpack_require__(32);
-var MIDIAccessState = __webpack_require__(144);
-var Mappings = __webpack_require__(142);
-var Tour = __webpack_require__(644);
+var MIDIAccessState = __webpack_require__(145);
+var Mappings = __webpack_require__(143);
+var Tour = __webpack_require__(646);
 
 
 var DetailsView = __webpack_require__(266);
-var Settings = __webpack_require__(143);
+var Settings = __webpack_require__(144);
 
-var SignalCollection = __webpack_require__(648);
+var SignalCollection = __webpack_require__(650);
 
 var signals = new SignalCollection([]);
 
@@ -40,7 +40,7 @@ VF.setups = VF.setups || {};
 
 // var _executedCommands = [];
 
-var AppRouter = __webpack_require__(95).extend({
+var AppRouter = __webpack_require__(96).extend({
   _workerInit: false,
 
   _handleBroadcastMessages: function(evt) {
@@ -81,6 +81,7 @@ var AppRouter = __webpack_require__(95).extend({
         console.info('unrecognized broadcast command "%s"', command);
     }
     router.trigger('app:broadcast:' + command, payload);
+    screen.trigger('app:broadcast:' + command, payload);
   },
 
   _handleWorkerMessages: function(evt) {
@@ -147,6 +148,7 @@ var AppRouter = __webpack_require__(95).extend({
         console.info('unrecognized worker command "%s"', command);
     }
     router.trigger('app:worker:' + command, payload);
+    screen.trigger('app:worker:' + command, payload);
   },
 
   initialize: function(options) {
@@ -241,7 +243,7 @@ var AppRouter = __webpack_require__(95).extend({
 
   tour: function(step) {
     var router = this;
-    var steps = __webpack_require__(645)(router.view).map(function(item, i) {
+    var steps = __webpack_require__(647)(router.view).map(function(item, i) {
       item.index = i;
       return item;
     });
@@ -279,10 +281,8 @@ var AppRouter = __webpack_require__(95).extend({
 
   _defaultBootstrap: function() {
     console.time();
-    var router = this;
     this._sendBootstrap(this.defaultSetup, function() {
       console.timeEnd();
-      router.view._setupEditor();
     });
   },
 
@@ -352,5 +352,5 @@ vf.history.start({
 
 /***/ })
 
-},[643]);
+},[645]);
 //# sourceMappingURL=controller-build.js.map

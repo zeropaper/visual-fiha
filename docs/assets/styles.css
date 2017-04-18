@@ -327,6 +327,9 @@ input.gutter-vertical {
 .column > input:not([type=checkbox]):not([type=radio]) {
   width: 100%;
 }
+.column > label:after {
+  content: ':';
+}
 
 /*
 Layout
@@ -418,9 +421,10 @@ Layout
 .region > .region-tabs {
 }
 
-.region > .region-content {  display: flex;
+.region > .region-content {
+  display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .code-editor > header {
@@ -485,13 +489,17 @@ Layout
 }
 .canvas-control .new-layer,
 .canvas-control .layers > .items {
-  margin-left: var(--spacing);
+  margin-left: 10%;
 }
 .canvas-control .layers > .items {
-  border-left: 1px solid var(--text-color-disabled);
+  /*border: 1px solid var(--text-color-disabled);*/
+}
+.canvas-control .layers > .items:empty {
+  /*border: none;*/
 }
 .canvas-control .layers {
-  border-bottom: 1px solid var(--text-color-disabled);
+  padding-bottom: var(--spacing);
+  /*border-bottom: 1px solid var(--text-color-disabled);*/
 }
 
 .header {
@@ -560,7 +568,7 @@ Canvas layer controls
   border-top: 1px solid;
   border-bottom: 1px solid;
 }
-
+/*
 .signal,
 .canvas-layer,
 .mappings-view .items {
@@ -568,6 +576,7 @@ Canvas layer controls
   border-bottom: 1px solid var(--bg-color);
   margin-bottom: 0;
 }
+*/
 .row.layers {
   border-right: 1px solid var(--text-color-disabled);
 }
@@ -613,19 +622,31 @@ header h3 {
   cursor: pointer;
 }
 header > .column.no-grow {
-  padding: 0;
+  /* padding: 0; */
 }
 header h3 {
   flex-grow: 2;
 }
-
+header .layer-type {
+  width: 10%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 1;
+  text-align: center;
+}
+header .layer-type span,
 h3 small {
-  vertical-align: super;
-  display: inline-block;
-  border-radius: var(--spacing);
+  display: block;
+  border-radius: calc(var(--spacing) * 0.5);
   background-color: var(--info-color);
   color: var(--text-color-contrast);
   padding: 2px 4px;
+}
+
+h3 small {
+  display: inline-block;
+  vertical-align: super;
 }
 header h3 span:before,
 header h3 span:after {
@@ -690,6 +711,7 @@ header h3 span:after {
   background: url(bgk-pattern.png) repeat;
 }
 */
+/*
 .timeline {
   min-height: 100px;
   height: 100%;
@@ -706,7 +728,13 @@ header h3 span:after {
 .timeline-graph {
   background-color: #000;
 }
+*/
 
+
+
+/*
+suggestion widget
+*/
 .suggestion-view {
   position: absolute;
   overflow: auto;
@@ -794,6 +822,13 @@ details
 .details.row {
   max-height: 35vh;
   overflow-y: auto;
+}
+
+.details .param-section {
+
+}
+.details .param-section > h5 {
+  padding: 0 var(--spacing);
 }
 
 /*

@@ -1,0 +1,24 @@
+# Blender MTL File: 'zeropaper-logo.blend'
+# Material Count: 2
+
+newmtl Material
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.336019 0.336019 0.336019
+Ks 0.223989 0.223989 0.223989
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd wildtextures-generic-grey-concrete.jpg
+
+newmtl Material.003
+Ns 145.098039
+Ka 0.800000 0.800000 0.800000
+Kd 0.210012 0.210012 0.210012
+Ks 0.111995 0.111995 0.111995
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd wildtextures-generic-grey-concrete.jpg

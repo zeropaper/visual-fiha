@@ -24,7 +24,7 @@ module.exports = ScreenLayerState.types.img = ScreenLayerState.extend({
 "use strict";
 
 var ScreenLayerState = __webpack_require__(5);
-var Extractor = __webpack_require__(568);
+var Extractor = __webpack_require__(570);
 
 module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   props: {
@@ -54,45 +54,54 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
     var svgState = this;
     ScreenLayerState.prototype.initialize.apply(svgState, arguments);
 
-    // only load SVG content on the worker
+    // load the svg string content from the worker only
     if (!svgState.hasDOM) {
       svgState.listenToAndRun(svgState, 'change:src', function() {
-        if (svgState.src) svgState.loadSVG();
+        svgState.set({content: ''}, {silent: true});
+        svgState.loadSVG();
       });
     }
+
     // only create an extractor for the state used in the controller
-    else if (svgState.isControllerState) {
-      svgState.extractor = new Extractor({
-        model: svgState
+    if (svgState.isControllerState) {
+      svgState.listenToAndRun(svgState, 'change:content', function() {
+        if (svgState.content) svgState.extractor = new Extractor({model: svgState});
       });
     }
+
+    svgState.listenTo(svgState.screenState, 'app:broadcast:bootstrap', function() {
+      svgState.loadSVG();
+    });
   },
 
   loadSVG: function(done) {
     var state = this;
     done = done || function(err/*, obj*/) {
       if (err) {
-        state.content = '';
-        console.warn(err.message);
+        // console.warn(err.message);
+        return;
       }
+      // console.info('loaded');
     };
 
-    if (!state.src) {
+    var src = state.src;
+    if (!src) {
       state.content = '';
-      return done(new Error('No src to load for ' + state.getId() + ' SVG layer'));
+      return done(new Error('No src to load for ' + state.getId() + ' SVG layer'), state);
     }
 
-    fetch(state.src)
+    fetch(src)
       .then(function(res) {
         return res.text();
       })
       .then(function(string) {
-        state.set({
-          content: string
-        });
+        state.content = string;
         done(null, state);
       })
-      .catch(done);
+      .catch(function(err) {
+        state.content = '';
+        done(err, state);
+      });
   },
 
   serialize: function() {
@@ -115,6 +124,560 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
 
 "use strict";
 
+var ScreenLayerState = __webpack_require__(5);
+var State = __webpack_require__(4);
+var Collection = __webpack_require__(6);
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+var Vector3 = State.extend({
+  props: {
+    x: ['number', true, 0],
+    y: ['number', true, 0],
+    z: ['number', true, 0]
+  }
+});
+var Point = State.extend({
+  props: {
+    x: ['number', true, 0],
+    y: ['number', true, 0],
+    z: ['number', true, 0]
+  }
+});
+// var Curve = State.extend({
+
+// });
+// var CurvePath = State.extend({
+
+// });
+// var Path = CurvePath.extend({
+
+// });
+var Shape = State.extend({
+
+});
+var ShapeCollection = Collection.extend({
+  model: Shape
+});
+
+
+var Color = State.extend({
+  props: {
+    r: ['number', true, 122],
+    g: ['number', true, 122],
+    b: ['number', true, 122]
+  }
+});
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+
+var ThreeState = State.extend({
+  idAttribute: 'name',
+  typeAttribute: 'type',
+  props: {
+    visible: ['boolean', true, true],
+    type: ['string', true, null],
+    name: ['string', true, null]
+  },
+  children: {
+    position: Point,
+    rotation: Vector3,
+    scale: Vector3
+  }
+});
+
+function makeCollectionModel(StateKind) {
+  return function(attrs, opts) {
+    var Constructor = StateKind.types[attrs.type] || StateKind;
+    var state = new Constructor(attrs, opts);
+    return state;
+  };
+}
+
+
+// function collectionParse(data) {
+//   console.info('typeof data', typeof data);
+//   return data;
+// }
+
+
+// function collectionToJSON() {
+//   var data = {};
+//   this.forEach(function(model) {// jshint ignore:line
+//     data[model.getId()] = model.serialize();
+//     delete data[model.getId()][model.idAttribute];
+//   });
+//   // console.info('collectionToJSON', data);
+//   return data;
+// }
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+var MaterialState = State.extend({
+  idAttribute: 'name',
+  typeAttribute: 'type',
+  props: {
+    type: ['string', false, null],
+    name: ['string', false, null]
+  },
+  children: {
+    color: Color
+  }
+});
+
+MaterialState.types = {};
+
+
+
+var MaterialCollection = Collection.extend({
+  mainIndex: 'name',
+  // parse: collectionParse,
+  // toJSON: collectionToJSON,
+  // serialize: collectionToJSON,
+  model: makeCollectionModel(MaterialState)
+});
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+var GeometryState = ThreeState.extend({
+  children: {
+    material: MaterialState
+  }
+});
+
+GeometryState.types = {};
+// BoxBufferGeometry
+// BoxGeometry
+GeometryState.types.box = GeometryState.extend({
+  signature: ['width', 'height', 'depth'],
+  threeClassName: 'BoxGeometry',
+  props: {
+    width: ['number', true, 5],
+    height: ['number', true, 5],
+    depth: ['number', true, 5],
+  }
+});
+// CircleBufferGeometry
+// CircleGeometry
+GeometryState.types.circle = GeometryState.extend({
+  signature: ['radius', 'segments', 'thetaStart', 'thetaLength'],
+  threeClassName: 'CircleGeometry',
+  props: {
+    radius: ['number', true, 10],
+    segments: ['number', true, 8],
+    thetaStart: ['number', true, 0],
+    thetaLength: ['number', true, Math.PI * 2]
+  }
+});
+// ConeBufferGeometry
+// ConeGeometry
+GeometryState.types.cone = GeometryState.extend({
+  signature: ['radius', 'height', 'radialSegments', 'heightSegments', 'openEnded', 'thetaStart', 'thetaLength'],
+  threeClassName: 'ConeGeometry',
+  props: {
+    radius: ['number', true, 10],
+    height: ['number', true, 10],
+    radialSegments: ['number', true, 8],
+    heightSegments: ['number', true, 1],
+    openEnded: ['boolean', true, false],
+    thetaStart: ['number', true, 0],
+    thetaLength: ['number', true, Math.PI * 2]
+  }
+});
+// CylinderBufferGeometry
+// CylinderGeometry
+GeometryState.types.cylinder = GeometryState.extend({
+  signature: [
+    'radiusTop',
+    'radiusBottom',
+    'height',
+    'radialSegments',
+    'heightSegments',
+    'openEnded',
+    'thetaStart',
+    'thetaLength'
+  ],
+  threeClassName: 'CylinderGeometry',
+  props: {
+    radiusTop: ['number', true, 10],
+    radiusBottom: ['number', true, 10],
+    height: ['number', true, 10],
+    radialSegments: ['number', true, 8],
+    heightSegments: ['number', true, 1],
+    openEnded: ['boolean', true, false],
+    thetaStart: ['number', true, 0],
+    thetaLength: ['number', true, Math.PI * 2]
+  }
+});
+// DodecahedronBufferGeometry
+// DodecahedronGeometry
+// EdgesGeometry
+// ExtrudeGeometry
+GeometryState.types.extrude = GeometryState.extend({
+  signature: ['shapes', 'options'],
+  threeClassName: 'ExtrudeGeometry',
+  collections: {
+    shapes: ShapeCollection
+  },
+  props: {
+    curveSegments: 'any',// int. number of points on the curves
+    steps: 'any',// int. number of points used for subdividing segements of extrude spline
+    amount: 'any',// int. Depth to extrude the shape
+    bevelEnabled: 'any',// bool. turn on bevel
+    bevelThickness: 'any',// float. how deep into the original shape bevel goes
+    bevelSize: 'any',// float. how far from shape outline is bevel
+    bevelSegments: 'any',// int. number of bevel layers
+    extrudePath: 'any',// THREE.CurvePath. 3d spline path to extrude shape along. (creates Frames if frames aren't defined)
+    frames: 'any',// THREE.TubeGeometry.FrenetFrames. containing arrays of tangents, normals, binormals
+    material: 'any',// int. material index for front and back faces
+    extrudeMaterial: 'any',// int. material index for extrusion and beveled faces
+    UVGenerator: 'any',// Object. object that provides UV generator functions
+  }
+});
+// IcosahedronBufferGeometry
+// IcosahedronGeometry
+// LatheBufferGeometry
+// LatheGeometry
+// OctahedronBufferGeometry
+// OctahedronGeometry
+// ParametricBufferGeometry
+// ParametricGeometry
+GeometryState.types.parametric = GeometryState.extend({
+  signature: ['func', 'slices', 'stacks'],
+  threeClassName: 'ParametricGeometry',
+  props: {
+    func: ['string', true, 'function(u, v) { return new THREE.Vector3(); }'],
+    slices: ['number', true, 5],
+    stacks: ['number', true, 5]
+  }
+});
+// PlaneBufferGeometry
+// PlaneGeometry
+// PolyhedronBufferGeometry
+// PolyhedronGeometry
+// RingBufferGeometry
+// RingGeometry
+// ShapeBufferGeometry
+// ShapeGeometry
+// SphereBufferGeometry
+// SphereGeometry
+// TetrahedronBufferGeometry
+// TetrahedronGeometry
+// TextGeometry
+// TorusBufferGeometry
+// TorusGeometry
+// TorusKnotBufferGeometry
+// TorusKnotGeometry
+// TubeGeometry
+// TubeBufferGeometry
+// WireframeGeometry
+
+
+var GeometryCollection = Collection.extend({
+  mainIndex: 'name',
+  // parse: collectionParse,
+  // toJSON: collectionToJSON,
+  // serialize: collectionToJSON,
+  model: makeCollectionModel(GeometryState)
+});
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+var LightState = ThreeState.extend({
+  props: {
+    intensity: ['number', true, 1]
+  },
+  children: {
+    color: Color
+  }
+});
+
+LightState.types = {};
+// AmbientLight
+LightState.types.ambient = LightState.extend({
+  signature: [],
+  threeClassName: 'AmbientLight',
+});
+// DirectionalLight
+LightState.types.directonal = LightState.extend({
+  signature: [],
+  threeClassName: 'DirectionalLight',
+  children: {
+    lookAt: Point
+  }
+});
+// HemisphereLight
+// PointLight
+// RectAreaLight
+// SpotLight
+
+
+
+
+var LightCollection = Collection.extend({
+  mainIndex: 'name',
+  // parse: collectionParse,
+  // toJSON: collectionToJSON,
+  // serialize: collectionToJSON,
+  model: makeCollectionModel(LightState)
+});
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+var CameraState = ThreeState.extend({
+  children: {
+    lookAt: Point
+  }
+});
+
+CameraState.types = {};
+// CubeCamera
+// OrthographicCamera
+CameraState.types.orthographic = CameraState.extend({
+  signature: ['left', 'right', 'top', 'bottom', 'near', 'far'],
+  threeClassName: 'OrthographicCamera',
+  props: {
+    left: ['number', true, 80],
+    right: ['number', true, 80],
+    top: ['number', true, 60],
+    bottom: ['number', true, 60],
+    near: ['number', true, 0.1],
+    far: ['number', true, 2000]
+  }
+});
+// PerspectiveCamera
+CameraState.types.perspective = CameraState.extend({
+  signature: ['fov', 'aspect', 'near', 'far'],
+  threeClassName: 'PerspectiveCamera',
+  props: {
+    focus: ['number', true, 10],
+    fov: ['number', true, 50],
+    aspect: ['number', true, 1],
+    near: ['number', true, 0.1],
+    far: ['number', true, 2000],
+    zoom: ['number', true, 1]
+  }
+});
+// StereoCamera
+
+
+
+var CameraCollection = Collection.extend({
+  mainIndex: 'name',
+  // parse: collectionParse,
+  // toJSON: collectionToJSON,
+  // serialize: collectionToJSON,
+  model: makeCollectionModel(CameraState)
+});
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+var LoaderState = ThreeState.extend({
+  props: {
+    path: ['string', false, ''],
+    src: ['string', true, '']
+  }
+});
+
+LoaderState.types = {};
+LoaderState.types.obj = LoaderState.extend({});
+LoaderState.types.objmtl = LoaderState.extend({
+  props: {
+    mtl: ['string', true, '']
+  }
+});
+
+var LoaderCollection = Collection.extend({
+  mainIndex: 'name',
+  model: makeCollectionModel(LoaderState)
+});
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
+  props: {
+    currentCamera: ['string', false, null],
+    renderFunction: ['string', true, 'function() { console.info(\'missing renderFunction for %s\', layer.model.getId()); }'],
+    updateFunction: ['string', true, 'function() { console.info(\'missing updateFunction for %s\', layer.model.getId()); }']
+  },
+
+  collections: {
+    parameters: ScreenLayerState.PropertyCollection,
+    styleProperties: ScreenLayerState.PropertyCollection,
+    //
+    geometries: GeometryCollection,
+    lights: LightCollection,
+    cameras: CameraCollection,
+    materials: MaterialCollection,
+    //
+    loaders: LoaderCollection
+  },
+
+  // parse: function(data) {
+  //   console.info('parse three data', data);
+
+  //   [
+  //     'geometries',
+  //     'lights',
+  //     'cameras',
+  //     'materials'
+  //   ].forEach(function(collectionName) {
+  //     data[collectionName] = Object.keys(data[collectionName] || {}).map(function(name) {
+  //       var obj = data[collectionName][name];
+  //       obj.name = name;
+  //       return obj;
+  //     });
+  //   });
+
+  //   return data;
+  // },
+
+  // toJSON: function() {
+  //   var data = ScreenLayerState.prototype.toJSON.apply(this, arguments);
+  //   // console.info('toJSON', data.cameras);
+  //   return data;
+  // },
+
+  // serialize: function() {
+  //   var data = ScreenLayerState.prototype.serialize.apply(this, arguments);
+  //   // console.info('serialize', data.cameras);
+  //   return data;
+  // },
+
+  initialize: function(attrs) {
+    ScreenLayerState.prototype.initialize.apply(this, arguments);
+    if (!this.lights.length && !attrs.lights) {
+      this.lights.add([
+        {
+          type: 'ambient',
+          name: 'defaultambient',
+          color: {
+            r: 1,
+            g: 1,
+            b: 1
+          }
+        },
+        {
+          type: 'directonal',
+          name: 'defaultdirectonal',
+          color: {
+            r: 1,
+            g: 1,
+            b: 1
+          },
+          position: {
+            x: 45,
+            y: 45,
+            z: 45
+          },
+          lookAt: {
+            x: 0,
+            y: 0,
+            z: 0
+          }
+        }
+      ]);
+    }
+
+    if (!this.cameras.length && !attrs.cameras) {
+      this.cameras.add([
+        {
+          type: 'perspective',
+          name: 'defaultperspective',
+          position: {
+            x: 35,
+            y: 35,
+            z: 35
+          },
+          lookAt: {
+            x: 0,
+            y: 0,
+            z: 0
+          }
+        },
+        {
+          type: 'orthographic',
+          name: 'defaultortho',
+          position: {
+            x: 35,
+            y: 35,
+            z: 35
+          },
+          lookAt: {
+            x: 0,
+            y: 0,
+            z: 0
+          }
+        }
+      ]);
+    }
+
+    if (!this.geometries.length && !attrs.geometries && !attrs.loaders) {
+      this.geometries.add([
+        {
+          type: 'box',
+          name: 'defaultbox',
+          position: {
+            x: 0,
+            y: 0,
+            z: 0
+          }
+        }
+      ]);
+    }
+  }
+});
+
+/***/ }),
+
+/***/ 13:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var LayerState = __webpack_require__(5);
 var TxtLayerState = LayerState.types.txt = LayerState.extend({
   props: {
@@ -125,7 +688,7 @@ module.exports = TxtLayerState;
 
 /***/ }),
 
-/***/ 13:
+/***/ 14:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -143,7 +706,7 @@ module.exports = ScreenLayerState.types.video = ScreenLayerState.extend({
 
 /***/ }),
 
-/***/ 227:
+/***/ 228:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -231,7 +794,6 @@ module.exports = mockedCtx;
 
 "use strict";
 
-var State = __webpack_require__(4);
 var State = __webpack_require__(4);
 var Collection = __webpack_require__(6);
 
@@ -336,22 +898,24 @@ var LayerState = State.extend({
   }
 });
 
+LayerState.PropertyState = PropertyState;
+LayerState.PropertyCollection = PropertyCollection;
 LayerState.types = {};
 
 module.exports = LayerState;
 
 /***/ }),
 
-/***/ 556:
+/***/ 557:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+
 function noop() {}
-var mockedCtx = __webpack_require__(227);
 
+var utils = module.exports = {};
 
-var utils = {};
 utils.random = function random(multi = 100) {
   return Math.random() * multi;
 };
@@ -364,6 +928,11 @@ utils.between = function between(val, min, max) {
 utils.log = function log(ctx, ...args) {
   console.info(...args);
 };
+
+
+utils.midiMinMax = __webpack_require__(574);
+utils.midi2Rad = __webpack_require__(576);
+utils.midi2Prct = __webpack_require__(575);
 
 /**
  * txt
@@ -571,6 +1140,16 @@ utils.restoreContexts = function restoreContexts(ctx, cache, count, preprocess, 
 };
 
 
+/***/ }),
+
+/***/ 558:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var mockedCtx = __webpack_require__(228);
+var utils = __webpack_require__(557);// jshint ignore:line
+
 // proxy the method and properties of the canvas context
 var ctxProperties = '';
 mockedCtx._.methods
@@ -581,19 +1160,6 @@ mockedCtx._.properties
   .forEach(function(name) {
     if (name !== 'canvas') ctxProperties += '\nvar ' + name + ' = function(val) { if (val !== undefined) { ctx.' + name + ' = val; } return ctx.' + name + '; };';
   });
-
-
-// proxy the ramda functions
-var ramdaMethods = '';
-var ramda = __webpack_require__(8);
-Object.keys(ramda)
-  .filter(function(name) {
-    return name.length > 1 && typeof ramda[name] === 'function';
-  })
-  .forEach(function(name) {
-    ramdaMethods += '\nvar ' + name + ' = ramda.' + name + ';';
-  });
-
 
 function compileFunction(drawFunction) {
   var fn;// jshint ignore:line
@@ -618,11 +1184,12 @@ function compileFunction(drawFunction) {
     };
 
     ${ ctxProperties }
-    /*
-    ${ ramdaMethods }
-    */
     var random = utils.random;
     var between = utils.between;
+    var midiMinMax = utils.midiMinMax;
+    var midi2rad = utils.midi2rad;
+    var midi2prct = utils.midi2prct;
+
     var grid = function(...args) { utils.grid(width, height, ...args); };
     var distribute = function(...args) { utils.distribute(...args); };
     var repeat = function(...args) { utils.repeat(...args); };
@@ -647,17 +1214,17 @@ module.exports = compileFunction;
 
 /***/ }),
 
-/***/ 557:
+/***/ 559:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 module.exports = {
-  lines: __webpack_require__(559),
-  loaders: __webpack_require__(561),
-  text: __webpack_require__(562),
-  utils: __webpack_require__(566)
+  lines: __webpack_require__(561),
+  loaders: __webpack_require__(563),
+  text: __webpack_require__(564),
+  utils: __webpack_require__(568)
 };
 
 if (typeof window !== 'undefined') {
@@ -668,7 +1235,7 @@ if (typeof window !== 'undefined') {
 
 /***/ }),
 
-/***/ 558:
+/***/ 560:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -753,20 +1320,20 @@ module.exports = function lineGrid(ctx) {
 
 /***/ }),
 
-/***/ 559:
+/***/ 561:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  grid: __webpack_require__(558),
-  roundFrequencies: __webpack_require__(560)
+  grid: __webpack_require__(560),
+  roundFrequencies: __webpack_require__(562)
 };
 
 /***/ }),
 
-/***/ 560:
+/***/ 562:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -834,7 +1401,7 @@ module.exports = function roundFrequencies(ctx) {
 
 /***/ }),
 
-/***/ 561:
+/***/ 563:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -897,19 +1464,19 @@ module.exports = {
 
 /***/ }),
 
-/***/ 562:
+/***/ 564:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  wrap: __webpack_require__(563)
+  wrap: __webpack_require__(565)
 };
 
 /***/ }),
 
-/***/ 563:
+/***/ 565:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -938,7 +1505,7 @@ module.exports = function wrapText(context, text, x, y, maxWidth, lineHeight) {
 
 /***/ }),
 
-/***/ 564:
+/***/ 566:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -966,7 +1533,7 @@ module.exports = function fps(ctx) {
 
 /***/ }),
 
-/***/ 565:
+/***/ 567:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -987,20 +1554,20 @@ module.exports = function frametime(ctx) {
 
 /***/ }),
 
-/***/ 566:
+/***/ 568:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  fps: __webpack_require__(564),
-  frametime: __webpack_require__(565)
+  fps: __webpack_require__(566),
+  frametime: __webpack_require__(567)
 };
 
 /***/ }),
 
-/***/ 568:
+/***/ 570:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1013,9 +1580,10 @@ var Extractor = State.extend({
 
   extractStyles: function() {
     var styles = {};
+    var existingStyles = this.model.svgStyles || {};
 
     this.svg.querySelectorAll('[style][id]').forEach(function(styledEl) {
-      styles['#' + styledEl.id] = styledEl.getAttribute('style');
+      styles['#' + styledEl.id] = existingStyles['#' + styledEl.id] || styledEl.getAttribute('style');
       styledEl.style = null;
     });
 
@@ -1053,7 +1621,9 @@ var Extractor = State.extend({
     }
 
     this.svg.style = null;
-    return props;
+
+    var previousProperties = this.model.styleProperties.serialize();
+    return props.concat(previousProperties);
   },
 
   extract: function() {
@@ -1092,6 +1662,39 @@ module.exports = Extractor;
 
 /***/ }),
 
+/***/ 574:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+module.exports = function minMax(val, min = 0, max = 16) {
+  return (Math.abs(min - max) * Number(val) * (1 / 127)) - min;
+};
+
+/***/ }),
+
+/***/ 575:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+module.exports = function midi2prct(val) {
+  return (Number(val) * (1 / 127));
+};
+
+/***/ }),
+
+/***/ 576:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+module.exports = function midi2rad(val) {
+  return Math.PI * 2 * (Number(val) * (1 / 127));
+};
+
+/***/ }),
+
 /***/ 9:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1100,8 +1703,8 @@ module.exports = Extractor;
 var State = __webpack_require__(4);
 var Collection = __webpack_require__(6);
 var ScreenLayerState = __webpack_require__(5);
-var mockedCtx = __webpack_require__(227);
-var compileFunction = __webpack_require__(556);
+var mockedCtx = __webpack_require__(228);
+var compileFunction = __webpack_require__(558);
 function drawLayerCtx() {
   /*
     You can access the canvas 2d context with the global ctx
@@ -1109,7 +1712,7 @@ function drawLayerCtx() {
 }
 
 var CanvasLayer = State.extend({
-  scripts: __webpack_require__(557),
+  scripts: __webpack_require__(559),
 
   idAttribute: 'name',
   cache: {},

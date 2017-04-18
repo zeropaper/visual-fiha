@@ -7,10 +7,10 @@ webpackChunk([2],{
 
 var assign = __webpack_require__(7);
 var Collection = __webpack_require__(6);
-var SignalState = __webpack_require__(86);
-__webpack_require__(569);
-__webpack_require__(570);
+var SignalState = __webpack_require__(87);
 __webpack_require__(571);
+__webpack_require__(572);
+__webpack_require__(573);
 
 var SignalCollection = Collection.extend({
   mainIndex: 'name',
@@ -39,12 +39,12 @@ module.exports = SignalCollection;
 
 /***/ }),
 
-/***/ 569:
+/***/ 571:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(86);
+var SignalState = __webpack_require__(87);
 
 var BeatState = SignalState.types.beat = SignalState.extend({
   initialize: function() {
@@ -95,12 +95,12 @@ module.exports = BeatState;
 
 /***/ }),
 
-/***/ 570:
+/***/ 572:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(86);
+var SignalState = __webpack_require__(87);
 
 var _360 = {
   type: 'number',
@@ -156,12 +156,12 @@ module.exports = HSLASignalState;
 
 /***/ }),
 
-/***/ 571:
+/***/ 573:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(86);
+var SignalState = __webpack_require__(87);
 var _255 = {
   type: 'number',
   required: true,
@@ -214,7 +214,7 @@ module.exports = RGBASignalState;
 
 /***/ }),
 
-/***/ 86:
+/***/ 87:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

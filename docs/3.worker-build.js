@@ -43,7 +43,7 @@ var State = __webpack_require__(4);
 var Collection = __webpack_require__(6);
 
 function cleanFnFromExport(item) {
-  item.transformFunction = item.transformFunction || item.fn.toString();
+  item.transformFunction = item.transformFunction || (item.fn || '').toString();
   delete item.fn;
   return item;
 }
@@ -93,7 +93,7 @@ var MappingEmitter = State.extend({
 
   props: {
     targets: ['array', true, function() { return []; }],
-    transformFunction: 'any',
+    transformFunction: ['string', true, 'function(val){return val;}'],
     source: ['string', false, ''],
     name: ['string', true, null]
   },

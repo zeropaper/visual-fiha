@@ -32,7 +32,7 @@ var ScreenState = State.extend({
   },
 
   collections: {
-    layers: __webpack_require__(567)
+    layers: __webpack_require__(569)
   },
 
   derived: {
@@ -74,7 +74,7 @@ module.exports = ScreenState;
 
 /***/ }),
 
-/***/ 567:
+/***/ 569:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -83,9 +83,10 @@ var assign = __webpack_require__(7);
 var Collection = __webpack_require__(6);
 var LayerState = __webpack_require__(5);
 __webpack_require__(9);
-__webpack_require__(13);
+__webpack_require__(14);
 __webpack_require__(11);
 __webpack_require__(10);
+__webpack_require__(13);
 __webpack_require__(12);
 
 module.exports = Collection.extend({
