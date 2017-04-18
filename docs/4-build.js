@@ -287,14 +287,14 @@ var Collection = __webpack_require__(34);
 
 var midiMappings = {
   'KORG INC.': {
-    'KP3 MIDI 1': __webpack_require__(707),
-    'nanoKONTROL2 MIDI 1': __webpack_require__(708)
+    'KP3 MIDI 1': __webpack_require__(711),
+    'nanoKONTROL2 MIDI 1': __webpack_require__(712)
   },
   'AKAI professional LLC': {
-    'LPD8 MIDI 1': __webpack_require__(706)
+    'LPD8 MIDI 1': __webpack_require__(710)
   },
   'Focusrite A.E. Ltd': {
-    'Launchpad Mini MIDI 1': __webpack_require__(709)
+    'Launchpad Mini MIDI 1': __webpack_require__(713)
   }
 };
 
@@ -733,7 +733,7 @@ module.exports = LayerDetailsView;
 "use strict";
 
 var View = __webpack_require__(652);
-var SignalDetailsView = __webpack_require__(711);
+var SignalDetailsView = __webpack_require__(715);
 var SignalControlView = View.extend({
   template: '<section class="rows signal">' +
     '<header class="row">' +
@@ -1031,6 +1031,8 @@ module.exports = RGBASignalControlView;
 /***/ 279:
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+
 var localForage = __webpack_require__(152);
 
 localForage.config({
@@ -1041,6 +1043,58 @@ localForage.config({
   storeName   : 'keyvaluepairs', // Should be alphanumeric, with underscores.
   description : 'Visual Fiha storage'
 });
+
+var setups = {};
+
+
+setups.empty = {mappings: {}, layers: {}, signals: {}};
+setups.algorave = __webpack_require__(677);
+setups['demo-css'] = __webpack_require__(680);
+setups['demo-canvas'] = __webpack_require__(679);
+setups['demo-3d-zeropaper'] = __webpack_require__(678);
+
+
+function toArr(obj) {
+  var keys = Object.keys(obj);
+  return keys.map(function(key) {
+    obj[key].name = key;
+    return obj[key];
+  });
+}
+
+function setupArr(setup) {
+  return {
+    layers: toArr(setup.layers || {}),
+    mappings: toArr(setup.mappings || {}),
+    signals: toArr(setup.signals || {})
+  };
+}
+
+
+function localForageCallback(name) {
+  return function(err) {
+    if(err) console.error('localforage "%s" error', name, err);
+  };
+}
+
+function saveSetup(setupId, setup, done) {
+  return localForage.setItem('local-' + setupId, setupArr(setup))
+          .then(function() {
+            done();
+          })
+          .catch(done);
+}
+
+function registerSetups(setupIds) {
+  Object.keys(setups).forEach(function (setupId) {
+    // if (setupIds.indexOf('local-' + setupId) > -1) return;
+    saveSetup(setupId, setups[setupId], localForageCallback(setupId));
+  });
+}
+
+localForage.keys()
+            .then(registerSetups)
+            .catch(localForageCallback('keys'));
 
 module.exports = localForage;
 
@@ -1436,16 +1490,16 @@ module.exports = function(controllerView) {
 
 var View = __webpack_require__(652);
 var MIDIAccessView = __webpack_require__(276);
-var SignalsView = __webpack_require__(714);
-var LayersView = __webpack_require__(695);
-var SuggestionView = __webpack_require__(688);
-var AudioSource = __webpack_require__(681);
-var AceEditor = __webpack_require__(679);
-var RegionView = __webpack_require__(687);
-var MappingsControlView = __webpack_require__(705);
-var MenuView = __webpack_require__(685);
+var SignalsView = __webpack_require__(718);
+var LayersView = __webpack_require__(699);
+var SuggestionView = __webpack_require__(692);
+var AudioSource = __webpack_require__(685);
+var AceEditor = __webpack_require__(683);
+var RegionView = __webpack_require__(691);
+var MappingsControlView = __webpack_require__(709);
+var MenuView = __webpack_require__(689);
 var objectPath = __webpack_require__(656);
-var ControlScreenControls = __webpack_require__(682);
+var ControlScreenControls = __webpack_require__(686);
 // var Timeline = require('./timeline-view');
 
 
@@ -2016,9 +2070,9 @@ module.exports = ControllerView;
 var assign = __webpack_require__(33);
 var Collection = __webpack_require__(34);
 var SignalState = __webpack_require__(657);
-__webpack_require__(710);
-__webpack_require__(712);
-__webpack_require__(713);
+__webpack_require__(714);
+__webpack_require__(716);
+__webpack_require__(717);
 
 var SignalCollection = Collection.extend({
   mainIndex: 'name',
@@ -2519,7 +2573,7 @@ var View = __webpack_require__(652);
 var objectPath = __webpack_require__(656);
 var propNamesExtractor = __webpack_require__(673);
 
-var PropertyView = __webpack_require__(686);
+var PropertyView = __webpack_require__(690);
 
 var DetailsView = View.extend({
   template: `
@@ -2642,13 +2696,997 @@ module.exports = DetailsView;
 
 /***/ }),
 
+/***/ 677:
+/***/ (function(module, exports) {
+
+module.exports = {
+	"signals": {
+		"beatA": {
+			"type": "beat",
+			"defaultValue": 1,
+			"input": 151.53
+		},
+		"colorA": {
+			"type": "hsla",
+			"defaultValue": "180,50%,50%,1",
+			"input": null,
+			"hue": 180,
+			"saturation": 50,
+			"lightness": 50,
+			"alpha": 100
+		}
+	},
+	"mappings": {
+		"beatOpacity": {
+			"targets": [
+				"layers.no-signal.opacity"
+			],
+			"transformFunction": "function (value) {\n  return value > 90 ? 100 : 15;\n}",
+			"source": "signals.beatA.result"
+		},
+		"nk2.r1": {
+			"targets": [
+				"layers.no-signal.active"
+			],
+			"transformFunction": "function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}",
+			"source": "midi:nk2.r1"
+		},
+		"nk2.knob1": {
+			"targets": [
+				"layers.canvas.canvasLayers.lines.knobA"
+			],
+			"transformFunction": "function (value) {\n  return value;\n}",
+			"source": "midi:nk2.knob1"
+		},
+		"nk2.knob2": {
+			"targets": [
+				"layers.canvas.canvasLayers.lines.knobB"
+			],
+			"transformFunction": "function (value) {\n  return value;\n}",
+			"source": "midi:nk2.knob2"
+		},
+		"nk2.knob3": {
+			"targets": [
+				"layers.canvas.canvasLayers.lines.knobC"
+			],
+			"transformFunction": "function (value) {\n  return value;\n}",
+			"source": "midi:nk2.knob3"
+		},
+		"beatNum20Str": {
+			"targets": [
+				"layers.ar.styleProperties.--beat.value",
+				"layers.vf.styleProperties.--beat.value"
+			],
+			"transformFunction": "function (value) {\n  return (value % 20).toString();\n}",
+			"source": "signals.beatA.beatNum"
+		},
+		"beatKnob": {
+			"targets": [
+				"signals.beatA.input"
+			],
+			"transformFunction": "function (value) {\n  return value + 63;\n}",
+			"source": "midi:nk2.knob8"
+		},
+		"beatNum100Str": {
+			"targets": [
+				"layers.vjs.text"
+			],
+			"transformFunction": "function (value, old) {\n  var names = [\n    '#### AUDIO ####',\n    'Sick Lincoln (UK) - Remote performance',\n    'H.AL.I.C. (BE)',\n    'Chaim (US/NL) ',\n    'Yaxu (UK/DE)',\n    'Alexandra Cárdenas & Camilla Vatne Barratt-Due (CO/NO)',\n    'Qirky (UK)',\n    'coï¿¥ï¾¡pt (UK) ',\n    'Renick Bell (JP)',\n    'codepage (DK/DE) ',\n    'Hlodver Sigurdsson (IS)',\n\n    '#### VISUAL ####',\n    'zeropaper (CH)',\n    'Fredrik Olofsson (SE)',\n    'Miri Kat (UK)',\n  ];\n\n  var index = Math.floor((value * 0.4) % names.length);\n  return names[index];\n}",
+			"source": "signals.beatA.beatNum"
+		}
+	},
+	"layers": {
+		"vjs": {
+			"type": "txt",
+			"active": false,
+			"opacity": 100,
+			"zIndex": -10,
+			"layerStyles": "text-align: center;\nfont-size: 12vmin;\ncolor: black;\nfont-family: monospace;\ntext-shadow: 1px 1px 0 #fff\n            ,2px 2px 0 #fff\n            ,3px 3px 0 #fff\n            ,4px 4px 0 #fff\n            ,5px 5px 0 #fff\n            ,6px 6px 0 #fff\n            ,-1px -1px 0 #666\n            ;",
+			"text": "Renick Bell (JP)",
+			"styleProperties": []
+		},
+		"canvas": {
+			"type": "canvas",
+			"active": true,
+			"opacity": 100,
+			"zIndex": 0,
+			"layerStyles": "",
+			"clear": 1,
+			"styleProperties": [],
+			"canvasLayers": [
+				{
+					"props": {
+						"active": {
+							"type": "boolean",
+							"required": true,
+							"default": true,
+							"allowNull": false
+						},
+						"text": {
+							"type": "string",
+							"required": true,
+							"default": "Hello World!",
+							"allowNull": false
+						},
+						"toggleA": {
+							"type": "boolean",
+							"required": true,
+							"default": false,
+							"allowNull": false
+						},
+						"knobA": {
+							"type": "number",
+							"required": true,
+							"default": 127,
+							"allowNull": false
+						},
+						"knobB": {
+							"type": "number",
+							"required": true,
+							"default": 127,
+							"allowNull": false
+						},
+						"knobC": {
+							"type": "number",
+							"required": true,
+							"default": 127,
+							"allowNull": false
+						}
+					},
+					"zIndex": 50,
+					"name": "lines",
+					"active": true,
+					"drawFunction": "function () {\n  var l = bufferLength();\n\n  // var str = layer.text || '';\n  // var letters = str.length <= l ? repeat('', Math.round((l - str.length) / 2))\n  //               .concat(str.split('')) : str.split('');\n  var f = 0;\n  var k = Math.round(layer.knobA * 0.05);\n  var p = Math.max(1, k);\n  var d = Math.pow(2, p);\n\n  // textAlign('center');\n  // textBaseline('middle');\n\n  grid(l, l / d, function(...args) {\n    fillStyle('black');\n    fillStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');\n    strokeStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');\n\n    // circle(...args, timeDomain(f) * 0.1);\n    polygone(...args, timeDomain(f) * layer.knobC * 0.05);\n    // font('20px monospace');\n    // font('20px monospace');\n    // txt(letters[f], ...args);\n    f++;\n  });\n}",
+					"text": "Hello World!",
+					"toggleA": false,
+					"knobA": 72,
+					"knobB": 62,
+					"knobC": 44
+				}
+			]
+		},
+		"ar": {
+			"type": "SVG",
+			"active": true,
+			"opacity": 50,
+			"zIndex": 0,
+			"layerStyles": "",
+			"svgStyles": {
+				"#algorave": "transform: translateY(var(--translate-y));\n  fill:none;\n  stroke:var(--stroke-color);\n  stroke-width:var(--stroke-width);\n  stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));\n  stroke-dashoffset: 0;"
+			},
+			"src": "./assets/algorave/algorave-stroke.svg",
+			"styleProperties": [
+				{
+					"name": "--stroke-color",
+					"value": "white",
+					"default": "white"
+				},
+				{
+					"name": "--stroke-width",
+					"value": "22",
+					"default": "22"
+				},
+				{
+					"name": "--beat",
+					"value": "9",
+					"default": "0"
+				},
+				{
+					"name": "--translate-y",
+					"value": "-20vh",
+					"default": "-20vh"
+				}
+			]
+		},
+		"vf": {
+			"type": "SVG",
+			"active": true,
+			"opacity": 50,
+			"zIndex": 0,
+			"layerStyles": "",
+			"svgStyles": {
+				"#fiha": "transform: translateY(var(--translate-y));\n  filter:url(#glow);\n  fill:var(--fill-color);\n  stroke:var(--stroke-color);\n  stroke-width:var(--stroke-width);\n  stroke-linecap:round;\n  stroke-linejoin:round;\n  stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));\n  stroke-dashoffset: 0;"
+			},
+			"src": "./assets/visual-fiha.svg",
+			"styleProperties": [
+				{
+					"name": "--fill-color",
+					"value": "none",
+					"default": "none"
+				},
+				{
+					"name": "--stroke-color",
+					"value": "white",
+					"default": "white"
+				},
+				{
+					"name": "--stroke-width",
+					"value": "22",
+					"default": "22"
+				},
+				{
+					"name": "--frametime",
+					"value": "0",
+					"default": "0"
+				},
+				{
+					"name": "--beat",
+					"value": "9",
+					"default": "0"
+				},
+				{
+					"name": "--translate-y",
+					"value": "20vh",
+					"default": "20vh"
+				}
+			]
+		}
+	}
+};
+
+/***/ }),
+
+/***/ 678:
+/***/ (function(module, exports) {
+
+module.exports = {
+	"signals": {
+		"beatA": {
+			"type": "beat",
+			"defaultValue": 1,
+			"input": 85
+		}
+	},
+	"mappings": {
+		"knob1": {
+			"targets": [
+				"layers.zero.parameters.knob1.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.knob1"
+		},
+		"knob2": {
+			"targets": [
+				"layers.zero.parameters.knob2.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.knob2"
+		},
+		"knob3": {
+			"targets": [
+				"layers.zero.parameters.knob3.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.knob3"
+		},
+		"knob4": {
+			"targets": [
+				"layers.zero.parameters.knob4.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.knob4"
+		},
+		"slider1": {
+			"targets": [
+				"layers.zero.parameters.slider1.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.slider1"
+		},
+		"slider2": {
+			"targets": [
+				"layers.zero.parameters.slider2.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.slider2"
+		},
+		"slider3": {
+			"targets": [
+				"layers.zero.parameters.slider3.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.slider3"
+		},
+		"slider4": {
+			"targets": [
+				"layers.zero.parameters.slider4.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.slider4"
+		},
+		"beatResult": {
+			"targets": [
+				"layers.zero.opacity"
+			],
+			"transformFunction": "function(val) { return val; }",
+			"source": "signals.beatA.result"
+		},
+		"beatResultNeg": {
+			"targets": [
+				"layers.zeropaperLogo.opacity"
+			],
+			"transformFunction": "function(val) { return 100 - val; }",
+			"source": "signals.beatA.result"
+		},
+		"beatNumContructionPath": {
+			"targets": [
+				"layers.bgk.src",
+				"layers.bgk2.src"
+			],
+			"transformFunction": "function(val) { return './assets/construction-work/'+ ((val % 3) + 1) +'/front.png'; }",
+			"source": "signals.beatA.beatNum"
+		}
+	},
+	"layers": {
+		"bgk": {
+			"type": "img",
+			"active": true,
+			"opacity": 100,
+			"zIndex": 100,
+			"layerStyles": "filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01)) rotate(calc(0.05deg * var(--frametime)));",
+			"src": "./assets/construction-work/1/front.png",
+			"styleProperties": []
+		},
+		"bgk2": {
+			"type": "img",
+			"active": true,
+			"opacity": 100,
+			"zIndex": 200,
+			"layerStyles": "filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01)) rotateX(180deg) rotateY(180deg) rotate(calc(-0.05deg * var(--frametime)));",
+			"src": "./assets/construction-work/1/front.png",
+			"styleProperties": []
+		},
+		"zero": {
+			"type": "threejs",
+			"active": true,
+			"opacity": 52.69312499999994,
+			"zIndex": 1000,
+			"layerStyles": "",
+			"currentCamera": "defaultperspective",
+			"renderFunction": "function() {\n  // var helper = new THREE.AxisHelper(20);\n  // helper.name = 'axisHelper';\n  // layer.scene.add(helper);\n\n  // helper = new THREE.GridHelper(200);\n  // helper.name = 'gridHelper';\n  // layer.scene.add(helper);\n\n  function makeClones(object, count = 1) {\n    for (var c = 1; c < count; c++) {\n      var clone = object.clone();\n      clone.traverse(function(child) {\n        if (!child.material) return;\n        child.material = child.material.clone();\n        // child.material.wireframe = true; // provokes illegal operation 😢\n      });\n      clone.name = 'clone' + (c + 1);\n      layer.scene.add(clone);\n    }\n  }\n\n  var fatView = layer.loaders.views.filter(v => v.model.name === 'fat')[0];\n  layer.listenToAndRun(fatView, 'change:object', function() {\n    var fatObject = fatView.object;\n    fatObject.traverse(function(child) {\n      if (child.material) child.material.side = THREE.DoubleSide;\n    });\n    makeClones(fatObject, 8);\n  });\n}",
+			"updateFunction": "function() {\n  var screenState = layer.model.screenState;\n  var audio = screenState.audio;\n  var freq = audio.frequency;\n  var vol = audio.timeDomain;\n\n  var scale = freq[12] * 0.1;\n  var speed = 1000;\n  var dist = 200;\n  var deg = (screenState.frametime % (speed * 360) / speed);\n  var tilt = vol[4] - 127;\n\n  layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);\n  layer.camera.lookAt(layer.scene.position);\n\n  var fat = layer.scene.getObjectByName('fat');\n  fat.scale.set(scale + 1, scale + 1, scale + 1);\n  fat.rotation.set(Math.PI * 0.35, midi2rad(parameter('knob1', 0)), midi2rad(parameter('knob2', 0)));\n\n  function alterMaterials(c) {\n    return function(child) {\n      if (child.material && child.material.color) {\n        child.material.wireframe = true;\n        child.material.color = new THREE.Color('hsl('+ freq[c * 4] +', ' + parameter('slider1', 50) + '%, ' + parameter('slider2', 50) + '%)');\n      }\n    }\n  }\n\n  function applyClones(count = 1) {\n    var cap = midiMinMax(parameter('knob3', 0), 0, count);\n    for (var c = 0; c < count; c++) {\n      var clone = layer.scene.getObjectByName('clone' + (c + 1));\n      if (clone) {\n        if (cap < c) {\n          clone.visible = false;\n          return;\n        }\n\n        clone.visible = true;\n        clone.traverse(alterMaterials(c));\n\n        var s = fat.scale.toArray();\n        clone.scale.set(...s);\n\n        var r = fat.rotation.toArray();\n        clone.rotation.set(...r);\n\n        var p = fat.position.toArray();\n        p[Math.round(midiMinMax(parameter('slider3', 0), 0, 2))] = (c * vol[4] * 0.01 * (tilt * (c % 2 === 0 ? 1 : -1)));\n        clone.position.set(...p);\n      }\n    }\n  }\n  applyClones(8);\n}",
+			"styleProperties": [],
+			"parameters": [
+				{
+					"name": "knob1",
+					"value": "63",
+					"default": ""
+				},
+				{
+					"name": "knob2",
+					"value": "63",
+					"default": ""
+				},
+				{
+					"name": "knob3",
+					"value": "63",
+					"default": ""
+				},
+				{
+					"name": "knob4",
+					"value": "63",
+					"default": ""
+				},
+				{
+					"name": "slider1",
+					"value": "63",
+					"default": ""
+				},
+				{
+					"name": "slider2",
+					"value": "63",
+					"default": ""
+				},
+				{
+					"name": "slider3",
+					"value": "63",
+					"default": ""
+				},
+				{
+					"name": "slider4",
+					"value": "63",
+					"default": ""
+				}
+			],
+			"geometries": [],
+			"lights": [
+				{
+					"visible": true,
+					"type": "ambient",
+					"name": "defaultambient",
+					"intensity": 1,
+					"position": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"rotation": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"scale": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"color": {
+						"r": 1,
+						"g": 1,
+						"b": 1
+					}
+				},
+				{
+					"visible": true,
+					"type": "directonal",
+					"name": "defaultdirectonal",
+					"intensity": 1,
+					"position": {
+						"x": 45,
+						"y": 45,
+						"z": 45
+					},
+					"rotation": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"scale": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"color": {
+						"r": 1,
+						"g": 1,
+						"b": 1
+					},
+					"lookAt": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			],
+			"cameras": [
+				{
+					"visible": true,
+					"type": "perspective",
+					"name": "defaultperspective",
+					"focus": 10,
+					"fov": 50,
+					"aspect": 1,
+					"near": 0.1,
+					"far": 2000,
+					"zoom": 1,
+					"position": {
+						"x": 35,
+						"y": 35,
+						"z": 35
+					},
+					"rotation": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"scale": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"lookAt": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				},
+				{
+					"visible": true,
+					"type": "orthographic",
+					"name": "defaultortho",
+					"left": 80,
+					"right": 80,
+					"top": 60,
+					"bottom": 60,
+					"near": 0.1,
+					"far": 2000,
+					"position": {
+						"x": 35,
+						"y": 35,
+						"z": 35
+					},
+					"rotation": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"scale": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"lookAt": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			],
+			"materials": [],
+			"loaders": [
+				{
+					"visible": true,
+					"type": "obj",
+					"name": "fat",
+					"path": "./assets/zeropaper/",
+					"src": "zeropaper-concrete.obj",
+					"position": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"rotation": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"scale": {
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			]
+		},
+		"zeropaperLogo": {
+			"type": "SVG",
+			"active": true,
+			"opacity": 47.30687500000006,
+			"zIndex": 1100,
+			"layerStyles": "mix-blend-mode: overlay;",
+			"svgStyles": {
+				"#zeropaper": "fill: var(--fill-color); stroke: var(--stroke-color); stroke-width: var(--stroke-width);"
+			},
+			"src": "./assets/zeropaper/zeropaper-fat.svg",
+			"styleProperties": [
+				{
+					"name": "--fill-color",
+					"value": "white",
+					"default": "white"
+				},
+				{
+					"name": "--stroke-color",
+					"value": "none",
+					"default": "none"
+				},
+				{
+					"name": "--stroke-width",
+					"value": "5px",
+					"default": "5px"
+				}
+			]
+		}
+	}
+};
+
+/***/ }),
+
 /***/ 679:
+/***/ (function(module, exports) {
+
+module.exports = {
+	"signals": {
+		"beatA": {
+			"type": "beat",
+			"defaultValue": 1,
+			"input": 120
+		}
+	},
+	"mappings": {},
+	"layers": {
+		"canvas": {
+			"type": "canvas",
+			"active": true,
+			"opacity": 100,
+			"zIndex": 0,
+			"layerStyles": "",
+			"clear": 1,
+			"styleProperties": [],
+			"canvasLayers": [
+				{
+					"props": {
+						"active": {
+							"type": "boolean",
+							"required": true,
+							"default": true,
+							"allowNull": false
+						}
+					},
+					"zIndex": 50,
+					"name": "lines",
+					"active": true,
+					"drawFunction": "function () {\n  var l = bufferLength();\n  var f = 0;\n  var k = 3;\n  var p = Math.max(1, k);\n  var d = Math.pow(2, p);\n\n  grid(l, l / d, function(...args) {\n    var ff = Math.round((l * 0.125) + (f * 0.125));\n    strokeStyle('hsl('+frequency(ff)+', 50%, 50%)');\n    var sides = Math.round(frequency(ff) * (1 / 10));\n    sides = Math.min(sides, 10);\n    sides = Math.max(sides, 3);\n    lineWidth(10 - sides);\n    circle(...args, timeDomain(ff) * 0.25);\n    polygone(...args, timeDomain(ff) + 50, sides);\n    f++;\n  });\n}"
+				}
+			]
+		}
+	}
+};
+
+/***/ }),
+
+/***/ 680:
+/***/ (function(module, exports) {
+
+module.exports = {
+	"signals": {
+		"beat": {
+			"type": "beat",
+			"defaultValue": 1,
+			"input": 114.26
+		}
+	},
+	"mappings": {
+		"knob1": {
+			"targets": [
+				"layers.canvas.canvasLayers.mid.knobA"
+			],
+			"transformFunction": "function(val) { return val; }",
+			"source": "midi:nk2.knob1"
+		},
+		"knob2": {
+			"targets": [
+				"layers.canvas.canvasLayers.mid.knobB"
+			],
+			"transformFunction": "function(val) { return val; }",
+			"source": "midi:nk2.knob2"
+		},
+		"knob3": {
+			"targets": [
+				"layers.canvas.canvasLayers.mid.knobC"
+			],
+			"transformFunction": "function(val) { return val; }",
+			"source": "midi:nk2.knob3"
+		},
+		"slider1": {
+			"targets": [
+				"layers.canvas.canvasLayers.mid.sliderA"
+			],
+			"transformFunction": "function(val) { return val; }",
+			"source": "midi:nk2.slider1"
+		},
+		"slider2": {
+			"targets": [
+				"layers.canvas.canvasLayers.mid.sliderB"
+			],
+			"transformFunction": "function(val) { return val; }",
+			"source": "midi:nk2.slider2"
+		},
+		"slider3": {
+			"targets": [
+				"layers.canvas.canvasLayers.mid.sliderC"
+			],
+			"transformFunction": "function(val) { return val; }",
+			"source": "midi:nk2.slider3"
+		},
+		"slider7Str": {
+			"targets": [
+				"layers.frontcpy.styleProperties.--rotation.value",
+				"layers.front3cpy.styleProperties.--rotation.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.slider7"
+		},
+		"slider8Str": {
+			"targets": [
+				"layers.back.styleProperties.--rotation.value",
+				"layers.front.styleProperties.--rotation.value",
+				"layers.front3.styleProperties.--rotation.value",
+				"layers.back3.styleProperties.--rotation.value"
+			],
+			"transformFunction": "function(val) { return val.toString(); }",
+			"source": "midi:nk2.slider8"
+		},
+		"beatSkyFront": {
+			"targets": [
+				"layers.front.src",
+				"layers.frontcpy.src"
+			],
+			"transformFunction": "function(val) {\n  var c = 3;\n  var t = 1;\n  var i = Math.floor((val % (c * t)) / t) + 1;\n  return './assets/construction-work/'+ i +'/front.png';\n}",
+			"source": "signals.beat.beatNum"
+		},
+		"beatSkyBack": {
+			"targets": [
+				"layers.back.src"
+			],
+			"transformFunction": "function(val) {\n  var c = 3;\n  var t = 1;\n  var i = Math.floor((val % (c * t)) / t) + 1;\n  return './assets/construction-work/'+ i +'/back.png';\n}",
+			"source": "signals.beat.beatNum"
+		},
+		"beatTreeFront": {
+			"targets": [
+				"layers.front3cpy.src",
+				"layers.front3.src"
+			],
+			"transformFunction": "function(val) {\n  var c = 3;\n  var t = 1;\n  var i = Math.floor((val % (c * t)) / t) + 1;\n  return './assets/trees/'+ i +'/front.png';\n}",
+			"source": "signals.beat.beatNum"
+		},
+		"beatTreeBack": {
+			"targets": [
+				"layers.back3.src"
+			],
+			"transformFunction": "function(val) {\n  var c = 3;\n  var t = 1;\n  var i = Math.floor((val % (c * t)) / t) + 1;\n  return './assets/trees/'+ i +'/back.png';\n}",
+			"source": "signals.beat.beatNum"
+		},
+		"knobBlur": {
+			"targets": [],
+			"transformFunction": "function (val) { return val.toString(); }",
+			"source": "midi:nk2.slider1"
+		},
+		"beatBlur": {
+			"targets": [
+				"layers.back.styleProperties.--blur.value",
+				"layers.front.styleProperties.--blur.value",
+				"layers.frontcpy.styleProperties.--blur.value",
+				"layers.back3.styleProperties.--blur.value",
+				"layers.back3.styleProperties.--blur.value",
+				"layers.back3.styleProperties.--blur.value",
+				"layers.front3.styleProperties.--blur.value",
+				"layers.front3cpy.styleProperties.--blur.value"
+			],
+			"transformFunction": "function (val) { return (val * 0.3).toString(); }",
+			"source": "signals.beat.result"
+		},
+		"toggleConsruction": {
+			"targets": [
+				"layers.back.active",
+				"layers.front.active",
+				"layers.frontcpy.active"
+			],
+			"transformFunction": "function (val, prev) { return val ? !prev : prev; }",
+			"source": "midi:nk2.r1"
+		},
+		"toggleTree": {
+			"targets": [
+				"layers.back3.active",
+				"layers.front3cpy.active",
+				"layers.front3.active"
+			],
+			"transformFunction": "function (val, prev) { return !val ? !prev : prev; }",
+			"source": "midi:nk2.r1"
+		}
+	},
+	"layers": {
+		"back": {
+			"type": "img",
+			"active": true,
+			"opacity": 100,
+			"zIndex": 0,
+			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01)));",
+			"src": "./assets/construction-work/2/back.png",
+			"styleProperties": [
+				{
+					"name": "--blur",
+					"value": "0.007766449999921576",
+					"default": "0"
+				},
+				{
+					"name": "--rotation",
+					"value": "0",
+					"default": "0"
+				},
+				{
+					"name": "--r",
+					"value": "calc((360deg / -127) * var(--rotation))",
+					"default": "0"
+				}
+			]
+		},
+		"back3": {
+			"type": "img",
+			"active": false,
+			"opacity": 100,
+			"zIndex": 0,
+			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01)))\n          rotateX(var(--r));",
+			"src": "./assets/trees/2/back.png",
+			"styleProperties": [
+				{
+					"name": "--blur",
+					"value": "0.007766449999921576",
+					"default": "0"
+				},
+				{
+					"name": "--rotation",
+					"value": "0",
+					"default": "0"
+				}
+			]
+		},
+		"frontcpy": {
+			"type": "img",
+			"active": true,
+			"opacity": 100,
+			"zIndex": 45,
+			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01)))\n            rotate(calc(-1deg * var(--rotation)));",
+			"src": "./assets/construction-work/2/front.png",
+			"styleProperties": [
+				{
+					"name": "--blur",
+					"value": "0.007766449999921576",
+					"default": "0"
+				},
+				{
+					"name": "--rotation",
+					"value": "0",
+					"default": "0"
+				}
+			]
+		},
+		"front3cpy": {
+			"type": "img",
+			"active": false,
+			"opacity": 100,
+			"zIndex": 49,
+			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg / 127) * var(--rotation)));",
+			"src": "./assets/trees/2/front.png",
+			"styleProperties": [
+				{
+					"name": "--blur",
+					"value": "0.007766449999921576",
+					"default": "0"
+				},
+				{
+					"name": "--rotation",
+					"value": "0",
+					"default": "0"
+				}
+			]
+		},
+		"canvas": {
+			"type": "canvas",
+			"active": false,
+			"opacity": 100,
+			"zIndex": 50,
+			"layerStyles": "",
+			"clear": 1,
+			"styleProperties": [],
+			"canvasLayers": [
+				{
+					"props": {
+						"active": {
+							"type": "boolean",
+							"required": true,
+							"default": true,
+							"allowNull": false
+						}
+					},
+					"zIndex": 0,
+					"name": "bottom",
+					"active": true,
+					"drawFunction": "function drawLayerCtx() {\n  /*\n    You can access the canvas 2d context with the global ctx\n  */\n}"
+				},
+				{
+					"props": {
+						"active": {
+							"type": "boolean",
+							"required": true,
+							"default": true,
+							"allowNull": false
+						},
+						"knobA": {
+							"type": "number",
+							"required": true,
+							"default": 0,
+							"allowNull": false
+						},
+						"knobB": {
+							"type": "number",
+							"required": true,
+							"default": 0,
+							"allowNull": false
+						},
+						"knobC": {
+							"type": "number",
+							"required": true,
+							"default": 0,
+							"allowNull": false
+						},
+						"sliderA": {
+							"type": "number",
+							"required": true,
+							"default": 0,
+							"allowNull": false
+						},
+						"sliderB": {
+							"type": "number",
+							"required": true,
+							"default": 0,
+							"allowNull": false
+						},
+						"sliderC": {
+							"type": "number",
+							"required": true,
+							"default": 0,
+							"allowNull": false
+						}
+					},
+					"zIndex": 50,
+					"name": "mid",
+					"active": true,
+					"drawFunction": "function drawLayerCtx() {\n  var count = 128;\n  var rows = 8;\n  var col = 'hsl('+Math.round(layer.knobA * (1 / 127) * 360)+','+Math.round(layer.knobB * (1 / 127) * 100)+'%,'+Math.round(layer.knobC * (1 / 127) * 100)+'%)';\n  //var col = 'rgb('+Math.round(layer.knobA * (1 / 127) * 255)+','+Math.round(layer.knobB * (1 / 127) * 255)+','+Math.round(layer.knobC * (1 / 127) * 255)+')';\n  strokeStyle(col);\n  var i = 0;\n  grid(count, rows, function (x, y) {\n    lineWidth(frequency(i) * 0.025 * between(layer.sliderC * (1 / (127 / 16)),1,16));\n    polygone(x, y, timeDomain(i) * 0.1 * between(layer.sliderA,1,127), between(Math.round(layer.sliderB * (1 / (127 / 9))),3,9));\n    i++;\n  });\n}",
+					"knobA": 22,
+					"knobB": 87,
+					"knobC": 47,
+					"sliderA": 61,
+					"sliderB": 38,
+					"sliderC": 3
+				},
+				{
+					"props": {
+						"active": {
+							"type": "boolean",
+							"required": true,
+							"default": true,
+							"allowNull": false
+						}
+					},
+					"zIndex": 100,
+					"name": "top",
+					"active": true,
+					"drawFunction": "function drawLayerCtx() {\n  /*\n    You can access the canvas 2d context with the global ctx\n  */\n}"
+				}
+			]
+		},
+		"front": {
+			"type": "img",
+			"active": true,
+			"opacity": 100,
+			"zIndex": 100,
+			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01)))\n            rotate(calc(1deg * var(--rotation)));",
+			"src": "./assets/construction-work/2/front.png",
+			"styleProperties": [
+				{
+					"name": "--blur",
+					"value": "0.007766449999921576",
+					"default": "0"
+				},
+				{
+					"name": "--rotation",
+					"value": "0",
+					"default": "0"
+				}
+			]
+		},
+		"front3": {
+			"type": "img",
+			"active": false,
+			"opacity": 100,
+			"zIndex": 100,
+			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg / -127) * var(--rotation)));",
+			"src": "./assets/trees/2/front.png",
+			"styleProperties": [
+				{
+					"name": "--blur",
+					"value": "0.007766449999921576",
+					"default": "0"
+				},
+				{
+					"name": "--rotation",
+					"value": "0",
+					"default": "0"
+				}
+			]
+		}
+	}
+};
+
+/***/ }),
+
+/***/ 683:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(35);
-var canvasCompleter = __webpack_require__(689);
+var canvasCompleter = __webpack_require__(693);
 
 var AceEditor = View.extend({
   editCode: function(options) {
@@ -2881,7 +3919,7 @@ module.exports = AceEditor;
 
 /***/ }),
 
-/***/ 680:
+/***/ 684:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3052,13 +4090,13 @@ module.exports = __webpack_require__(35).extend({
 
 /***/ }),
 
-/***/ 681:
+/***/ 685:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(652);
-var AudioMonitor = __webpack_require__(680);
+var AudioMonitor = __webpack_require__(684);
 var AudioSource = View.extend({
   autoRender: true,
 
@@ -3179,7 +4217,7 @@ module.exports = AudioSource;
 
 /***/ }),
 
-/***/ 682:
+/***/ 686:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3240,7 +4278,7 @@ module.exports = ControlScreenControls;
 
 /***/ }),
 
-/***/ 683:
+/***/ 687:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3394,7 +4432,7 @@ module.exports = GistView;
 
 /***/ }),
 
-/***/ 684:
+/***/ 688:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3464,14 +4502,14 @@ module.exports = LocalforageView;
 
 /***/ }),
 
-/***/ 685:
+/***/ 689:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(35);
-var GistView = __webpack_require__(683);
-var LocalforageView = __webpack_require__(684);
+var GistView = __webpack_require__(687);
+var LocalforageView = __webpack_require__(688);
 
 var MenuView = View.extend({
   template: `
@@ -3542,7 +4580,7 @@ module.exports = MenuView;
 
 /***/ }),
 
-/***/ 686:
+/***/ 690:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3957,7 +4995,7 @@ module.exports = PropertyView;
 
 /***/ }),
 
-/***/ 687:
+/***/ 691:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4110,7 +5148,7 @@ module.exports = RegionView;
 
 /***/ }),
 
-/***/ 688:
+/***/ 692:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4501,7 +5539,7 @@ module.exports = SuggestionView;
 
 /***/ }),
 
-/***/ 689:
+/***/ 693:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4585,7 +5623,7 @@ module.exports = canvasCompleter;
 
 /***/ }),
 
-/***/ 690:
+/***/ 694:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4784,7 +5822,7 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
 
 /***/ }),
 
-/***/ 693:
+/***/ 697:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4796,7 +5834,7 @@ module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.exten
 
 /***/ }),
 
-/***/ 695:
+/***/ 699:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4804,12 +5842,12 @@ module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.exten
 var View = __webpack_require__(653);
 
 var LayerControlView = __webpack_require__(653);
-__webpack_require__(690);
-__webpack_require__(696);
-__webpack_require__(693);
+__webpack_require__(694);
+__webpack_require__(700);
+__webpack_require__(697);
+__webpack_require__(707);
+__webpack_require__(705);
 __webpack_require__(703);
-__webpack_require__(701);
-__webpack_require__(699);
 
 var LayersView = View.extend({
   commands: {
@@ -4884,14 +5922,14 @@ module.exports = LayersView;
 
 /***/ }),
 
-/***/ 696:
+/***/ 700:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
 var ScreenLayerControlView = __webpack_require__(653);
-var SVGDetailsView = __webpack_require__(697);
+var SVGDetailsView = __webpack_require__(701);
 
 module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
   template: `
@@ -4928,7 +5966,7 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
 
 /***/ }),
 
-/***/ 697:
+/***/ 701:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5032,12 +6070,12 @@ module.exports = SVGDetailsView;
 
 /***/ }),
 
-/***/ 699:
+/***/ 703:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ThreeJSDetailsView = __webpack_require__(700);
+var ThreeJSDetailsView = __webpack_require__(704);
 
 var ScreenLayerControlView = __webpack_require__(653);
 module.exports = ScreenLayerControlView.types.threejs = ScreenLayerControlView.extend({
@@ -5051,7 +6089,7 @@ module.exports = ScreenLayerControlView.types.threejs = ScreenLayerControlView.e
 
 /***/ }),
 
-/***/ 700:
+/***/ 704:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5163,7 +6201,7 @@ module.exports = ThreeJSDetailsView;
 
 /***/ }),
 
-/***/ 701:
+/***/ 705:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5175,7 +6213,7 @@ module.exports = TxtLayerControlView;
 
 /***/ }),
 
-/***/ 703:
+/***/ 707:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5187,7 +6225,7 @@ module.exports = ScreenLayerControlView.types.video = ScreenLayerControlView.ext
 
 /***/ }),
 
-/***/ 705:
+/***/ 709:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5580,7 +6618,7 @@ module.exports = MappingsControlView;
 
 /***/ }),
 
-/***/ 706:
+/***/ 710:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5659,7 +6697,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 707:
+/***/ 711:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5841,7 +6879,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 708:
+/***/ 712:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5960,7 +6998,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 709:
+/***/ 713:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6096,7 +7134,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 710:
+/***/ 714:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6152,7 +7190,7 @@ module.exports = BeatState;
 
 /***/ }),
 
-/***/ 711:
+/***/ 715:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6177,7 +7215,7 @@ module.exports = SignalDetailsView;
 
 /***/ }),
 
-/***/ 712:
+/***/ 716:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6238,7 +7276,7 @@ module.exports = HSLASignalState;
 
 /***/ }),
 
-/***/ 713:
+/***/ 717:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6296,7 +7334,7 @@ module.exports = RGBASignalState;
 
 /***/ }),
 
-/***/ 714:
+/***/ 718:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

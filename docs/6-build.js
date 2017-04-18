@@ -7,12 +7,12 @@ webpackJsonp([6],{
 
 var View = __webpack_require__(35);
 var LayerView = __webpack_require__(654);
-__webpack_require__(691);
-__webpack_require__(698);
-__webpack_require__(704);
-__webpack_require__(694);
-__webpack_require__(676);
+__webpack_require__(695);
 __webpack_require__(702);
+__webpack_require__(708);
+__webpack_require__(698);
+__webpack_require__(676);
+__webpack_require__(706);
 __webpack_require__(676);
 
 
@@ -434,8 +434,8 @@ window.THREE = window.THREE || THREE;
 
 // require('three/examples/js/loaders/DDSLoader');
 // THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
-__webpack_require__(677);
-__webpack_require__(678);
+__webpack_require__(681);
+__webpack_require__(682);
 
 
 var midiMinMax = __webpack_require__(658);
@@ -927,7 +927,7 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 677:
+/***/ 681:
 /***/ (function(module, exports) {
 
 /**
@@ -1474,7 +1474,7 @@ THREE.MTLLoader.MaterialCreator.prototype = {
 
 /***/ }),
 
-/***/ 678:
+/***/ 682:
 /***/ (function(module, exports) {
 
 /**
@@ -2224,7 +2224,7 @@ THREE.OBJLoader.prototype = {
 
 /***/ }),
 
-/***/ 691:
+/***/ 695:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2308,7 +2308,7 @@ module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 694:
+/***/ 698:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2390,7 +2390,7 @@ module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 698:
+/***/ 702:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2471,7 +2471,7 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 702:
+/***/ 706:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2493,7 +2493,7 @@ module.exports = TxtLayerView;
 
 /***/ }),
 
-/***/ 704:
+/***/ 708:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
