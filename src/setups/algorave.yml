@@ -1,0 +1,262 @@
+signals:
+  beatA:
+    type: beat
+    defaultValue: 1
+    input: 151.53
+  colorA:
+    type: hsla
+    defaultValue: '180,50%,50%,1'
+    input: null
+    hue: 180
+    saturation: 50
+    lightness: 50
+    alpha: 100
+mappings:
+  beatOpacity:
+    targets:
+      - layers.no-signal.opacity
+    transformFunction: |-
+      function (value) {
+        return value > 90 ? 100 : 15;
+      }
+    source: signals.beatA.result
+  nk2.r1:
+    targets:
+      - layers.no-signal.active
+    transformFunction: |-
+      function (value, currentValue) {
+        if (!value) return currentValue;
+              return !currentValue;
+      }
+    source: 'midi:nk2.r1'
+  nk2.knob1:
+    targets:
+      - layers.canvas.canvasLayers.lines.knobA
+    transformFunction: |-
+      function (value) {
+        return value;
+      }
+    source: 'midi:nk2.knob1'
+  nk2.knob2:
+    targets:
+      - layers.canvas.canvasLayers.lines.knobB
+    transformFunction: |-
+      function (value) {
+        return value;
+      }
+    source: 'midi:nk2.knob2'
+  nk2.knob3:
+    targets:
+      - layers.canvas.canvasLayers.lines.knobC
+    transformFunction: |-
+      function (value) {
+        return value;
+      }
+    source: 'midi:nk2.knob3'
+  beatNum20Str:
+    targets:
+      - layers.ar.styleProperties.--beat.value
+      - layers.vf.styleProperties.--beat.value
+    transformFunction: |-
+      function (value) {
+        return (value % 20).toString();
+      }
+    source: signals.beatA.beatNum
+  beatKnob:
+    targets:
+      - signals.beatA.input
+    transformFunction: |-
+      function (value) {
+        return value + 63;
+      }
+    source: 'midi:nk2.knob8'
+  beatNum100Str:
+    targets:
+      - layers.vjs.text
+    transformFunction: |-
+      function (value, old) {
+        var names = [
+          '#### AUDIO ####',
+          'Sick Lincoln (UK) - Remote performance',
+          'H.AL.I.C. (BE)',
+          'Chaim (US/NL) ',
+          'Yaxu (UK/DE)',
+          'Alexandra Cárdenas & Camilla Vatne Barratt-Due (CO/NO)',
+          'Qirky (UK)',
+          'coï¿¥ï¾¡pt (UK) ',
+          'Renick Bell (JP)',
+          'codepage (DK/DE) ',
+          'Hlodver Sigurdsson (IS)',
+
+          '#### VISUAL ####',
+          'zeropaper (CH)',
+          'Fredrik Olofsson (SE)',
+          'Miri Kat (UK)',
+        ];
+
+        var index = Math.floor((value * 0.4) % names.length);
+        return names[index];
+      }
+    source: signals.beatA.beatNum
+layers:
+  vjs:
+    type: txt
+    active: false
+    opacity: 100
+    zIndex: -10
+    layerStyles: |-
+      text-align: center;
+      font-size: 12vmin;
+      color: black;
+      font-family: monospace;
+      text-shadow: 1px 1px 0 #fff
+                  ,2px 2px 0 #fff
+                  ,3px 3px 0 #fff
+                  ,4px 4px 0 #fff
+                  ,5px 5px 0 #fff
+                  ,6px 6px 0 #fff
+                  ,-1px -1px 0 #666
+                  ;
+    text: Renick Bell (JP)
+    styleProperties: []
+  canvas:
+    type: canvas
+    active: true
+    opacity: 100
+    zIndex: 0
+    layerStyles: ''
+    clear: 1
+    styleProperties: []
+    canvasLayers:
+      - props:
+          active:
+            type: boolean
+            required: true
+            default: true
+            allowNull: false
+          text:
+            type: string
+            required: true
+            default: Hello World!
+            allowNull: false
+          toggleA:
+            type: boolean
+            required: true
+            default: false
+            allowNull: false
+          knobA:
+            type: number
+            required: true
+            default: 127
+            allowNull: false
+          knobB:
+            type: number
+            required: true
+            default: 127
+            allowNull: false
+          knobC:
+            type: number
+            required: true
+            default: 127
+            allowNull: false
+        zIndex: 50
+        name: lines
+        active: true
+        drawFunction: |-
+          function () {
+            var l = bufferLength();
+
+            // var str = layer.text || '';
+            // var letters = str.length <= l ? repeat('', Math.round((l - str.length) / 2))
+            //               .concat(str.split('')) : str.split('');
+            var f = 0;
+            var k = Math.round(layer.knobA * 0.05);
+            var p = Math.max(1, k);
+            var d = Math.pow(2, p);
+
+            // textAlign('center');
+            // textBaseline('middle');
+
+            grid(l, l / d, function(...args) {
+              fillStyle('black');
+              fillStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');
+              strokeStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');
+
+              // circle(...args, timeDomain(f) * 0.1);
+              polygone(...args, timeDomain(f) * layer.knobC * 0.05);
+              // font('20px monospace');
+              // font('20px monospace');
+              // txt(letters[f], ...args);
+              f++;
+            });
+          }
+        text: Hello World!
+        toggleA: false
+        knobA: 72
+        knobB: 62
+        knobC: 44
+  ar:
+    type: SVG
+    active: true
+    opacity: 50
+    zIndex: 0
+    layerStyles: ''
+    svgStyles:
+      '#algorave': |-
+        transform: translateY(var(--translate-y));
+          fill:none;
+          stroke:var(--stroke-color);
+          stroke-width:var(--stroke-width);
+          stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));
+          stroke-dashoffset: 0;
+    src: ./assets/algorave/algorave-stroke.svg
+    styleProperties:
+      - name: '--stroke-color'
+        value: white
+        default: white
+      - name: '--stroke-width'
+        value: '22'
+        default: '22'
+      - name: '--beat'
+        value: '9'
+        default: '0'
+      - name: '--translate-y'
+        value: '-20vh'
+        default: '-20vh'
+  vf:
+    type: SVG
+    active: true
+    opacity: 50
+    zIndex: 0
+    layerStyles: ''
+    svgStyles:
+      '#fiha': |-
+        transform: translateY(var(--translate-y));
+          filter:url(#glow);
+          fill:var(--fill-color);
+          stroke:var(--stroke-color);
+          stroke-width:var(--stroke-width);
+          stroke-linecap:round;
+          stroke-linejoin:round;
+          stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));
+          stroke-dashoffset: 0;
+    src: ./assets/visual-fiha.svg
+    styleProperties:
+      - name: '--fill-color'
+        value: none
+        default: none
+      - name: '--stroke-color'
+        value: white
+        default: white
+      - name: '--stroke-width'
+        value: '22'
+        default: '22'
+      - name: '--frametime'
+        value: '0'
+        default: '0'
+      - name: '--beat'
+        value: '9'
+        default: '0'
+      - name: '--translate-y'
+        value: 20vh
+        default: 20vh

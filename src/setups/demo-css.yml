@@ -1,0 +1,331 @@
+signals:
+  beat:
+    type: beat
+    defaultValue: 1
+    input: 114.26
+mappings:
+  knob1:
+    targets:
+      - layers.canvas.canvasLayers.mid.knobA
+    transformFunction: 'function(val) { return val; }'
+    source: 'midi:nk2.knob1'
+  knob2:
+    targets:
+      - layers.canvas.canvasLayers.mid.knobB
+    transformFunction: 'function(val) { return val; }'
+    source: 'midi:nk2.knob2'
+  knob3:
+    targets:
+      - layers.canvas.canvasLayers.mid.knobC
+    transformFunction: 'function(val) { return val; }'
+    source: 'midi:nk2.knob3'
+  slider1:
+    targets:
+      - layers.canvas.canvasLayers.mid.sliderA
+    transformFunction: 'function(val) { return val; }'
+    source: 'midi:nk2.slider1'
+  slider2:
+    targets:
+      - layers.canvas.canvasLayers.mid.sliderB
+    transformFunction: 'function(val) { return val; }'
+    source: 'midi:nk2.slider2'
+  slider3:
+    targets:
+      - layers.canvas.canvasLayers.mid.sliderC
+    transformFunction: 'function(val) { return val; }'
+    source: 'midi:nk2.slider3'
+  slider7Str:
+    targets:
+      - layers.frontcpy.styleProperties.--rotation.value
+      - layers.front3cpy.styleProperties.--rotation.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.slider7'
+  slider8Str:
+    targets:
+      - layers.back.styleProperties.--rotation.value
+      - layers.front.styleProperties.--rotation.value
+      - layers.front3.styleProperties.--rotation.value
+      - layers.back3.styleProperties.--rotation.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.slider8'
+  beatSkyFront:
+    targets:
+      - layers.front.src
+      - layers.frontcpy.src
+    transformFunction: |-
+      function(val) {
+        var c = 3;
+        var t = 1;
+        var i = Math.floor((val % (c * t)) / t) + 1;
+        return './assets/construction-work/'+ i +'/front.png';
+      }
+    source: signals.beat.beatNum
+  beatSkyBack:
+    targets:
+      - layers.back.src
+    transformFunction: |-
+      function(val) {
+        var c = 3;
+        var t = 1;
+        var i = Math.floor((val % (c * t)) / t) + 1;
+        return './assets/construction-work/'+ i +'/back.png';
+      }
+    source: signals.beat.beatNum
+  beatTreeFront:
+    targets:
+      - layers.front3cpy.src
+      - layers.front3.src
+    transformFunction: |-
+      function(val) {
+        var c = 3;
+        var t = 1;
+        var i = Math.floor((val % (c * t)) / t) + 1;
+        return './assets/trees/'+ i +'/front.png';
+      }
+    source: signals.beat.beatNum
+  beatTreeBack:
+    targets:
+      - layers.back3.src
+    transformFunction: |-
+      function(val) {
+        var c = 3;
+        var t = 1;
+        var i = Math.floor((val % (c * t)) / t) + 1;
+        return './assets/trees/'+ i +'/back.png';
+      }
+    source: signals.beat.beatNum
+  knobBlur:
+    targets: []
+    transformFunction: 'function (val) { return val.toString(); }'
+    source: 'midi:nk2.slider1'
+  beatBlur:
+    targets:
+      - layers.back.styleProperties.--blur.value
+      - layers.front.styleProperties.--blur.value
+      - layers.frontcpy.styleProperties.--blur.value
+      - layers.back3.styleProperties.--blur.value
+      - layers.back3.styleProperties.--blur.value
+      - layers.back3.styleProperties.--blur.value
+      - layers.front3.styleProperties.--blur.value
+      - layers.front3cpy.styleProperties.--blur.value
+    transformFunction: 'function (val) { return (val * 0.3).toString(); }'
+    source: signals.beat.result
+  toggleConsruction:
+    targets:
+      - layers.back.active
+      - layers.front.active
+      - layers.frontcpy.active
+    transformFunction: 'function (val, prev) { return val ? !prev : prev; }'
+    source: 'midi:nk2.r1'
+  toggleTree:
+    targets:
+      - layers.back3.active
+      - layers.front3cpy.active
+      - layers.front3.active
+    transformFunction: 'function (val, prev) { return !val ? !prev : prev; }'
+    source: 'midi:nk2.r1'
+layers:
+  back:
+    type: img
+    active: true
+    opacity: 100
+    zIndex: 0
+    layerStyles: |-
+      filter: blur(calc(1px * var(--blur))) grayscale(1);
+      transform: scale(calc(1 + (var(--blur) * 0.01)));
+    src: ./assets/construction-work/2/back.png
+    styleProperties:
+      - name: '--blur'
+        value: '0.007766449999921576'
+        default: '0'
+      - name: '--rotation'
+        value: '0'
+        default: '0'
+      - name: '--r'
+        value: calc((360deg / -127) * var(--rotation))
+        default: '0'
+  back3:
+    type: img
+    active: false
+    opacity: 100
+    zIndex: 0
+    layerStyles: |-
+      filter: blur(calc(1px * var(--blur))) grayscale(1);
+      transform: scale(calc(1 + (var(--blur) * 0.01)))
+                rotateX(var(--r));
+    src: ./assets/trees/2/back.png
+    styleProperties:
+      - name: '--blur'
+        value: '0.007766449999921576'
+        default: '0'
+      - name: '--rotation'
+        value: '0'
+        default: '0'
+  frontcpy:
+    type: img
+    active: true
+    opacity: 100
+    zIndex: 45
+    layerStyles: |-
+      filter: blur(calc(1px * var(--blur))) grayscale(1);
+      transform: scale(calc(1 + (var(--blur) * 0.01)))
+                  rotate(calc(-1deg * var(--rotation)));
+    src: ./assets/construction-work/2/front.png
+    styleProperties:
+      - name: '--blur'
+        value: '0.007766449999921576'
+        default: '0'
+      - name: '--rotation'
+        value: '0'
+        default: '0'
+  front3cpy:
+    type: img
+    active: false
+    opacity: 100
+    zIndex: 49
+    layerStyles: >-
+      filter: blur(calc(1px * var(--blur))) grayscale(1);
+
+      transform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg /
+      127) * var(--rotation)));
+    src: ./assets/trees/2/front.png
+    styleProperties:
+      - name: '--blur'
+        value: '0.007766449999921576'
+        default: '0'
+      - name: '--rotation'
+        value: '0'
+        default: '0'
+  canvas:
+    type: canvas
+    active: false
+    opacity: 100
+    zIndex: 50
+    layerStyles: ''
+    clear: 1
+    styleProperties: []
+    canvasLayers:
+      - props:
+          active:
+            type: boolean
+            required: true
+            default: true
+            allowNull: false
+        zIndex: 0
+        name: bottom
+        active: true
+        drawFunction: |-
+          function drawLayerCtx() {
+            /*
+              You can access the canvas 2d context with the global ctx
+            */
+          }
+      - props:
+          active:
+            type: boolean
+            required: true
+            default: true
+            allowNull: false
+          knobA:
+            type: number
+            required: true
+            default: 0
+            allowNull: false
+          knobB:
+            type: number
+            required: true
+            default: 0
+            allowNull: false
+          knobC:
+            type: number
+            required: true
+            default: 0
+            allowNull: false
+          sliderA:
+            type: number
+            required: true
+            default: 0
+            allowNull: false
+          sliderB:
+            type: number
+            required: true
+            default: 0
+            allowNull: false
+          sliderC:
+            type: number
+            required: true
+            default: 0
+            allowNull: false
+        zIndex: 50
+        name: mid
+        active: true
+        drawFunction: |-
+          function drawLayerCtx() {
+            var count = 128;
+            var rows = 8;
+            var col = 'hsl('+Math.round(layer.knobA * (1 / 127) * 360)+','+Math.round(layer.knobB * (1 / 127) * 100)+'%,'+Math.round(layer.knobC * (1 / 127) * 100)+'%)';
+            //var col = 'rgb('+Math.round(layer.knobA * (1 / 127) * 255)+','+Math.round(layer.knobB * (1 / 127) * 255)+','+Math.round(layer.knobC * (1 / 127) * 255)+')';
+            strokeStyle(col);
+            var i = 0;
+            grid(count, rows, function (x, y) {
+              lineWidth(frequency(i) * 0.025 * between(layer.sliderC * (1 / (127 / 16)),1,16));
+              polygone(x, y, timeDomain(i) * 0.1 * between(layer.sliderA,1,127), between(Math.round(layer.sliderB * (1 / (127 / 9))),3,9));
+              i++;
+            });
+          }
+        knobA: 22
+        knobB: 87
+        knobC: 47
+        sliderA: 61
+        sliderB: 38
+        sliderC: 3
+      - props:
+          active:
+            type: boolean
+            required: true
+            default: true
+            allowNull: false
+        zIndex: 100
+        name: top
+        active: true
+        drawFunction: |-
+          function drawLayerCtx() {
+            /*
+              You can access the canvas 2d context with the global ctx
+            */
+          }
+  front:
+    type: img
+    active: true
+    opacity: 100
+    zIndex: 100
+    layerStyles: |-
+      filter: blur(calc(1px * var(--blur))) grayscale(1);
+      transform: scale(calc(1 + (var(--blur) * 0.01)))
+                  rotate(calc(1deg * var(--rotation)));
+    src: ./assets/construction-work/2/front.png
+    styleProperties:
+      - name: '--blur'
+        value: '0.007766449999921576'
+        default: '0'
+      - name: '--rotation'
+        value: '0'
+        default: '0'
+  front3:
+    type: img
+    active: false
+    opacity: 100
+    zIndex: 100
+    layerStyles: >-
+      filter: blur(calc(1px * var(--blur))) grayscale(1);
+
+      transform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg /
+      -127) * var(--rotation)));
+    src: ./assets/trees/2/front.png
+    styleProperties:
+      - name: '--blur'
+        value: '0.007766449999921576'
+        default: '0'
+      - name: '--rotation'
+        value: '0'
+        default: '0'
