@@ -20,6 +20,23 @@ setups['demo-canvas'] = require('json-loader!yaml-loader!./setups/demo-canvas.ym
 setups['demo-3d-zeropaper'] = require('json-loader!yaml-loader!./setups/demo-3d-zeropaper.yml');
 
 
+function toArr(obj) {
+  var keys = Object.keys(obj);
+  return keys.map(function(key) {
+    obj[key].name = key;
+    return obj[key];
+  });
+}
+
+function setupArr(setup) {
+  return {
+    layers: toArr(setup.layers || {}),
+    mappings: toArr(setup.mappings || {}),
+    signals: toArr(setup.signals || {})
+  };
+}
+
+
 function localForageCallback(name) {
   return function(err) {
     if(err) console.error('localforage "%s" error', name, err);
@@ -27,7 +44,7 @@ function localForageCallback(name) {
 }
 
 function saveSetup(setupId, setup, done) {
-  return localForage.setItem('local-' + setupId, setup)
+  return localForage.setItem('local-' + setupId, setupArr(setup))
           .then(function() {
             done();
           })
