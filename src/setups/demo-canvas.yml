@@ -1,0 +1,45 @@
+signals:
+  beatA:
+    type: beat
+    defaultValue: 1
+    input: 120
+mappings: {}
+layers:
+  canvas:
+    type: canvas
+    active: true
+    opacity: 100
+    zIndex: 0
+    layerStyles: ''
+    clear: 1
+    styleProperties: []
+    canvasLayers:
+      - props:
+          active:
+            type: boolean
+            required: true
+            default: true
+            allowNull: false
+        zIndex: 50
+        name: lines
+        active: true
+        drawFunction: |-
+          function () {
+            var l = bufferLength();
+            var f = 0;
+            var k = 3;
+            var p = Math.max(1, k);
+            var d = Math.pow(2, p);
+
+            grid(l, l / d, function(...args) {
+              var ff = Math.round((l * 0.125) + (f * 0.125));
+              strokeStyle('hsl('+frequency(ff)+', 50%, 50%)');
+              var sides = Math.round(frequency(ff) * (1 / 10));
+              sides = Math.min(sides, 10);
+              sides = Math.max(sides, 3);
+              lineWidth(10 - sides);
+              circle(...args, timeDomain(ff) * 0.25);
+              polygone(...args, timeDomain(ff) + 50, sides);
+              f++;
+            });
+          }

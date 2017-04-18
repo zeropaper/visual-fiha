@@ -1,0 +1,312 @@
+signals:
+  beatA:
+    type: beat
+    defaultValue: 1
+    input: 85
+mappings:
+  knob1:
+    targets:
+      - layers.zero.parameters.knob1.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.knob1'
+  knob2:
+    targets:
+      - layers.zero.parameters.knob2.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.knob2'
+  knob3:
+    targets:
+      - layers.zero.parameters.knob3.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.knob3'
+  knob4:
+    targets:
+      - layers.zero.parameters.knob4.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.knob4'
+  slider1:
+    targets:
+      - layers.zero.parameters.slider1.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.slider1'
+  slider2:
+    targets:
+      - layers.zero.parameters.slider2.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.slider2'
+  slider3:
+    targets:
+      - layers.zero.parameters.slider3.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.slider3'
+  slider4:
+    targets:
+      - layers.zero.parameters.slider4.value
+    transformFunction: 'function(val) { return val.toString(); }'
+    source: 'midi:nk2.slider4'
+  beatResult:
+    targets:
+      - layers.zero.opacity
+    transformFunction: 'function(val) { return val; }'
+    source: signals.beatA.result
+  beatResultNeg:
+    targets:
+      - layers.zeropaperLogo.opacity
+    transformFunction: 'function(val) { return 100 - val; }'
+    source: signals.beatA.result
+  beatNumContructionPath:
+    targets:
+      - layers.bgk.src
+      - layers.bgk2.src
+    transformFunction: >-
+      function(val) { return './assets/construction-work/'+ ((val % 3) + 1)
+      +'/front.png'; }
+    source: signals.beatA.beatNum
+layers:
+  bgk:
+    type: img
+    active: true
+    opacity: 100
+    zIndex: 100
+    layerStyles: >-
+      filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01))
+      rotate(calc(0.05deg * var(--frametime)));
+    src: ./assets/construction-work/1/front.png
+    styleProperties: []
+  bgk2:
+    type: img
+    active: true
+    opacity: 100
+    zIndex: 200
+    layerStyles: >-
+      filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01))
+      rotateX(180deg) rotateY(180deg) rotate(calc(-0.05deg * var(--frametime)));
+    src: ./assets/construction-work/1/front.png
+    styleProperties: []
+  zero:
+    type: threejs
+    active: true
+    opacity: 52.69312499999994
+    zIndex: 1000
+    layerStyles: ''
+    currentCamera: defaultperspective
+    renderFunction: "function() {\n  // var helper = new THREE.AxisHelper(20);\n  // helper.name = 'axisHelper';\n  // layer.scene.add(helper);\n\n  // helper = new THREE.GridHelper(200);\n  // helper.name = 'gridHelper';\n  // layer.scene.add(helper);\n\n  function makeClones(object, count = 1) {\n    for (var c = 1; c < count; c++) {\n      var clone = object.clone();\n      clone.traverse(function(child) {\n        if (!child.material) return;\n        child.material = child.material.clone();\n        // child.material.wireframe = true; // provokes illegal operation \uD83D\uDE22\n      });\n      clone.name = 'clone' + (c + 1);\n      layer.scene.add(clone);\n    }\n  }\n\n  var fatView = layer.loaders.views.filter(v => v.model.name === 'fat')[0];\n  layer.listenToAndRun(fatView, 'change:object', function() {\n    var fatObject = fatView.object;\n    fatObject.traverse(function(child) {\n      if (child.material) child.material.side = THREE.DoubleSide;\n    });\n    makeClones(fatObject, 8);\n  });\n}"
+    updateFunction: |-
+      function() {
+        var screenState = layer.model.screenState;
+        var audio = screenState.audio;
+        var freq = audio.frequency;
+        var vol = audio.timeDomain;
+
+        var scale = freq[12] * 0.1;
+        var speed = 1000;
+        var dist = 200;
+        var deg = (screenState.frametime % (speed * 360) / speed);
+        var tilt = vol[4] - 127;
+
+        layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);
+        layer.camera.lookAt(layer.scene.position);
+
+        var fat = layer.scene.getObjectByName('fat');
+        fat.scale.set(scale + 1, scale + 1, scale + 1);
+        fat.rotation.set(Math.PI * 0.35, midi2rad(parameter('knob1', 0)), midi2rad(parameter('knob2', 0)));
+
+        function alterMaterials(c) {
+          return function(child) {
+            if (child.material && child.material.color) {
+              child.material.wireframe = true;
+              child.material.color = new THREE.Color('hsl('+ freq[c * 4] +', ' + parameter('slider1', 50) + '%, ' + parameter('slider2', 50) + '%)');
+            }
+          }
+        }
+
+        function applyClones(count = 1) {
+          var cap = midiMinMax(parameter('knob3', 0), 0, count);
+          for (var c = 0; c < count; c++) {
+            var clone = layer.scene.getObjectByName('clone' + (c + 1));
+            if (clone) {
+              if (cap < c) {
+                clone.visible = false;
+                return;
+              }
+
+              clone.visible = true;
+              clone.traverse(alterMaterials(c));
+
+              var s = fat.scale.toArray();
+              clone.scale.set(...s);
+
+              var r = fat.rotation.toArray();
+              clone.rotation.set(...r);
+
+              var p = fat.position.toArray();
+              p[Math.round(midiMinMax(parameter('slider3', 0), 0, 2))] = (c * vol[4] * 0.01 * (tilt * (c % 2 === 0 ? 1 : -1)));
+              clone.position.set(...p);
+            }
+          }
+        }
+        applyClones(8);
+      }
+    styleProperties: []
+    parameters:
+      - name: knob1
+        value: '63'
+        default: ''
+      - name: knob2
+        value: '63'
+        default: ''
+      - name: knob3
+        value: '63'
+        default: ''
+      - name: knob4
+        value: '63'
+        default: ''
+      - name: slider1
+        value: '63'
+        default: ''
+      - name: slider2
+        value: '63'
+        default: ''
+      - name: slider3
+        value: '63'
+        default: ''
+      - name: slider4
+        value: '63'
+        default: ''
+    geometries: []
+    lights:
+      - visible: true
+        type: ambient
+        name: defaultambient
+        intensity: 1
+        position:
+          x: 0
+          'y': 0
+          z: 0
+        rotation:
+          x: 0
+          'y': 0
+          z: 0
+        scale:
+          x: 0
+          'y': 0
+          z: 0
+        color:
+          r: 1
+          g: 1
+          b: 1
+      - visible: true
+        type: directonal
+        name: defaultdirectonal
+        intensity: 1
+        position:
+          x: 45
+          'y': 45
+          z: 45
+        rotation:
+          x: 0
+          'y': 0
+          z: 0
+        scale:
+          x: 0
+          'y': 0
+          z: 0
+        color:
+          r: 1
+          g: 1
+          b: 1
+        lookAt:
+          x: 0
+          'y': 0
+          z: 0
+    cameras:
+      - visible: true
+        type: perspective
+        name: defaultperspective
+        focus: 10
+        fov: 50
+        aspect: 1
+        near: 0.1
+        far: 2000
+        zoom: 1
+        position:
+          x: 35
+          'y': 35
+          z: 35
+        rotation:
+          x: 0
+          'y': 0
+          z: 0
+        scale:
+          x: 0
+          'y': 0
+          z: 0
+        lookAt:
+          x: 0
+          'y': 0
+          z: 0
+      - visible: true
+        type: orthographic
+        name: defaultortho
+        left: 80
+        right: 80
+        top: 60
+        bottom: 60
+        near: 0.1
+        far: 2000
+        position:
+          x: 35
+          'y': 35
+          z: 35
+        rotation:
+          x: 0
+          'y': 0
+          z: 0
+        scale:
+          x: 0
+          'y': 0
+          z: 0
+        lookAt:
+          x: 0
+          'y': 0
+          z: 0
+    materials: []
+    loaders:
+      - visible: true
+        type: obj
+        name: fat
+        path: ./assets/zeropaper/
+        src: zeropaper-concrete.obj
+        position:
+          x: 0
+          'y': 0
+          z: 0
+        rotation:
+          x: 0
+          'y': 0
+          z: 0
+        scale:
+          x: 0
+          'y': 0
+          z: 0
+  zeropaperLogo:
+    type: SVG
+    active: true
+    opacity: 47.30687500000006
+    zIndex: 1100
+    layerStyles: 'mix-blend-mode: overlay;'
+    svgStyles:
+      '#zeropaper': >-
+        fill: var(--fill-color); stroke: var(--stroke-color); stroke-width:
+        var(--stroke-width);
+    src: ./assets/zeropaper/zeropaper-fat.svg
+    styleProperties:
+      - name: '--fill-color'
+        value: white
+        default: white
+      - name: '--stroke-color'
+        value: none
+        default: none
+      - name: '--stroke-width'
+        value: 5px
+        default: 5px
