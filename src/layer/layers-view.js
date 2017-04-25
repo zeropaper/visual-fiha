@@ -26,12 +26,7 @@ var LayersView = View.extend({
     helper.attach(el, function(selected) {
       el.value = selected;
       helper.detach();
-    }).fill([
-      'default',
-      'img',
-      'SVG',
-      'canvas'
-    ]);
+    }).fill(Object.keys(LayerControlView.types));
   },
 
   _addLayer: function() {
