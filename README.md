@@ -37,6 +37,8 @@ An open source browser based VJing tool with MIDI support.
 
 # Installation
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/zeropaper/visual-fiha.svg)](https://greenkeeper.io/)
+
 [No need to install, open Google Chrome and enjoy.](https://zeropaper.github.io/visual-fiha)
 
 ## Seriously?
