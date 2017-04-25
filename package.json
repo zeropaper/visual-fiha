@@ -38,7 +38,7 @@
     "wdio": "latest",
     "wdio-mocha-framework": "^0.5.8",
     "wdio-selenium-standalone-service": "latest",
-    "wdio-spec-reporter": "0.0.5",
+    "wdio-spec-reporter": "0.1.0",
     "wdio-static-server-service": "latest",
     "webpack-dev-server": "^2.2.0"
   },
@@ -61,9 +61,9 @@
     "npm-run-all": "^4.0.0",
     "ramda": "^0.23.0",
     "rimraf": "^2.5.4",
-    "three": "^0.84.0",
+    "three": "^0.85.1",
     "webpack": "^2.2.1",
-    "worker-loader": "^0.7.1",
+    "worker-loader": "^0.8.0",
     "yaml-loader": "^0.4.0"
   }
 }
