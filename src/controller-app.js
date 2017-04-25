@@ -311,7 +311,6 @@ var AppRouter = require('ampersand-router').extend({
   },
 
   loadSetup: function(setupId) {
-    console.info('loadSetup', setupId);
     var router = this;
 
     function done(err, setup) {
@@ -322,7 +321,7 @@ var AppRouter = require('ampersand-router').extend({
       console.time();
       router._sendBootstrap(setup, function() {
         console.timeEnd();
-        router.view._setupEditor();
+        router.navigate('setup/' + setupId, {replace: false, trigger: false});
       });
     }
 
@@ -338,7 +337,7 @@ var AppRouter = require('ampersand-router').extend({
   },
 
   loadLocal: function(localId, done) {
-    var localforageView = this.view.localforageView;
+    var localforageView = this.view.menuView.localforageView;
     localforageView.loadLocal(localId, done);
   },
 

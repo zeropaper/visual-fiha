@@ -46,17 +46,15 @@ var LocalforageView = View.extend({
             .catch(done);
   },
   _restoreSetup: function() {
-    var controlView = this.parent;
     var id = 'local-' + this.query('[name=local-id]').value;
-    this.loadLocal(id, function(err, setup) {
-      if (err) throw err;
-      controlView.fromJSON(setup);
-    });
+    var router = this.parent.router;
+    router.loadSetup(id);
   },
   _saveSetup: function() {
     var id = 'local-' + this.query('[name=local-id]').value;
+    var router = this.parent.router;
     this.saveLocal(id, function() {
-      console.info('saved setup to local storage as ' + id);
+      router.navigate('setup/' + id, {trigger: false, replace: false});
     });
   }
 });
