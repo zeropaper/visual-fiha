@@ -50,7 +50,7 @@ var ScreenState = require('./screen/state');
 var MIDIAccessState = require('./midi/state');
 var Mappings = require('./mapping/data');
 var Tour = require('./controller/tour/index');
-
+var installSetups = require('./storage').installSetups;
 
 var DetailsView = require('./layer/details-view');
 var Settings = require('./controller/settings');
@@ -358,9 +358,11 @@ controllerSetup.el = document.querySelector('.controller');
 var vf = window.visualFiha = new AppRouter({
   setup: controllerSetup
 });
-vf.history.start({
-  root: location.pathname,
-  pushState: false
+installSetups(function(err) {
+  vf.history.start({
+    root: location.pathname,
+    pushState: false
+  });
 });
 
 
