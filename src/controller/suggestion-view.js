@@ -266,21 +266,23 @@ var SuggestionView = View.extend({
     view.el.style.visibility = 'hidden';
 
     setTimeout(function () {
-      if (!view.el || !view.el.parentNode || !view.inputEl) { return; }
+      var parentNode = view.el.parentNode;
+      if (!view.el || !parentNode || !view.inputEl) { return; }
       var ipos = view.inputEl.getBoundingClientRect();
       var bpos = view.el.getBoundingClientRect();
 
-      if (ipos.top > view.el.parentNode.clientHeight * 0.5) {
-        view.el.style.maxHeight = Math.min(ipos.top, view.el.parentNode.clientHeight * 0.33) + 'px';
+      // determine which of above or below has most available space and set position and max-height accordingly
+      if (ipos.top > parentNode.clientHeight * 0.5) {
+        view.el.style.maxHeight = Math.max(ipos.top, parentNode.clientHeight * 0.33) + 'px';
         view.el.style.top = ((ipos.top - view.el.clientHeight) - 3) + 'px';
       }
       else {
-        view.el.style.maxHeight = Math.min(ipos.bottom, view.el.parentNode.clientHeight * 0.33) + 'px';
+        view.el.style.maxHeight = Math.max(ipos.bottom, parentNode.clientHeight * 0.33) + 'px';
         view.el.style.top = (ipos.bottom + 3) + 'px';
       }
 
       var s = window.getComputedStyle(view.inputEl);
-      var exceed = view.el.parentNode && (bpos.left + bpos.width) > view.el.parentNode.clientWidth;
+      var exceed = parentNode && (bpos.left + bpos.width) > parentNode.clientWidth;
       view.el.style.textAlign = s.textAlign;
       if (s.textAlign === 'right' || exceed) {
         view.el.style.left = (ipos.left - (bpos.width - ipos.width)) + 'px';
