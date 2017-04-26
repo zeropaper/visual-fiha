@@ -8,7 +8,7 @@ var dirname = require('path').dirname;
 var webpack = require('webpack');
 
 var srcPath = resolve(__dirname, 'src');
-var destPath = resolve(__dirname, 'docs');
+var destPath = resolve(__dirname, 'gh-pages');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 var readFileSync = fs.readFileSync;
@@ -125,7 +125,7 @@ module.exports = function(env) {
 
     output: {
       path: destPath,
-      filename: '[name]-build.js'
+      filename: '[name]/build.js'
     },
 
     devtool: env.prod ? 'source-map' : 'inline-source-map',
