@@ -33,6 +33,11 @@ function compileFunction(func) {
     var frametime = layer ? layer.frametime : 0;
     var audio = layer ? layer.audio : {};
 
+    var getLoaderViewByName = function(name) {
+      var filtered = layer.loaders.views.filter(v => v.model.name === name);
+      return filtered.length ? filtered[0] : false;
+    };
+
     var bufferLength = function() {
       return ((layer.audio || {}).bufferLength) || 128;
     };
@@ -104,7 +109,7 @@ function makeThreeObjectInstance(model) {
   if (model.material) {
     if (model.material.color) {
       var color = model.material.color;
-      materialOptions.color = new THREE.Color('rgb('+Math.round(color.r)+', '+Math.round(color.g)+', '+Math.round(color.b)+')');
+      materialOptions.color = new THREE.Color(color.r, color.g, color.b);
     }
   }
 
@@ -193,6 +198,12 @@ var ThreeLoader = ThreeObject.extend({
     }
   },
 
+  addObj: function() {
+    var obj = this.object;
+    this.scene.add(obj);
+    return this;
+  },
+
   initialize: function() {
     ThreeObject.prototype.initialize.apply(this, arguments);
     var view = this;
@@ -202,7 +213,17 @@ var ThreeLoader = ThreeObject.extend({
       if (prev.object) {
         prev.object.remove();
       }
-      view.scene.add(view.object);
+      var obj = view.object;
+
+      var model = view.model;
+      if (model.material) {
+        if (model.material.color && obj.material) {
+          var color = model.material.color;
+          obj.material.color.setRGB(color.r, color.g, color.b);
+        }
+      }
+
+      view.addObj();
     });
 
     view.listenToAndRun(view.model, 'change:src change:path', function() {
@@ -236,10 +257,19 @@ var ThreeLoader = ThreeObject.extend({
 });
 
 
+function applyTransformations(model, object) {
+  var s = model.scale;
+  var r = model.rotation;
+  var p = model.position;
+  object.scale.set(s.x, s.y, s.z);
+  object.rotation.set(r.x, r.y, r.z);
+  object.position.set(p.x, p.y, p.z);
+}
+
 ThreeLoader.types = {};
 ThreeLoader.types.obj = ThreeLoader.extend({
   load: function(done, progress = noop, error = noop) {
-    var layer = this;
+    var view = this;
     var model = this.model;
 
     var objLoader = new THREE.OBJLoader();
@@ -247,7 +277,8 @@ ThreeLoader.types.obj = ThreeLoader.extend({
 
     function objLoaded(object) {
       object.name = model.name;
-      layer.loaded = object;
+      view.loaded = object;
+      applyTransformations(model, object);
       done();
     }
 
@@ -260,15 +291,21 @@ ThreeLoader.types.obj = ThreeLoader.extend({
 ThreeLoader.types.objmtl = ThreeLoader.extend({
   derived: {
     object: {
-      deps: [],
+      deps: ['loaded'],
       fn: function() {
         return this.loaded ? this.loaded.object : false;
       }
     }
   },
 
+  addObj: function() {
+    var obj = this.object;
+    this.scene.add(obj);
+    return this;
+  },
+
   load: function(done, progress = noop, error = noop) {
-    var layer = this;
+    var view = this;
     var model = this.model;
 
     var objLoader = new THREE.OBJLoader();
@@ -276,7 +313,8 @@ ThreeLoader.types.objmtl = ThreeLoader.extend({
 
     function objLoaded(object) {
       object.name = model.name;
-      layer.loaded = {object: object, materials: layer.loaded.materials};
+      view.set('loaded', {object: object, materials: view.loaded.materials}, {silent: false, trigger: true});
+      applyTransformations(model, object);
       done();
     }
 
@@ -286,7 +324,7 @@ ThreeLoader.types.objmtl = ThreeLoader.extend({
     function mtlLoaded(materials) {
       materials.preload();
       objLoader.setMaterials(materials);
-      layer.set('loaded', {materials: materials, object: null}, {silent: true});
+      view.set('loaded', {materials: materials, object: null}, {silent: true});
       objLoader.load(model.src, objLoaded, progress, error);
     }
 
