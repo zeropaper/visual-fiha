@@ -1,0 +1,158 @@
+signals: {}
+mappings: {}
+layers:
+  cubes:
+    type: threejs
+    active: true
+    opacity: 100
+    zIndex: 1000
+    layerStyles: ''
+    currentCamera: perspective
+    renderFunction: |-
+      function() {
+        var helper = new THREE.AxisHelper(20);
+        helper.name = 'axisHelper';
+        layer.scene.add(helper);
+
+        helper = new THREE.GridHelper(200);
+        helper.name = 'gridHelper';
+        layer.scene.add(helper);
+        console.info(layer.scene.children.map(o => o.name));
+      }
+    updateFunction: |-
+      function() {
+        var screenState = layer.model.screenState;
+        var audio = screenState.audio;
+        var freq = audio.frequency;
+        var vol = audio.timeDomain;
+
+        var scale = freq[12] * 0.1;
+        var speed = 1000;
+        var dist = 80;
+        var deg = (screenState.frametime % (speed * 360) / speed);
+        var tilt = vol[4] - 127;
+
+        layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);
+        layer.camera.lookAt(layer.scene.position);
+        /*
+        */
+      }
+    styleProperties: []
+    parameters: []
+    geometries:
+      - visible: true
+        type: box
+        name: box1
+        width: 55
+        height: 25
+        depth: 5
+        position:
+          x: 40
+          'y': 0
+          z: 10
+        rotation:
+          x: 1
+          'y': 0.2
+          z: 0
+        scale:
+          x: 1.6
+          'y': 1
+          z: 1
+    lights:
+      - visible: true
+        type: ambient
+        name: ambient
+        intensity: 0.1
+        position:
+          x: 0
+          'y': 0
+          z: 0
+        rotation:
+          x: 0
+          'y': 0
+          z: 0
+        scale:
+          x: 1
+          'y': 1
+          z: 1
+        color:
+          r: 1
+          g: 0
+          b: 0
+      - visible: true
+        type: directonal
+        name: directonal
+        intensity: 0.1
+        position:
+          x: 45
+          'y': 45
+          z: 45
+        rotation:
+          x: 0
+          'y': 0
+          z: 0
+        scale:
+          x: 0
+          'y': 0
+          z: 0
+        color:
+          r: 0
+          g: 0
+          b: 1
+        lookAt:
+          x: 0
+          'y': 0
+          z: 0
+    cameras:
+      - visible: true
+        type: perspective
+        name: persp
+        focus: 10
+        fov: 50
+        aspect: 1
+        near: 0.1
+        far: 2000
+        zoom: 1
+        position:
+          x: 35
+          'y': 35
+          z: 35
+        rotation:
+          x: 0
+          'y': 0
+          z: 0
+        scale:
+          x: 0
+          'y': 0
+          z: 0
+        lookAt:
+          x: 0
+          'y': 0
+          z: 0
+      - visible: true
+        type: orthographic
+        name: ortho
+        left: 80
+        right: 80
+        top: 60
+        bottom: 60
+        near: 0.1
+        far: 2000
+        position:
+          x: 35
+          'y': 35
+          z: 35
+        rotation:
+          x: 0
+          'y': 0
+          z: 0
+        scale:
+          x: 0
+          'y': 0
+          z: 0
+        lookAt:
+          x: 0
+          'y': 0
+          z: 0
+    materials: []
+    loaders: []

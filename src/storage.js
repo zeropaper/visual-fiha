@@ -18,6 +18,7 @@ setups.algorave = require('json-loader!yaml-loader!./setups/algorave.yml');
 setups['demo-css'] = require('json-loader!yaml-loader!./setups/demo-css.yml');
 setups['demo-canvas'] = require('json-loader!yaml-loader!./setups/demo-canvas.yml');
 setups['demo-3d-zeropaper'] = require('json-loader!yaml-loader!./setups/demo-3d-zeropaper.yml');
+setups['demo-3d-cubes'] = require('json-loader!yaml-loader!./setups/demo-3d-cubes.yml');
 
 
 function toArr(obj) {
