@@ -1,0 +1,62 @@
+signals: {}
+mappings: {}
+layers:
+  schatten:
+    type: threejs
+    active: true
+    opacity: 52.69312499999994
+    zIndex: 1000
+    layerStyles: ''
+    currentCamera: null
+    renderFunction: |-
+      function() {
+        var helper = new THREE.AxisHelper(20);
+        helper.name = 'axisHelper';
+        layer.scene.add(helper);
+
+        helper = new THREE.GridHelper(200);
+        helper.name = 'gridHelper';
+        layer.scene.add(helper);
+
+        // var loaderView = getLoaderViewByName('schatten');
+        // layer.listenToAndRun(loaderView, 'change:object', function() {
+        //   var obj = loaderView.object;
+        //   console.info('schatten', obj, layer.scene.children);
+        //   if (!obj) return;
+        //   obj.traverse(function(child) {
+        //     console.info('schatten child', child.name, !!child.material);
+        //     // if (child.material) child.material.color.set(0xffffff);
+        //   });
+        // });
+      }
+    updateFunction: |-
+      function() {
+        var screenState = layer.model.screenState;
+        var audio = screenState.audio;
+        var freq = audio.frequency;
+        var vol = audio.timeDomain;
+
+        var scale = freq[12] * 0.1;
+        var speed = 1000;
+        var dist = 100;
+        var deg = (screenState.frametime % (speed * 360) / speed);
+        var tilt = vol[4] - 127;
+
+        layer.camera.position.set(Math.cos(deg) * dist, 30, Math.sin(deg) * dist);
+        layer.camera.lookAt(new THREE.Vector3(0, 15, 0));
+      }
+    styleProperties: []
+    parameters: []
+    geometries: []
+    lights: []
+    cameras: []
+    materials: []
+    loaders:
+      - name: schatten
+        type: json
+        path: ./assets/schatten/
+        src: 'schatten.json'
+        scale:
+          x: 10
+          'y': 10
+          z: 10
