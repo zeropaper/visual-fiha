@@ -10,14 +10,14 @@ var Collection = require('ampersand-collection');
  *                                     *
 \***************************************/
 
-var Vector3 = State.extend({
+var Euler = State.extend({
   props: {
     x: ['number', true, 0],
     y: ['number', true, 0],
     z: ['number', true, 0]
   }
 });
-var Point = State.extend({
+var Vector3 = State.extend({
   props: {
     x: ['number', true, 0],
     y: ['number', true, 0],
@@ -67,8 +67,8 @@ var ThreeState = State.extend({
     name: ['string', true, null]
   },
   children: {
-    position: Point,
-    rotation: Vector3,
+    position: Vector3,
+    rotation: Euler,
     scale: Vector3
   }
 });
@@ -306,11 +306,11 @@ LightState.types.directonal = LightState.extend({
   signature: [],
   threeClassName: 'DirectionalLight',
   children: {
-    lookAt: Point
+    lookAt: Vector3
   }
 });
 // HemisphereLight
-// PointLight
+// Vector3Light
 // RectAreaLight
 // SpotLight
 
@@ -334,7 +334,7 @@ var LightCollection = Collection.extend({
 \***************************************/
 var CameraState = ThreeState.extend({
   children: {
-    lookAt: Point
+    lookAt: Vector3
   }
 });
 
@@ -388,7 +388,10 @@ var CameraCollection = Collection.extend({
 var LoaderState = ThreeState.extend({
   props: {
     path: ['string', false, ''],
-    src: ['string', true, '']
+    src: ['string', true, ''],
+  },
+  children: {
+    material: MaterialState
   }
 });
 
@@ -464,7 +467,11 @@ module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
 
   initialize: function(attrs) {
     ScreenLayerState.prototype.initialize.apply(this, arguments);
-    if (!this.lights.length && !attrs.lights) {
+    var noLights = !this.lights.length && (!attrs.lights || !attrs.lights.length);
+    var noCameras = !this.cameras.length && (!attrs.cameras || !attrs.cameras.length);
+    var noGeometries = !this.geometries.length && (!attrs.geometries || !attrs.geometries.length);
+
+    if (noLights) {
       this.lights.add([
         {
           type: 'ambient',
@@ -497,7 +504,7 @@ module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
       ]);
     }
 
-    if (!this.cameras.length && !attrs.cameras) {
+    if (noCameras) {
       this.cameras.add([
         {
           type: 'perspective',
@@ -530,7 +537,7 @@ module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
       ]);
     }
 
-    if (!this.geometries.length && !attrs.geometries && !attrs.loaders) {
+    if (noGeometries && !attrs.loaders) {
       this.geometries.add([
         {
           type: 'box',

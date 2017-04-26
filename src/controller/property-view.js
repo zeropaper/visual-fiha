@@ -120,7 +120,7 @@ var PropertyView = View.extend({
   commands: {
     'click .prop-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
     'change [name="value"]': 'propChange _handleChange',
-    // 'click .prop-value-reset button': 'resetProp _handleReset',
+    'click .prop-value-reset button': 'propChange _handleReset',
   },
 
   _handleRemoveMappingTarget: function() {
@@ -141,9 +141,14 @@ var PropertyView = View.extend({
     };
   },
 
-  // _handleReset: function() {
-  //   this.parent.model.unset(this.model.name);
-  // },
+  _handleReset: function() {
+    var parent = this.model.collection.parent.model;
+    return {
+      path: parent.modelPath || objectPath(parent),
+      property: this.model.name,
+      value: this.model.default
+    };
+  },
 
   events: {
     'focus [name="mapping-name"]': '_suggestMapping',

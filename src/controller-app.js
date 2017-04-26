@@ -50,7 +50,7 @@ var ScreenState = require('./screen/state');
 var MIDIAccessState = require('./midi/state');
 var Mappings = require('./mapping/data');
 var Tour = require('./controller/tour/index');
-
+var installSetups = require('./storage').installSetups;
 
 var DetailsView = require('./layer/details-view');
 var Settings = require('./controller/settings');
@@ -311,7 +311,6 @@ var AppRouter = require('ampersand-router').extend({
   },
 
   loadSetup: function(setupId) {
-    console.info('loadSetup', setupId);
     var router = this;
 
     function done(err, setup) {
@@ -322,7 +321,7 @@ var AppRouter = require('ampersand-router').extend({
       console.time();
       router._sendBootstrap(setup, function() {
         console.timeEnd();
-        router.view._setupEditor();
+        router.navigate('setup/' + setupId, {replace: false, trigger: false});
       });
     }
 
@@ -338,7 +337,7 @@ var AppRouter = require('ampersand-router').extend({
   },
 
   loadLocal: function(localId, done) {
-    var localforageView = this.view.localforageView;
+    var localforageView = this.view.menuView.localforageView;
     localforageView.loadLocal(localId, done);
   },
 
@@ -359,9 +358,11 @@ controllerSetup.el = document.querySelector('.controller');
 var vf = window.visualFiha = new AppRouter({
   setup: controllerSetup
 });
-vf.history.start({
-  root: location.pathname,
-  pushState: false
+installSetups(function(err) {
+  vf.history.start({
+    root: location.pathname,
+    pushState: false
+  });
 });
 
 

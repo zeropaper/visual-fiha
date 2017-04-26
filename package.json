@@ -13,8 +13,10 @@
   },
   "scripts": {
     "test": "karma start ./test/karma.conf.js --single-run",
-    "clean": "rimraf docs",
-    "prebuild": "npm run clean && mkdir docs && cp -r assets docs/",
+    "clean": "rimraf gh-pages",
+    "precopy-assets": "mkdir -p gh-pages",
+    "copy-assets": "cp -r assets gh-pages/",
+    "prebuild": "npm run clean && npm run copy-assets",
     "build": "webpack --env.prod",
     "postinstall": "npm run build",
     "prerun:dev": "npm run prebuild",
@@ -23,8 +25,8 @@
     "run:wdio": "wdio ./test-e2e/wdio.conf.js",
     "run:dev": "npm-run-all --parallel run:webpack run:karma",
     "test:e2e": "npm-run-all build run:wdio",
-    "prestage-master": "npm run build",
-    "stage-master": "git add docs/ && git commit --allow-empty -m \"update builds\" && git rebase -i"
+    "pregh-pages": "npm run clean && git clone git://github.com/zeropaper/visual-fiha.git --branch gh-pages gh-pages",
+    "gh-pages": "npm run copy-assets && git commit --allow-empty -m \"update gh-pages\" && echo \"You can now 'push origin gh-pages'\""
   },
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",

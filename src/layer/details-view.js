@@ -109,7 +109,7 @@ var StylePropertyView = View.extend({
   commands: {
     'click .prop-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
     'change [name="value"]': 'propChange _handleChange',
-    // 'click .prop-value-reset button': 'resetProp _handleReset',
+    'click .prop-value-reset button': 'propChange _handleReset',
   },
 
   _handleRemoveMappingTarget: function() {
@@ -126,6 +126,14 @@ var StylePropertyView = View.extend({
       path: objectPath(this.model),
       property: 'value',
       value: this.query('[name="value"]').value
+    };
+  },
+
+  _handleReset: function() {
+    return {
+      path: objectPath(this.model),
+      property: 'value',
+      value: this.model.default
     };
   },
 

@@ -18,6 +18,7 @@ setups.algorave = require('json-loader!yaml-loader!./setups/algorave.yml');
 setups['demo-css'] = require('json-loader!yaml-loader!./setups/demo-css.yml');
 setups['demo-canvas'] = require('json-loader!yaml-loader!./setups/demo-canvas.yml');
 setups['demo-3d-zeropaper'] = require('json-loader!yaml-loader!./setups/demo-3d-zeropaper.yml');
+setups['demo-3d-cubes'] = require('json-loader!yaml-loader!./setups/demo-3d-cubes.yml');
 
 
 function toArr(obj) {
@@ -29,6 +30,7 @@ function toArr(obj) {
 }
 
 function setupArr(setup) {
+  setup = setup || {};
   return {
     layers: toArr(setup.layers || {}),
     mappings: toArr(setup.mappings || {}),
@@ -36,12 +38,6 @@ function setupArr(setup) {
   };
 }
 
-
-function localForageCallback(name) {
-  return function(err) {
-    if(err) console.error('localforage "%s" error', name, err);
-  };
-}
 
 function saveSetup(setupId, setup, done) {
   return localForage.setItem('local-' + setupId, setupArr(setup))
@@ -51,15 +47,19 @@ function saveSetup(setupId, setup, done) {
           .catch(done);
 }
 
-function registerSetups(setupIds) {
-  Object.keys(setups).forEach(function (setupId) {
-    // if (setupIds.indexOf('local-' + setupId) > -1) return;
-    saveSetup(setupId, setups[setupId], localForageCallback(setupId));
-  });
-}
-
-localForage.keys()
-            .then(registerSetups)
-            .catch(localForageCallback('keys'));
+localForage.installSetups = function(done) {
+  done = typeof done === 'function' ? done : function() { console.info('...finished'); };
+  var funcs = Object.keys(setups)
+    .map(setupId => {
+      return function(done) {
+        saveSetup(setupId, setups[setupId], function(err) {
+          if (err) return done(err);
+          if (funcs.length) return funcs.shift()(done);
+          done();
+        });
+      };
+    });
+  funcs.shift()(done);
+};
 
 module.exports = localForage;
