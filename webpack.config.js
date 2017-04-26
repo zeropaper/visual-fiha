@@ -125,7 +125,7 @@ module.exports = function(env) {
 
     output: {
       path: destPath,
-      filename: '[name]/build.js'
+      filename: '[name]-build.js'
     },
 
     devtool: env.prod ? 'source-map' : 'inline-source-map',
