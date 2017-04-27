@@ -40,10 +40,10 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     return this;
   },
 
-  updateProperties: function() {
+  updateParameters: function() {
     if (!this.model.active || !this.el) return this;
-    this.model.styleProperties.forEach(function(styleProp) {
-      this.setProperty(styleProp.name, styleProp.value);
+    this.model.parameters.forEach(function(styleProp) {
+      this.setProperty('--' + styleProp.name, styleProp.value);
     }, this);
     return this;
   },
@@ -52,22 +52,22 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     if (!this.el || this.el.innerHTML === this.model.content) return this;
 
     this.el.innerHTML = this.model.content;
-    this.updateStyles().updateProperties();
+    this.updateStyles().updateParameters();
   },
 
   initialize: function() {
     ScreenLayerView.prototype.initialize.apply(this, arguments);
-    this.updateContent().updateStyles().updateProperties();
+    this.updateContent().updateStyles().updateParameters();
 
     this.listenTo(this.model, 'change:content', this.updateContent);
     this.on('change:el', this.updateContent);
 
     this.listenToAndRun(this.model, 'change:svgStyles', this.updateStyles);
-    this.listenToAndRun(this.model.styleProperties, 'add remove change', this.updateProperties);
+    this.listenToAndRun(this.model.parameters, 'add remove change', this.updateParameters);
   },
 
-  addRule: function(selector, properties) {
-    ScreenLayerView.prototype.addRule.call(this, selector, properties);
+  addRule: function(selector, parameters) {
+    ScreenLayerView.prototype.addRule.call(this, selector, parameters);
     return this;
   }
 });

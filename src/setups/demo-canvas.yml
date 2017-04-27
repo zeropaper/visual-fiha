@@ -14,12 +14,11 @@ layers:
     clear: 1
     styleProperties: []
     canvasLayers:
-      - props:
-          active:
+      - parameters:
+          - name: 'active'
             type: boolean
             required: true
             default: true
-            allowNull: false
         zIndex: 50
         name: lines
         active: true

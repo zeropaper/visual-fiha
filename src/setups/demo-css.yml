@@ -36,16 +36,16 @@ mappings:
     source: 'midi:nk2.slider3'
   slider7Str:
     targets:
-      - layers.frontcpy.styleProperties.--rotation.value
-      - layers.front3cpy.styleProperties.--rotation.value
+      - layers.frontcpy.parameters.--rotation.value
+      - layers.front3cpy.parameters.--rotation.value
     transformFunction: 'function(val) { return val.toString(); }'
     source: 'midi:nk2.slider7'
   slider8Str:
     targets:
-      - layers.back.styleProperties.--rotation.value
-      - layers.front.styleProperties.--rotation.value
-      - layers.front3.styleProperties.--rotation.value
-      - layers.back3.styleProperties.--rotation.value
+      - layers.back.parameters.--rotation.value
+      - layers.front.parameters.--rotation.value
+      - layers.front3.parameters.--rotation.value
+      - layers.back3.parameters.--rotation.value
     transformFunction: 'function(val) { return val.toString(); }'
     source: 'midi:nk2.slider8'
   beatSkyFront:
@@ -100,14 +100,14 @@ mappings:
     source: 'midi:nk2.slider1'
   beatBlur:
     targets:
-      - layers.back.styleProperties.--blur.value
-      - layers.front.styleProperties.--blur.value
-      - layers.frontcpy.styleProperties.--blur.value
-      - layers.back3.styleProperties.--blur.value
-      - layers.back3.styleProperties.--blur.value
-      - layers.back3.styleProperties.--blur.value
-      - layers.front3.styleProperties.--blur.value
-      - layers.front3cpy.styleProperties.--blur.value
+      - layers.back.parameters.--blur.value
+      - layers.front.parameters.--blur.value
+      - layers.frontcpy.parameters.--blur.value
+      - layers.back3.parameters.--blur.value
+      - layers.back3.parameters.--blur.value
+      - layers.back3.parameters.--blur.value
+      - layers.front3.parameters.--blur.value
+      - layers.front3cpy.parameters.--blur.value
     transformFunction: 'function (val) { return (val * 0.3).toString(); }'
     source: signals.beat.result
   toggleConsruction:
@@ -134,14 +134,14 @@ layers:
       filter: blur(calc(1px * var(--blur))) grayscale(1);
       transform: scale(calc(1 + (var(--blur) * 0.01)));
     src: ./assets/construction-work/2/back.png
-    styleProperties:
-      - name: '--blur'
+    parameters:
+      - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
-      - name: '--rotation'
+      - name: 'rotation'
         value: '0'
         default: '0'
-      - name: '--r'
+      - name: 'r'
         value: calc((360deg / -127) * var(--rotation))
         default: '0'
   back3:
@@ -154,11 +154,11 @@ layers:
       transform: scale(calc(1 + (var(--blur) * 0.01)))
                 rotateX(var(--r));
     src: ./assets/trees/2/back.png
-    styleProperties:
-      - name: '--blur'
+    parameters:
+      - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
-      - name: '--rotation'
+      - name: 'rotation'
         value: '0'
         default: '0'
   frontcpy:
@@ -171,11 +171,11 @@ layers:
       transform: scale(calc(1 + (var(--blur) * 0.01)))
                   rotate(calc(-1deg * var(--rotation)));
     src: ./assets/construction-work/2/front.png
-    styleProperties:
-      - name: '--blur'
+    parameters:
+      - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
-      - name: '--rotation'
+      - name: 'rotation'
         value: '0'
         default: '0'
   front3cpy:
@@ -189,11 +189,11 @@ layers:
       transform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg /
       127) * var(--rotation)));
     src: ./assets/trees/2/front.png
-    styleProperties:
-      - name: '--blur'
+    parameters:
+      - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
-      - name: '--rotation'
+      - name: 'rotation'
         value: '0'
         default: '0'
   canvas:
@@ -203,7 +203,7 @@ layers:
     zIndex: 50
     layerStyles: ''
     clear: 1
-    styleProperties: []
+    parameters: []
     canvasLayers:
       - props:
           active:
@@ -304,11 +304,11 @@ layers:
       transform: scale(calc(1 + (var(--blur) * 0.01)))
                   rotate(calc(1deg * var(--rotation)));
     src: ./assets/construction-work/2/front.png
-    styleProperties:
-      - name: '--blur'
+    parameters:
+      - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
-      - name: '--rotation'
+      - name: 'rotation'
         value: '0'
         default: '0'
   front3:
@@ -322,10 +322,10 @@ layers:
       transform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg /
       -127) * var(--rotation)));
     src: ./assets/trees/2/front.png
-    styleProperties:
-      - name: '--blur'
+    parameters:
+      - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
-      - name: '--rotation'
+      - name: 'rotation'
         value: '0'
         default: '0'

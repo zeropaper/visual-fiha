@@ -2,7 +2,7 @@
 var ScreenLayerState = require('./../state');
 var State = require('ampersand-state');
 var Collection = require('ampersand-collection');
-
+var ParameterCollection = require('./../../parameter/collection');
 
 /***************************************\
  *                                     *
@@ -423,8 +423,7 @@ module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
   },
 
   collections: {
-    parameters: ScreenLayerState.PropertyCollection,
-    styleProperties: ScreenLayerState.PropertyCollection,
+    parameters: ParameterCollection,
     //
     geometries: GeometryCollection,
     lights: LightCollection,

@@ -324,8 +324,11 @@ input.gutter-vertical {
   margin-bottom: var(--spacing);
 }
 
-.column > input:not([type=checkbox]):not([type=radio]) {
+.column > input:not([type=checkbox]):not([type=radio]),
+.column > select,
+.column > textarea {
   width: 100%;
+  /* margin: calc(0 - var(--spacing)); */
 }
 .column > label:after {
   content: ':';
@@ -673,17 +676,17 @@ header h3 span:after {
 
 .object-prop {}
 
-.prop-name {
+.parameter-name {
   width: 120px;}
 
-.prop-value {
+.parameter-value {
   width: 100px;
 }
-.prop-value input {
+.parameter-value input {
   margin: auto;
   max-width: 100%;
 }
-.prop-toggle-btn {
+.parameter-toggle-btn {
   width: 100%;
 }
 

@@ -1,6 +1,6 @@
 'use strict';
-var State = require('ampersand-state');
 var Collection = require('ampersand-collection');
+var ParameterCollection = require('./../../parameter/collection');
 var ScreenLayerState = require('./../state');
 var mockedCtx = require('./mocked-canvas-2d-context');
 var compileFunction = require('./compile-draw-function');
@@ -10,53 +10,20 @@ function drawLayerCtx() {
   */
 }
 
-var CanvasLayer = State.extend({
-  scripts: require('./scripts'),
-
+var CanvasLayer = ScreenLayerState.extend({
   idAttribute: 'name',
   cache: {},
 
   props: {
-    zIndex: ['number', true, 0],
-    name: ['string', true, null],
-    active: ['boolean', true, true],
     drawFunction: ['any', true, function() { return drawLayerCtx; }]
   },
 
-  serialize: function() {
-    var obj = State.prototype.serialize.apply(this, arguments);
-    var returned = {};
-    var propName;
-
-
-    var props = this.serializationProps.props || [];
-    if (props.length) {
-      returned.props = {};
-    }
-
-    // var propName;
-    var def = this.constructor.prototype._definition;
-    for (propName in obj) {
-      returned[propName] = obj[propName];
-
-      if (props.indexOf(propName) > -1) {
-        returned.props[propName] = def[propName];
-      }
-    }
-
-    var type = typeof this.drawFunction;
-    if (type === 'function') {
-      returned.drawFunction = this.drawFunction.toString();
-    }
-    else if (type === 'string') {
-      returned.drawFunction = this.drawFunction;
-    }
-    returned.name = this.name;
-    return returned;
+  collections: {
+    parameters: ParameterCollection
   },
 
   toJSON: function(...args) {
-    return this.serialize(...args);
+    return this.toJSON(...args);
   },
 
   derived: {
@@ -71,7 +38,7 @@ var CanvasLayer = State.extend({
             'draw'
           ].indexOf(key) < 0;
         });
-
+        console.info('targets for %s', this.name, targets);
         return {
           source: [],
           target: targets
@@ -140,24 +107,12 @@ var CanvasLayer = State.extend({
   }
 });
 
-var _CanvasLayersCache = {};
 var CanvasLayers = Collection.extend({
-  mainIndex: CanvasLayer.prototype.idAttribute,
-
+  mainIndex: 'name',
   comparator: 'zIndex',
 
   model: function (attrs, options) {
-    var def = {
-      props: attrs.props || {},
-      serializationProps: {
-        props: [].concat([
-          'active',
-        ], Object.keys(attrs.props || {})),
-      }
-    };
-    var Constructor = _CanvasLayersCache[attrs.name] || CanvasLayer.extend(def);
-    _CanvasLayersCache[attrs.name] = Constructor;
-    var inst =  new Constructor(attrs, options);
+    var inst =  new CanvasLayer(attrs, options);
     if (options.init === false) inst.initialize();
     return inst;
   }
@@ -165,8 +120,17 @@ var CanvasLayers = Collection.extend({
 
 
 module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
-  props: {
-    clear: ['number', true, 1]
+  baseParameters: ScreenLayerState.prototype.baseParameters.concat([
+    {name: 'clear', type: 'number', default: 1}
+  ]),
+
+  derived: {
+    clear: {
+      deps: ['parameters.clear'],
+      fn: function() {
+        return this.parameters.getValue('clear');
+      }
+    }
   },
 
   collections: {

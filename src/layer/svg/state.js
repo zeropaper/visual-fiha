@@ -19,7 +19,7 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
           source: [],
           target: [
             'active',
-            'styleProperties'
+            'parameters'
           ]
         };
       }

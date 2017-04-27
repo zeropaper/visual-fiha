@@ -1,22 +1,21 @@
 'use strict';
 var assign = require('lodash.assign');
 var View = require('./../controller/control-view');
-var objectPath = require('./../utils/object-path');
 
-var PropertyView = View.extend({
+var ParamView = View.extend({
   template: `
-    <div class="columns object-prop prop-type-default">
-      <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow prop-value-reset">
+    <div class="columns object-prop parameter-type-default">
+      <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow parameter-value-reset">
         <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
-      <div class="column prop-value">
+      <div class="column parameter-value">
         <input name="value" type="text" />
       </div>
-      <div class="column prop-mapping-clear no-grow">
+      <div class="column parameter-mapping-clear no-grow">
         <button title="Remove mapping" class="vfi-unlink"></button>
       </div>
-      <div class="column prop-mapping-name">
+      <div class="column parameter-mapping-name">
         <input placeholder="mappingName" name="mapping-name" type="text" />
       </div>
       <div class="column no-grow">
@@ -27,15 +26,15 @@ var PropertyView = View.extend({
 
   initialize: function() {
     View.prototype.initialize.apply(this, arguments);
-
-    this.listenToAndRun(this.parent.model, 'change:' + this.model.name, function() {
-      this.trigger('change:model', this.model);
+    this.listenTo(this.rootView.mappings, 'change', function mappingsChange(...args) {
+      this.trigger('change:rootView.mappings', ...args);
     });
   },
 
   derived: {
     suggestionHelper: {
       cache: false,
+      deps: [],
       fn: function() {
         var view = this.parent;
         while (view) {
@@ -48,34 +47,48 @@ var PropertyView = View.extend({
 
     value: {
       deps: [
-        'model',
-        'model.name',
-        'parent.model'
+        'model.value'
       ],
       fn: function() {
-        return this.parent.model.get(this.model.name);
+        return this.model.value;
       }
     },
 
-    propertyPath: {
-      deps: [],
+    parameterPath: {
+      deps: [
+        'model.modelPath'
+      ],
       fn: function() {
-        return this.parent.modelPath + '.' + this.model.name;
+        return this.model.modelPath + '.value';
       }
     },
 
     mapping: {
-      deps: [],
+      deps: [
+        'rootView.mappings',//good idea?
+        'parameterPath'
+      ],
       fn: function() {
-        return this.rootView.mappings.findMappingByTarget(this.propertyPath);
+        return this.rootView.mappings.findMappingByTarget(this.parameterPath);
       }
     }
   },
 
   bindings: {
+    isProperty: {
+      type: 'booleanClass',
+      name: 'instance-property'
+    },
+
+    parameterPath: {
+      type: 'attribute',
+      name: 'title',
+      selector: '.parameter-name'
+    },
+
     'model.name': {
       type: 'text',
-      selector: '.prop-name'
+      selector: '.parameter-name'
     },
 
     value: {
@@ -89,7 +102,7 @@ var PropertyView = View.extend({
     'mapping.name': [
       {
         type: 'booleanAttribute',
-        selector: '.prop-mapping-clear button',
+        selector: '.parameter-mapping-clear button',
         name: 'disabled',
         invert: true
       },
@@ -111,41 +124,39 @@ var PropertyView = View.extend({
       },
       {
         type: 'booleanAttribute',
-        selector: '.prop-value-reset button',
+        selector: '.parameter-value-reset button',
         name: 'disabled'
       }
     ]
   },
 
   commands: {
-    'click .prop-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
+    'click .parameter-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
     'change [name="value"]': 'propChange _handleChange',
-    'click .prop-value-reset button': 'propChange _handleReset',
+    'click .parameter-value-reset button': 'propChange _handleReset'
   },
 
   _handleRemoveMappingTarget: function() {
-    var propertyPath = this.propertyPath;
+    var parameterPath = this.parameterPath;
     var mapping = this.mapping.serialize();
     mapping.targets = mapping.targets.filter(function(target) {
-      return target !== propertyPath;
+      return target !== parameterPath;
     });
     return {mapping: mapping};
   },
 
   _handleChange: function() {
-    var parent = this.model.collection.parent.model;
     return {
-      path: parent.modelPath || objectPath(parent),
-      property: this.model.name,
+      path: this.model.modelPath,
+      property: 'value',
       value: this.query('[name="value"]').value
     };
   },
 
   _handleReset: function() {
-    var parent = this.model.collection.parent.model;
     return {
-      path: parent.modelPath || objectPath(parent),
-      property: this.model.name,
+      path: this.model.modelPath,
+      property: 'value',
       value: this.model.default
     };
   },
@@ -160,13 +171,13 @@ var PropertyView = View.extend({
     var view = this;
     var helper = view.suggestionHelper;
     var mappings = this.rootView.mappings;
-    var propertyPath = this.propertyPath;
+    var parameterPath = this.parameterPath;
 
     helper.attach(evt.target, function(selected) {
       var mappingState = mappings.get(selected);
       if (!mappingState) return;
       var mapping = mappingState.serialize();
-      mapping.targets.push(propertyPath);
+      mapping.targets.push(parameterPath);
       view.sendCommand('updateMapping', {
         mapping: mapping
       });
@@ -180,14 +191,13 @@ var PropertyView = View.extend({
     if (!helper || !view.model.values || !view.model.values.length) return;
 
     var model = view.model;
-    var parent = model.collection.parent.model;
     var el = evt.target;
     helper.attach(el, function(selected) {
       // console.info('set %s . %s = %s', objectPath(parent), model.name, selected, el.value !== selected);
 
       view.sendCommand('propChange', {
-        path: objectPath(parent),
-        property: model.name,
+        path: model.modelPath,
+        property: 'value',
         value: selected
       });
 
@@ -221,7 +231,7 @@ var PropertyView = View.extend({
 
 
 
-PropertyView.types = {};
+ParamView.types = {};
 
 
 
@@ -233,20 +243,20 @@ PropertyView.types = {};
 \***************************************/
 
 
-PropertyView.types.boolean = PropertyView.extend({
+ParamView.types.boolean = ParamView.extend({
   template: `
-    <div class="columns object-prop prop-type-boolean">
-      <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow prop-value-reset">
+    <div class="columns object-prop parameter-type-boolean">
+      <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow parameter-value-reset">
         <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
-      <div class="column prop-value">
-        <button class="prop-toggle-btn"></button>
+      <div class="column parameter-value">
+        <button class="parameter-toggle-btn"></button>
       </div>
-      <div class="column prop-mapping-clear no-grow">
+      <div class="column parameter-mapping-clear no-grow">
         <button title="Remove mapping" class="vfi-unlink"></button>
       </div>
-      <div class="column prop-mapping-name">
+      <div class="column parameter-mapping-name">
         <input placeholder="mappingName" name="mapping-name" type="text" />
       </div>
       <div class="column no-grow">
@@ -255,27 +265,31 @@ PropertyView.types.boolean = PropertyView.extend({
     </div>
   `,
 
-  bindings: assign({}, PropertyView.prototype.bindings, {
+  bindings: assign({}, ParamView.prototype.bindings, {
     value: {
-      selector: 'button.prop-toggle-btn',
+      selector: 'button.parameter-toggle-btn',
       type: 'booleanClass',
       yes: 'vfi-toggle-on',
       no: 'vfi-toggle-off'
     }
   }),
 
-  events: assign({}, PropertyView.prototype.events, {
-    'focus [name="mapping-name"]': '_suggestMapping',
-    'click button.prop-toggle-btn': '_handleChange'
+  commands: {
+    'click .parameter-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
+    'click button.parameter-toggle-btn': 'propChange _handleChange',
+    'click .parameter-value-reset button': 'propChange _handleReset'
+  },
+
+  events: assign({}, ParamView.prototype.events, {
+    'focus [name="mapping-name"]': '_suggestMapping'
   }),
 
   _handleChange: function() {
-    var parent = this.model.collection.parent.model;
-    this.sendCommand('propChange', {
-      path: objectPath(parent),
-      property: this.model.name,
-      value: !parent[this.model.name]
-    });
+    return {
+      path: this.model.modelPath,
+      property: 'value',
+      value: !this.model.value
+    };
   }
 });
 
@@ -289,20 +303,20 @@ PropertyView.types.boolean = PropertyView.extend({
 \***************************************/
 
 
-PropertyView.types.number = PropertyView.extend({
+ParamView.types.number = ParamView.extend({
   template: `
-    <div class="columns object-prop prop-type-number">
-      <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow prop-value-reset">
+    <div class="columns object-prop parameter-type-number">
+      <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow parameter-value-reset">
         <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
-      <div class="column prop-value">
+      <div class="column parameter-value">
         <input name="value" type="number" />
       </div>
-      <div class="column prop-mapping-clear no-grow">
+      <div class="column parameter-mapping-clear no-grow">
         <button title="Remove mapping" class="vfi-unlink"></button>
       </div>
-      <div class="column prop-mapping-name">
+      <div class="column parameter-mapping-name">
         <input placeholder="mappingName" name="mapping-name" type="text" />
       </div>
       <div class="column no-grow">
@@ -311,7 +325,7 @@ PropertyView.types.number = PropertyView.extend({
     </div>
   `,
 
-  bindings: assign({}, PropertyView.prototype.bindings, {
+  bindings: assign({}, ParamView.prototype.bindings, {
     min: [
       {
         selector: '[name=value]',
@@ -346,7 +360,7 @@ PropertyView.types.number = PropertyView.extend({
   },
 
   _handleChange: function() {
-    var payload = PropertyView.prototype._handleChange.apply(this, arguments);
+    var payload = ParamView.prototype._handleChange.apply(this, arguments);
     payload.value = Number(payload.value);
     return payload;
   }
@@ -378,7 +392,7 @@ PropertyView.types.number = PropertyView.extend({
 
 
 
-PropertyView.names = {};
+ParamView.names = {};
 
 
 
@@ -390,7 +404,7 @@ PropertyView.names = {};
 \***************************************/
 
 
-PropertyView.names.active = PropertyView.types.boolean.extend({});
+ParamView.names.active = ParamView.types.boolean.extend({});
 
 
 
@@ -402,12 +416,12 @@ PropertyView.names.active = PropertyView.types.boolean.extend({});
 \***************************************/
 
 
-PropertyView.names.opacity = PropertyView.types.number.extend({
+ParamView.names.opacity = ParamView.types.number.extend({
   session: {
     min: ['number', false, 0],
-    max: ['number', false, 100]
+    max: ['number', false, 1]
   }
 });
 
 
-module.exports = PropertyView;
+module.exports = ParamView;

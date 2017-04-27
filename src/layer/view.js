@@ -5,7 +5,7 @@ var LayerView = View.extend({
   template: function() {
     return `
       <div id="${this.model.getId()}" view-id="${this.cid}" class="missing-layer-view" style="will-change:transform, opacity, backfaceVisibility;width:100%;height:100%;display:table">
-        <div style="display:table-cell;color:#a66;vertical-align:middle;text-align:center;font-weight:700;font-size:30px;text-shadow:0 0 4px #000">
+        <div style="display:table-cell;color:#666;vertical-align:middle;text-align:center;font-weight:700;font-size:30px;text-shadow:0 0 4px #000">
           Missing
           <span data-hook="type"></span> for
           <span data-hook="name"></span>
@@ -18,8 +18,8 @@ var LayerView = View.extend({
   },
 
   initialize: function() {
-    this.listenTo(this.model.styleProperties, 'change', function(prop) {
-      this.setProperty(prop.name, prop.value);
+    this.listenTo(this.model.parameters, 'change', function(prop) {
+      this.setProperty('--' + prop.name, prop.value);
     });
   },
 
@@ -87,7 +87,7 @@ var LayerView = View.extend({
     },
     'model.opacity': {
       type: function(el, val) {
-        this.cssRule.style.opacity = val * 0.01;
+        this.cssRule.style.opacity = val;
       }
     },
     'model.zIndex': {
@@ -101,7 +101,7 @@ var LayerView = View.extend({
     this.cssRule.style.setProperty(...args);
   },
 
-  addRule: function(selector, properties) {
+  addRule: function(selector, parameters) {
     var sheet = this.sheet;
     var prefix = '#'+ this.model.getId() +' ';
     var index = sheet.cssRules.length;
@@ -115,7 +115,7 @@ var LayerView = View.extend({
 
     index = sheet.cssRules.length;
 
-    sheet.insertRule(selector + ' { ' + properties + ' } ', index);
+    sheet.insertRule(selector + ' { ' + parameters + ' } ', index);
     return this;
   },
 

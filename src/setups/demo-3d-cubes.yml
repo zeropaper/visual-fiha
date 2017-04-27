@@ -37,7 +37,6 @@ layers:
         /*
         */
       }
-    styleProperties: []
     parameters: []
     geometries:
       - visible: true

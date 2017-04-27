@@ -1,55 +1,82 @@
 'use strict';
 var State = require('ampersand-state');
-var Collection = require('ampersand-collection');
 
-var PropertyState = State.extend({
-  idAttribute: 'name',
-
-  mappable: {
-    target: ['value']
-  },
-
-  props: {
-    name: ['string', true, ''],
-    value: ['string', false, ''],
-    default: ['string', true, '']
-  }
-});
-
-var PropertyCollection = Collection.extend({
-  mainIndex: 'name',
-  model: PropertyState
-});
+var objectPath = require('./../utils/object-path');
+var ParameterCollection = require('./../parameter/collection');
 
 var LayerState = State.extend({
   idAttribute: 'name',
   typeAttribute: 'type',
 
   initialize: function() {
-    State.prototype.initialize.apply(this, arguments);
     var state = this;
-    state.listenToAndRun(state.styleProperties, 'change', function() {
-      state.trigger('change:styleProperties', state, state.styleProperties, {styleProperties: true});
+
+    state.ensureParameters();
+
+    state.listenToAndRun(state.parameters, 'change', function() {
+      state.trigger('change:parameters', state, state.parameters, {parameters: true});
     });
+
+    state.listenToAndRun(state.parameters, 'sort', state.ensureParameters);
   },
 
   collections: {
-    styleProperties: PropertyCollection
+    parameters: ParameterCollection
+  },
+
+  baseParameters: [
+    {name: 'zIndex', type: 'number', default: 0},
+    {name: 'opacity', type: 'number', default: 1, min: 0, max: 1},
+    {name: 'active', type: 'boolean', default: true}
+  ],
+
+  ensureParameters: function(definition = []) {
+    (this.baseParameters || [])
+      .concat(definition)
+      .forEach(function(parameterDef) {
+        var existing = this.parameters.get(parameterDef.name);
+        if (!existing) {
+          var created = this.parameters.add(parameterDef);
+          this.listenTo(created, 'change:value', function(...args) {
+            this.trigger('change:parameters.' + created.name, ...args);
+          });
+          created.value = parameterDef.default;
+        }
+      }, this);
+    return this;
   },
 
   props: {
     name: ['string', true, null],
     type: ['string', true, 'default'],
-    active: ['boolean', true, true],
-    opacity: {
-      type: 'number',
-      default: 100
-    },
-    zIndex: ['number', true, 0],
     layerStyles: ['string', false, '']
   },
 
   derived: {
+    modelPath: {
+      deps: ['name'],
+      fn: function() {
+        return objectPath(this);
+      }
+    },
+    active: {
+      deps: ['parameters.active'],
+      fn: function() {
+        return this.parameters.getValue('active');
+      }
+    },
+    opacity: {
+      deps: ['parameters.opacity'],
+      fn: function() {
+        return this.parameters.getValue('opacity');
+      }
+    },
+    zIndex: {
+      deps: ['parameters.zIndex'],
+      fn: function() {
+        return this.parameters.getValue('zIndex');
+      }
+    },
     screenState: {
       deps: ['collection', 'collection.parent'],
       fn: function() {
@@ -96,15 +123,9 @@ var LayerState = State.extend({
 
   _log: function(...args) {
     this.screenState._log(...args);
-  },
-
-  toJSON: function() {
-    return State.prototype.toJSON.apply(this, arguments);
   }
 });
 
-LayerState.PropertyState = PropertyState;
-LayerState.PropertyCollection = PropertyCollection;
 LayerState.types = {};
 
 module.exports = LayerState;

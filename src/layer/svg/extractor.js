@@ -37,9 +37,8 @@ var Extractor = State.extend({
     var name, value;
 
     for (var p = 0; p < this.svg.style.length; p++) {
-      name = this.svg.style[p];
+      name = this.svg.style[p].slice(2);
       value = this.svg.style.getPropertyValue(name).trim();
-
       props.push({
         name: name,
         value: value,
@@ -49,8 +48,8 @@ var Extractor = State.extend({
 
     this.svg.style = null;
 
-    var previousProperties = this.model.styleProperties.serialize();
-    return props.concat(previousProperties);
+    var previousParameters = this.model.parameters.serialize();
+    return props.concat(previousParameters);
   },
 
   extract: function() {
@@ -66,8 +65,8 @@ var Extractor = State.extend({
 
     layer.svgStyles = Object.keys(svgState.svgStyles).length ? this.removeStylesFromContent().model.svgStyles : this.extractStyles();
 
-    this.model.styleProperties.set(this.setPathLengths().extractProps());
-    layer.styleProperties = this.model.styleProperties.serialize();
+    this.model.parameters.set(this.setPathLengths().extractProps());
+    layer.parameters = this.model.parameters.serialize();
 
     layer.content = this.el.innerHTML;
 

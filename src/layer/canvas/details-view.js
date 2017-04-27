@@ -1,15 +1,16 @@
 'use strict';
-var assign = require('lodash.assign');
-var DetailsView = require('./../controller/details-view');
-var ParameterView = require('./../parameter/view');
 
-var LayerDetailsView = DetailsView.extend({
+var assign = require('lodash.assign');
+var LayerDetailsView = require('./../details-view');
+
+var CanvasLayerDetailsView = LayerDetailsView.extend({
   template: `
     <section>
       <header>
         <div class="columns">
-          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
-          <div class="column no-grow columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small>sublayer</small></h3>
+          <div class="columns no-grow column">
+            <div class="column no-grow"><button name="edit-draw-function">Draw</button></div>
             <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
           </div>
         </div>
@@ -17,7 +18,7 @@ var LayerDetailsView = DetailsView.extend({
       </header>
 
       <div class="rows row param-section">
-        <h5>Parameters</h5>
+        <h5>Canvas layer parameters</h5>
         <div class="row columns">
           <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
           <div class="column"><select name="parameter-type">
@@ -34,17 +35,13 @@ var LayerDetailsView = DetailsView.extend({
     </section>
   `,
 
-  events: assign(DetailsView.prototype.events, {
-    'click [name=show-origin]': '_showOrigin'
-  }),
+  events: assign({
+    'click [name=edit-draw-function]': '_editDrawFunction'
+  }, LayerDetailsView.prototype.bindings),
 
-
-  _showOrigin: function() {
-    this.rootView.trigger('blink', this.modelPath);
+  _editDrawFunction: function() {
+    this.editFunction('drawFunction');
   }
 });
 
-LayerDetailsView.ParameterView = ParameterView;
-LayerDetailsView.types = {};
-
-module.exports = LayerDetailsView;
+module.exports = CanvasLayerDetailsView;

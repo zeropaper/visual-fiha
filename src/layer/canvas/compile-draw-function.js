@@ -2,7 +2,7 @@
 var mockedCtx = require('./mocked-canvas-2d-context');
 var utils = require('./canvas-utils');// jshint ignore:line
 
-// proxy the method and properties of the canvas context
+// proxy the method and parameters of the canvas context
 var ctxProperties = '';
 mockedCtx._.methods
   .forEach(function(name) {
@@ -33,6 +33,10 @@ function compileFunction(drawFunction) {
     };
     var timeDomain = function(x) {
       return ((layer.audio || {}).timeDomain || [])[x] || 0;
+    };
+
+    var parameter = function(name, defaultVal) {
+      return layer.parameters.getValue(name, defaultVal);
     };
 
     ${ ctxProperties }

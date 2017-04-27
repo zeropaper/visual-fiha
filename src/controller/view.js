@@ -439,7 +439,6 @@ var ControllerView = View.extend({
   events: {
     'click .vf-app-name': '_openMenu',
     'click [name="screen"]': '_openScreen',
-    'click [name="setup-editor"]': '_setupEditor',
     'click [name="start-tour"]': '_startTour'
   },
 

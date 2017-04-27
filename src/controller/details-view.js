@@ -1,12 +1,10 @@
 'use strict';
 var assign = require('lodash.assign');
-var Collection = require('ampersand-collection');
-var State = require('ampersand-state');
 var View = require('./control-view');
 var objectPath = require('./../utils/object-path');
 var propNamesExtractor = require('./../utils/prop-names');
+var ParamView = require('./../parameter/view');
 
-var PropertyView = require('./property-view');
 
 var DetailsView = View.extend({
   template: `
@@ -19,17 +17,24 @@ var DetailsView = View.extend({
       </header>
 
       <div class="rows row param-section">
-        <h5>Properties</h5>
-        <div class="row items"></div>
+        <h5>Parameters</h5>
+        <div class="row columns">
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row parameters" ></div>
       </div>
     </section>
   `,
 
   initialize: function() {
-    this.listenToAndRun(this, 'change:definition', function() {
-      this.properties.reset(this.definition);
-    });
-
     this.listenTo(this.rootView, 'all', function(evtName) {
       if (evtName.indexOf('app:') === 0 && evtName.indexOf('Mapping') > 0) {
         this.trigger('change:model', this.model);
@@ -67,38 +72,62 @@ var DetailsView = View.extend({
     }
   },
 
-  collections: {
-    properties: Collection.extend({
-      mainIndex: 'name',
+  events: {
+    'click [name=parameter-add]': 'addParameter'
+  },
 
-      model: State.extend({
-        idAttribute: 'name',
+  addParameter: function() {
+    var val = this.query('[name=parameter-default]').value;
+    var props = this.model.parameters.serialize();
+    props.push({
+      name: this.query('[name=parameter-name]').value,
+      type: this.query('[name=parameter-type]').value,
+      default: val,
+      value: val
+    });
 
-        session: {
-          name: 'string',
-          allowNull: 'boolean',
-          default: 'any',
-          required: 'boolean',
-          test: 'any',
-          type: 'string',
-          values: 'array'
-        }
-      })
-    })
+    this.rootView.sendCommand('propChange', {
+      path: 'layers.' + this.model.getId(),
+      property: 'parameters',
+      value: props
+    });
+  },
+
+  editFunction: function(propName) {
+    var rootView = this.rootView;
+    var path = objectPath(this.model);
+    var script = this.model.get(propName) || ('function ' + propName + '() {\n}');
+    rootView.getEditor({
+      tabName: this.model.getId() + ' ' + propName,
+      script: script,
+      language: 'javascript',
+      title: path + '.' + propName,
+      onshoworigin: function() {
+        rootView.trigger('blink', path);
+      },
+      autoApply: true,
+      onvalidchange: function doneEditingFunction(str) {
+        rootView.sendCommand('propChange', {
+          path: path,
+          property: propName,
+          value: str
+        });
+      }
+    });
   },
 
   render: function() {
     View.prototype.render.apply(this, arguments);
 
-    if (this.propertiesView) {
-      this.propertiesView.remove();
+    if (this.parameters) {
+      this.parameters.remove();
     }
 
-    this.propertiesView = this.renderCollection(this.properties, function (opts) {
-      var Constructor = (PropertyView.names[opts.model.name] || PropertyView.types[opts.model.type] || PropertyView);
-      // console.info('property name: %s (%s), type: %s (%s)', opts.model.name, !!PropertyView.names[opts.model.name], opts.model.type, !!PropertyView.types[opts.model.type]);
+    this.parameters = this.renderCollection(this.model.parameters, function (opts) {
+      var Constructor = (ParamView.names[opts.model.name] || ParamView.types[opts.model.type] || ParamView);
+      // console.info('property name: %s (%s), type: %s (%s)', opts.model.name, !!ParamView.names[opts.model.name], opts.model.type, !!ParamView.types[opts.model.type]);
       return new Constructor(opts);
-    }, '.items');
+    }, '.parameters');
 
     this.trigger('change:model');
     this.trigger('change:model.name');
@@ -109,6 +138,15 @@ var DetailsView = View.extend({
   bindings: {
     'model.name': '[data-hook=name]',
     'model.type': [
+      {
+        selector: '[name=parameter-type]',
+        type: function(el, val) {
+          if (document.activeElement === el) return;
+          el.querySelectorAll('option').forEach(o => { o.selected = false; });
+          var selectedOption = el.querySelector('option[value="' + val + '"]');
+          if (selectedOption) selectedOption.selected = true;
+        }
+      },
       {
         selector: '[data-hook=type]',
         type: 'text'
@@ -124,4 +162,5 @@ var DetailsView = View.extend({
     modelPath: '[data-hook="object-path"]'
   }
 });
+
 module.exports = DetailsView;

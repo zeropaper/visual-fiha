@@ -66,7 +66,7 @@ module.exports = function(controllerView) {
       name: 'signals',
       selector: '.region-right .region-content',
       text: 'Using signals allow to create complex variables which can be used to control the layer transformations.<br/>' +
-      'Just like layers, click the name of a signal to display its details and manipulate their properties.',
+      'Just like layers, click the name of a signal to display its details and manipulate their parameters.',
       prepare: function() {
         controllerView.regionRight.focusTab('Signals');
       }

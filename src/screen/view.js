@@ -151,7 +151,7 @@ var ScreenView = View.extend(clientMixin, {
     }
   },
 
-  addRule: function(selector, properties) {
+  addRule: function(selector, parameters) {
     var sheet = this.sheet;
     this.el.id = this.el.id || 'vf-screen-' + this.cid;
     var prefix = '#'+ this.el.id +' ';
@@ -166,7 +166,7 @@ var ScreenView = View.extend(clientMixin, {
 
     index = sheet.cssRules.length;
 
-    sheet.insertRule(selector + ' { ' + properties + ' } ', index);
+    sheet.insertRule(selector + ' { ' + parameters + ' } ', index);
     return this;
   },
 

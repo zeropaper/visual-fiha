@@ -72,7 +72,6 @@ layers:
       filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01))
       rotate(calc(0.05deg * var(--frametime)));
     src: ./assets/construction-work/1/front.png
-    styleProperties: []
   bgk2:
     type: img
     active: true
@@ -82,7 +81,6 @@ layers:
       filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01))
       rotateX(180deg) rotateY(180deg) rotate(calc(-0.05deg * var(--frametime)));
     src: ./assets/construction-work/1/front.png
-    styleProperties: []
   zero:
     type: threejs
     active: true
@@ -147,7 +145,6 @@ layers:
         }
         applyClones(8);
       }
-    styleProperties: []
     parameters:
       - name: knob1
         value: '63'
@@ -300,13 +297,13 @@ layers:
         fill: var(--fill-color); stroke: var(--stroke-color); stroke-width:
         var(--stroke-width);
     src: ./assets/zeropaper/zeropaper-fat.svg
-    styleProperties:
-      - name: '--fill-color'
+    parameters:
+      - name: 'fill-color'
         value: white
         default: white
-      - name: '--stroke-color'
+      - name: 'stroke-color'
         value: none
         default: none
-      - name: '--stroke-width'
+      - name: 'stroke-width'
         value: 5px
         default: 5px

@@ -55,8 +55,8 @@ mappings:
     source: 'midi:nk2.knob3'
   beatNum20Str:
     targets:
-      - layers.ar.styleProperties.--beat.value
-      - layers.vf.styleProperties.--beat.value
+      - layers.ar.parameters.beat.value
+      - layers.vf.parameters.beat.value
     transformFunction: |-
       function (value) {
         return (value % 20).toString();
@@ -118,7 +118,7 @@ layers:
                   ,-1px -1px 0 #666
                   ;
     text: Renick Bell (JP)
-    styleProperties: []
+    parameters: []
   canvas:
     type: canvas
     active: true
@@ -126,39 +126,33 @@ layers:
     zIndex: 0
     layerStyles: ''
     clear: 1
-    styleProperties: []
+    parameters: []
     canvasLayers:
-      - props:
-          active:
+      - parameters:
+          - name: 'active'
             type: boolean
             required: true
             default: true
-            allowNull: false
-          text:
+          - name: 'text'
             type: string
             required: true
             default: Hello World!
-            allowNull: false
-          toggleA:
+          - name: 'toggleA'
             type: boolean
             required: true
             default: false
-            allowNull: false
-          knobA:
+          - name: 'knobA'
             type: number
             required: true
             default: 127
-            allowNull: false
-          knobB:
+          - name: 'knobB'
             type: number
             required: true
             default: 127
-            allowNull: false
-          knobC:
+          - name: 'knobC'
             type: number
             required: true
             default: 127
-            allowNull: false
         zIndex: 50
         name: lines
         active: true
@@ -210,17 +204,17 @@ layers:
           stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));
           stroke-dashoffset: 0;
     src: ./assets/algorave/algorave-stroke.svg
-    styleProperties:
-      - name: '--stroke-color'
+    parameters:
+      - name: 'stroke-color'
         value: white
         default: white
-      - name: '--stroke-width'
+      - name: 'stroke-width'
         value: '22'
         default: '22'
-      - name: '--beat'
+      - name: 'beat'
         value: '9'
         default: '0'
-      - name: '--translate-y'
+      - name: 'translate-y'
         value: '-20vh'
         default: '-20vh'
   vf:
@@ -241,22 +235,22 @@ layers:
           stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));
           stroke-dashoffset: 0;
     src: ./assets/visual-fiha.svg
-    styleProperties:
-      - name: '--fill-color'
+    parameters:
+      - name: 'fill-color'
         value: none
         default: none
-      - name: '--stroke-color'
+      - name: 'stroke-color'
         value: white
         default: white
-      - name: '--stroke-width'
+      - name: 'stroke-width'
         value: '22'
         default: '22'
-      - name: '--frametime'
+      - name: 'frametime'
         value: '0'
         default: '0'
-      - name: '--beat'
+      - name: 'beat'
         value: '9'
         default: '0'
-      - name: '--translate-y'
+      - name: 'translate-y'
         value: 20vh
         default: 20vh
