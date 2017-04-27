@@ -12,17 +12,14 @@
     "url": "git://github.com/zeropaper/visual-fiha.git"
   },
   "scripts": {
-    "test": "karma start ./test/karma.conf.js --single-run",
+    "test": "echo \"No test for now\" && exit 0",
     "clean": "rimraf gh-pages",
     "copy-assets": "cp -r assets gh-pages/",
     "prebuild": "npm-run-all clean copy-assets",
     "build": "webpack --env.prod",
     "postinstall": "npm run build",
     "run:webpack": "webpack-dev-server --env.dev --port=8081",
-    "run:karma": "karma start ./test/karma.conf.js",
-    "run:wdio": "wdio ./test-e2e/wdio.conf.js",
-    "run:dev": "npm-run-all clean copy-assets --parallel run:webpack run:karma",
-    "test:e2e": "npm-run-all build run:wdio",
+    "run:dev": "npm-run-all clean copy-assets --parallel run:webpack",
     "pregh-pages": "npm run clean && git clone -b gh-pages ./.git gh-pages && cd gh-pages && git remote set-url origin git@github.com:zeropaper/visual-fiha.git",
     "gh-pages": "npm run copy-assets && cd gh-pages/ && git add . && git commit --allow-empty -m \"update gh-pages\"",
     "postgh-pages": "echo \"You can now 'cd gh-pages && push origin gh-pages'\""
@@ -30,17 +27,7 @@
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",
   "devDependencies": {
-    "expect.js": "^0.3.1",
-    "karma": "^1.3.0",
-    "karma-chrome-launcher": "^2.0.0",
-    "karma-mocha": "^1.3.0",
-    "karma-webpack": "^2.0.1",
     "marked": "^0.3.6",
-    "wdio": "latest",
-    "wdio-mocha-framework": "^0.5.8",
-    "wdio-selenium-standalone-service": "latest",
-    "wdio-spec-reporter": "0.1.0",
-    "wdio-static-server-service": "latest",
     "webpack-dev-server": "^2.2.0"
   },
   "dependencies": {

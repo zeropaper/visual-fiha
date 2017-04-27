@@ -37,8 +37,6 @@ An open source browser based VJing tool with MIDI support.
 
 # Installation
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/zeropaper/visual-fiha.svg)](https://greenkeeper.io/)
-
 [No need to install, open Google Chrome and enjoy.](https://zeropaper.github.io/visual-fiha)
 
 ## Seriously?
@@ -58,12 +56,6 @@ Browsers from Mircosoft or Apple, even the latest versions, do not deserve atten
 # Development
 
 See the [development guide in the wiki](https://github.com/zeropaper/visual-fiha/wiki/Development).
-
-## Status
-
-[Master branch](https://zeropaper.github.io/visual-fiha): [![Build Status](https://travis-ci.org/zeropaper/visual-fiha.svg?branch=master)](https://travis-ci.org/zeropaper/visual-fiha/branches)
-
-Dev branch: [![Build Status](https://travis-ci.org/zeropaper/visual-fiha.svg?branch=dev)](https://travis-ci.org/zeropaper/visual-fiha/branches)
 
 # Supporting the project
 
