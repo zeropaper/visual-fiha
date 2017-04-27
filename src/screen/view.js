@@ -7,6 +7,7 @@ require('./../layer/video/view');
 require('./../layer/img/view');
 require('./../layer/threejs/view');
 require('./../layer/txt/view');
+require('./../layer/p5/view');
 require('./../layer/threejs/view');
 
 

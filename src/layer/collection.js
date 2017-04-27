@@ -7,6 +7,7 @@ require('./video/state');
 require('./svg/state');
 require('./img/state');
 require('./txt/state');
+require('./p5/state');
 require('./threejs/state');
 
 module.exports = Collection.extend({

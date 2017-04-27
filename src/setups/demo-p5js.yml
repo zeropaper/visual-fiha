@@ -1,0 +1,9 @@
+signals: {}
+mappings: {}
+layers:
+  p5:
+    type: p5
+    setupFunction: console.info(p);
+    drawFunction: |-
+      p.fill('#eee');
+      p.ellipse(100, 100, 50);

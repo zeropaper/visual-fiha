@@ -7,6 +7,7 @@ require('./svg/control-view');
 require('./img/control-view');
 require('./video/control-view');
 require('./txt/control-view');
+require('./p5/control-view');
 require('./threejs/control-view');
 
 var LayersView = View.extend({
