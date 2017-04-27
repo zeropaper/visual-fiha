@@ -1,8 +1,0 @@
-{
-  "mocha": true,
-  "node": true,
-  "strict": false,
-  "globals": {
-    "browser": false
-  }
-}
