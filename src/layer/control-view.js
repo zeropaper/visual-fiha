@@ -1,7 +1,7 @@
 'use strict';
 var View = require('./../controller/control-view');
 var LayerDetailsView = require('./details-view');
-var objectPath = require('./../object-path');
+var objectPath = require('./../utils/object-path');
 
 var LayerControlView = View.extend({
   template: `

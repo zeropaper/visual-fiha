@@ -1,6 +1,6 @@
 'use strict';
 
-var resolve = require('./../resolve');
+var resolve = require('./../utils/resolve');
 var assign = require('lodash.assign');
 var State = require('ampersand-state');
 var Collection = require('ampersand-collection');

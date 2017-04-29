@@ -1,6 +1,6 @@
 'use strict';
 var DetailsView = require('./../details-view');
-var propNamesExtractor = require('./../../prop-names');
+var propNamesExtractor = require('./../../utils/prop-names');
 var assign = require('lodash.assign');
 
 var SVGDetailsView = DetailsView.extend({

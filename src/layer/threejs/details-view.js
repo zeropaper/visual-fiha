@@ -2,7 +2,7 @@
 var DetailsView = require('./../details-view');
 var StylePropertyView = DetailsView.StylePropertyView;
 var assign = require('lodash.assign');
-var propNamesExtractor = require('./../../prop-names');
+var propNamesExtractor = require('./../../utils/prop-names');
 
 var ThreeJSDetailsView = DetailsView.extend({
   template: `

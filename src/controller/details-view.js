@@ -3,8 +3,8 @@ var assign = require('lodash.assign');
 var Collection = require('ampersand-collection');
 var State = require('ampersand-state');
 var View = require('./control-view');
-var objectPath = require('./../object-path');
-var propNamesExtractor = require('./../prop-names');
+var objectPath = require('./../utils/object-path');
+var propNamesExtractor = require('./../utils/prop-names');
 
 var PropertyView = require('./property-view');
 

@@ -2,7 +2,7 @@
 var LayerControlView = require('./../control-view');
 var LayerDetailsView = require('./../details-view');
 var assign = require('lodash.assign');
-var objectPath = require('./../../object-path');
+var objectPath = require('./../../utils/object-path');
 
 var CanvasLayerDetailsView = LayerDetailsView.extend({
   template: `

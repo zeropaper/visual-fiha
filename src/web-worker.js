@@ -23,11 +23,11 @@ require.ensure([
   './screen/state',
 ], function() {
 require.ensure([
-  './resolve',
+  './utils/resolve',
   './signal/collection'
 ], function() {
 // ---------------------------------------------------------------
-var resolve = require('./resolve');
+var resolve = require('./utils/resolve');
 
 var Mappings = require('./mapping/data');
 

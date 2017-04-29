@@ -9,7 +9,7 @@ var AceEditor = require('./ace-view');
 var RegionView = require('./region-view');
 var MappingsControlView = require('./../mapping/control-view');
 var MenuView = require('./menu/view');
-var objectPath = require('./../object-path');
+var objectPath = require('./../utils/object-path');
 var ControlScreenControls = require('./control-screen-controls-view');
 // var Timeline = require('./timeline-view');
 

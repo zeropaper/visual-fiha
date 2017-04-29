@@ -1,7 +1,7 @@
 'use strict';
 var assign = require('lodash.assign');
-var View = require('./control-view');
-var objectPath = require('./../object-path');
+var View = require('./../controller/control-view');
+var objectPath = require('./../utils/object-path');
 
 var PropertyView = View.extend({
   template: `

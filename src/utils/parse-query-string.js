@@ -1,6 +1,6 @@
 'use strict';
 
-function parseQS(str) {
+module.exports = function parseQueryString(str) {
   return (function(a) {
     if (a === '') return {};
     var b = {};
@@ -11,8 +11,4 @@ function parseQS(str) {
     }
     return b;
   })(str.split('&'));
-}
-
-module.exports = require('ampersand-router').extend({
-  parseQueryString: parseQS,
-});
+};
