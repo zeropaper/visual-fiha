@@ -86,19 +86,31 @@ Form
 */
 button,
 select,
+select option,
 textarea,
 [contenteditable=true],
 input:not([type=checkbox]):not([type=radio]) {
+  --input-height: calc(1em + 4px);
   display: inline-block;
-  line-height: 1;
+  line-height: var(--input-height);
+  /* min-height: var(--input-height); */
   font-size: inherit;
+  padding: var(--spacing);
+  margin: 0;
+}
+button,
+select,
+textarea,
+[contenteditable=true],
+input:not([type=checkbox]):not([type=radio]) {
   position: relative;
   color: currentColor;
   border: 1px solid transparent;
   background: transparent;
-  margin: 0;
-  padding: var(--spacing);
   box-shadow: 0 0 1px 0 currentColor inset;
+}
+select option {
+  background-color: var(--bg-color);
 }
 button.no-border {
   box-shadow: none;
@@ -158,7 +170,6 @@ input:not([type=radio]):error {
 button {
   border-radius: 0.1em;
   cursor: pointer;
-  line-height: 1.2;
 }
 button[disabled] {
   cursor: not-allowed;
