@@ -115,7 +115,7 @@ var MappingEmitter = State.extend({
         return this.collection.resolve(sourcePath);
       }
     },
-    sourceProperty: {
+    sourceParameter: {
       deps: ['source'],
       fn: function() {
         if (this.source.indexOf('midi:') === 0) return;
@@ -124,6 +124,10 @@ var MappingEmitter = State.extend({
       }
     }
   },
+
+  hasTarget: function(targetPath) {
+    return this.targets.indexOf(targetPath) > -1;
+  }
 });
 
 var Mappings = Collection.extend({
@@ -159,7 +163,7 @@ var Mappings = Collection.extend({
     (mappings || []).forEach(function(mapping) {
       if (!mapping.sourceState) return;
       this.listenTo(mapping.sourceState, 'all', function(evtName, source, value) {
-        if (evtName !== 'change:' + mapping.sourceProperty) return;
+        if (evtName !== 'change:' + mapping.sourceParameter) return;
         this.process([mapping], value);
       });
     }, this);
@@ -187,7 +191,7 @@ var Mappings = Collection.extend({
 
   findMappingByTarget: function(path) {
     return this.models.find(function(mapping) {
-      return mapping.targets.indexOf(path) > -1;
+      return mapping.hasTarget(path);
     });
   },
 
@@ -234,7 +238,7 @@ var Mappings = Collection.extend({
     sources.forEach(function(info) {
       info.targets.forEach(function(target) {
         var parts = target.split('.');
-        var targetProperty = parts.pop();
+        var targetParameter = parts.pop();
         var targetStatePath = parts.join('.');
         var state;
         try {
@@ -242,10 +246,14 @@ var Mappings = Collection.extend({
         } catch(e) {}
         if (!state) return;
 
-        var finalValue = info.fn(value, state.get(targetProperty));
+        var finalValue = info.fn(value, state.get(targetParameter));
         if (finalValue instanceof Error) return;
+
+        if (state.type === 'boolean') finalValue = finalValue === 'false' ? false : !!finalValue;
+        if (state.type === 'string') finalValue = (finalValue || '').toString();
+        if (state.type === 'number') finalValue = Number(finalValue || 0);
         try {
-          state.set(targetProperty, finalValue);
+          state.set(targetParameter, finalValue);
         }
         catch (e) {
           console.info(e.message);

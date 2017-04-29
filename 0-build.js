@@ -6,56 +6,83 @@ webpackJsonp([0,5],{
 "use strict";
 
 var State = __webpack_require__(27);
-var Collection = __webpack_require__(34);
 
-var PropertyState = State.extend({
-  idAttribute: 'name',
-
-  mappable: {
-    target: ['value']
-  },
-
-  props: {
-    name: ['string', true, ''],
-    value: ['string', false, ''],
-    default: ['string', true, '']
-  }
-});
-
-var PropertyCollection = Collection.extend({
-  mainIndex: 'name',
-  model: PropertyState
-});
+var objectPath = __webpack_require__(653);
+var ParameterCollection = __webpack_require__(656);
 
 var LayerState = State.extend({
   idAttribute: 'name',
   typeAttribute: 'type',
 
   initialize: function() {
-    State.prototype.initialize.apply(this, arguments);
     var state = this;
-    state.listenToAndRun(state.styleProperties, 'change', function() {
-      state.trigger('change:styleProperties', state, state.styleProperties, {styleProperties: true});
+
+    state.ensureParameters();
+
+    state.listenToAndRun(state.parameters, 'change', function() {
+      state.trigger('change:parameters', state, state.parameters, {parameters: true});
     });
+
+    state.listenToAndRun(state.parameters, 'sort', state.ensureParameters);
   },
 
   collections: {
-    styleProperties: PropertyCollection
+    parameters: ParameterCollection
+  },
+
+  baseParameters: [
+    {name: 'zIndex', type: 'number', default: 0},
+    {name: 'opacity', type: 'number', default: 1, min: 0, max: 1},
+    {name: 'active', type: 'boolean', default: true}
+  ],
+
+  ensureParameters: function(definition = []) {
+    (this.baseParameters || [])
+      .concat(definition)
+      .forEach(function(parameterDef) {
+        var existing = this.parameters.get(parameterDef.name);
+        if (!existing) {
+          var created = this.parameters.add(parameterDef);
+          this.listenTo(created, 'change:value', function(...args) {
+            this.trigger('change:parameters.' + created.name, ...args);
+          });
+          created.value = parameterDef.default;
+        }
+      }, this);
+    return this;
   },
 
   props: {
     name: ['string', true, null],
     type: ['string', true, 'default'],
-    active: ['boolean', true, true],
-    opacity: {
-      type: 'number',
-      default: 100
-    },
-    zIndex: ['number', true, 0],
     layerStyles: ['string', false, '']
   },
 
   derived: {
+    modelPath: {
+      deps: ['name'],
+      fn: function() {
+        return objectPath(this);
+      }
+    },
+    active: {
+      deps: ['parameters.active'],
+      fn: function() {
+        return this.parameters.getValue('active');
+      }
+    },
+    opacity: {
+      deps: ['parameters.opacity'],
+      fn: function() {
+        return this.parameters.getValue('opacity');
+      }
+    },
+    zIndex: {
+      deps: ['parameters.zIndex'],
+      fn: function() {
+        return this.parameters.getValue('zIndex');
+      }
+    },
     screenState: {
       deps: ['collection', 'collection.parent'],
       fn: function() {
@@ -102,15 +129,9 @@ var LayerState = State.extend({
 
   _log: function(...args) {
     this.screenState._log(...args);
-  },
-
-  toJSON: function() {
-    return State.prototype.toJSON.apply(this, arguments);
   }
 });
 
-LayerState.PropertyState = PropertyState;
-LayerState.PropertyCollection = PropertyCollection;
 LayerState.types = {};
 
 module.exports = LayerState;
@@ -122,85 +143,31 @@ module.exports = LayerState;
 
 "use strict";
 
-
-module.exports = {
-  lines: __webpack_require__(664),
-  loaders: __webpack_require__(666),
-  text: __webpack_require__(667),
-  utils: __webpack_require__(671)
-};
-
-if (typeof window !== 'undefined') {
-  window.VF = window.VF || {};
-  window.VF.canvas = module.exports;
-}
-
-
-/***/ }),
-
-/***/ 270:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var State = __webpack_require__(27);
 var Collection = __webpack_require__(34);
+var ParameterCollection = __webpack_require__(656);
 var ScreenLayerState = __webpack_require__(266);
-var mockedCtx = __webpack_require__(655);
-var compileFunction = __webpack_require__(662);
+var mockedCtx = __webpack_require__(657);
+var compileFunction = __webpack_require__(663);
 function drawLayerCtx() {
   /*
     You can access the canvas 2d context with the global ctx
   */
 }
 
-var CanvasLayer = State.extend({
-  scripts: __webpack_require__(269),
-
+var CanvasLayer = ScreenLayerState.extend({
   idAttribute: 'name',
   cache: {},
 
   props: {
-    zIndex: ['number', true, 0],
-    name: ['string', true, null],
-    active: ['boolean', true, true],
     drawFunction: ['any', true, function() { return drawLayerCtx; }]
   },
 
-  serialize: function() {
-    var obj = State.prototype.serialize.apply(this, arguments);
-    var returned = {};
-    var propName;
-
-
-    var props = this.serializationProps.props || [];
-    if (props.length) {
-      returned.props = {};
-    }
-
-    // var propName;
-    var def = this.constructor.prototype._definition;
-    for (propName in obj) {
-      returned[propName] = obj[propName];
-
-      if (props.indexOf(propName) > -1) {
-        returned.props[propName] = def[propName];
-      }
-    }
-
-    var type = typeof this.drawFunction;
-    if (type === 'function') {
-      returned.drawFunction = this.drawFunction.toString();
-    }
-    else if (type === 'string') {
-      returned.drawFunction = this.drawFunction;
-    }
-    returned.name = this.name;
-    return returned;
+  collections: {
+    parameters: ParameterCollection
   },
 
   toJSON: function(...args) {
-    return this.serialize(...args);
+    return this.toJSON(...args);
   },
 
   derived: {
@@ -215,7 +182,7 @@ var CanvasLayer = State.extend({
             'draw'
           ].indexOf(key) < 0;
         });
-
+        console.info('targets for %s', this.name, targets);
         return {
           source: [],
           target: targets
@@ -284,24 +251,12 @@ var CanvasLayer = State.extend({
   }
 });
 
-var _CanvasLayersCache = {};
 var CanvasLayers = Collection.extend({
-  mainIndex: CanvasLayer.prototype.idAttribute,
-
+  mainIndex: 'name',
   comparator: 'zIndex',
 
   model: function (attrs, options) {
-    var def = {
-      props: attrs.props || {},
-      serializationProps: {
-        props: [].concat([
-          'active',
-        ], Object.keys(attrs.props || {})),
-      }
-    };
-    var Constructor = _CanvasLayersCache[attrs.name] || CanvasLayer.extend(def);
-    _CanvasLayersCache[attrs.name] = Constructor;
-    var inst =  new Constructor(attrs, options);
+    var inst =  new CanvasLayer(attrs, options);
     if (options.init === false) inst.initialize();
     return inst;
   }
@@ -309,8 +264,17 @@ var CanvasLayers = Collection.extend({
 
 
 module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
-  props: {
-    clear: ['number', true, 1]
+  baseParameters: ScreenLayerState.prototype.baseParameters.concat([
+    {name: 'clear', type: 'number', default: 1}
+  ]),
+
+  derived: {
+    clear: {
+      deps: ['parameters.clear'],
+      fn: function() {
+        return this.parameters.getValue('clear');
+      }
+    }
   },
 
   collections: {
@@ -320,7 +284,7 @@ module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
 
 /***/ }),
 
-/***/ 271:
+/***/ 270:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -338,13 +302,13 @@ module.exports = ScreenLayerState.types.img = ScreenLayerState.extend({
 
 /***/ }),
 
-/***/ 272:
+/***/ 271:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var ScreenLayerState = __webpack_require__(266);
-var Extractor = __webpack_require__(672);
+var Extractor = __webpack_require__(664);
 
 module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   props: {
@@ -363,7 +327,7 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
           source: [],
           target: [
             'active',
-            'styleProperties'
+            'parameters'
           ]
         };
       }
@@ -439,7 +403,7 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
 
 /***/ }),
 
-/***/ 273:
+/***/ 272:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -447,7 +411,7 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
 var ScreenLayerState = __webpack_require__(266);
 var State = __webpack_require__(27);
 var Collection = __webpack_require__(34);
-
+var ParameterCollection = __webpack_require__(656);
 
 /***************************************\
  *                                     *
@@ -868,8 +832,7 @@ module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
   },
 
   collections: {
-    parameters: ScreenLayerState.PropertyCollection,
-    styleProperties: ScreenLayerState.PropertyCollection,
+    parameters: ParameterCollection,
     //
     geometries: GeometryCollection,
     lights: LightCollection,
@@ -1000,7 +963,7 @@ module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
 
 /***/ }),
 
-/***/ 274:
+/***/ 273:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1015,7 +978,7 @@ module.exports = TxtLayerState;
 
 /***/ }),
 
-/***/ 275:
+/***/ 274:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1065,7 +1028,7 @@ var ScreenState = State.extend({
   },
 
   collections: {
-    layers: __webpack_require__(697)
+    layers: __webpack_require__(700)
   },
 
   derived: {
@@ -1107,7 +1070,107 @@ module.exports = ScreenState;
 
 /***/ }),
 
-/***/ 655:
+/***/ 653:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function isCollectionOfParent(o, p) {
+  if (!p || !p._collections) return;
+  for (var name in p._collections) {
+    if (p[name] === o.collection) return name + '.' + o.getId();
+  }
+}
+
+function isChildOfParent(o, p) {
+  if (!p || !p._children) return;
+  for (var name in p._children) {
+    if (p[name] === o) return name;
+  }
+}
+
+function isPropOfParent(o, p) {
+  if (!p) return;
+  for (var name in p) {
+    if (p[name] === o) return name;
+  }
+}
+
+var _paths = {};
+function objectPath(state) {
+  if (!state) return null;
+  if (_paths[state.cid]) return _paths[state.cid];
+  var parts = [];
+
+
+  function up(instance) {
+    var collectionName = instance.collection ?
+                          isCollectionOfParent(instance, instance.collection.parent) :
+                          null;
+    if (collectionName) {
+      parts.unshift(collectionName);
+      return up(instance.collection.parent);
+    }
+
+    var childName = isChildOfParent(instance, instance.parent);
+    if (childName) {
+      parts.unshift(childName);
+      return up(instance.parent);
+    }
+
+
+    var propName = isPropOfParent(instance, instance.parent);
+    if (propName) {
+      parts.unshift(propName);
+      return up(instance.parent);
+    }
+
+    if (instance.parent) up(instance.parent);
+  }
+
+  up(state);
+
+  _paths[state.cid] = parts.join('.');
+  return _paths[state.cid];
+}
+
+module.exports = objectPath;
+
+/***/ }),
+
+/***/ 656:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var ParamState = __webpack_require__(665);
+var Collection = __webpack_require__(34);
+
+var ParamCollection = Collection.extend({
+  mainIndex: 'name',
+  model: ParamState,
+
+  comparator: 'name',
+
+  toJSON: function (...args) {
+    return this.map(model => model.toJSON(...args));
+  },
+
+  getValue: function(name, defaultVal) {
+    var param = this.get(name);
+    if (!param) return defaultVal;
+    var val = param.value;
+    defaultVal = arguments.length === 2 ? defaultVal : param.default;
+    return val === null || typeof val === 'undefined' ? defaultVal : val;
+  }
+});
+
+module.exports = ParamCollection;
+
+/***/ }),
+
+/***/ 657:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1190,7 +1253,7 @@ module.exports = mockedCtx;
 
 /***/ }),
 
-/***/ 658:
+/***/ 659:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1201,7 +1264,7 @@ module.exports = function minMax(val, min = 0, max = 16) {
 
 /***/ }),
 
-/***/ 659:
+/***/ 660:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1212,7 +1275,7 @@ module.exports = function midi2prct(val) {
 
 /***/ }),
 
-/***/ 660:
+/***/ 661:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1223,7 +1286,7 @@ module.exports = function midi2rad(val) {
 
 /***/ }),
 
-/***/ 661:
+/***/ 662:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1247,9 +1310,9 @@ utils.log = function log(ctx, ...args) {
 };
 
 
-utils.midiMinMax = __webpack_require__(658);
-utils.midi2Rad = __webpack_require__(660);
-utils.midi2Prct = __webpack_require__(659);
+utils.midiMinMax = __webpack_require__(659);
+utils.midi2Rad = __webpack_require__(661);
+utils.midi2Prct = __webpack_require__(660);
 
 /**
  * txt
@@ -1459,15 +1522,15 @@ utils.restoreContexts = function restoreContexts(ctx, cache, count, preprocess, 
 
 /***/ }),
 
-/***/ 662:
+/***/ 663:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var mockedCtx = __webpack_require__(655);
-var utils = __webpack_require__(661);// jshint ignore:line
+var mockedCtx = __webpack_require__(657);
+var utils = __webpack_require__(662);// jshint ignore:line
 
-// proxy the method and properties of the canvas context
+// proxy the method and parameters of the canvas context
 var ctxProperties = '';
 mockedCtx._.methods
   .forEach(function(name) {
@@ -1498,6 +1561,10 @@ function compileFunction(drawFunction) {
     };
     var timeDomain = function(x) {
       return ((layer.audio || {}).timeDomain || [])[x] || 0;
+    };
+
+    var parameter = function(name, defaultVal) {
+      return layer.parameters.getValue(name, defaultVal);
     };
 
     ${ ctxProperties }
@@ -1531,339 +1598,7 @@ module.exports = compileFunction;
 
 /***/ }),
 
-/***/ 663:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/* global module */
-module.exports = function lineGrid(ctx) {
-  ctx.strokeStyle = this.lineColor || '#000';
-  ctx.fillStyle = this.lineColor || '#000';
-  var rows = Math.max(this.pointRows || 4, 1);
-  var lw = this.lineWidth || 0;
-  var radius = Math.max(this.pointRadius || lw, 1);
-  var vol = this.screenState.audio.timeDomain;
-  var freq = this.screenState.audio.frequency;
-  var count = vol.length;//Math.max(this.pointsCount || 1, 1);
-  var twoPI = Math.PI * 2;
-  var w = ctx.canvas.width;
-  var h = ctx.canvas.height;
-  var sh = h / rows;
-  var cols = Math.round(count / rows);
-  var sw = w / cols;
-  var row = -0.5;
-  var prow;
-  // var rand = this.randFactor || 0;
-  var i;
-  var x;
-  var y;
-  var px;
-  var py;
-  var p;
-  var point;
-  var points = [];
-
-
-  // function random(factor) {
-  //   factor = factor || rand;
-  //   return Math.random() * rand * (Math.random() > 0.5 ? 1 : -1);
-  // }
-
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = lw;
-  for (i = 0; i < count; i++) {
-    if (i % cols < 1) {
-      row++;
-    }
-    y = (sh * row) + (freq[i] - 12);// + random(freq[i]);
-    x = (sw * 0.5) + (sw * (i % cols));// + (freq[i] - 12);// + random(freq[i]);
-    points.push([x, y]);
-
-    if (lw) {
-      if (!px) {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-      }
-      else {
-        if (row != prow) {
-          ctx.stroke();
-          ctx.moveTo(x, y);
-        }
-        else {
-          ctx.lineTo(x, y);
-        }
-      }
-    }
-
-    px = x;
-    py = y;
-    prow = row;
-  }
-  ctx.stroke();
-  ctx.closePath();
-
-  for (p in points) {
-    point = points[p];
-    ctx.beginPath();
-    ctx.arc(point[0], point[1], Math.min(Math.max(vol[p] * radius * 0.01, 1), sh * 0.5), 0, twoPI);
-    ctx.closePath();
-    ctx.fill();
-  }
-};
-
-
-/***/ }),
-
 /***/ 664:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/*global module, require*/
-module.exports = {
-  grid: __webpack_require__(663),
-  roundFrequencies: __webpack_require__(665)
-};
-
-/***/ }),
-
-/***/ 665:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/* global module */
-module.exports = function roundFrequencies(ctx) {
-  var audio = this.screenState.audio || {};
-  var bufferLength = audio.bufferLength;
-  var freqArray = audio.frequency;
-  var timeDomainArray = audio.timeDomain;
-
-  if (!bufferLength || !freqArray || !timeDomainArray) return;
-
-  var x = ctx.canvas.width * 0.5;
-  var y = ctx.canvas.height * 0.5;
-  var r = Math.min(x, y) - 20;
-  // var first;
-  var rad = Math.PI * 2;
-
-  var i = 0, a, td, lx, ly;
-  var original = {
-    lineWidth: ctx.lineWidth,
-    lineCap: ctx.lineCap,
-    lineJoin: ctx.lineJoin,
-    strokeStyle: ctx.strokeStyle,
-  };
-
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-
-  ctx.strokeStyle = 'red';
-  var col;
-  for (var lw = y*2; lw >= y*0.2; lw-=y*0.2) {
-    col = col === 'white' ? 'black' : 'white';
-    ctx.strokeStyle = col;
-    ctx.lineWidth = lw;
-
-    // ctx.beginPath();
-    // for (i = 0; i < bufferLength; i++) {
-    //   a = ((rad / bufferLength) * i) - Math.PI;
-    //   f = (r / 100) * (freqArray[i] / 2);
-    //   lx = Math.round(x + Math.cos(a) * f);
-    //   ly = Math.round(y + Math.sin(a) * f);
-    //   ctx.lineTo(lx, ly);
-    // }
-    // ctx.stroke();
-
-    ctx.beginPath();
-    for (i = 0; i < bufferLength; i++) {
-      a = ((rad / bufferLength) * i) - Math.PI;
-      td = (r / 100) * (timeDomainArray[i] / 2);
-      lx = Math.round(x + Math.cos(a) * td);
-      ly = Math.round(y + Math.sin(a) * td);
-      ctx.lineTo(lx, ly);
-    }
-    ctx.stroke();
-  }
-
-  ctx.lineWidth = original.lineWidth;
-  ctx.lineCap = original.lineCap;
-  ctx.lineJoin = original.lineJoin;
-  ctx.strokeStyle = original.strokeStyle;
-};
-
-
-/***/ }),
-
-/***/ 666:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/* global module */
-var _cacheImgs = {};
-function loadImg(url, done) {
-  // loaded
-  if (_cacheImgs[url]) {
-    return done(null, _cacheImgs[url]);
-  }
-  // loading
-  if (_cacheImgs[url] === false) {
-    return done();
-  }
-
-  var img = new Image();
-  _cacheImgs[url] = false;
-  img.onload = function() {
-    _cacheImgs[url] = img;
-  };
-  img.src = url;
-}
-
-var _cacheVideos = {};
-function loadVideo(url, done) {
-  // loaded
-  if (_cacheVideos[url]) {
-    return done(null, _cacheVideos[url]);
-  }
-  // loading
-  if (_cacheVideos[url] === false) {
-    return done();
-  }
-
-  var video = document.createElement('video');
-  _cacheVideos[url] = false;
-
-  video.loop = true;
-  video.autoplay = true;
-  video.autostart = true;
-  video.muted = true;
-  video.volume = 0;
-  video.controls = false;
-  video.oncanplaythrough = function() {
-    if (_cacheVideos[url]) return;
-    video.width = video.videoWidth;
-    video.height = video.videoHeight;
-    _cacheVideos[url] = video;
-  };
-  video.src = url;
-}
-
-
-
-module.exports = {
-  img: loadImg,
-  video: loadVideo
-};
-
-/***/ }),
-
-/***/ 667:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/*global module, require*/
-module.exports = {
-  wrap: __webpack_require__(668)
-};
-
-/***/ }),
-
-/***/ 668:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* global module */
-
-// borrowed from http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
-module.exports = function wrapText(context, text, x, y, maxWidth, lineHeight) {
-  var words = text.split(' ');
-  var line = '';
-
-  for(var n = 0; n < words.length; n++) {
-    var testLine = line + words[n] + ' ';
-    var metrics = context.measureText(testLine);
-    var testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0) {
-      context.fillText(line, x, y);
-      line = words[n] + ' ';
-      y += lineHeight;
-    }
-    else {
-      line = testLine;
-    }
-  }
-  context.fillText(line, x, y);
-};
-
-/***/ }),
-
-/***/ 669:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/*global module */
-module.exports = function fps(ctx) {
-  var cx = ctx.canvas.width * 0.5;
-  var cy = ctx.canvas.height * 0.5;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = (cy * 0.25) + 'px monospace';
-
-  var cache = this.cache;
-  var screen = this.screenState;
-
-  cache.previous = cache.previous || 0;
-  var fps = Math.round(1000 / (screen.frametime - cache.previous)) + 'fps';
-  ctx.lineWidth = 3;
-  ctx.fillStyle = '#000';
-  ctx.strokeStyle = '#fff';
-  ctx.fillText(fps, cx, cy);
-  ctx.strokeText(fps, cx, cy);
-  cache.previous = screen.frametime;
-};
-
-/***/ }),
-
-/***/ 670:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/*global module */
-module.exports = function frametime(ctx) {
-  var cx = ctx.canvas.width * 0.5;
-  var cy = ctx.canvas.height * 0.5;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = (cy * 0.25) + 'px monospace';
-  var ft = Math.round(this.screenState.frametime) + 'ms';
-  ctx.fillStyle = '#000';
-  ctx.strokeStyle = '#fff';
-  ctx.fillText(ft, cx, cy);
-  ctx.strokeText(ft, cx, cy);
-};
-
-/***/ }),
-
-/***/ 671:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/*global module, require*/
-module.exports = {
-  fps: __webpack_require__(669),
-  frametime: __webpack_require__(670)
-};
-
-/***/ }),
-
-/***/ 672:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1906,9 +1641,8 @@ var Extractor = State.extend({
     var name, value;
 
     for (var p = 0; p < this.svg.style.length; p++) {
-      name = this.svg.style[p];
+      name = this.svg.style[p].slice(2);
       value = this.svg.style.getPropertyValue(name).trim();
-
       props.push({
         name: name,
         value: value,
@@ -1918,8 +1652,8 @@ var Extractor = State.extend({
 
     this.svg.style = null;
 
-    var previousProperties = this.model.styleProperties.serialize();
-    return props.concat(previousProperties);
+    var previousParameters = this.model.parameters.serialize();
+    return props.concat(previousParameters);
   },
 
   extract: function() {
@@ -1935,8 +1669,8 @@ var Extractor = State.extend({
 
     layer.svgStyles = Object.keys(svgState.svgStyles).length ? this.removeStylesFromContent().model.svgStyles : this.extractStyles();
 
-    this.model.styleProperties.set(this.setPathLengths().extractProps());
-    layer.styleProperties = this.model.styleProperties.serialize();
+    this.model.parameters.set(this.setPathLengths().extractProps());
+    layer.parameters = this.model.parameters.serialize();
 
     layer.content = this.el.innerHTML;
 
@@ -1958,7 +1692,52 @@ module.exports = Extractor;
 
 /***/ }),
 
-/***/ 697:
+/***/ 665:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var State = __webpack_require__(27);
+var objectPath = __webpack_require__(653);
+
+var ParamState = State.extend({
+  idAttribute: 'name',
+
+  mappable: {
+    target: ['value']
+  },
+
+  props: {
+    name: ['string', true, ''],
+    type: ['string', false, ''],
+    value: ['any', false, ''],
+    default: ['any', false, '']
+  },
+
+  derived: {
+    modelPath: {
+      deps: ['name'],
+      fn: function() {
+        return objectPath(this);
+      }
+    },
+    typeSafe: {
+      deps: ['value', 'type'],
+      fn: function() {
+        if (this.type === 'boolean') return !!this.value;
+        if (this.type === 'string') return (this.value || '').toString();
+        if (this.type === 'number') return Number(this.value || 0);
+        return this.value;
+      }
+    }
+  }
+});
+
+module.exports = ParamState;
+
+/***/ }),
+
+/***/ 700:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1966,12 +1745,12 @@ module.exports = Extractor;
 var assign = __webpack_require__(33);
 var Collection = __webpack_require__(34);
 var LayerState = __webpack_require__(266);
-__webpack_require__(270);
-__webpack_require__(275);
-__webpack_require__(272);
-__webpack_require__(271);
+__webpack_require__(269);
 __webpack_require__(274);
+__webpack_require__(271);
+__webpack_require__(270);
 __webpack_require__(273);
+__webpack_require__(272);
 
 module.exports = Collection.extend({
   comparator: 'zIndex',

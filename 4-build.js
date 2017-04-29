@@ -6,7 +6,7 @@ webpackJsonp([4,1],{
 "use strict";
 
 
-var resolve = __webpack_require__(674);
+var resolve = __webpack_require__(667);
 var assign = __webpack_require__(33);
 var State = __webpack_require__(27);
 var Collection = __webpack_require__(34);
@@ -84,7 +84,7 @@ var MappingEmitter = State.extend({
         return this.collection.resolve(sourcePath);
       }
     },
-    sourceProperty: {
+    sourceParameter: {
       deps: ['source'],
       fn: function() {
         if (this.source.indexOf('midi:') === 0) return;
@@ -93,6 +93,10 @@ var MappingEmitter = State.extend({
       }
     }
   },
+
+  hasTarget: function(targetPath) {
+    return this.targets.indexOf(targetPath) > -1;
+  }
 });
 
 var Mappings = Collection.extend({
@@ -128,7 +132,7 @@ var Mappings = Collection.extend({
     (mappings || []).forEach(function(mapping) {
       if (!mapping.sourceState) return;
       this.listenTo(mapping.sourceState, 'all', function(evtName, source, value) {
-        if (evtName !== 'change:' + mapping.sourceProperty) return;
+        if (evtName !== 'change:' + mapping.sourceParameter) return;
         this.process([mapping], value);
       });
     }, this);
@@ -156,7 +160,7 @@ var Mappings = Collection.extend({
 
   findMappingByTarget: function(path) {
     return this.models.find(function(mapping) {
-      return mapping.targets.indexOf(path) > -1;
+      return mapping.hasTarget(path);
     });
   },
 
@@ -203,7 +207,7 @@ var Mappings = Collection.extend({
     sources.forEach(function(info) {
       info.targets.forEach(function(target) {
         var parts = target.split('.');
-        var targetProperty = parts.pop();
+        var targetParameter = parts.pop();
         var targetStatePath = parts.join('.');
         var state;
         try {
@@ -211,10 +215,14 @@ var Mappings = Collection.extend({
         } catch(e) {}
         if (!state) return;
 
-        var finalValue = info.fn(value, state.get(targetProperty));
+        var finalValue = info.fn(value, state.get(targetParameter));
         if (finalValue instanceof Error) return;
+
+        if (state.type === 'boolean') finalValue = finalValue === 'false' ? false : !!finalValue;
+        if (state.type === 'string') finalValue = (finalValue || '').toString();
+        if (state.type === 'number') finalValue = Number(finalValue || 0);
         try {
-          state.set(targetProperty, finalValue);
+          state.set(targetParameter, finalValue);
         }
         catch (e) {
           console.info(e.message);
@@ -256,11 +264,11 @@ var setups = {};
 
 
 setups.empty = {mappings: {}, layers: {}, signals: {}};
-setups.algorave = __webpack_require__(677);
-setups['demo-css'] = __webpack_require__(681);
-setups['demo-canvas'] = __webpack_require__(680);
-setups['demo-3d-zeropaper'] = __webpack_require__(679);
-setups['demo-3d-cubes'] = __webpack_require__(678);
+setups.algorave = __webpack_require__(671);
+setups['demo-css'] = __webpack_require__(675);
+setups['demo-canvas'] = __webpack_require__(674);
+setups['demo-3d-zeropaper'] = __webpack_require__(673);
+setups['demo-3d-cubes'] = __webpack_require__(672);
 
 
 function toArr(obj) {
@@ -360,14 +368,14 @@ var Collection = __webpack_require__(34);
 
 var midiMappings = {
   'KORG INC.': {
-    'KP3 MIDI 1': __webpack_require__(712),
-    'nanoKONTROL2 MIDI 1': __webpack_require__(713)
+    'KP3 MIDI 1': __webpack_require__(715),
+    'nanoKONTROL2 MIDI 1': __webpack_require__(716)
   },
   'AKAI professional LLC': {
-    'LPD8 MIDI 1': __webpack_require__(711)
+    'LPD8 MIDI 1': __webpack_require__(714)
   },
   'Focusrite A.E. Ltd': {
-    'Launchpad Mini MIDI 1': __webpack_require__(714)
+    'Launchpad Mini MIDI 1': __webpack_require__(717)
   }
 };
 
@@ -533,179 +541,8 @@ module.exports = MIDIAccessState;
 "use strict";
 
 var assign = __webpack_require__(33);
-var DetailsView = __webpack_require__(675);
-var View = __webpack_require__(652);
-var objectPath = __webpack_require__(656);
-
-var StylePropertyView = View.extend({
-  template: `
-    <div class="columns object-prop prop-type-default">
-      <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow prop-value-reset">
-        <button title="Reset to default value" class="vfi-cancel"></button>
-      </div>
-      <div class="column prop-value">
-        <input name="value" type="text" />
-      </div>
-      <div class="column prop-mapping-clear no-grow">
-        <button title="Remove mapping" class="vfi-unlink"></button>
-      </div>
-      <div class="column prop-mapping-name">
-        <input placeholder="mappingName" name="mapping-name" type="text" />
-      </div>
-      <div class="column no-grow">
-        <button title="Mapping details" class="mapping-details"></button>
-      </div>
-    </div>
-  `,
-
-  initialize: function() {
-    View.prototype.initialize.apply(this, arguments);
-    this.listenToAndRun(this.rootView.mappings, 'change:targets', function() {
-      this.trigger('change:rootView.mappings');
-    });
-  },
-
-  derived: {
-    suggestionHelper: {
-      cache: false,
-      fn: function() {
-        var view = this.parent;
-        while (view) {
-          if (view.suggestionHelper) return view.suggestionHelper;
-          view = view.parent;
-        }
-        return false;
-      }
-    },
-
-    modelPath: {
-      deps: ['model'],
-      fn: function() {
-        return objectPath(this.model);
-      }
-    },
-
-    propertyPath: {
-      deps: ['model.name', 'modelPath'],
-      fn: function() {
-        return this.modelPath + '.value';
-      }
-    },
-
-    mapping: {
-      deps: ['propertyPath', 'rootView.mappings'],
-      fn: function() {
-        return this.rootView.mappings.findMappingByTarget(this.propertyPath);
-      }
-    }
-  },
-
-  bindings: {
-    'model.name': '.prop-name',
-    'model.value': {
-      selector: '[name="value"]',
-      type: 'value'
-    },
-
-    'mapping.name': [
-      {
-        type: 'booleanAttribute',
-        selector: '.prop-mapping-clear button',
-        name: 'disabled',
-        invert: true
-      },
-      {
-        type: 'value',
-        selector: '[name="mapping-name"]'
-      },
-      {
-        type: 'booleanClass',
-        selector: '.mapping-details',
-        yes: 'vfi-eye',
-        no: 'vfi-eye-off'
-      },
-      {
-        type: 'booleanAttribute',
-        selector: '.mapping-details',
-        name: 'disabled',
-        invert: true
-      },
-      {
-        type: 'booleanAttribute',
-        selector: '.prop-value-reset button',
-        name: 'disabled'
-      }
-    ]
-  },
-
-  commands: {
-    'click .prop-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
-    'change [name="value"]': 'propChange _handleChange',
-    'click .prop-value-reset button': 'propChange _handleReset',
-  },
-
-  _handleRemoveMappingTarget: function() {
-    var propertyPath = this.propertyPath;
-    var mapping = this.mapping.serialize();
-    mapping.targets = mapping.targets.filter(function(target) {
-      return target !== propertyPath;
-    });
-    return {mapping: mapping};
-  },
-
-  _handleChange: function() {
-    return {
-      path: objectPath(this.model),
-      property: 'value',
-      value: this.query('[name="value"]').value
-    };
-  },
-
-  _handleReset: function() {
-    return {
-      path: objectPath(this.model),
-      property: 'value',
-      value: this.model.default
-    };
-  },
-
-  events: {
-    'focus [name="mapping-name"]': '_suggestMapping',
-    'click button.mapping-details': '_showMapping'
-  },
-
-  _suggestMapping: function(evt) {
-    var view = this;
-    var helper = view.suggestionHelper;
-    var mappings = this.rootView.mappings;
-    var propertyPath = this.propertyPath;
-
-    helper.attach(evt.target, function(selected) {
-      var mappingState = mappings.get(selected);
-      if (!mappingState) return;
-      var mapping = mappingState.serialize();
-      mapping.targets.push(propertyPath);
-      view.sendCommand('updateMapping', {
-        mapping: mapping
-      });
-      helper.detach();
-    }).fill(mappings.map(function(state) { return state.name; }));
-  },
-
-  _showMapping: function() {
-    var mapping = this.mapping;
-    this.rootView.regionRight.focusTab('Mappings');
-    this.rootView.mappingsView.mappingsList.views.forEach(function(view) {
-      if (view.model === mapping) {
-        view.el.scrollIntoView();
-        view.blink();
-      }
-    });
-  }
-});
-
-
+var DetailsView = __webpack_require__(668);
+var ParameterView = __webpack_require__(670);
 
 var LayerDetailsView = DetailsView.extend({
   template: `
@@ -721,87 +558,34 @@ var LayerDetailsView = DetailsView.extend({
       </header>
 
       <div class="rows row param-section">
-        <h5>CSS variables</h5>
+        <h5>Parameters</h5>
         <div class="row columns">
-          <div class="columns"><input type="text" name="style-prop-name" placeholder="--css-var-name" /></div>
-          <div class="columns"><input type="text" name="style-prop-default" placeholder="2px, 100%, " /></div>
-          <div class="columns no-grow"><button name="style-prop-add" class="vfi-plus"></button></div>
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
         </div>
-        <div class="row style-props" ></div>
-      </div>
-
-      <div class="rows row param-section">
-        <h5>Layer properties</h5>
-        <div class="row mappings props"></div>
+        <div class="row parameters" ></div>
       </div>
     </section>
   `,
 
-
   events: assign(DetailsView.prototype.events, {
-    'click [name=show-origin]': '_showOrigin',
-    'click [name=style-prop-add]': 'addStyleProperty'
+    'click [name=show-origin]': '_showOrigin'
   }),
+
 
   _showOrigin: function() {
     this.rootView.trigger('blink', this.modelPath);
-  },
-
-  addStyleProperty: function() {
-    var val = this.query('[name=style-prop-default]').value;
-    var props = this.model.styleProperties.serialize();
-    props.push({
-      name: this.query('[name=style-prop-name]').value,
-      default: val,
-      value: val
-    });
-
-    this.rootView.sendCommand('propChange', {
-      path: 'layers.' + this.model.getId(),
-      property: 'styleProperties',
-      value: props
-    });
-  },
-
-  editFunction: function(propName) {
-    var rootView = this.rootView;
-    var path = objectPath(this.model);
-    var script = this.model.get(propName) || ('function ' + propName + '() {\n}');
-    rootView.getEditor({
-      tabName: this.model.getId() + ' ' + propName,
-      script: script,
-      language: 'javascript',
-      title: path + '.' + propName,
-      onshoworigin: function() {
-        rootView.trigger('blink', path);
-      },
-      autoApply: true,
-      onvalidchange: function doneEditingFunction(str) {
-        rootView.sendCommand('propChange', {
-          path: path,
-          property: propName,
-          value: str
-        });
-      }
-    });
-  },
-
-  render: function() {
-    DetailsView.prototype.render.apply(this, arguments);
-
-    if (this.styleProperties) {
-      this.styleProperties.remove();
-    }
-
-    if (this.model.styleProperties) {
-      this.styleProperties = this.renderCollection(this.model.styleProperties, StylePropertyView, '.style-props');
-    }
-
-    return this;
   }
 });
 
-LayerDetailsView.StylePropertyView = StylePropertyView;
+LayerDetailsView.ParameterView = ParameterView;
 LayerDetailsView.types = {};
 
 module.exports = LayerDetailsView;
@@ -814,7 +598,7 @@ module.exports = LayerDetailsView;
 "use strict";
 
 var View = __webpack_require__(652);
-var SignalDetailsView = __webpack_require__(716);
+var SignalDetailsView = __webpack_require__(719);
 var SignalControlView = View.extend({
   template: '<section class="rows signal">' +
     '<header class="row">' +
@@ -887,7 +671,7 @@ module.exports = SignalControlView;
 
 /***/ }),
 
-/***/ 276:
+/***/ 275:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -929,7 +713,7 @@ module.exports = HSLASignalControlView;
 
 /***/ }),
 
-/***/ 277:
+/***/ 276:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -986,7 +770,7 @@ module.exports = MIDIAccessView;
 
 /***/ }),
 
-/***/ 278:
+/***/ 277:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1095,13 +879,13 @@ module.exports = BeatSignalControlView;
 
 /***/ }),
 
-/***/ 279:
+/***/ 278:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var SignalControlView = __webpack_require__(268);
-var HSLASignalControlView = __webpack_require__(276);
+var HSLASignalControlView = __webpack_require__(275);
 
 var RGBASignalControlView = SignalControlView.types.rgba = HSLASignalControlView.extend({});
 
@@ -1109,7 +893,7 @@ module.exports = RGBASignalControlView;
 
 /***/ }),
 
-/***/ 644:
+/***/ 643:
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = function() {
@@ -1118,7 +902,7 @@ module.exports = function() {
 
 /***/ }),
 
-/***/ 646:
+/***/ 645:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1380,7 +1164,7 @@ module.exports = Tour;
 
 /***/ }),
 
-/***/ 647:
+/***/ 646:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1452,7 +1236,7 @@ module.exports = function(controllerView) {
       name: 'signals',
       selector: '.region-right .region-content',
       text: 'Using signals allow to create complex variables which can be used to control the layer transformations.<br/>' +
-      'Just like layers, click the name of a signal to display its details and manipulate their properties.',
+      'Just like layers, click the name of a signal to display its details and manipulate their parameters.',
       prepare: function() {
         controllerView.regionRight.focusTab('Signals');
       }
@@ -1492,23 +1276,23 @@ module.exports = function(controllerView) {
 
 /***/ }),
 
-/***/ 648:
+/***/ 647:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(652);
-var MIDIAccessView = __webpack_require__(277);
-var SignalsView = __webpack_require__(719);
-var LayersView = __webpack_require__(700);
-var SuggestionView = __webpack_require__(693);
-var AudioSource = __webpack_require__(686);
-var AceEditor = __webpack_require__(684);
-var RegionView = __webpack_require__(692);
-var MappingsControlView = __webpack_require__(710);
-var MenuView = __webpack_require__(690);
-var objectPath = __webpack_require__(656);
-var ControlScreenControls = __webpack_require__(687);
+var MIDIAccessView = __webpack_require__(276);
+var SignalsView = __webpack_require__(722);
+var LayersView = __webpack_require__(703);
+var SuggestionView = __webpack_require__(686);
+var AudioSource = __webpack_require__(680);
+var AceEditor = __webpack_require__(678);
+var RegionView = __webpack_require__(685);
+var MappingsControlView = __webpack_require__(713);
+var MenuView = __webpack_require__(684);
+var objectPath = __webpack_require__(653);
+var ControlScreenControls = __webpack_require__(681);
 // var Timeline = require('./timeline-view');
 
 
@@ -1937,7 +1721,6 @@ var ControllerView = View.extend({
   events: {
     'click .vf-app-name': '_openMenu',
     'click [name="screen"]': '_openScreen',
-    'click [name="setup-editor"]': '_setupEditor',
     'click [name="start-tour"]': '_startTour'
   },
 
@@ -2071,6 +1854,27 @@ module.exports = ControllerView;
 
 /***/ }),
 
+/***/ 648:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = {
+  lines: __webpack_require__(691),
+  loaders: __webpack_require__(693),
+  text: __webpack_require__(694),
+  utils: __webpack_require__(698)
+};
+
+if (typeof window !== 'undefined') {
+  window.VF = window.VF || {};
+  window.VF.canvas = module.exports;
+}
+
+
+/***/ }),
+
 /***/ 650:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2078,10 +1882,10 @@ module.exports = ControllerView;
 
 var assign = __webpack_require__(33);
 var Collection = __webpack_require__(34);
-var SignalState = __webpack_require__(657);
-__webpack_require__(715);
-__webpack_require__(717);
+var SignalState = __webpack_require__(658);
 __webpack_require__(718);
+__webpack_require__(720);
+__webpack_require__(721);
 
 var SignalCollection = Collection.extend({
   mainIndex: 'name',
@@ -2268,14 +2072,14 @@ module.exports = ControlView;
 
 /***/ }),
 
-/***/ 653:
+/***/ 654:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(652);
 var LayerDetailsView = __webpack_require__(267);
-var objectPath = __webpack_require__(656);
+var objectPath = __webpack_require__(653);
 
 var LayerControlView = View.extend({
   template: `
@@ -2398,76 +2202,7 @@ module.exports = LayerControlView;
 
 /***/ }),
 
-/***/ 656:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-function isCollectionOfParent(o, p) {
-  if (!p || !p._collections) return;
-  for (var name in p._collections) {
-    if (p[name] === o.collection) return name + '.' + o.getId();
-  }
-}
-
-function isChildOfParent(o, p) {
-  if (!p || !p._children) return;
-  for (var name in p._children) {
-    if (p[name] === o) return name;
-  }
-}
-
-function isPropOfParent(o, p) {
-  if (!p) return;
-  for (var name in p) {
-    if (p[name] === o) return name;
-  }
-}
-
-var _paths = {};
-function objectPath(state) {
-  if (!state) return null;
-  if (_paths[state.cid]) return _paths[state.cid];
-  var parts = [];
-
-
-  function up(instance) {
-    var collectionName = instance.collection ?
-                          isCollectionOfParent(instance, instance.collection.parent) :
-                          null;
-    if (collectionName) {
-      parts.unshift(collectionName);
-      return up(instance.collection.parent);
-    }
-
-    var childName = isChildOfParent(instance, instance.parent);
-    if (childName) {
-      parts.unshift(childName);
-      return up(instance.parent);
-    }
-
-
-    var propName = isPropOfParent(instance, instance.parent);
-    if (propName) {
-      parts.unshift(propName);
-      return up(instance.parent);
-    }
-
-    if (instance.parent) up(instance.parent);
-  }
-
-  up(state);
-
-  _paths[state.cid] = parts.join('.');
-  return _paths[state.cid];
-}
-
-module.exports = objectPath;
-
-/***/ }),
-
-/***/ 657:
+/***/ 658:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2518,7 +2253,7 @@ module.exports = SignalState;
 
 /***/ }),
 
-/***/ 673:
+/***/ 666:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2537,7 +2272,7 @@ module.exports = function propNamesExtractor(state, excluded = []) {
 
 /***/ }),
 
-/***/ 674:
+/***/ 667:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2570,19 +2305,17 @@ module.exports = resolve;
 
 /***/ }),
 
-/***/ 675:
+/***/ 668:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
-var Collection = __webpack_require__(34);
-var State = __webpack_require__(27);
 var View = __webpack_require__(652);
-var objectPath = __webpack_require__(656);
-var propNamesExtractor = __webpack_require__(673);
+var objectPath = __webpack_require__(653);
+var propNamesExtractor = __webpack_require__(666);
+var ParamView = __webpack_require__(670);
 
-var PropertyView = __webpack_require__(691);
 
 var DetailsView = View.extend({
   template: `
@@ -2595,17 +2328,24 @@ var DetailsView = View.extend({
       </header>
 
       <div class="rows row param-section">
-        <h5>Properties</h5>
-        <div class="row items"></div>
+        <h5>Parameters</h5>
+        <div class="row columns">
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row parameters" ></div>
       </div>
     </section>
   `,
 
   initialize: function() {
-    this.listenToAndRun(this, 'change:definition', function() {
-      this.properties.reset(this.definition);
-    });
-
     this.listenTo(this.rootView, 'all', function(evtName) {
       if (evtName.indexOf('app:') === 0 && evtName.indexOf('Mapping') > 0) {
         this.trigger('change:model', this.model);
@@ -2643,38 +2383,62 @@ var DetailsView = View.extend({
     }
   },
 
-  collections: {
-    properties: Collection.extend({
-      mainIndex: 'name',
+  events: {
+    'click [name=parameter-add]': 'addParameter'
+  },
 
-      model: State.extend({
-        idAttribute: 'name',
+  addParameter: function() {
+    var val = this.query('[name=parameter-default]').value;
+    var props = this.model.parameters.serialize();
+    props.push({
+      name: this.query('[name=parameter-name]').value,
+      type: this.query('[name=parameter-type]').value,
+      default: val,
+      value: val
+    });
 
-        session: {
-          name: 'string',
-          allowNull: 'boolean',
-          default: 'any',
-          required: 'boolean',
-          test: 'any',
-          type: 'string',
-          values: 'array'
-        }
-      })
-    })
+    this.rootView.sendCommand('propChange', {
+      path: 'layers.' + this.model.getId(),
+      property: 'parameters',
+      value: props
+    });
+  },
+
+  editFunction: function(propName) {
+    var rootView = this.rootView;
+    var path = objectPath(this.model);
+    var script = this.model.get(propName) || ('function ' + propName + '() {\n}');
+    rootView.getEditor({
+      tabName: this.model.getId() + ' ' + propName,
+      script: script,
+      language: 'javascript',
+      title: path + '.' + propName,
+      onshoworigin: function() {
+        rootView.trigger('blink', path);
+      },
+      autoApply: true,
+      onvalidchange: function doneEditingFunction(str) {
+        rootView.sendCommand('propChange', {
+          path: path,
+          property: propName,
+          value: str
+        });
+      }
+    });
   },
 
   render: function() {
     View.prototype.render.apply(this, arguments);
 
-    if (this.propertiesView) {
-      this.propertiesView.remove();
+    if (this.parameters) {
+      this.parameters.remove();
     }
 
-    this.propertiesView = this.renderCollection(this.properties, function (opts) {
-      var Constructor = (PropertyView.names[opts.model.name] || PropertyView.types[opts.model.type] || PropertyView);
-      // console.info('property name: %s (%s), type: %s (%s)', opts.model.name, !!PropertyView.names[opts.model.name], opts.model.type, !!PropertyView.types[opts.model.type]);
+    this.parameters = this.renderCollection(this.model.parameters, function (opts) {
+      var Constructor = (ParamView.names[opts.model.name] || ParamView.types[opts.model.type] || ParamView);
+      // console.info('property name: %s (%s), type: %s (%s)', opts.model.name, !!ParamView.names[opts.model.name], opts.model.type, !!ParamView.types[opts.model.type]);
       return new Constructor(opts);
-    }, '.items');
+    }, '.parameters');
 
     this.trigger('change:model');
     this.trigger('change:model.name');
@@ -2685,6 +2449,15 @@ var DetailsView = View.extend({
   bindings: {
     'model.name': '[data-hook=name]',
     'model.type': [
+      {
+        selector: '[name=parameter-type]',
+        type: function(el, val) {
+          if (document.activeElement === el) return;
+          el.querySelectorAll('option').forEach(o => { o.selected = false; });
+          var selectedOption = el.querySelector('option[value="' + val + '"]');
+          if (selectedOption) selectedOption.selected = true;
+        }
+      },
       {
         selector: '[data-hook=type]',
         type: 'text'
@@ -2700,12 +2473,447 @@ var DetailsView = View.extend({
     modelPath: '[data-hook="object-path"]'
   }
 });
+
 module.exports = DetailsView;
 
 
 /***/ }),
 
-/***/ 677:
+/***/ 670:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(33);
+var View = __webpack_require__(652);
+
+var ParamView = View.extend({
+  template: `
+    <div class="columns object-prop parameter-type-default">
+      <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow parameter-value-reset">
+        <button title="Reset to default value" class="vfi-cancel"></button>
+      </div>
+      <div class="column parameter-value">
+        <input name="value" type="text" />
+      </div>
+      <div class="column parameter-mapping-clear no-grow">
+        <button title="Remove mapping" class="vfi-unlink"></button>
+      </div>
+      <div class="column parameter-mapping-name">
+        <input placeholder="mappingName" name="mapping-name" type="text" />
+      </div>
+      <div class="column no-grow">
+        <button title="Mapping details" class="mapping-details"></button>
+      </div>
+    </div>
+  `,
+
+  initialize: function() {
+    View.prototype.initialize.apply(this, arguments);
+    this.listenTo(this.rootView.mappings, 'change', function mappingsChange(...args) {
+      this.trigger('change:rootView.mappings', ...args);
+    });
+  },
+
+  derived: {
+    suggestionHelper: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        var view = this.parent;
+        while (view) {
+          if (view.suggestionHelper) return view.suggestionHelper;
+          view = view.parent;
+        }
+        return false;
+      }
+    },
+
+    value: {
+      deps: [
+        'model.value'
+      ],
+      fn: function() {
+        return this.model.value;
+      }
+    },
+
+    parameterPath: {
+      deps: [
+        'model.modelPath'
+      ],
+      fn: function() {
+        return this.model.modelPath + '.value';
+      }
+    },
+
+    mapping: {
+      deps: [
+        'rootView.mappings',//good idea?
+        'parameterPath'
+      ],
+      fn: function() {
+        return this.rootView.mappings.findMappingByTarget(this.parameterPath);
+      }
+    }
+  },
+
+  bindings: {
+    isProperty: {
+      type: 'booleanClass',
+      name: 'instance-property'
+    },
+
+    parameterPath: {
+      type: 'attribute',
+      name: 'title',
+      selector: '.parameter-name'
+    },
+
+    'model.name': {
+      type: 'text',
+      selector: '.parameter-name'
+    },
+
+    value: {
+      type: function(el, val) {
+        if (el === document.activeElement) return;
+        el.value = val;
+      },
+      selector: 'input[name=value]',
+    },
+
+    'mapping.name': [
+      {
+        type: 'booleanAttribute',
+        selector: '.parameter-mapping-clear button',
+        name: 'disabled',
+        invert: true
+      },
+      {
+        type: 'value',
+        selector: '[name="mapping-name"]'
+      },
+      {
+        type: 'booleanClass',
+        selector: '.mapping-details',
+        yes: 'vfi-eye',
+        no: 'vfi-eye-off'
+      },
+      {
+        type: 'booleanAttribute',
+        selector: '.mapping-details',
+        name: 'disabled',
+        invert: true
+      },
+      {
+        type: 'booleanAttribute',
+        selector: '.parameter-value-reset button',
+        name: 'disabled'
+      }
+    ]
+  },
+
+  commands: {
+    'click .parameter-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
+    'change [name="value"]': 'propChange _handleChange',
+    'click .parameter-value-reset button': 'propChange _handleReset'
+  },
+
+  _handleRemoveMappingTarget: function() {
+    var parameterPath = this.parameterPath;
+    var mapping = this.mapping.serialize();
+    mapping.targets = mapping.targets.filter(function(target) {
+      return target !== parameterPath;
+    });
+    return {mapping: mapping};
+  },
+
+  _handleChange: function() {
+    return {
+      path: this.model.modelPath,
+      property: 'value',
+      value: this.query('[name="value"]').value
+    };
+  },
+
+  _handleReset: function() {
+    return {
+      path: this.model.modelPath,
+      property: 'value',
+      value: this.model.default
+    };
+  },
+
+  events: {
+    'focus [name="mapping-name"]': '_suggestMapping',
+    'focus [type="text"][name="value"]': '_suggestValues',
+    'click button.mapping-details': '_showMapping'
+  },
+
+  _suggestMapping: function(evt) {
+    var view = this;
+    var helper = view.suggestionHelper;
+    var mappings = this.rootView.mappings;
+    var parameterPath = this.parameterPath;
+
+    helper.attach(evt.target, function(selected) {
+      var mappingState = mappings.get(selected);
+      if (!mappingState) return;
+      var mapping = mappingState.serialize();
+      mapping.targets.push(parameterPath);
+      view.sendCommand('updateMapping', {
+        mapping: mapping
+      });
+      helper.detach();
+    }).fill(mappings.map(function(state) { return state.name; }));
+  },
+
+  _suggestValues: function(evt) {
+    var view = this;
+    var helper = view.suggestionHelper;
+    if (!helper || !view.model.values || !view.model.values.length) return;
+
+    var model = view.model;
+    var el = evt.target;
+    helper.attach(el, function(selected) {
+      // console.info('set %s . %s = %s', objectPath(parent), model.name, selected, el.value !== selected);
+
+      view.sendCommand('propChange', {
+        path: model.modelPath,
+        property: 'value',
+        value: selected
+      });
+
+      el.value = selected;
+      helper.detach();
+    }).fill(model.values);
+  },
+
+  _showMapping: function() {
+    var mapping = this.mapping;
+    var rootView = this.rootView;
+    rootView.regionRight.focusTab('Mappings');
+    rootView.mappingsView.mappingsList.views.forEach(function(view) {
+      if (view.model === mapping) {
+        view.el.scrollIntoView();
+        view.blink();
+      }
+    });
+  }
+});
+
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+
+ParamView.types = {};
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+ParamView.types.boolean = ParamView.extend({
+  template: `
+    <div class="columns object-prop parameter-type-boolean">
+      <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow parameter-value-reset">
+        <button title="Reset to default value" class="vfi-cancel"></button>
+      </div>
+      <div class="column parameter-value">
+        <button class="parameter-toggle-btn"></button>
+      </div>
+      <div class="column parameter-mapping-clear no-grow">
+        <button title="Remove mapping" class="vfi-unlink"></button>
+      </div>
+      <div class="column parameter-mapping-name">
+        <input placeholder="mappingName" name="mapping-name" type="text" />
+      </div>
+      <div class="column no-grow">
+        <button title="Mapping details" class="mapping-details"></button>
+      </div>
+    </div>
+  `,
+
+  bindings: assign({}, ParamView.prototype.bindings, {
+    value: {
+      selector: 'button.parameter-toggle-btn',
+      type: 'booleanClass',
+      yes: 'vfi-toggle-on',
+      no: 'vfi-toggle-off'
+    }
+  }),
+
+  commands: {
+    'click .parameter-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
+    'click button.parameter-toggle-btn': 'propChange _handleChange',
+    'click .parameter-value-reset button': 'propChange _handleReset'
+  },
+
+  events: assign({}, ParamView.prototype.events, {
+    'focus [name="mapping-name"]': '_suggestMapping'
+  }),
+
+  _handleChange: function() {
+    return {
+      path: this.model.modelPath,
+      property: 'value',
+      value: !this.model.value
+    };
+  }
+});
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+ParamView.types.number = ParamView.extend({
+  template: `
+    <div class="columns object-prop parameter-type-number">
+      <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow parameter-value-reset">
+        <button title="Reset to default value" class="vfi-cancel"></button>
+      </div>
+      <div class="column parameter-value">
+        <input name="value" type="number" />
+      </div>
+      <div class="column parameter-mapping-clear no-grow">
+        <button title="Remove mapping" class="vfi-unlink"></button>
+      </div>
+      <div class="column parameter-mapping-name">
+        <input placeholder="mappingName" name="mapping-name" type="text" />
+      </div>
+      <div class="column no-grow">
+        <button title="Mapping details" class="mapping-details"></button>
+      </div>
+    </div>
+  `,
+
+  bindings: assign({}, ParamView.prototype.bindings, {
+    min: [
+      {
+        selector: '[name=value]',
+        type: function(el, val) {
+          if (val !== null && typeof val !== 'undefined') {
+            el.setAttribute('min', val);
+          }
+          else {
+            el.removeAttribute('min');
+          }
+        }
+      }
+    ],
+    max: [
+      {
+        selector: '[name=value]',
+        type: function(el, val) {
+          if (val !== null && typeof val !== 'undefined') {
+            el.setAttribute('max', val);
+          }
+          else {
+            el.removeAttribute('max');
+          }
+        }
+      }
+    ],
+  }),
+
+  session: {
+    min: ['number', false, null],
+    max: ['number', false, null]
+  },
+
+  _handleChange: function() {
+    var payload = ParamView.prototype._handleChange.apply(this, arguments);
+    payload.value = Number(payload.value);
+    return payload;
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+
+
+
+ParamView.names = {};
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+ParamView.names.active = ParamView.types.boolean.extend({});
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+ParamView.names.opacity = ParamView.types.number.extend({
+  session: {
+    min: ['number', false, 0],
+    max: ['number', false, 1]
+  }
+});
+
+
+module.exports = ParamView;
+
+/***/ }),
+
+/***/ 671:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -2763,8 +2971,8 @@ module.exports = {
 		},
 		"beatNum20Str": {
 			"targets": [
-				"layers.ar.styleProperties.--beat.value",
-				"layers.vf.styleProperties.--beat.value"
+				"layers.ar.parameters.beat.value",
+				"layers.vf.parameters.beat.value"
 			],
 			"transformFunction": "function (value) {\n  return (value % 20).toString();\n}",
 			"source": "signals.beatA.beatNum"
@@ -2792,7 +3000,7 @@ module.exports = {
 			"zIndex": -10,
 			"layerStyles": "text-align: center;\nfont-size: 12vmin;\ncolor: black;\nfont-family: monospace;\ntext-shadow: 1px 1px 0 #fff\n            ,2px 2px 0 #fff\n            ,3px 3px 0 #fff\n            ,4px 4px 0 #fff\n            ,5px 5px 0 #fff\n            ,6px 6px 0 #fff\n            ,-1px -1px 0 #666\n            ;",
 			"text": "Renick Bell (JP)",
-			"styleProperties": []
+			"parameters": []
 		},
 		"canvas": {
 			"type": "canvas",
@@ -2801,47 +3009,47 @@ module.exports = {
 			"zIndex": 0,
 			"layerStyles": "",
 			"clear": 1,
-			"styleProperties": [],
+			"parameters": [],
 			"canvasLayers": [
 				{
-					"props": {
-						"active": {
+					"parameters": [
+						{
+							"name": "active",
 							"type": "boolean",
 							"required": true,
-							"default": true,
-							"allowNull": false
+							"default": true
 						},
-						"text": {
+						{
+							"name": "text",
 							"type": "string",
 							"required": true,
-							"default": "Hello World!",
-							"allowNull": false
+							"default": "Hello World!"
 						},
-						"toggleA": {
+						{
+							"name": "toggleA",
 							"type": "boolean",
 							"required": true,
-							"default": false,
-							"allowNull": false
+							"default": false
 						},
-						"knobA": {
+						{
+							"name": "knobA",
 							"type": "number",
 							"required": true,
-							"default": 127,
-							"allowNull": false
+							"default": 127
 						},
-						"knobB": {
+						{
+							"name": "knobB",
 							"type": "number",
 							"required": true,
-							"default": 127,
-							"allowNull": false
+							"default": 127
 						},
-						"knobC": {
+						{
+							"name": "knobC",
 							"type": "number",
 							"required": true,
-							"default": 127,
-							"allowNull": false
+							"default": 127
 						}
-					},
+					],
 					"zIndex": 50,
 					"name": "lines",
 					"active": true,
@@ -2864,24 +3072,24 @@ module.exports = {
 				"#algorave": "transform: translateY(var(--translate-y));\n  fill:none;\n  stroke:var(--stroke-color);\n  stroke-width:var(--stroke-width);\n  stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));\n  stroke-dashoffset: 0;"
 			},
 			"src": "./assets/algorave/algorave-stroke.svg",
-			"styleProperties": [
+			"parameters": [
 				{
-					"name": "--stroke-color",
+					"name": "stroke-color",
 					"value": "white",
 					"default": "white"
 				},
 				{
-					"name": "--stroke-width",
+					"name": "stroke-width",
 					"value": "22",
 					"default": "22"
 				},
 				{
-					"name": "--beat",
+					"name": "beat",
 					"value": "9",
 					"default": "0"
 				},
 				{
-					"name": "--translate-y",
+					"name": "translate-y",
 					"value": "-20vh",
 					"default": "-20vh"
 				}
@@ -2897,34 +3105,34 @@ module.exports = {
 				"#fiha": "transform: translateY(var(--translate-y));\n  filter:url(#glow);\n  fill:var(--fill-color);\n  stroke:var(--stroke-color);\n  stroke-width:var(--stroke-width);\n  stroke-linecap:round;\n  stroke-linejoin:round;\n  stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));\n  stroke-dashoffset: 0;"
 			},
 			"src": "./assets/visual-fiha.svg",
-			"styleProperties": [
+			"parameters": [
 				{
-					"name": "--fill-color",
+					"name": "fill-color",
 					"value": "none",
 					"default": "none"
 				},
 				{
-					"name": "--stroke-color",
+					"name": "stroke-color",
 					"value": "white",
 					"default": "white"
 				},
 				{
-					"name": "--stroke-width",
+					"name": "stroke-width",
 					"value": "22",
 					"default": "22"
 				},
 				{
-					"name": "--frametime",
+					"name": "frametime",
 					"value": "0",
 					"default": "0"
 				},
 				{
-					"name": "--beat",
+					"name": "beat",
 					"value": "9",
 					"default": "0"
 				},
 				{
-					"name": "--translate-y",
+					"name": "translate-y",
 					"value": "20vh",
 					"default": "20vh"
 				}
@@ -2935,7 +3143,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 678:
+/***/ 672:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -2951,7 +3159,6 @@ module.exports = {
 			"currentCamera": "perspective",
 			"renderFunction": "function() {\n  var helper = new THREE.AxisHelper(20);\n  helper.name = 'axisHelper';\n  layer.scene.add(helper);\n\n  helper = new THREE.GridHelper(200);\n  helper.name = 'gridHelper';\n  layer.scene.add(helper);\n  console.info(layer.scene.children.map(o => o.name));\n}",
 			"updateFunction": "function() {\n  var screenState = layer.model.screenState;\n  var audio = screenState.audio;\n  var freq = audio.frequency;\n  var vol = audio.timeDomain;\n\n  var scale = freq[12] * 0.1;\n  var speed = 1000;\n  var dist = 80;\n  var deg = (screenState.frametime % (speed * 360) / speed);\n  var tilt = vol[4] - 127;\n\n  layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);\n  layer.camera.lookAt(layer.scene.position);\n  /*\n  */\n}",
-			"styleProperties": [],
 			"parameters": [],
 			"geometries": [
 				{
@@ -3109,7 +3316,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 679:
+/***/ 673:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -3207,8 +3414,7 @@ module.exports = {
 			"opacity": 100,
 			"zIndex": 100,
 			"layerStyles": "filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01)) rotate(calc(0.05deg * var(--frametime)));",
-			"src": "./assets/construction-work/1/front.png",
-			"styleProperties": []
+			"src": "./assets/construction-work/1/front.png"
 		},
 		"bgk2": {
 			"type": "img",
@@ -3216,8 +3422,7 @@ module.exports = {
 			"opacity": 100,
 			"zIndex": 200,
 			"layerStyles": "filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01)) rotateX(180deg) rotateY(180deg) rotate(calc(-0.05deg * var(--frametime)));",
-			"src": "./assets/construction-work/1/front.png",
-			"styleProperties": []
+			"src": "./assets/construction-work/1/front.png"
 		},
 		"zero": {
 			"type": "threejs",
@@ -3228,7 +3433,6 @@ module.exports = {
 			"currentCamera": "defaultperspective",
 			"renderFunction": "function() {\n  // var helper = new THREE.AxisHelper(20);\n  // helper.name = 'axisHelper';\n  // layer.scene.add(helper);\n\n  // helper = new THREE.GridHelper(200);\n  // helper.name = 'gridHelper';\n  // layer.scene.add(helper);\n\n  function makeClones(object, count = 1) {\n    for (var c = 1; c < count; c++) {\n      var clone = object.clone();\n      clone.traverse(function(child) {\n        if (!child.material) return;\n        child.material = child.material.clone();\n        // child.material.wireframe = true; // provokes illegal operation 😢\n      });\n      clone.name = 'clone' + (c + 1);\n      layer.scene.add(clone);\n    }\n  }\n\n  var fatView = layer.loaders.views.filter(v => v.model.name === 'fat')[0];\n  layer.listenToAndRun(fatView, 'change:object', function() {\n    var fatObject = fatView.object;\n    fatObject.traverse(function(child) {\n      if (child.material) child.material.side = THREE.DoubleSide;\n    });\n    makeClones(fatObject, 8);\n  });\n}",
 			"updateFunction": "function() {\n  var screenState = layer.model.screenState;\n  var audio = screenState.audio;\n  var freq = audio.frequency;\n  var vol = audio.timeDomain;\n\n  var scale = freq[12] * 0.1;\n  var speed = 1000;\n  var dist = 200;\n  var deg = (screenState.frametime % (speed * 360) / speed);\n  var tilt = vol[4] - 127;\n\n  layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);\n  layer.camera.lookAt(layer.scene.position);\n\n  var fat = layer.scene.getObjectByName('fat');\n  fat.scale.set(scale + 1, scale + 1, scale + 1);\n  fat.rotation.set(Math.PI * 0.35, midi2rad(parameter('knob1', 0)), midi2rad(parameter('knob2', 0)));\n\n  function alterMaterials(c) {\n    return function(child) {\n      if (child.material && child.material.color) {\n        child.material.wireframe = true;\n        child.material.color = new THREE.Color('hsl('+ freq[c * 4] +', ' + parameter('slider1', 50) + '%, ' + parameter('slider2', 50) + '%)');\n      }\n    }\n  }\n\n  function applyClones(count = 1) {\n    var cap = midiMinMax(parameter('knob3', 0), 0, count);\n    for (var c = 0; c < count; c++) {\n      var clone = layer.scene.getObjectByName('clone' + (c + 1));\n      if (clone) {\n        if (cap < c) {\n          clone.visible = false;\n          return;\n        }\n\n        clone.visible = true;\n        clone.traverse(alterMaterials(c));\n\n        var s = fat.scale.toArray();\n        clone.scale.set(...s);\n\n        var r = fat.rotation.toArray();\n        clone.rotation.set(...r);\n\n        var p = fat.position.toArray();\n        p[Math.round(midiMinMax(parameter('slider3', 0), 0, 2))] = (c * vol[4] * 0.01 * (tilt * (c % 2 === 0 ? 1 : -1)));\n        clone.position.set(...p);\n      }\n    }\n  }\n  applyClones(8);\n}",
-			"styleProperties": [],
 			"parameters": [
 				{
 					"name": "knob1",
@@ -3431,19 +3635,19 @@ module.exports = {
 				"#zeropaper": "fill: var(--fill-color); stroke: var(--stroke-color); stroke-width: var(--stroke-width);"
 			},
 			"src": "./assets/zeropaper/zeropaper-fat.svg",
-			"styleProperties": [
+			"parameters": [
 				{
-					"name": "--fill-color",
+					"name": "fill-color",
 					"value": "white",
 					"default": "white"
 				},
 				{
-					"name": "--stroke-color",
+					"name": "stroke-color",
 					"value": "none",
 					"default": "none"
 				},
 				{
-					"name": "--stroke-width",
+					"name": "stroke-width",
 					"value": "5px",
 					"default": "5px"
 				}
@@ -3454,7 +3658,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 680:
+/***/ 674:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -3477,14 +3681,14 @@ module.exports = {
 			"styleProperties": [],
 			"canvasLayers": [
 				{
-					"props": {
-						"active": {
+					"parameters": [
+						{
+							"name": "active",
 							"type": "boolean",
 							"required": true,
-							"default": true,
-							"allowNull": false
+							"default": true
 						}
-					},
+					],
 					"zIndex": 50,
 					"name": "lines",
 					"active": true,
@@ -3497,7 +3701,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 681:
+/***/ 675:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -3553,18 +3757,18 @@ module.exports = {
 		},
 		"slider7Str": {
 			"targets": [
-				"layers.frontcpy.styleProperties.--rotation.value",
-				"layers.front3cpy.styleProperties.--rotation.value"
+				"layers.frontcpy.parameters.--rotation.value",
+				"layers.front3cpy.parameters.--rotation.value"
 			],
 			"transformFunction": "function(val) { return val.toString(); }",
 			"source": "midi:nk2.slider7"
 		},
 		"slider8Str": {
 			"targets": [
-				"layers.back.styleProperties.--rotation.value",
-				"layers.front.styleProperties.--rotation.value",
-				"layers.front3.styleProperties.--rotation.value",
-				"layers.back3.styleProperties.--rotation.value"
+				"layers.back.parameters.--rotation.value",
+				"layers.front.parameters.--rotation.value",
+				"layers.front3.parameters.--rotation.value",
+				"layers.back3.parameters.--rotation.value"
 			],
 			"transformFunction": "function(val) { return val.toString(); }",
 			"source": "midi:nk2.slider8"
@@ -3606,14 +3810,14 @@ module.exports = {
 		},
 		"beatBlur": {
 			"targets": [
-				"layers.back.styleProperties.--blur.value",
-				"layers.front.styleProperties.--blur.value",
-				"layers.frontcpy.styleProperties.--blur.value",
-				"layers.back3.styleProperties.--blur.value",
-				"layers.back3.styleProperties.--blur.value",
-				"layers.back3.styleProperties.--blur.value",
-				"layers.front3.styleProperties.--blur.value",
-				"layers.front3cpy.styleProperties.--blur.value"
+				"layers.back.parameters.--blur.value",
+				"layers.front.parameters.--blur.value",
+				"layers.frontcpy.parameters.--blur.value",
+				"layers.back3.parameters.--blur.value",
+				"layers.back3.parameters.--blur.value",
+				"layers.back3.parameters.--blur.value",
+				"layers.front3.parameters.--blur.value",
+				"layers.front3cpy.parameters.--blur.value"
 			],
 			"transformFunction": "function (val) { return (val * 0.3).toString(); }",
 			"source": "signals.beat.result"
@@ -3645,19 +3849,19 @@ module.exports = {
 			"zIndex": 0,
 			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01)));",
 			"src": "./assets/construction-work/2/back.png",
-			"styleProperties": [
+			"parameters": [
 				{
-					"name": "--blur",
+					"name": "blur",
 					"value": "0.007766449999921576",
 					"default": "0"
 				},
 				{
-					"name": "--rotation",
+					"name": "rotation",
 					"value": "0",
 					"default": "0"
 				},
 				{
-					"name": "--r",
+					"name": "r",
 					"value": "calc((360deg / -127) * var(--rotation))",
 					"default": "0"
 				}
@@ -3670,14 +3874,14 @@ module.exports = {
 			"zIndex": 0,
 			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01)))\n          rotateX(var(--r));",
 			"src": "./assets/trees/2/back.png",
-			"styleProperties": [
+			"parameters": [
 				{
-					"name": "--blur",
+					"name": "blur",
 					"value": "0.007766449999921576",
 					"default": "0"
 				},
 				{
-					"name": "--rotation",
+					"name": "rotation",
 					"value": "0",
 					"default": "0"
 				}
@@ -3690,14 +3894,14 @@ module.exports = {
 			"zIndex": 45,
 			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01)))\n            rotate(calc(-1deg * var(--rotation)));",
 			"src": "./assets/construction-work/2/front.png",
-			"styleProperties": [
+			"parameters": [
 				{
-					"name": "--blur",
+					"name": "blur",
 					"value": "0.007766449999921576",
 					"default": "0"
 				},
 				{
-					"name": "--rotation",
+					"name": "rotation",
 					"value": "0",
 					"default": "0"
 				}
@@ -3710,14 +3914,14 @@ module.exports = {
 			"zIndex": 49,
 			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg / 127) * var(--rotation)));",
 			"src": "./assets/trees/2/front.png",
-			"styleProperties": [
+			"parameters": [
 				{
-					"name": "--blur",
+					"name": "blur",
 					"value": "0.007766449999921576",
 					"default": "0"
 				},
 				{
-					"name": "--rotation",
+					"name": "rotation",
 					"value": "0",
 					"default": "0"
 				}
@@ -3730,7 +3934,7 @@ module.exports = {
 			"zIndex": 50,
 			"layerStyles": "",
 			"clear": 1,
-			"styleProperties": [],
+			"parameters": [],
 			"canvasLayers": [
 				{
 					"props": {
@@ -3825,14 +4029,14 @@ module.exports = {
 			"zIndex": 100,
 			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01)))\n            rotate(calc(1deg * var(--rotation)));",
 			"src": "./assets/construction-work/2/front.png",
-			"styleProperties": [
+			"parameters": [
 				{
-					"name": "--blur",
+					"name": "blur",
 					"value": "0.007766449999921576",
 					"default": "0"
 				},
 				{
-					"name": "--rotation",
+					"name": "rotation",
 					"value": "0",
 					"default": "0"
 				}
@@ -3845,14 +4049,14 @@ module.exports = {
 			"zIndex": 100,
 			"layerStyles": "filter: blur(calc(1px * var(--blur))) grayscale(1);\ntransform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg / -127) * var(--rotation)));",
 			"src": "./assets/trees/2/front.png",
-			"styleProperties": [
+			"parameters": [
 				{
-					"name": "--blur",
+					"name": "blur",
 					"value": "0.007766449999921576",
 					"default": "0"
 				},
 				{
-					"name": "--rotation",
+					"name": "rotation",
 					"value": "0",
 					"default": "0"
 				}
@@ -3863,13 +4067,13 @@ module.exports = {
 
 /***/ }),
 
-/***/ 684:
+/***/ 678:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(35);
-var canvasCompleter = __webpack_require__(694);
+var canvasCompleter = __webpack_require__(687);
 
 var AceEditor = View.extend({
   editCode: function(options) {
@@ -4102,7 +4306,7 @@ module.exports = AceEditor;
 
 /***/ }),
 
-/***/ 685:
+/***/ 679:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4273,13 +4477,13 @@ module.exports = __webpack_require__(35).extend({
 
 /***/ }),
 
-/***/ 686:
+/***/ 680:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(652);
-var AudioMonitor = __webpack_require__(685);
+var AudioMonitor = __webpack_require__(679);
 var AudioSource = View.extend({
   autoRender: true,
 
@@ -4400,7 +4604,7 @@ module.exports = AudioSource;
 
 /***/ }),
 
-/***/ 687:
+/***/ 681:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4461,7 +4665,7 @@ module.exports = ControlScreenControls;
 
 /***/ }),
 
-/***/ 688:
+/***/ 682:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4615,7 +4819,7 @@ module.exports = GistView;
 
 /***/ }),
 
-/***/ 689:
+/***/ 683:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4683,14 +4887,14 @@ module.exports = LocalforageView;
 
 /***/ }),
 
-/***/ 690:
+/***/ 684:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(35);
-var GistView = __webpack_require__(688);
-var LocalforageView = __webpack_require__(689);
+var GistView = __webpack_require__(682);
+var LocalforageView = __webpack_require__(683);
 
 var MenuView = View.extend({
   template: `
@@ -4761,427 +4965,7 @@ module.exports = MenuView;
 
 /***/ }),
 
-/***/ 691:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var assign = __webpack_require__(33);
-var View = __webpack_require__(652);
-var objectPath = __webpack_require__(656);
-
-var PropertyView = View.extend({
-  template: `
-    <div class="columns object-prop prop-type-default">
-      <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow prop-value-reset">
-        <button title="Reset to default value" class="vfi-cancel"></button>
-      </div>
-      <div class="column prop-value">
-        <input name="value" type="text" />
-      </div>
-      <div class="column prop-mapping-clear no-grow">
-        <button title="Remove mapping" class="vfi-unlink"></button>
-      </div>
-      <div class="column prop-mapping-name">
-        <input placeholder="mappingName" name="mapping-name" type="text" />
-      </div>
-      <div class="column no-grow">
-        <button title="Mapping details" class="mapping-details"></button>
-      </div>
-    </div>
-  `,
-
-  initialize: function() {
-    View.prototype.initialize.apply(this, arguments);
-
-    this.listenToAndRun(this.parent.model, 'change:' + this.model.name, function() {
-      this.trigger('change:model', this.model);
-    });
-  },
-
-  derived: {
-    suggestionHelper: {
-      cache: false,
-      fn: function() {
-        var view = this.parent;
-        while (view) {
-          if (view.suggestionHelper) return view.suggestionHelper;
-          view = view.parent;
-        }
-        return false;
-      }
-    },
-
-    value: {
-      deps: [
-        'model',
-        'model.name',
-        'parent.model'
-      ],
-      fn: function() {
-        return this.parent.model.get(this.model.name);
-      }
-    },
-
-    propertyPath: {
-      deps: [],
-      fn: function() {
-        return this.parent.modelPath + '.' + this.model.name;
-      }
-    },
-
-    mapping: {
-      deps: [],
-      fn: function() {
-        return this.rootView.mappings.findMappingByTarget(this.propertyPath);
-      }
-    }
-  },
-
-  bindings: {
-    'model.name': {
-      type: 'text',
-      selector: '.prop-name'
-    },
-
-    value: {
-      type: function(el, val) {
-        if (el === document.activeElement) return;
-        el.value = val;
-      },
-      selector: 'input[name=value]',
-    },
-
-    'mapping.name': [
-      {
-        type: 'booleanAttribute',
-        selector: '.prop-mapping-clear button',
-        name: 'disabled',
-        invert: true
-      },
-      {
-        type: 'value',
-        selector: '[name="mapping-name"]'
-      },
-      {
-        type: 'booleanClass',
-        selector: '.mapping-details',
-        yes: 'vfi-eye',
-        no: 'vfi-eye-off'
-      },
-      {
-        type: 'booleanAttribute',
-        selector: '.mapping-details',
-        name: 'disabled',
-        invert: true
-      },
-      {
-        type: 'booleanAttribute',
-        selector: '.prop-value-reset button',
-        name: 'disabled'
-      }
-    ]
-  },
-
-  commands: {
-    'click .prop-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
-    'change [name="value"]': 'propChange _handleChange',
-    'click .prop-value-reset button': 'propChange _handleReset',
-  },
-
-  _handleRemoveMappingTarget: function() {
-    var propertyPath = this.propertyPath;
-    var mapping = this.mapping.serialize();
-    mapping.targets = mapping.targets.filter(function(target) {
-      return target !== propertyPath;
-    });
-    return {mapping: mapping};
-  },
-
-  _handleChange: function() {
-    var parent = this.model.collection.parent.model;
-    return {
-      path: parent.modelPath || objectPath(parent),
-      property: this.model.name,
-      value: this.query('[name="value"]').value
-    };
-  },
-
-  _handleReset: function() {
-    var parent = this.model.collection.parent.model;
-    return {
-      path: parent.modelPath || objectPath(parent),
-      property: this.model.name,
-      value: this.model.default
-    };
-  },
-
-  events: {
-    'focus [name="mapping-name"]': '_suggestMapping',
-    'focus [type="text"][name="value"]': '_suggestValues',
-    'click button.mapping-details': '_showMapping'
-  },
-
-  _suggestMapping: function(evt) {
-    var view = this;
-    var helper = view.suggestionHelper;
-    var mappings = this.rootView.mappings;
-    var propertyPath = this.propertyPath;
-
-    helper.attach(evt.target, function(selected) {
-      var mappingState = mappings.get(selected);
-      if (!mappingState) return;
-      var mapping = mappingState.serialize();
-      mapping.targets.push(propertyPath);
-      view.sendCommand('updateMapping', {
-        mapping: mapping
-      });
-      helper.detach();
-    }).fill(mappings.map(function(state) { return state.name; }));
-  },
-
-  _suggestValues: function(evt) {
-    var view = this;
-    var helper = view.suggestionHelper;
-    if (!helper || !view.model.values || !view.model.values.length) return;
-
-    var model = view.model;
-    var parent = model.collection.parent.model;
-    var el = evt.target;
-    helper.attach(el, function(selected) {
-      // console.info('set %s . %s = %s', objectPath(parent), model.name, selected, el.value !== selected);
-
-      view.sendCommand('propChange', {
-        path: objectPath(parent),
-        property: model.name,
-        value: selected
-      });
-
-      el.value = selected;
-      helper.detach();
-    }).fill(model.values);
-  },
-
-  _showMapping: function() {
-    var mapping = this.mapping;
-    var rootView = this.rootView;
-    rootView.regionRight.focusTab('Mappings');
-    rootView.mappingsView.mappingsList.views.forEach(function(view) {
-      if (view.model === mapping) {
-        view.el.scrollIntoView();
-        view.blink();
-      }
-    });
-  }
-});
-
-
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-
-
-
-PropertyView.types = {};
-
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-
-
-PropertyView.types.boolean = PropertyView.extend({
-  template: `
-    <div class="columns object-prop prop-type-boolean">
-      <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow prop-value-reset">
-        <button title="Reset to default value" class="vfi-cancel"></button>
-      </div>
-      <div class="column prop-value">
-        <button class="prop-toggle-btn"></button>
-      </div>
-      <div class="column prop-mapping-clear no-grow">
-        <button title="Remove mapping" class="vfi-unlink"></button>
-      </div>
-      <div class="column prop-mapping-name">
-        <input placeholder="mappingName" name="mapping-name" type="text" />
-      </div>
-      <div class="column no-grow">
-        <button title="Mapping details" class="mapping-details"></button>
-      </div>
-    </div>
-  `,
-
-  bindings: assign({}, PropertyView.prototype.bindings, {
-    value: {
-      selector: 'button.prop-toggle-btn',
-      type: 'booleanClass',
-      yes: 'vfi-toggle-on',
-      no: 'vfi-toggle-off'
-    }
-  }),
-
-  events: assign({}, PropertyView.prototype.events, {
-    'focus [name="mapping-name"]': '_suggestMapping',
-    'click button.prop-toggle-btn': '_handleChange'
-  }),
-
-  _handleChange: function() {
-    var parent = this.model.collection.parent.model;
-    this.sendCommand('propChange', {
-      path: objectPath(parent),
-      property: this.model.name,
-      value: !parent[this.model.name]
-    });
-  }
-});
-
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-
-
-PropertyView.types.number = PropertyView.extend({
-  template: `
-    <div class="columns object-prop prop-type-number">
-      <div class="column gutter text-right prop-name"></div>
-      <div class="column no-grow prop-value-reset">
-        <button title="Reset to default value" class="vfi-cancel"></button>
-      </div>
-      <div class="column prop-value">
-        <input name="value" type="number" />
-      </div>
-      <div class="column prop-mapping-clear no-grow">
-        <button title="Remove mapping" class="vfi-unlink"></button>
-      </div>
-      <div class="column prop-mapping-name">
-        <input placeholder="mappingName" name="mapping-name" type="text" />
-      </div>
-      <div class="column no-grow">
-        <button title="Mapping details" class="mapping-details"></button>
-      </div>
-    </div>
-  `,
-
-  bindings: assign({}, PropertyView.prototype.bindings, {
-    min: [
-      {
-        selector: '[name=value]',
-        type: function(el, val) {
-          if (val !== null && typeof val !== 'undefined') {
-            el.setAttribute('min', val);
-          }
-          else {
-            el.removeAttribute('min');
-          }
-        }
-      }
-    ],
-    max: [
-      {
-        selector: '[name=value]',
-        type: function(el, val) {
-          if (val !== null && typeof val !== 'undefined') {
-            el.setAttribute('max', val);
-          }
-          else {
-            el.removeAttribute('max');
-          }
-        }
-      }
-    ],
-  }),
-
-  session: {
-    min: ['number', false, null],
-    max: ['number', false, null]
-  },
-
-  _handleChange: function() {
-    var payload = PropertyView.prototype._handleChange.apply(this, arguments);
-    payload.value = Number(payload.value);
-    return payload;
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-
-
-
-
-
-PropertyView.names = {};
-
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-
-
-PropertyView.names.active = PropertyView.types.boolean.extend({});
-
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-
-
-PropertyView.names.opacity = PropertyView.types.number.extend({
-  session: {
-    min: ['number', false, 0],
-    max: ['number', false, 100]
-  }
-});
-
-
-module.exports = PropertyView;
-
-/***/ }),
-
-/***/ 692:
+/***/ 685:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5334,7 +5118,7 @@ module.exports = RegionView;
 
 /***/ }),
 
-/***/ 693:
+/***/ 686:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5727,14 +5511,14 @@ module.exports = SuggestionView;
 
 /***/ }),
 
-/***/ 694:
+/***/ 687:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 // http://plnkr.co/edit/6MVntVmXYUbjR0DI82Cr
 
-var mockedCtx = __webpack_require__(655);
+var mockedCtx = __webpack_require__(657);
 var ramda = __webpack_require__(41);
 
 var entries = [].concat(mockedCtx._.properties, mockedCtx._.methods);
@@ -5811,45 +5595,16 @@ module.exports = canvasCompleter;
 
 /***/ }),
 
-/***/ 695:
+/***/ 688:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var LayerControlView = __webpack_require__(653);
-var LayerDetailsView = __webpack_require__(267);
+var LayerControlView = __webpack_require__(654);
 var assign = __webpack_require__(33);
-var objectPath = __webpack_require__(656);
+var objectPath = __webpack_require__(653);
 
-var CanvasLayerDetailsView = LayerDetailsView.extend({
-  template: `
-    <section>
-      <header>
-        <div class="columns">
-          <h3 class="column">Details for <span data-hook="name"></span> <small>sublayer</small></h3>
-          <div class="columns no-grow column">
-            <div class="column no-grow"><button name="edit-draw-function">Draw</button></div>
-            <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
-          </div>
-        </div>
-        <h5 data-hook="object-path"></h5>
-      </header>
-
-      <div class="rows row param-section">
-        <h5>Canvas layer properties</h5>
-        <div class="row mappings props"></div>
-      </div>
-    </section>
-  `,
-
-  events: assign({
-    'click [name=edit-draw-function]': '_editDrawFunction'
-  }, LayerDetailsView.prototype.bindings),
-
-  _editDrawFunction: function() {
-    this.editFunction('drawFunction');
-  }
-});
+var CanvasLayerDetailsView = __webpack_require__(689);
 
 var CanvasControlLayerView = LayerControlView.extend({
   template: `
@@ -6010,32 +5765,418 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
 
 /***/ }),
 
+/***/ 689:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var assign = __webpack_require__(33);
+var LayerDetailsView = __webpack_require__(267);
+
+var CanvasLayerDetailsView = LayerDetailsView.extend({
+  template: `
+    <section>
+      <header>
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small>sublayer</small></h3>
+          <div class="columns no-grow column">
+            <div class="column no-grow"><button name="edit-draw-function">Draw</button></div>
+            <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+          </div>
+        </div>
+        <h5 data-hook="object-path"></h5>
+      </header>
+
+      <div class="rows row param-section">
+        <h5>Canvas layer parameters</h5>
+        <div class="row columns">
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row parameters" ></div>
+      </div>
+    </section>
+  `,
+
+  events: assign({
+    'click [name=edit-draw-function]': '_editDrawFunction'
+  }, LayerDetailsView.prototype.bindings),
+
+  _editDrawFunction: function() {
+    this.editFunction('drawFunction');
+  }
+});
+
+module.exports = CanvasLayerDetailsView;
+
+/***/ }),
+
+/***/ 690:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/* global module */
+module.exports = function lineGrid(ctx) {
+  ctx.strokeStyle = this.lineColor || '#000';
+  ctx.fillStyle = this.lineColor || '#000';
+  var rows = Math.max(this.pointRows || 4, 1);
+  var lw = this.lineWidth || 0;
+  var radius = Math.max(this.pointRadius || lw, 1);
+  var vol = this.screenState.audio.timeDomain;
+  var freq = this.screenState.audio.frequency;
+  var count = vol.length;//Math.max(this.pointsCount || 1, 1);
+  var twoPI = Math.PI * 2;
+  var w = ctx.canvas.width;
+  var h = ctx.canvas.height;
+  var sh = h / rows;
+  var cols = Math.round(count / rows);
+  var sw = w / cols;
+  var row = -0.5;
+  var prow;
+  // var rand = this.randFactor || 0;
+  var i;
+  var x;
+  var y;
+  var px;
+  var py;
+  var p;
+  var point;
+  var points = [];
+
+
+  // function random(factor) {
+  //   factor = factor || rand;
+  //   return Math.random() * rand * (Math.random() > 0.5 ? 1 : -1);
+  // }
+
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = lw;
+  for (i = 0; i < count; i++) {
+    if (i % cols < 1) {
+      row++;
+    }
+    y = (sh * row) + (freq[i] - 12);// + random(freq[i]);
+    x = (sw * 0.5) + (sw * (i % cols));// + (freq[i] - 12);// + random(freq[i]);
+    points.push([x, y]);
+
+    if (lw) {
+      if (!px) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      }
+      else {
+        if (row != prow) {
+          ctx.stroke();
+          ctx.moveTo(x, y);
+        }
+        else {
+          ctx.lineTo(x, y);
+        }
+      }
+    }
+
+    px = x;
+    py = y;
+    prow = row;
+  }
+  ctx.stroke();
+  ctx.closePath();
+
+  for (p in points) {
+    point = points[p];
+    ctx.beginPath();
+    ctx.arc(point[0], point[1], Math.min(Math.max(vol[p] * radius * 0.01, 1), sh * 0.5), 0, twoPI);
+    ctx.closePath();
+    ctx.fill();
+  }
+};
+
+
+/***/ }),
+
+/***/ 691:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*global module, require*/
+module.exports = {
+  grid: __webpack_require__(690),
+  roundFrequencies: __webpack_require__(692)
+};
+
+/***/ }),
+
+/***/ 692:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/* global module */
+module.exports = function roundFrequencies(ctx) {
+  var audio = this.screenState.audio || {};
+  var bufferLength = audio.bufferLength;
+  var freqArray = audio.frequency;
+  var timeDomainArray = audio.timeDomain;
+
+  if (!bufferLength || !freqArray || !timeDomainArray) return;
+
+  var x = ctx.canvas.width * 0.5;
+  var y = ctx.canvas.height * 0.5;
+  var r = Math.min(x, y) - 20;
+  // var first;
+  var rad = Math.PI * 2;
+
+  var i = 0, a, td, lx, ly;
+  var original = {
+    lineWidth: ctx.lineWidth,
+    lineCap: ctx.lineCap,
+    lineJoin: ctx.lineJoin,
+    strokeStyle: ctx.strokeStyle,
+  };
+
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  ctx.strokeStyle = 'red';
+  var col;
+  for (var lw = y*2; lw >= y*0.2; lw-=y*0.2) {
+    col = col === 'white' ? 'black' : 'white';
+    ctx.strokeStyle = col;
+    ctx.lineWidth = lw;
+
+    // ctx.beginPath();
+    // for (i = 0; i < bufferLength; i++) {
+    //   a = ((rad / bufferLength) * i) - Math.PI;
+    //   f = (r / 100) * (freqArray[i] / 2);
+    //   lx = Math.round(x + Math.cos(a) * f);
+    //   ly = Math.round(y + Math.sin(a) * f);
+    //   ctx.lineTo(lx, ly);
+    // }
+    // ctx.stroke();
+
+    ctx.beginPath();
+    for (i = 0; i < bufferLength; i++) {
+      a = ((rad / bufferLength) * i) - Math.PI;
+      td = (r / 100) * (timeDomainArray[i] / 2);
+      lx = Math.round(x + Math.cos(a) * td);
+      ly = Math.round(y + Math.sin(a) * td);
+      ctx.lineTo(lx, ly);
+    }
+    ctx.stroke();
+  }
+
+  ctx.lineWidth = original.lineWidth;
+  ctx.lineCap = original.lineCap;
+  ctx.lineJoin = original.lineJoin;
+  ctx.strokeStyle = original.strokeStyle;
+};
+
+
+/***/ }),
+
+/***/ 693:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/* global module */
+var _cacheImgs = {};
+function loadImg(url, done) {
+  // loaded
+  if (_cacheImgs[url]) {
+    return done(null, _cacheImgs[url]);
+  }
+  // loading
+  if (_cacheImgs[url] === false) {
+    return done();
+  }
+
+  var img = new Image();
+  _cacheImgs[url] = false;
+  img.onload = function() {
+    _cacheImgs[url] = img;
+  };
+  img.src = url;
+}
+
+var _cacheVideos = {};
+function loadVideo(url, done) {
+  // loaded
+  if (_cacheVideos[url]) {
+    return done(null, _cacheVideos[url]);
+  }
+  // loading
+  if (_cacheVideos[url] === false) {
+    return done();
+  }
+
+  var video = document.createElement('video');
+  _cacheVideos[url] = false;
+
+  video.loop = true;
+  video.autoplay = true;
+  video.autostart = true;
+  video.muted = true;
+  video.volume = 0;
+  video.controls = false;
+  video.oncanplaythrough = function() {
+    if (_cacheVideos[url]) return;
+    video.width = video.videoWidth;
+    video.height = video.videoHeight;
+    _cacheVideos[url] = video;
+  };
+  video.src = url;
+}
+
+
+
+module.exports = {
+  img: loadImg,
+  video: loadVideo
+};
+
+/***/ }),
+
+/***/ 694:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*global module, require*/
+module.exports = {
+  wrap: __webpack_require__(695)
+};
+
+/***/ }),
+
+/***/ 695:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* global module */
+
+// borrowed from http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
+module.exports = function wrapText(context, text, x, y, maxWidth, lineHeight) {
+  var words = text.split(' ');
+  var line = '';
+
+  for(var n = 0; n < words.length; n++) {
+    var testLine = line + words[n] + ' ';
+    var metrics = context.measureText(testLine);
+    var testWidth = metrics.width;
+    if (testWidth > maxWidth && n > 0) {
+      context.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    }
+    else {
+      line = testLine;
+    }
+  }
+  context.fillText(line, x, y);
+};
+
+/***/ }),
+
+/***/ 696:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*global module */
+module.exports = function fps(ctx) {
+  var cx = ctx.canvas.width * 0.5;
+  var cy = ctx.canvas.height * 0.5;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = (cy * 0.25) + 'px monospace';
+
+  var cache = this.cache;
+  var screen = this.screenState;
+
+  cache.previous = cache.previous || 0;
+  var fps = Math.round(1000 / (screen.frametime - cache.previous)) + 'fps';
+  ctx.lineWidth = 3;
+  ctx.fillStyle = '#000';
+  ctx.strokeStyle = '#fff';
+  ctx.fillText(fps, cx, cy);
+  ctx.strokeText(fps, cx, cy);
+  cache.previous = screen.frametime;
+};
+
+/***/ }),
+
+/***/ 697:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*global module */
+module.exports = function frametime(ctx) {
+  var cx = ctx.canvas.width * 0.5;
+  var cy = ctx.canvas.height * 0.5;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = (cy * 0.25) + 'px monospace';
+  var ft = Math.round(this.screenState.frametime) + 'ms';
+  ctx.fillStyle = '#000';
+  ctx.strokeStyle = '#fff';
+  ctx.fillText(ft, cx, cy);
+  ctx.strokeText(ft, cx, cy);
+};
+
+/***/ }),
+
 /***/ 698:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+/*global module, require*/
+module.exports = {
+  fps: __webpack_require__(696),
+  frametime: __webpack_require__(697)
+};
 
-var ScreenLayerControlView = __webpack_require__(653);
+/***/ }),
+
+/***/ 701:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var ScreenLayerControlView = __webpack_require__(654);
 module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.extend({
 });
 
 /***/ }),
 
-/***/ 700:
+/***/ 703:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var View = __webpack_require__(653);
+var View = __webpack_require__(654);
 
-var LayerControlView = __webpack_require__(653);
-__webpack_require__(695);
-__webpack_require__(701);
-__webpack_require__(698);
-__webpack_require__(708);
-__webpack_require__(706);
+var LayerControlView = __webpack_require__(654);
+__webpack_require__(688);
 __webpack_require__(704);
+__webpack_require__(701);
+__webpack_require__(711);
+__webpack_require__(709);
+__webpack_require__(707);
 
 var LayersView = View.extend({
   commands: {
@@ -6105,14 +6246,14 @@ module.exports = LayersView;
 
 /***/ }),
 
-/***/ 701:
+/***/ 704:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
-var ScreenLayerControlView = __webpack_require__(653);
-var SVGDetailsView = __webpack_require__(702);
+var ScreenLayerControlView = __webpack_require__(654);
+var SVGDetailsView = __webpack_require__(705);
 
 module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
   template: `
@@ -6149,13 +6290,13 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
 
 /***/ }),
 
-/***/ 702:
+/***/ 705:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var DetailsView = __webpack_require__(267);
-var propNamesExtractor = __webpack_require__(673);
+var propNamesExtractor = __webpack_require__(666);
 var assign = __webpack_require__(33);
 
 var SVGDetailsView = DetailsView.extend({
@@ -6173,18 +6314,19 @@ var SVGDetailsView = DetailsView.extend({
       </header>
 
       <div class="rows row param-section">
-        <h5>CSS variables</h5>
+        <h5>Parameters</h5>
         <div class="row columns">
-          <div class="columns"><input type="text" name="style-prop-name" placeholder="--css-var-name" /></div>
-          <div class="columns"><input type="text" name="style-prop-default" placeholder="2px, 100%, " /></div>
-          <div class="columns no-grow"><button name="style-prop-add" class="vfi-plus"></button></div>
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
         </div>
-        <div class="row style-props" ></div>
-      </div>
-
-      <div class="rows row param-section">
-        <h5>Layer properties</h5>
-        <div class="row mappings props"></div>
+        <div class="row parameters" ></div>
       </div>
     </section>
   `,
@@ -6193,7 +6335,7 @@ var SVGDetailsView = DetailsView.extend({
   events: assign(DetailsView.prototype.events, {
     'click [name=show-origin]': '_showOrigin',
     'click [name=edit-svg-styles]': '_editSvgStyles',
-    'click [name=style-prop-add]': 'addStyleProperty'
+    'click [name=style-prop-add]': 'addParameter'
   }),
 
   _editSvgStyles: function() {
@@ -6253,14 +6395,14 @@ module.exports = SVGDetailsView;
 
 /***/ }),
 
-/***/ 704:
+/***/ 707:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ThreeJSDetailsView = __webpack_require__(705);
+var ThreeJSDetailsView = __webpack_require__(708);
 
-var ScreenLayerControlView = __webpack_require__(653);
+var ScreenLayerControlView = __webpack_require__(654);
 module.exports = ScreenLayerControlView.types.threejs = ScreenLayerControlView.extend({
   _showDetails: function () {
     this.rootView.showDetails(new ThreeJSDetailsView({
@@ -6272,15 +6414,14 @@ module.exports = ScreenLayerControlView.types.threejs = ScreenLayerControlView.e
 
 /***/ }),
 
-/***/ 705:
+/***/ 708:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var DetailsView = __webpack_require__(267);
-var StylePropertyView = DetailsView.StylePropertyView;
 var assign = __webpack_require__(33);
-var propNamesExtractor = __webpack_require__(673);
+var propNamesExtractor = __webpack_require__(666);
 
 var ThreeJSDetailsView = DetailsView.extend({
   template: `
@@ -6298,72 +6439,33 @@ var ThreeJSDetailsView = DetailsView.extend({
       </header>
 
       <div class="rows row param-section">
-        <h5>Script parameters</h5>
+        <h5>Parameters</h5>
         <div class="row columns">
-          <div class="columns"><input type="text" name="parameter-name" placeholder="parameterName" /></div>
-          <div class="columns"><input type="text" name="parameter-default" /></div>
-          <div class="columns no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
         </div>
         <div class="row parameters" ></div>
-      </div>
-
-      <div class="rows row param-section">
-        <h5>CSS variables</h5>
-        <div class="row columns">
-          <div class="columns"><input type="text" name="style-prop-name" placeholder="--css-var-name" /></div>
-          <div class="columns"><input type="text" name="style-prop-default" placeholder="2px, 100%, " /></div>
-          <div class="columns no-grow"><button name="style-prop-add" class="vfi-plus"></button></div>
-        </div>
-        <div class="row style-props" ></div>
-      </div>
-
-      <div class="rows row param-section">
-        <h5>Layer properties</h5>
-        <div class="row mappings props"></div>
       </div>
     </section>
   `,
 
   events: assign(DetailsView.prototype.events, {
-    'click [name=parameter-add]': 'addParameter',
     'click [name=edit-render-function]': '_editRenderFunction',
     'click [name=edit-update-function]': '_editUpdateFunction'
   }),
-
-  addParameter: function() {
-    var val = this.query('[name=parameter-default]').value;
-    var props = this.model.parameters.serialize();
-    props.push({
-      name: this.query('[name=parameter-name]').value,
-      default: val,
-      value: val
-    });
-    this.rootView.sendCommand('propChange', {
-      path: 'layers.' + this.model.getId(),
-      property: 'parameters',
-      value: props
-    });
-  },
 
   _editRenderFunction: function() {
     this.editFunction('renderFunction');
   },
   _editUpdateFunction: function() {
     this.editFunction('updateFunction');
-  },
-
-  render: function() {
-    DetailsView.prototype.render.apply(this, arguments);
-
-    if (this.parameters) {
-      this.parameters.remove();
-    }
-
-    if (this.model.parameters) {
-      this.parameters = this.renderCollection(this.model.parameters, StylePropertyView, '.parameters');
-    }
-
-    return this;
   },
 
   derived: {
@@ -6384,31 +6486,31 @@ module.exports = ThreeJSDetailsView;
 
 /***/ }),
 
-/***/ 706:
+/***/ 709:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var LayerControlView = __webpack_require__(653);
+var LayerControlView = __webpack_require__(654);
 var TxtLayerControlView = LayerControlView.types.txt = LayerControlView.extend({
 });
 module.exports = TxtLayerControlView;
 
 /***/ }),
 
-/***/ 708:
+/***/ 711:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var ScreenLayerControlView = __webpack_require__(653);
+var ScreenLayerControlView = __webpack_require__(654);
 module.exports = ScreenLayerControlView.types.video = ScreenLayerControlView.extend({
 });
 
 /***/ }),
 
-/***/ 710:
+/***/ 713:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6801,7 +6903,7 @@ module.exports = MappingsControlView;
 
 /***/ }),
 
-/***/ 711:
+/***/ 714:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6880,7 +6982,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 712:
+/***/ 715:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7062,7 +7164,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 713:
+/***/ 716:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7181,7 +7283,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 714:
+/***/ 717:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7317,12 +7419,12 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 715:
+/***/ 718:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(657);
+var SignalState = __webpack_require__(658);
 
 var BeatState = SignalState.types.beat = SignalState.extend({
   initialize: function() {
@@ -7373,13 +7475,13 @@ module.exports = BeatState;
 
 /***/ }),
 
-/***/ 716:
+/***/ 719:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
-var DetailsView = __webpack_require__(675);
+var DetailsView = __webpack_require__(668);
 var SignalDetailsView = DetailsView.extend({
   derived: {
     modelPath: {
@@ -7398,12 +7500,12 @@ module.exports = SignalDetailsView;
 
 /***/ }),
 
-/***/ 717:
+/***/ 720:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(657);
+var SignalState = __webpack_require__(658);
 
 var _360 = {
   type: 'number',
@@ -7459,12 +7561,12 @@ module.exports = HSLASignalState;
 
 /***/ }),
 
-/***/ 718:
+/***/ 721:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(657);
+var SignalState = __webpack_require__(658);
 var _255 = {
   type: 'number',
   required: true,
@@ -7517,7 +7619,7 @@ module.exports = RGBASignalState;
 
 /***/ }),
 
-/***/ 719:
+/***/ 722:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7525,9 +7627,9 @@ module.exports = RGBASignalState;
 var View = __webpack_require__(652);
 
 var SignalControlView = __webpack_require__(268);
+__webpack_require__(277);
+__webpack_require__(275);
 __webpack_require__(278);
-__webpack_require__(276);
-__webpack_require__(279);
 
 var SignalsView = View.extend({
   commands: {

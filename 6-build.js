@@ -6,14 +6,14 @@ webpackJsonp([6],{
 "use strict";
 
 var View = __webpack_require__(35);
-var LayerView = __webpack_require__(654);
-__webpack_require__(696);
-__webpack_require__(703);
-__webpack_require__(709);
+var LayerView = __webpack_require__(655);
 __webpack_require__(699);
-__webpack_require__(676);
-__webpack_require__(707);
-__webpack_require__(676);
+__webpack_require__(706);
+__webpack_require__(712);
+__webpack_require__(702);
+__webpack_require__(669);
+__webpack_require__(710);
+__webpack_require__(669);
 
 
 function signature(fn) {
@@ -157,7 +157,7 @@ var ScreenView = View.extend(clientMixin, {
     }
   },
 
-  addRule: function(selector, properties) {
+  addRule: function(selector, parameters) {
     var sheet = this.sheet;
     this.el.id = this.el.id || 'vf-screen-' + this.cid;
     var prefix = '#'+ this.el.id +' ';
@@ -172,7 +172,7 @@ var ScreenView = View.extend(clientMixin, {
 
     index = sheet.cssRules.length;
 
-    sheet.insertRule(selector + ' { ' + properties + ' } ', index);
+    sheet.insertRule(selector + ' { ' + parameters + ' } ', index);
     return this;
   },
 
@@ -280,7 +280,7 @@ module.exports = ScreenView;
 
 /***/ }),
 
-/***/ 654:
+/***/ 655:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -291,7 +291,7 @@ var LayerView = View.extend({
   template: function() {
     return `
       <div id="${this.model.getId()}" view-id="${this.cid}" class="missing-layer-view" style="will-change:transform, opacity, backfaceVisibility;width:100%;height:100%;display:table">
-        <div style="display:table-cell;color:#a66;vertical-align:middle;text-align:center;font-weight:700;font-size:30px;text-shadow:0 0 4px #000">
+        <div style="display:table-cell;color:#666;vertical-align:middle;text-align:center;font-weight:700;font-size:30px;text-shadow:0 0 4px #000">
           Missing
           <span data-hook="type"></span> for
           <span data-hook="name"></span>
@@ -304,8 +304,8 @@ var LayerView = View.extend({
   },
 
   initialize: function() {
-    this.listenTo(this.model.styleProperties, 'change', function(prop) {
-      this.setProperty(prop.name, prop.value);
+    this.listenTo(this.model.parameters, 'change', function(prop) {
+      this.setProperty('--' + prop.name, prop.value);
     });
   },
 
@@ -373,7 +373,7 @@ var LayerView = View.extend({
     },
     'model.opacity': {
       type: function(el, val) {
-        this.cssRule.style.opacity = val * 0.01;
+        this.cssRule.style.opacity = val;
       }
     },
     'model.zIndex': {
@@ -387,7 +387,7 @@ var LayerView = View.extend({
     this.cssRule.style.setProperty(...args);
   },
 
-  addRule: function(selector, properties) {
+  addRule: function(selector, parameters) {
     var sheet = this.sheet;
     var prefix = '#'+ this.model.getId() +' ';
     var index = sheet.cssRules.length;
@@ -401,7 +401,7 @@ var LayerView = View.extend({
 
     index = sheet.cssRules.length;
 
-    sheet.insertRule(selector + ' { ' + properties + ' } ', index);
+    sheet.insertRule(selector + ' { ' + parameters + ' } ', index);
     return this;
   },
 
@@ -421,26 +421,26 @@ module.exports = LayerView;
 
 /***/ }),
 
-/***/ 676:
+/***/ 669:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 // var assign = require('lodash.assign');
-var ScreenLayerView = __webpack_require__(654);
+var ScreenLayerView = __webpack_require__(655);
 
 var THREE = __webpack_require__(95);
 window.THREE = window.THREE || THREE;
 
 // require('three/examples/js/loaders/DDSLoader');
 // THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
-__webpack_require__(682);
-__webpack_require__(683);
+__webpack_require__(676);
+__webpack_require__(677);
 
 
-var midiMinMax = __webpack_require__(658);
-var midi2Rad = __webpack_require__(660);
-var midi2Prct = __webpack_require__(659);
+var midiMinMax = __webpack_require__(659);
+var midi2Rad = __webpack_require__(661);
+var midi2Prct = __webpack_require__(660);
 
 
 function noop() {}
@@ -965,7 +965,7 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 682:
+/***/ 676:
 /***/ (function(module, exports) {
 
 /**
@@ -1512,7 +1512,7 @@ THREE.MTLLoader.MaterialCreator.prototype = {
 
 /***/ }),
 
-/***/ 683:
+/***/ 677:
 /***/ (function(module, exports) {
 
 /**
@@ -2261,14 +2261,14 @@ THREE.OBJLoader.prototype = {
 
 /***/ }),
 
-/***/ 696:
+/***/ 699:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
 
-var ScreenLayerView = __webpack_require__(654);
+var ScreenLayerView = __webpack_require__(655);
 module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
   template: function() {
     return '<canvas id="' + this.model.getId() + '" view-id="' + this.cid + '"></canvas>';
@@ -2345,12 +2345,12 @@ module.exports = ScreenLayerView.types.canvas = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 699:
+/***/ 702:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ScreenLayerView = __webpack_require__(654);
+var ScreenLayerView = __webpack_require__(655);
 var _cacheImgs = {};
 function loadImg(url, viewId, done) {
   if (_cacheImgs[url]) {
@@ -2427,12 +2427,12 @@ module.exports = ScreenLayerView.types.img = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 703:
+/***/ 706:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ScreenLayerView = __webpack_require__(654);
+var ScreenLayerView = __webpack_require__(655);
 
 module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
   autoRender: true,
@@ -2473,10 +2473,10 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     return this;
   },
 
-  updateProperties: function() {
+  updateParameters: function() {
     if (!this.model.active || !this.el) return this;
-    this.model.styleProperties.forEach(function(styleProp) {
-      this.setProperty(styleProp.name, styleProp.value);
+    this.model.parameters.forEach(function(styleProp) {
+      this.setProperty('--' + styleProp.name, styleProp.value);
     }, this);
     return this;
   },
@@ -2485,22 +2485,22 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
     if (!this.el || this.el.innerHTML === this.model.content) return this;
 
     this.el.innerHTML = this.model.content;
-    this.updateStyles().updateProperties();
+    this.updateStyles().updateParameters();
   },
 
   initialize: function() {
     ScreenLayerView.prototype.initialize.apply(this, arguments);
-    this.updateContent().updateStyles().updateProperties();
+    this.updateContent().updateStyles().updateParameters();
 
     this.listenTo(this.model, 'change:content', this.updateContent);
     this.on('change:el', this.updateContent);
 
     this.listenToAndRun(this.model, 'change:svgStyles', this.updateStyles);
-    this.listenToAndRun(this.model.styleProperties, 'add remove change', this.updateProperties);
+    this.listenToAndRun(this.model.parameters, 'add remove change', this.updateParameters);
   },
 
-  addRule: function(selector, properties) {
-    ScreenLayerView.prototype.addRule.call(this, selector, properties);
+  addRule: function(selector, parameters) {
+    ScreenLayerView.prototype.addRule.call(this, selector, parameters);
     return this;
   }
 });
@@ -2508,13 +2508,13 @@ module.exports = ScreenLayerView.types.SVG = ScreenLayerView.extend({
 
 /***/ }),
 
-/***/ 707:
+/***/ 710:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(33);
-var LayerView = __webpack_require__(654);
+var LayerView = __webpack_require__(655);
 var TxtLayerView = LayerView.types.txt = LayerView.extend({
   autoRender: true,
 
@@ -2530,13 +2530,13 @@ module.exports = TxtLayerView;
 
 /***/ }),
 
-/***/ 709:
+/***/ 712:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var ScreenLayerView = __webpack_require__(654);
+var ScreenLayerView = __webpack_require__(655);
 module.exports = ScreenLayerView.types.video = ScreenLayerView.extend({
   template: function() {
     return '<video id="' + this.model.cid + '" view-id="' + this.cid + '" autoplay loop muted></video>';

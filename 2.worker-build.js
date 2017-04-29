@@ -8,9 +8,9 @@ webpackChunk([2],{
 var assign = __webpack_require__(7);
 var Collection = __webpack_require__(6);
 var SignalState = __webpack_require__(87);
-__webpack_require__(571);
-__webpack_require__(572);
-__webpack_require__(573);
+__webpack_require__(564);
+__webpack_require__(565);
+__webpack_require__(566);
 
 var SignalCollection = Collection.extend({
   mainIndex: 'name',
@@ -39,7 +39,7 @@ module.exports = SignalCollection;
 
 /***/ }),
 
-/***/ 571:
+/***/ 564:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -95,7 +95,7 @@ module.exports = BeatState;
 
 /***/ }),
 
-/***/ 572:
+/***/ 565:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -156,7 +156,7 @@ module.exports = HSLASignalState;
 
 /***/ }),
 
-/***/ 573:
+/***/ 566:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

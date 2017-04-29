@@ -324,8 +324,11 @@ input.gutter-vertical {
   margin-bottom: var(--spacing);
 }
 
-.column > input:not([type=checkbox]):not([type=radio]) {
+.column > input:not([type=checkbox]):not([type=radio]),
+.column > select,
+.column > textarea {
   width: 100%;
+  /* margin: calc(0 - var(--spacing)); */
 }
 .column > label:after {
   content: ':';
@@ -342,6 +345,23 @@ Layout
   color: var(--text-color);
   background-color: var(--bg-color);
   font-weight: 400;
+}
+.controller-app:after {
+  content: '';
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-color);
+  will-change: opacity;
+}
+.controller-app.bootstraped:after {
+  opacity: 0.5;
+}
+.controller-app.initialized.bootstraped:after {
+  display: none;
 }
 
 .index-page .page-content {
@@ -656,17 +676,17 @@ header h3 span:after {
 
 .object-prop {}
 
-.prop-name {
+.parameter-name {
   width: 120px;}
 
-.prop-value {
+.parameter-value {
   width: 100px;
 }
-.prop-value input {
+.parameter-value input {
   margin: auto;
   max-width: 100%;
 }
-.prop-toggle-btn {
+.parameter-toggle-btn {
   width: 100%;
 }
 

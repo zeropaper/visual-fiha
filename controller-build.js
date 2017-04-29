@@ -1,6 +1,6 @@
 webpackJsonp([3],{
 
-/***/ 645:
+/***/ 644:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20,12 +20,12 @@ __webpack_require__.e/* require.ensure */(4).then((function(require) {
 function auid() {
   return parseInt((Math.random() + '.' + performance.now()).replace(/\./g, ''), 10);
 }
-var LoadedWorker = __webpack_require__(644);
-var ControllerView = __webpack_require__(648);
+var LoadedWorker = __webpack_require__(643);
+var ControllerView = __webpack_require__(647);
 var ScreenState = __webpack_require__(32);
 var MIDIAccessState = __webpack_require__(146);
 var Mappings = __webpack_require__(143);
-var Tour = __webpack_require__(646);
+var Tour = __webpack_require__(645);
 var installSetups = __webpack_require__(144).installSetups;
 
 var DetailsView = __webpack_require__(267);
@@ -243,7 +243,7 @@ var AppRouter = __webpack_require__(96).extend({
 
   tour: function(step) {
     var router = this;
-    var steps = __webpack_require__(647)(router.view).map(function(item, i) {
+    var steps = __webpack_require__(646)(router.view).map(function(item, i) {
       item.index = i;
       return item;
     });
@@ -271,7 +271,19 @@ var AppRouter = __webpack_require__(96).extend({
 
   _sendBootstrap: function(setup, done) {
     done = typeof done === 'function' ? done : function() { console.info('APP bootstraped'); };
-    this.once('app:broadcast:bootstrap', done);
+    var cl = document.body.classList;
+    cl.add('bootstraping');
+    cl.remove('bootstraped');
+
+    this.once('app:broadcast:bootstrap', function() {
+      cl.remove('bootstraping');
+      cl.add('bootstraped');
+
+      cl.add('initialized');
+
+      done.apply(this, arguments);
+    });
+
     this.sendCommand('bootstrap', {
       layers: setup.layers,
       signals: setup.signals,
@@ -353,5 +365,5 @@ installSetups(function(err) {
 
 /***/ })
 
-},[645]);
+},[644]);
 //# sourceMappingURL=controller-build.js.map
