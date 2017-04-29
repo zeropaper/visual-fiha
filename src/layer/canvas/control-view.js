@@ -94,7 +94,6 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
         <div class="row columns new-layer">
           <div class="column no-grow gutter"><label>New sub-layer</label></div>
           <div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>
-          <div class="column"><input type="text" placeholder="propA, propB" data-hook="new-layer-props" /></div>
           <div class="column no-grow">
             <button name="add-layer" class="vfi-plus"></button>
           </div>
@@ -120,17 +119,10 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
     evt.preventDefault();
     var nameEl = this.queryByHook('new-layer-name');
     var name = nameEl.value.trim();
-    var propsEl = this.queryByHook('new-layer-props');
-    var propsVal = propsEl ? propsEl.value.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; }) : [];
 
-    var props = {};
-    propsVal.forEach(function(prop) {
-      props[prop] = 'any';
-    });
     var res = this.model.canvasLayers.add({
       name: name,
-      drawFunction: 'function(ctx) {\n  // ' + name + ' drawFunction\n}',
-      props: props
+      drawFunction: 'function(ctx) {\n  // ' + name + ' drawFunction\n}'
     });
 
     if (!res) {
