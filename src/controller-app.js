@@ -295,7 +295,19 @@ var AppRouter = require('ampersand-router').extend({
 
   _sendBootstrap: function(setup, done) {
     done = typeof done === 'function' ? done : function() { console.info('APP bootstraped'); };
-    this.once('app:broadcast:bootstrap', done);
+    var cl = document.body.classList;
+    cl.add('bootstraping');
+    cl.remove('bootstraped');
+
+    this.once('app:broadcast:bootstrap', function() {
+      cl.remove('bootstraping');
+      cl.add('bootstraped');
+
+      cl.add('initialized');
+
+      done.apply(this, arguments);
+    });
+
     this.sendCommand('bootstrap', {
       layers: setup.layers,
       signals: setup.signals,
