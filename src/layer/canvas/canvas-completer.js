@@ -2,17 +2,9 @@
 // http://plnkr.co/edit/6MVntVmXYUbjR0DI82Cr
 
 var mockedCtx = require('./mocked-canvas-2d-context');
-var ramda = require('ramda');
 
 var entries = [].concat(mockedCtx._.properties, mockedCtx._.methods);
 
-Object.keys(ramda)
-  .filter(function(name) {
-    return name.length > 1 && typeof ramda[name] === 'function';
-  })
-  .forEach(function(name) {
-    entries.push(name);
-  });
 
 // https://gist.github.com/andrei-m/982927#gistcomment-1931258
 function levenshteinDistance(a, b) {

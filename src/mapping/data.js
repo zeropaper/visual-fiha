@@ -15,22 +15,10 @@ function compileTransformFunction(fn) {
   fn = fn || function(val) { return val; };
   var compiled;
 
-  // proxy the ramda functions
-  var ramdaMethods = '';
-  var ramda = require('ramda');
-  Object.keys(ramda)
-    .filter(function(name) {
-      return name.length > 1 && typeof ramda[name] === 'function';
-    })
-    .forEach(function(name) {
-      ramdaMethods += '\nvar ' + name + ' = ramda.' + name + ';';
-    });
-
   var str = `compiled = (function() {
   // override some stuff that should not be used
   var navigator, window, global, document, module, exports;
 
-  ${ ramdaMethods }
   return function(val, oldVal) {
     var result;
     try {

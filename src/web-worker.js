@@ -2,7 +2,6 @@
 'use strict';
 var worker = self;
 require.ensure([
-  'ramda',
   'lodash.assign',
   'ampersand-state',
   'ampersand-collection'

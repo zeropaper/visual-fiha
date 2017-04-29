@@ -1,7 +1,6 @@
 'use strict';
 
 require.ensure([
-  'ramda',
   'lodash.assign',
   'ampersand-state',
   'ampersand-collection'
