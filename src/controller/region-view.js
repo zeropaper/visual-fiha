@@ -6,10 +6,10 @@ var Collection = require('ampersand-collection');
 var ViewSwitcher = require('ampersand-view-switcher');
 
 var TabView = View.extend({
-  template: '<li class="columns">' +
+  template: '<li class="tab columns">' +
     '<div class="column gutter name"></div>' +
     '<div class="column no-grow">' +
-      '<button class="vfi-minus-squared-alt"></button>' +
+      '<button class="vfi-minus-squared-alt no-border"></button>' +
     '</div>' +
   '</li>',
 
@@ -131,15 +131,15 @@ var RegionView = View.extend({
     //     view.trigger('change:' + key);
     //   }, view);
     // }
-    this._setView(view);
+    return this._setView(view);
   },
 
   focusTabIndex: function(index) {
-    this._focus(this.tabs.at(index));
+    return this._focus(this.tabs.at(index));
   },
 
   focusTab: function(name) {
-    this._focus(this.tabs.get(name));
+    return this._focus(this.tabs.get(name));
   }
 });
 
