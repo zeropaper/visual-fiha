@@ -3,22 +3,31 @@ var ScreenLayerState = require('./../state');
 var Extractor = require('./extractor');
 
 module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
+  baseParameters: [
+    {name: 'src', type: 'string', default: ''}
+  ].concat(ScreenLayerState.prototype.baseParameters),
+
   props: {
-    svgStyles: ['object', true, function() { return {}; }],
-    src: ['string', false, null]
+    svgStyles: ['object', true, function() { return {}; }]
   },
+
   session: {
     content: ['string', false, '']
   },
 
   derived: {
+    src: {
+      deps: ['parameters.src'],
+      fn: function() {
+        return this.parameters.getValue('src');
+      }
+    },
     mappable: {
       deps: [],
       fn: function() {
         return {
           source: [],
           target: [
-            'active',
             'parameters'
           ]
         };
