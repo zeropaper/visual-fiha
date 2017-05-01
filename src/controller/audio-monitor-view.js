@@ -1,4 +1,5 @@
 'use strict';
+var pad = require('./../utils/pad');
 module.exports = require('ampersand-view').extend({
   autoRender: true,
   template: '<canvas width="200" height="200"></canvas>',
@@ -133,7 +134,7 @@ module.exports = require('ampersand-view').extend({
     }
     ctx.stroke();
     ctx.textBaseline = 'top';
-    ctx.fillText(min.toFixed(2) + ' - ' + max.toFixed(2) + ' | ' + (avg / bufferLength).toFixed(2), x, 0);
+    ctx.fillText('frq: ' + pad(min.toFixed(), 3) + ' - ' + pad(max.toFixed(), 3) + ' | ' + pad((avg / bufferLength).toFixed(), 3), x, 0);
 
 
 
@@ -156,7 +157,7 @@ module.exports = require('ampersand-view').extend({
     }
     ctx.stroke();
     ctx.textBaseline = 'bottom';
-    ctx.fillText(min.toFixed(2) + ' - ' + max.toFixed(2) + ' | ' + (avg / bufferLength).toFixed(2), x, height);
+    ctx.fillText('vol: ' + pad(min.toFixed(), 3) + ' - ' + pad(max.toFixed(), 3) + ' | ' + pad((avg / bufferLength).toFixed(), 3), x, height);
 
     return this;
   }
