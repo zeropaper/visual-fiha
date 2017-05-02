@@ -72,8 +72,8 @@ var LayerControlView = View.extend({
 
   _toggleActive: function() {
     return {
-      path: objectPath(this.model),
-      property: 'active',
+      path: objectPath(this.model) + '.parameters.active',
+      property: 'value',
       value: !this.model.active
     };
   },
