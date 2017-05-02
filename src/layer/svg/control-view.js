@@ -11,7 +11,10 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
         <div class="column no-grow"><button title="Edit layer CSS" class="edit-css vfi-code"></button></div>
         <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
         <h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>
-        <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
+        <div class="column columns no-grow">
+          <div class="column no-grow text-right"><button name="edit-svg-css">CSS</button></div>
+          <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
+        </div>
       </header>
 
       <div class="preview gutter-horizontal"></div>
@@ -21,12 +24,14 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
   `,
 
   events: assign(ScreenLayerControlView.prototype.events, {
-    'click .edit-svg-css': '_editSVGStyles'
+    'click [name=edit-svg-css]': '_editSvgStyles'
   }),
 
   session: {
     svgStyles: ['object', true, function() { return {}; }]
   },
+
+  _editSvgStyles: SVGDetailsView.prototype._editSvgStyles,
 
   _showDetails: function () {
     this.rootView.showDetails(new SVGDetailsView({

@@ -89,6 +89,7 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
           <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
           <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
           <h3 class="column layer-name" data-hook="name"></h3>
+          <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
         </div>
 
         <div class="row columns new-layer">

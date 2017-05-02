@@ -25,6 +25,7 @@ var LayerControlView = View.extend({
     'click .layer-name': '_showDetails'
   },
 
+  editFunction: LayerDetailsView.prototype.editFunction,
 
   _showDetails: function () {
     var DetailsViewConstructor = LayerDetailsView.types ? LayerDetailsView.types[this.model.getType()] : false;
