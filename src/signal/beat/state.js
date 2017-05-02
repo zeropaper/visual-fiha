@@ -14,24 +14,24 @@ var BeatState = SignalState.types.beat = SignalState.extend({
   },
 
   mappable: {
-    source: ['result', 'timeBetweenBeats', 'beatNum'],
+    source: ['result', 'beatlength', 'beatnum'],
     target: ['input']
   },
 
   derived: {
     result: {
-      deps: ['timeBetweenBeats', 'frametime'],
+      deps: ['beatlength', 'frametime'],
       fn: function() {
         return this.computeSignal();
       }
     },
-    beatNum: {
-      deps: ['timeBetweenBeats', 'frametime'],
+    beatnum: {
+      deps: ['beatlength', 'frametime'],
       fn: function() {
-        return this.frametime ? Math.floor(this.frametime / this.timeBetweenBeats) : 0;
+        return this.frametime ? Math.floor(this.frametime / this.beatlength) : 0;
       }
     },
-    timeBetweenBeats: {
+    beatlength: {
       deps: ['input'],
       fn: function() {
         return (60 * 1000) / Math.max(this.input, 1);
@@ -41,7 +41,7 @@ var BeatState = SignalState.types.beat = SignalState.extend({
 
   computeSignal: function() {
     var ft = this.frametime;
-    var tbb = this.timeBetweenBeats;
+    var tbb = this.beatlength;
     return !ft ? 0 : (100 - (((ft % tbb) / tbb) * 100));
   }
 });

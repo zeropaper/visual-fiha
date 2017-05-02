@@ -53,7 +53,7 @@ mappings:
         return value;
       }
     source: 'midi:nk2.knob3'
-  beatNum20Str:
+  beatnum20Str:
     targets:
       - layers.ar.parameters.beat.value
       - layers.vf.parameters.beat.value
@@ -61,7 +61,7 @@ mappings:
       function (value) {
         return (value % 20).toString();
       }
-    source: signals.beatA.beatNum
+    source: signals.beatA.beatnum
   beatKnob:
     targets:
       - signals.beatA.input
@@ -70,7 +70,7 @@ mappings:
         return value + 63;
       }
     source: 'midi:nk2.knob8'
-  beatNum100Str:
+  beatnum100Str:
     targets:
       - layers.vjs.text
     transformFunction: |-
@@ -97,7 +97,7 @@ mappings:
         var index = Math.floor((value * 0.4) % names.length);
         return names[index];
       }
-    source: signals.beatA.beatNum
+    source: signals.beatA.beatnum
 layers:
   vjs:
     type: txt

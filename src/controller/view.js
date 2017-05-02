@@ -6,6 +6,7 @@ var LayersView = require('./../layer/layers-view');
 var SuggestionView = require('./suggestion-view');
 var AudioSource = require('./audio-source-view');
 var AceEditor = require('./ace-view');
+var ClockView = require('./clock-view');
 var RegionView = require('./region-view');
 var MappingsControlView = require('./../mapping/control-view');
 var MenuView = require('./menu/view');
@@ -242,6 +243,19 @@ var ControllerView = View.extend({
       }
     },
 
+    clockView: {
+      waitFor: 'el',
+      selector: '.vf-clock-view',
+      prepareView: function(el) {
+        var view = new ClockView({
+          parent: this,
+          model: this.model.clock,
+          el: el
+        });
+        return view;
+      }
+    },
+
     regionRight: {
       waitFor: 'el',
       selector: '.region-right',
@@ -376,7 +390,7 @@ var ControllerView = View.extend({
   },
 
   bindings: {
-    workerPerformance: '.worker-performance',
+    workerPerformance: '.vf-worker-performance',
     showControlScreen: [
       {
         selector: '.control-screen',
@@ -416,12 +430,6 @@ var ControllerView = View.extend({
         selector: '[name="pause"]'
       }
     ]
-  },
-
-  commands: {
-    'click [name="play"]': 'play',
-    'click [name="pause"]': 'pause',
-    'click [name="stop"]': 'stop'
   },
 
   events: {
@@ -512,9 +520,6 @@ var ControllerView = View.extend({
     this.renderWithTemplate();
 
     this.cacheElements({
-      jsHeapLimit: '.heap-limit span',
-      jsHeapTotal: '.heap-total span',
-      jsHeapUsed: '.heap-used span',
       detailsEl: '.details'
     });
 
@@ -534,13 +539,9 @@ var ControllerView = View.extend({
         <a href class="column gutter no-grow vf-app-name">Visual Fiha <span class="hamburger-menu"><span></span></span></a>
 
         <div class="column columns">
-          <!-- <span class="column columns no-grow button-group">
-            <button class="column gutter-horizontal" name="play"><span class="vfi-play"></span></button>
-            <button class="column gutter-horizontal" name="pause"><span class="vfi-pause"></span></button>
-            <button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>
-          </span> -->
+          <div class="column gutter vf-worker-performance"></div>
 
-          <div class="column gutter worker-performance"></div>
+          <div class="vf-clock-view column columns"></div>
 
           <div class="column no-grow control-screen-controls"></div>
 

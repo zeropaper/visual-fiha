@@ -97,7 +97,7 @@ var AppRouter = require('ampersand-router').extend({
         break;
 
       case 'heartbeat':
-        screen.frametime = payload.frametime;
+        screen.clock.set(payload.clock);
         break;
 
       default:

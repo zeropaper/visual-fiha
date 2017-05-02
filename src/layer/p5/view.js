@@ -35,10 +35,11 @@ function compileSketch(setupFunction, drawFunction) {
       try {
         ${ setupFunction.toString() }
       } catch (e) {}
+      p.noLoop();
     };
 
     p.draw = function() {
-      var frametime = screen.frametime || 0;
+      var frametime = screen.clock.frametime || 0;
       try {
         ${ drawFunction.toString() }
       } catch(e) {}
@@ -68,14 +69,6 @@ var P5LayerView = LayerView.types.p5 = LayerView.extend({
   template: function() {
     return '<div class="layer-p5" id="' + this.model.getId() + '" view-id="' + this.cid + '"></div>';
   },
-
-  // bindings: {
-  //   draw: {
-  //     type: function() {
-  //       this.p5.draw = this.draw.bind(this);
-  //     }
-  //   }
-  // },
 
   derived: {
     p5: {
@@ -113,6 +106,10 @@ var P5LayerView = LayerView.types.p5 = LayerView.extend({
         return compileSketch(this.model.setupFunction, this.model.drawFunction).bind(this);
       }
     }
+  },
+
+  update: function() {
+    this.p5.redraw();
   },
 
   remove: function() {

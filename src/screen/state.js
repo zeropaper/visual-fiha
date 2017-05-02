@@ -8,8 +8,8 @@ var ScreenState = State.extend({
   },
 
   mappable: {
-    source: ['frametime', 'midi', 'firstframetime', 'signals'],
-    target: ['layers', 'signals']
+    source: ['midi', 'frametime', 'clock', 'signals'],
+    target: ['layers', 'signals', 'clock']
   },
 
   session: {
@@ -18,11 +18,11 @@ var ScreenState = State.extend({
       frequency: new Uint8Array(128),
       timeDomain: new Uint8Array(128)
     }; }],
-    frametime: ['number', true, 0],
-    firstframetime: ['any', true, function () {
-      return performance.now();
-    }],
     latency: ['number', true, 0]
+  },
+
+  children: {
+    clock: require('./clock')
   },
 
   collections: {
@@ -30,6 +30,12 @@ var ScreenState = State.extend({
   },
 
   derived: {
+    frametime: {
+      deps: ['clock.frametime'],
+      fn: function() {
+        return this.clock.frametime;
+      }
+    },
     hasDOM: {
       deps: [],
       fn: function() {

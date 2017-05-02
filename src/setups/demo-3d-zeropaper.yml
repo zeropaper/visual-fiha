@@ -54,14 +54,14 @@ mappings:
       - layers.zeropaperLogo.opacity
     transformFunction: 'function(val) { return 100 - val; }'
     source: signals.beatA.result
-  beatNumContructionPath:
+  beatnumContructionPath:
     targets:
       - layers.bgk.src
       - layers.bgk2.src
     transformFunction: >-
       function(val) { return './assets/construction-work/'+ ((val % 3) + 1)
       +'/front.png'; }
-    source: signals.beatA.beatNum
+    source: signals.beatA.beatnum
 layers:
   bgk:
     type: img

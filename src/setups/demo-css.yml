@@ -59,7 +59,7 @@ mappings:
         var i = Math.floor((val % (c * t)) / t) + 1;
         return './assets/construction-work/'+ i +'/front.png';
       }
-    source: signals.beat.beatNum
+    source: signals.beat.beatnum
   beatSkyBack:
     targets:
       - layers.back.src
@@ -70,7 +70,7 @@ mappings:
         var i = Math.floor((val % (c * t)) / t) + 1;
         return './assets/construction-work/'+ i +'/back.png';
       }
-    source: signals.beat.beatNum
+    source: signals.beat.beatnum
   beatTreeFront:
     targets:
       - layers.front3cpy.src
@@ -82,7 +82,7 @@ mappings:
         var i = Math.floor((val % (c * t)) / t) + 1;
         return './assets/trees/'+ i +'/front.png';
       }
-    source: signals.beat.beatNum
+    source: signals.beat.beatnum
   beatTreeBack:
     targets:
       - layers.back3.src
@@ -93,7 +93,7 @@ mappings:
         var i = Math.floor((val % (c * t)) / t) + 1;
         return './assets/trees/'+ i +'/back.png';
       }
-    source: signals.beat.beatNum
+    source: signals.beat.beatnum
   knobBlur:
     targets: []
     transformFunction: 'function (val) { return val.toString(); }'

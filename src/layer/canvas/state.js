@@ -58,7 +58,7 @@ var CanvasLayer = ScreenLayerState.extend({
       deps: ['screenState'],
       fn: function() {
         if (!this.screenState) return 0;
-        return this.screenState.frametime || 0;
+        return this.screenState.clock.frametime || 0;
       }
     },
     audio: {

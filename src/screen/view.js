@@ -51,8 +51,9 @@ var commands = {
       state = this.model.layers.add(layer);
     }
   },
-  heartbeat: function(frametime, audio) {
-    this.model.frametime = frametime;
+  heartbeat: function(clock, audio) {
+    this.model.clock.set(clock);
+    this.model.trigger('change:clock.frametime', clock.frametime);
     this.model.audio = audio;
   },
   updateLayers: function(layers) {
@@ -122,6 +123,21 @@ var ScreenView = View.extend(clientMixin, {
       throw new Error('Missing model option for ScreenView');
     }
     this.initializeClient();
+
+    var clock = this.model.clock;
+    [
+      'frametime',
+      'bpm',
+      'beatlength',
+      'beatnum',
+      'beatprct'
+    ].forEach(function(propName) {
+      this.listenToAndRun(clock, 'change:' + propName, function() {
+        this.setProperty('--' + propName, clock.get(propName));
+      });
+    }, this);
+
+    this.listenToAndRun(this.model, 'change:audio', this._updateAudio);
   },
 
   derived: {
@@ -243,31 +259,40 @@ var ScreenView = View.extend(clientMixin, {
     return this;
   },
 
+  _prev: null,
   _ar: null,
   _animate: function() {
-    this._updateLayers();
-    this._ar = window.requestAnimationFrame(this._animate.bind(this));
+    var timestamp = arguments[0];
+    if (this.prev) console.info('screen last frame duration', (timestamp - this.prev).toFixed(4));
+    this.prev = timestamp;
+
+    var view = this;
+    view._updateLayers();
+    view._ar = window.requestAnimationFrame(function(timestamp) {
+      view._animate(timestamp);
+    });
+  },
+
+  _updateAudio: function() {
+    var audio = this.model.audio;
+    if (!audio || !audio.frequency || !audio.timeDomain) return this;
+    var length = audio.frequency.length;
+    var l, li = 0, af = 0, av = 0, ll = length / 16;
+
+    for (l = 0; l < length; l += ll) {
+      li++;
+      af += audio.frequency[l];
+      av += audio.timeDomain[l];
+      this.setProperty('--freq' + li, audio.frequency[l]);
+      this.setProperty('--vol' + li, audio.timeDomain[l]);
+    }
+
+    this.setProperty('--freqAvg', af / length);
+    this.setProperty('--volAvg', av / length);
+    return this;
   },
 
   _updateLayers: function() {
-    this.setProperty('--frametime', this.model.frametime);
-
-    var audio = this.model.audio;
-    if (audio && audio.frequency && audio.timeDomain) {
-      var length = audio.frequency.length;
-      var l, li = 0, af = 0, av = 0, ll = length / 16;
-
-      for (l = 0; l < length; l += ll) {
-        li++;
-        af += audio.frequency[l];
-        av += audio.timeDomain[l];
-        this.setProperty('--freq' + li, audio.frequency[l]);
-        this.setProperty('--vol' + li, audio.timeDomain[l]);
-      }
-      this.setProperty('--freqAvg', af / length);
-      this.setProperty('--volAvg', av / length);
-    }
-
     this.layersView.views.forEach(function(subview) {
       if (subview.model.active) subview.update();
     });

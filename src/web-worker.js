@@ -41,6 +41,9 @@ var SignalCollection = require('./signal/collection');
 worker.signals = new SignalCollection({
   parent: worker.screen
 });
+worker.signals.listenTo(worker.screen.clock, 'change:frametime', function(...args) {
+  worker.signals.trigger('change:frametime', ...args);
+});
 var localForage = require('./storage');
 
 
@@ -111,18 +114,16 @@ function broadcastCommand(name, payload) {
 /******************************************************\
  * Worker   clock                                     *
 \******************************************************/
-var _fps = 45;
+var _fps = 60;
 var _prev = performance.now();
 var _frameMillis = 1000 / _fps;
 var _internalTimeout;
 var _frameCounter = 0;
 var _samplesCount = _fps * 2;
 var _prevSamples = _prev;
-var _animationStartTime = performance.now();
 
 function _animate() {
-  worker.screen.frametime = __dataContext.frametime = performance.now() - _animationStartTime;
-  worker.signals.trigger('frametime', __dataContext.frametime);
+  __dataContext.frametime = worker.screen.clock.refresh().frametime;
 
   emitCommand('updateSignals', {
     signals: worker.signals.serialize().filter(o => o.name)
@@ -193,16 +194,19 @@ channel.addEventListener('message', function(evt) {
  * Worker commands                                    *
 \******************************************************/
 var commands = {
-  play: function(ft) {
-    if (ft) screen.layers.frametime = __dataContext.frametime = ft;
-
+  play: function() {
+    worker.screen.clock.play();
   },
   pause: function() {
-
+    worker.screen.clock.pause();
   },
   stop: function() {
-
+    worker.screen.clock.stop();
   },
+  setBPM: function(bpm) {
+    worker.screen.clock.bpm = bpm;
+  },
+
   storageKeys: function() {
     localForage
       .keys()
@@ -213,7 +217,6 @@ var commands = {
           emitCommand('storageKeys', {error: err});
         });
   },
-
   storageSave: function(setupId) {
     var setup = {
       layers: worker.layers.serialize(),
@@ -230,7 +233,6 @@ var commands = {
           emitCommand('storageSave', {error: err, setupId: setupId});
         });
   },
-
   storageLoad: function(setupId) {
     localForage
       .getItem(setupId)
@@ -277,7 +279,7 @@ var commands = {
   heartbeat: function(audio) {
     worker.audio = audio;
     broadcastCommand('heartbeat', {
-      frametime: worker.screen.frametime || 0,
+      clock: worker.screen.clock.serialize(),
       audio: audio
     });
   },

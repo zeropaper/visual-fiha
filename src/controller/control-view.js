@@ -85,11 +85,13 @@ var ControlView = View.extend({
           }
         }
 
-        info = {};
+        info = {
+          passive: true
+        };
       }
       else {
         command = info.command;
-        serializer = info.serializer;
+        serializer = info.serializer || noop;
       }
 
       // var listener = throttle(function commandEventListener(...args) {
@@ -99,18 +101,20 @@ var ControlView = View.extend({
         rootView.sendCommand(command, serializer.apply(view, ...args)/*, done*/);
       };
 
-      var els = [view.el];
+      var els = [el];
       if (selector) {
         els = el.querySelectorAll(selector);
       }
 
       commands.push({
         event: evtName,
+        selector: selector,
         listener: listener,
         command: command,
         listenerOptions: {
           passive: info.passive
         },
+        el: el,
         elements: els
       });
     }, view);
