@@ -21,42 +21,42 @@ function compileFunction(drawFunction) {
   var navigator, window, global, document, module, exports;
 
   return function(ctx) {
-    var width = (ctx.canvas || {}).width || 400;
-    var height = (ctx.canvas || {}).height || 300;
-    var layer = this;
-    var store = layer.cache;
-    var frametime = layer ? layer.frametime : 0;
-    var audio = layer ? layer.audio : {};
-    var bufferLength = function() { return ((layer.audio || {}).bufferLength) || 128; };
-    var frequency = function(x) {
+    const width = (ctx.canvas || {}).width || 400;
+    const height = (ctx.canvas || {}).height || 300;
+    const layer = this;
+    const store = layer.cache;
+    const frametime = layer ? layer.frametime : 0;
+    const audio = layer ? layer.audio : {};
+    const bufferLength = function() { return ((layer.audio || {}).bufferLength) || 128; };
+    const frequency = function(x) {
       return ((layer.audio || {}).frequency || [])[x] || 0;
     };
-    var timeDomain = function(x) {
+    const timeDomain = function(x) {
       return ((layer.audio || {}).timeDomain || [])[x] || 0;
     };
 
-    var parameter = function(name, defaultVal) {
+    const parameter = function(name, defaultVal) {
       return layer.parameters.getValue(name, defaultVal);
     };
 
     ${ ctxProperties }
-    var random = utils.random;
-    var between = utils.between;
-    var midiMinMax = utils.midiMinMax;
-    var midi2rad = utils.midi2rad;
-    var midi2prct = utils.midi2prct;
+    const random = utils.random;
+    const between = utils.between;
+    const midiMinMax = utils.midiMinMax;
+    const midi2rad = utils.midi2rad;
+    const midi2prct = utils.midi2prct;
 
-    var grid = function(...args) { utils.grid(width, height, ...args); };
-    var distribute = function(...args) { utils.distribute(...args); };
-    var repeat = function(...args) { utils.repeat(...args); };
-    var log = function(...args) { utils.log(ctx, ...args); };
-    var txt = function(...args) { utils.txt(ctx, ...args); };
-    var dot = function(...args) { utils.dot(ctx, ...args); };
-    var circle = function(...args) { utils.circle(ctx, ...args); };
-    var polygone = function(...args) { utils.polygone(ctx, ...args); };
-    var line = function(...args) { utils.line(ctx, ...args); };
-    var cacheContext = function(...args) { utils.cacheContext(ctx, ...args); };
-    var restoreContexts = function(...args) { utils.restoreContexts(ctx, ...args); };
+    const grid = function(...args) { utils.grid(width, height, ...args); };
+    const distribute = function(...args) { utils.distribute(...args); };
+    const repeat = function(...args) { utils.repeat(...args); };
+    const log = function(...args) { utils.log(ctx, ...args); };
+    const txt = function(...args) { utils.txt(ctx, ...args); };
+    const dot = function(...args) { utils.dot(ctx, ...args); };
+    const circle = function(...args) { utils.circle(ctx, ...args); };
+    const polygone = function(...args) { utils.polygone(ctx, ...args); };
+    const line = function(...args) { utils.line(ctx, ...args); };
+    const cacheContext = function(...args) { utils.cacheContext(ctx, ...args); };
+    const restoreContexts = function(...args) { utils.restoreContexts(ctx, ...args); };
 
 
     return (${ drawFunction.toString() })(ctx);
