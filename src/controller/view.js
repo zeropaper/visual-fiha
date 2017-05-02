@@ -392,7 +392,9 @@ var ControllerView = View.extend({
     controlScreenWidth: {
       selector: '.region-left',
       type: function(el, val) {
-        el.style.width = val +'px';
+        var width = val +'px';
+        el.style.maxWidth = width;
+        el.style.minWidth = width;
       }
     },
     controlScreenHeight: {
