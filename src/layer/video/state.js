@@ -12,9 +12,5 @@ module.exports = ScreenLayerState.types.video = ScreenLayerState.extend({
         return this.parameters.getValue('src');
       }
     }
-  },
-
-  initialize: function() {
-    ScreenLayerState.prototype.initialize.apply(this, arguments);
   }
 });

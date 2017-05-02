@@ -77,20 +77,19 @@ var DetailsView = View.extend({
   },
 
   addParameter: function() {
+    if (!this.model.parameters) return;
     var val = this.query('[name=parameter-default]').value;
-    var props = this.model.parameters.serialize();
-    props.push({
+    var parameter = {
       name: this.query('[name=parameter-name]').value,
       type: this.query('[name=parameter-type]').value,
       default: val,
       value: val
-    });
-
-    this.rootView.sendCommand('propChange', {
-      path: 'layers.' + this.model.getId(),
-      property: 'parameters',
-      value: props
-    });
+    };
+    console.info('addParameter', parameter);
+    // this.rootView.sendCommand('addParameter', {
+    //   path: this.modelPath,
+    //   parameter: parameter
+    // });
   },
 
   editFunction: function(propName) {

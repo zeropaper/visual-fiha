@@ -1,7 +1,6 @@
 'use strict';
 var assign = require('lodash.assign');
 var DetailsView = require('./../controller/details-view');
-var ParameterView = require('./../parameter/view');
 
 var LayerDetailsView = DetailsView.extend({
   template: `
@@ -44,7 +43,6 @@ var LayerDetailsView = DetailsView.extend({
   }
 });
 
-LayerDetailsView.ParameterView = ParameterView;
 LayerDetailsView.types = {};
 
 module.exports = LayerDetailsView;

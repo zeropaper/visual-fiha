@@ -380,6 +380,12 @@ var commands = {
     var state = worker.layers.get(layer.name);
     state.set(layer);
     if (broadcast) broadcastCommand('updateLayer', {layer: layer});
+  },
+
+  addParameter: function(path, parameter) {
+    var obj = resolve(path, __dataContext);
+    if (!obj || !obj.parameters) return;
+    obj.parameters.add(parameter);
   }
 };
 

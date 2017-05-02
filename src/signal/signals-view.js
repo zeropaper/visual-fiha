@@ -2,7 +2,6 @@
 var View = require('./../controller/control-view');
 
 var SignalControlView = require('./control-view');
-require('./beat/control-view');
 require('./hsla/control-view');
 require('./rgba/control-view');
 
@@ -20,12 +19,7 @@ var SignalsView = View.extend({
     helper.attach(this.queryByHook('signal-type'), function(selected) {
       el.value = selected;
       helper.detach();
-    }).fill([
-      'default',
-      'beat',
-      'hsla',
-      'rgba'
-    ]);
+    }).fill(Object.keys(SignalControlView.types));
   },
 
   _addSignal: function() {
