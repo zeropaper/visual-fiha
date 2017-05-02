@@ -1,28 +1,12 @@
 /* global Request */
 'use strict';
 var View = require('./../control-view');
-var jsYAML = require('js-yaml');
 
 function resToJSON(res) {
   return res.json();
 }
 
-function toObj(arr) {
-  var obj = {};
-  arr.forEach(function(o) {
-    obj[o.name] = o;
-    delete obj[o.name].name;
-  });
-  return obj;
-}
-
-function toArr(obj) {
-  var keys = Object.keys(obj);
-  return keys.map(function(key) {
-    obj[key].name = key;
-    return obj[key];
-  });
-}
+var toYaml = require('./../../utils/setup-to-yaml');
 
 
 var GistView = View.extend({
@@ -82,35 +66,17 @@ var GistView = View.extend({
       .then(resToJSON)
       .then(function(json) {
         var content = json.files['visual-fiha-setup.yml'].content;
-        done(null, view.fromYaml(content));
+        done(null, content);
       }, done)
       .catch(done);
   },
 
-  fromYaml: function(newStr) {
-    var obj = {};
-    try {
-      obj = jsYAML.safeLoad(newStr);
-      obj.signals = toArr(obj.signals || {});
-      obj.layers = toArr(obj.layers || {});
-      obj.mappings = toArr(obj.mappings || {});
-    }
-    catch(e) {
-      console.warn(e);
-    }
-    return obj;
-  },
 
   toYaml: function() {
-    var setup = this.parent.toJSON();
-    setup.signals = toObj(setup.signals || []);
-    setup.layers = toObj(setup.layers || []);
-    setup.mappings = toObj(setup.mappings || []);
-    return jsYAML.safeDump(JSON.parse(JSON.stringify(setup)));
+    return toYaml(this.parent.toJSON());
   },
 
   _saveGist: function(evt) {
-    console.info('_saveGist');
     evt.preventDefault();
     var method = 'POST';
     var url = 'https://api.github.com/gists';

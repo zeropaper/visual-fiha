@@ -26,7 +26,6 @@ require.ensure([
 ], function() {
 require.ensure([
   './controller/settings',
-  './storage',
   './layer/canvas/scripts',
   './midi/state',
   './midi/view',
@@ -49,7 +48,7 @@ var ScreenState = require('./screen/state');
 var MIDIAccessState = require('./midi/state');
 var Mappings = require('./mapping/data');
 var Tour = require('./controller/tour/index');
-var installSetups = require('./storage').installSetups;
+var fromYaml = require('./utils/yaml-to-setup');
 
 var DetailsView = require('./layer/details-view');
 var Settings = require('./controller/settings');
@@ -71,7 +70,6 @@ var AppRouter = require('ampersand-router').extend({
     var screen = router.model;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
-    // logger.info('app incoming broadcast command "%s"', command);
 
     switch (command) {
       case 'bootstrap':
@@ -104,7 +102,6 @@ var AppRouter = require('ampersand-router').extend({
         console.info('unrecognized broadcast command "%s"', command);
     }
     router.trigger('app:broadcast:' + command, payload);
-    screen.trigger('app:broadcast:' + command, payload);
   },
 
   _handleWorkerMessages: function(evt) {
@@ -112,7 +109,6 @@ var AppRouter = require('ampersand-router').extend({
     var screen = router.model;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
-    // logger.info('app incoming worker command "%s"', command);
 
     switch (command) {
       case 'health':
@@ -167,11 +163,26 @@ var AppRouter = require('ampersand-router').extend({
         router.view.timeline.addEntries(payload.commands);
         break;
 
+      case 'storageSetupInstalled':
+        router.history.start({
+          root: location.pathname,
+          pushState: false
+        });
+        break;
+
+      case 'storageSave':
+      case 'storageLoad':
+        router.navigate('/setup/' + payload.setupId, {trigger: false, replace: false});
+        break;
+
+      case 'yamlLoad':
+      case 'storageKeys':
+        break;
+
       default:
         console.info('unrecognized worker command "%s"', command);
     }
     router.trigger('app:worker:' + command, payload);
-    screen.trigger('app:worker:' + command, payload);
   },
 
   initialize: function(options) {
@@ -182,6 +193,9 @@ var AppRouter = require('ampersand-router').extend({
 
     var screen = router.model = new ScreenState({}, {
       router: this
+    });
+    router.on('all', function(...args) {
+      if (args[0] && args[0].indexOf('app:') === 0) screen.trigger(...args);
     });
 
     var mappingContext = {
@@ -222,14 +236,8 @@ var AppRouter = require('ampersand-router').extend({
       router: router,
       signals: signals,
       mappings: router.mappings,
-      el: document.querySelector('.controller')
+      el: options.el
     });
-
-    router.defaultSetup = options.setup || {
-      layers: [],
-      signals: [],
-      mappings: []
-    };
   },
 
   sendCommand: function(name, payload, callback) {
@@ -271,7 +279,8 @@ var AppRouter = require('ampersand-router').extend({
       return item;
     });
 
-    function tourReady() {
+    function tourReady(err) {
+      if (err) throw err;
       if (!router.tourView) {
         router.tourView = new Tour({
           parent: router,
@@ -285,98 +294,67 @@ var AppRouter = require('ampersand-router').extend({
       }
 
       router.tourView.step = step;
-      router._tourBotstrapped = true;
+      router._tourBootstrapped = true;
     }
 
-    if (router._tourBotstrapped) return tourReady();
-    router._sendBootstrap(router.defaultSetup, tourReady);
+    if (router._tourBootstrapped) return tourReady();
+    // load the default setup
+    router.loadSetup(null, tourReady);
   },
 
-  _sendBootstrap: function(setup, done) {
-    done = typeof done === 'function' ? done : function() { console.info('APP bootstraped'); };
-    var cl = document.body.classList;
-    cl.add('bootstraping');
-    cl.remove('bootstraped');
+  loadSetup: function(setupId, next) {
+    console.time(setupId);
 
-    this.once('app:broadcast:bootstrap', function() {
-      cl.remove('bootstraping');
-      cl.add('bootstraped');
-
-      cl.add('initialized');
-
-      done.apply(this, arguments);
-    });
-
-    this.sendCommand('bootstrap', {
-      layers: setup.layers,
-      signals: setup.signals,
-      mappings: setup.mappings
-    });
-  },
-
-  _defaultBootstrap: function() {
-    console.time();
-    this._sendBootstrap(this.defaultSetup, function() {
-      console.timeEnd();
-    });
-  },
-
-  loadSetup: function(setupId) {
     var router = this;
+    setupId = setupId || 'local-demo-3d-zeropaper';
+
+    next = typeof next === 'function' ? next : function(){};
 
     function done(err, setup) {
-      if (err || !setup || !setup.layers || !setup.signals || !setup.mappings) {
-        return router._defaultBootstrap();
-      }
-
-      console.time();
-      router._sendBootstrap(setup, function() {
-        console.timeEnd();
-        router.navigate('setup/' + setupId, {replace: false, trigger: false});
-      });
+      console.timeEnd(setupId);
+      if (err) return next(err);
+      // router.navigate('setup/' + setupId, {replace: false, trigger: false});
+      router.view.getSetupEditor(setup);
+      next();
     }
 
-    if (!setupId) {
-      router._defaultBootstrap();
-    }
-    else if (setupId.indexOf('local-') === 0) {
-      router.loadLocal(setupId, done);
+    if (setupId.indexOf('local-') === 0) {
+      router._loadLocal(setupId, done);
     }
     else {
-      router.loadGist(setupId, done);
+      router._loadGist(setupId, done);
     }
   },
 
-  loadLocal: function(localId, done) {
-    var localforageView = this.view.menuView.localforageView;
-    localforageView.loadLocal(localId, done);
+  _loadLocal: function(setupId, done) {
+    done = typeof done === 'function' ? done : function(err) {
+      if(err) console.error('localforage error', err.message);
+    };
+
+    this.once('app:worker:storageLoad', function(data) {
+      done(data.error, data.setup);
+    });
+
+    this.sendCommand('storageLoad', {setupId: setupId});
   },
 
-  loadGist: function(gistId, done) {
+  _loadGist: function(gistId, done) {
     var gistView = this.view.gistView;
     var same = gistView.gistId === gistId;
     gistView.gistId = gistId;
-    if (!same) gistView._loadGist(done);
+    if (!same) {
+      gistView._loadGist(function(err, content) {
+        if (err) return done(err);
+        done(null, fromYaml(content));
+      });
+    }
   }
 });
 
 
-
-
-var controllerSetup = VF._defaultSetup;
-controllerSetup.el = document.querySelector('.controller');
-
-var vf = window.visualFiha = new AppRouter({
-  setup: controllerSetup
+window.visualFiha = new AppRouter({
+  el: document.querySelector('.controller')
 });
-installSetups(function(err) {
-  vf.history.start({
-    root: location.pathname,
-    pushState: false
-  });
-});
-
-
 
 // ---------------------------------------------------------------
 }, 'controller-deps');

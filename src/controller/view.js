@@ -10,6 +10,8 @@ var RegionView = require('./region-view');
 var MappingsControlView = require('./../mapping/control-view');
 var MenuView = require('./menu/view');
 var objectPath = require('./../utils/object-path');
+var fromYaml = require('./../utils/yaml-to-setup');
+var toYaml = require('./../utils/setup-to-yaml');
 var ControlScreenControls = require('./control-screen-controls-view');
 // var Timeline = require('./timeline-view');
 
@@ -255,18 +257,6 @@ var ControllerView = View.extend({
       selector: '.region-right',
       prepareView: function(el) {
         var parent = this;
-        function buildLayers() {
-          if (parent.layersView && parent.layersView.remove) {
-            parent.layersView.remove();
-            parent.stopListening(parent.layersView);
-          }
-          parent.layersView = new LayersView({
-            collection: parent.model.layers,
-            parent: parent,
-            model: parent.model
-          });
-          return parent.layersView;
-        }
 
         parent.mappingsView = new MappingsControlView({
           collection: parent.mappings,
@@ -274,50 +264,35 @@ var ControllerView = View.extend({
           model: parent.model
         });
 
-        function buildSignals() {
-          if (parent.signalsView && parent.signalsView.remove) {
-            parent.signalsView.remove();
-            parent.stopListening(parent.signalsView);
-          }
-          parent.signalsView = new SignalsView({
-            collection: parent.signals,
-            parent: parent,
-            model: parent.model
-          });
-          return parent.signalsView;
-        }
-
         function buildCodeEditor() {
-          if (parent.codeEditor) {
-            parent.stopListening(parent.codeEditor);
-          }
-          parent.codeEditor = new AceEditor({
+          parent.codeEditor = parent.codeEditor || new AceEditor({
             parent: parent
           });
+          var editor = parent.codeEditor;
 
-          var gistView = parent.menuView.gistView;
-          parent.codeEditor.editCode({
+          editor.editCode({
             autoApply: false,
             title: 'Setup',
-            script: gistView.toYaml(),
+            script: parent.toYaml(),
             language: 'yaml',
             onapply: function(str) {
-              parent.router._sendBootstrap(gistView.fromYaml(str), function() {
-                console.info('apply setup done');
+              parent.listenToOnce(parent.router, 'app:worker:yamlLoad', function(payload) {
+                parent.fromJSON(payload.setup);
+                editor.script = parent.toYaml();
+                editor.setPristine();
               });
+              parent.sendCommand('yamlLoad', {yamlStr: str});
             }
           });
-          return parent.codeEditor;
+          return editor;
         }
 
         var view = new RegionView({
           parent: parent,
           el: el,
           tabs: [
-            {name: 'Layers', rebuild: buildLayers, pinned: true, active: true},
-            {name: 'Signals', rebuild: buildSignals, pinned: true},
-            {name: 'Mappings', view: parent.mappingsView, pinned: true},
-            {name: 'Setup', rebuild: buildCodeEditor, pinned: true}
+            {name: 'Setup', rebuild: buildCodeEditor, pinned: true, active: true},
+            {name: 'Mappings', view: parent.mappingsView, pinned: true}
           ]
         });
 
@@ -335,6 +310,31 @@ var ControllerView = View.extend({
       prepareView: function(el) {
         var parent = this;
         var styles = this.computedStyle;
+        function buildLayers() {
+          if (parent.layersView && parent.layersView.remove) {
+            parent.layersView.remove();
+            parent.stopListening(parent.layersView);
+          }
+          parent.layersView = new LayersView({
+            collection: parent.model.layers,
+            parent: parent,
+            model: parent.model
+          });
+          return parent.layersView;
+        }
+
+        function buildSignals() {
+          if (parent.signalsView && parent.signalsView.remove) {
+            parent.signalsView.remove();
+            parent.stopListening(parent.signalsView);
+          }
+          parent.signalsView = new SignalsView({
+            collection: parent.signals,
+            parent: parent,
+            model: parent.model
+          });
+          return parent.signalsView;
+        }
 
         function buildAudioSource() {
           parent.audioSource = new AudioSource({
@@ -353,19 +353,15 @@ var ControllerView = View.extend({
           });
         }
 
-        // parent.timeline = new Timeline({
-        //   parent: this,
-        //   entries: []
-        // });
-
         var view = new RegionView({
           parent: parent,
           el: el,
           currentView: parent.mappingsView,
           tabs: [
-            {name: 'MIDI', view: parent.MIDIAccess, pinned: true, active: true},
-            {name: 'Audio', rebuild: buildAudioSource, pinned: true},
-            // {name: 'Timeline', view: parent.timeline, pinned: true, active: true}
+            {name: 'Layers', rebuild: buildLayers, pinned: true, active: true},
+            {name: 'Signals', rebuild: buildSignals, pinned: true},
+            {name: 'MIDI', view: parent.MIDIAccess, pinned: true},
+            {name: 'Audio', rebuild: buildAudioSource, pinned: true}
           ]
         });
 
@@ -451,6 +447,17 @@ var ControllerView = View.extend({
     window.open('./screen.html#' + this.broadcastId, 'screen', 'width=800,height=600,location=no');
   },
 
+  _startTour: function() {
+    this.router.navigate('tour');
+  },
+
+
+  fromYaml: fromYaml,
+
+  toYaml: function(setup) {
+    return toYaml(setup || this.toJSON());
+  },
+
   toJSON: function() {
     return {
       signals: this.signals.toJSON(),
@@ -459,17 +466,18 @@ var ControllerView = View.extend({
     };
   },
 
-  fromJSON: function(obj) {
-    this.router._sendBootstrap(obj);
-    return this;
+  fromJSON: function(json) {
+    this.model.layers.reset(json.layers);
+    this.signals.reset(json.signals);
+    this.mappings.reset(json.mappings);
   },
 
-
-  _startTour: function() {
-    this.router.navigate('tour');
+  getSetupEditor: function(setup) {
+    var editor = this.regionRight.focusTab('Setup');
+    editor.script = this.toYaml(setup);
+    editor.setPristine();
+    return editor;
   },
-
-
 
   getEditor: function(options) {
     var tabs = this.regionRight.tabs;
@@ -492,7 +500,8 @@ var ControllerView = View.extend({
 
   showDetails: function (view) {
     if (view === this.currentDetails) return this;
-    var tabs = this.regionLeftBottom.tabs;
+    var region = this.regionRight;
+    var tabs = region.tabs;
     var tabName = view.modelPath || objectPath(view.model);
     var found = tabs.get(tabName);
     if (!found) {
@@ -502,7 +511,7 @@ var ControllerView = View.extend({
       found.view = view;
     }
 
-    this.regionLeftBottom.focusTab(tabName);
+    region.focusTab(tabName);
     found.view.blink();
     return this;
   },
@@ -529,8 +538,8 @@ var ControllerView = View.extend({
   template: `
     <div class="controller rows">
       <div class="vf-app-menu"></div>
-      <div class="row columns gutter-left header">
-        <a href class="column no-grow vf-app-name">Visual Fiha <span class="hamburger-menu"><span></span></span></a>
+      <div class="row columns header no-grow">
+        <a href class="column gutter no-grow vf-app-name">Visual Fiha <span class="hamburger-menu"><span></span></span></a>
 
         <div class="column columns">
           <!-- <span class="column columns no-grow button-group">
@@ -539,7 +548,7 @@ var ControllerView = View.extend({
             <button class="column gutter-horizontal" name="stop"><span class="vfi-stop"></span></button>
           </span> -->
 
-          <div class="column gutter-left worker-performance"></div>
+          <div class="column gutter worker-performance"></div>
 
           <div class="column no-grow control-screen-controls"></div>
 

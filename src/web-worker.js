@@ -27,6 +27,7 @@ require.ensure([
 ], function() {
 // ---------------------------------------------------------------
 var resolve = require('./utils/resolve');
+var fromYaml = require('./utils/yaml-to-setup');
 
 var Mappings = require('./mapping/data');
 
@@ -39,7 +40,13 @@ var SignalCollection = require('./signal/collection');
 worker.signals = new SignalCollection({
   parent: worker.screen
 });
+var localForage = require('./storage');
 
+
+localForage.installSetups(function(err) {
+  if (err) return emitCommand('storageSetupInstalled', {error: err});
+  emitCommand('storageSetupInstalled');
+});
 
 
 var __dataContext = {
@@ -193,10 +200,68 @@ var commands = {
     worker.mappings.import(mappings, true);
 
     broadcastCommand('bootstrap', {
+  storageKeys: function() {
+    localForage
+      .keys()
+        .then(function(keys) {
+          emitCommand('storageKeys', {keys: keys});
+        })
+        .catch(function(err) {
+          emitCommand('storageKeys', {error: err});
+        });
+  },
+
+  storageSave: function(setupId) {
+    var setup = {
+      layers: worker.layers.serialize(),
       signals: worker.signals.serialize(),
-      mappings: worker.mappings.export(),
+      mappings: worker.mappings.serialize()
+    };
+
+    localForage
+      .setItem(setupId, setup)
+        .then(function() {
+          emitCommand('storageSave', {setup: setup, setupId: setupId});
+        })
+        .catch(function(err) {
+          emitCommand('storageSave', {error: err, setupId: setupId});
+        });
+  },
+
+  storageLoad: function(setupId) {
+    localForage
+      .getItem(setupId)
+        .then(function(setup) {
+          worker.layers.reset(setup.layers);
+          worker.signals.reset(setup.signals);
+          worker.mappings.reset(setup.mappings);
+
+          setup = {
+            signals: worker.signals.serialize(),
+            mappings: worker.mappings.serialize(),
+            layers: worker.layers.serialize()
+          };
+          broadcastCommand('bootstrap', {layers: setup.layers});
+          emitCommand('storageLoad', {setup: setup, setupId: setupId});
+        })
+        .catch(function(err) {
+          emitCommand('storageLoad', {error: err, setupId: setupId});
+        });
+  },
+
+  yamlLoad: function(yamlStr) {
+    var setup = fromYaml(yamlStr);
+    worker.layers.reset(setup.layers);
+    worker.signals.reset(setup.signals);
+    worker.mappings.reset(setup.mappings);
+
+    setup = {
+      signals: worker.signals.serialize(),
+      mappings: worker.mappings.serialize(),
       layers: worker.layers.serialize()
-    });
+    };
+    broadcastCommand('bootstrap', {layers: setup.layers});
+    emitCommand('yamlLoad', {setup: setup});
   },
 
 

@@ -1,6 +1,5 @@
 'use strict';
 
-var localForage = require('./../../storage');
 
 var View = require('ampersand-view');
 var LocalforageView = View.extend({
@@ -20,31 +19,30 @@ var LocalforageView = View.extend({
   },
   _suggestKeys: function(evt) {
     var helper = this.parent.suggestionHelper;
-    localForage.keys().then(function(keys) {
+
+    this.listenToOnce(this.parent, 'app:worker:storageKeys', function(data) {
       helper
         .attach(evt.target, function(selected) {
           evt.target.value = selected;
           helper.detach();
         })
-        .fill(keys.map(s => s.replace('local-', '')));
+        .fill((data.keys || []).map(s => s.replace('local-', '')));
     });
+
+    this.parent.sendCommand('storageKeys');
   },
-  loadLocal: function(setupId, done) {
-    done = typeof done === 'function' ? done : function(err) { if(err) console.error('localforage error', err.message); };
-    return localForage.getItem(setupId)
-            .then(function(setup) {
-              done(null, setup);
-            }, done)
-            .catch(done);
-  },
+
   saveLocal: function(setupId, done) {
     done = typeof done === 'function' ? done : function(err) { if(err) console.error('localforage error', err.message); };
-    return localForage.setItem(setupId, this.parent.toJSON())
-            .then(function() {
-              done();
-            }, done)
-            .catch(done);
+
+    this.listenToOnce(this.parent, 'app:worker:storageSave', function(data, x) {
+      console.info('storage save...', data, x);
+      done(data.error);
+    });
+
+    this.parent.sendCommand('storageSave', {setupId: setupId});
   },
+
   _restoreSetup: function() {
     var id = 'local-' + this.query('[name=local-id]').value;
     var router = this.parent.router;
