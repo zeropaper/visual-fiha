@@ -4,7 +4,7 @@ module.exports = function(controllerView) {
     {
       title: 'Screen layers',
       name: 'layers',
-      selector: '.region-right .region-content',
+      selector: '.region-left-bottom .region-content',
       text: 'The layers provide a way to compose an screen with different types of media.<br/>'+
         'The aspect of a layer can be influenced by preset or custom variables.',
       prepare: function() {
@@ -23,7 +23,7 @@ module.exports = function(controllerView) {
     {
       title: 'Layer details',
       name: 'layer-details',
-      selector: 'section.layers>.items .svg-layer-control:nth-child(2) .layer-name',
+      selector: '.region-left-bottom .layers .items > section:nth-child(2) .layer-name',
       text: 'Click on a layer name to open its details.',
       prepare: function() {
         controllerView.regionRight.focusTab('Layers');
@@ -33,7 +33,7 @@ module.exports = function(controllerView) {
     {
       title: 'Layer variables',
       name: 'layer-variables',
-      selector: '.style-props',
+      selector: '.region-right .parameters',
       text: 'The CSS variables defined here can then be used in the style editor.<br/>'+
         'Try adding a variable name "<code>--rotation</code>" with its value "<code>calc(0.05deg * var(--frametime))</code>".<br/>'+
         'The "<code>--frametime</code>" variable is a "screen" variable (and is available to all layers).',
