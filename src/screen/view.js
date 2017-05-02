@@ -39,7 +39,6 @@ function registerCommand(commandName, command) {
 var commands = {
   bootstrap: function bootstrap(layers) {
     this.model.layers.reset(layers);
-    this.model.trigger('app:broadcast:bootstrap', {layers: layers});
     this.resize();
   },
   updateLayer: function(layer) {
@@ -51,8 +50,11 @@ var commands = {
       state = this.model.layers.add(layer);
     }
   },
-  updateLayers: function(layers, audio) {
-    if (audio) this.model.audio = audio;
+  heartbeat: function(frametime, audio) {
+    this.model.frametime = frametime;
+    this.model.audio = audio;
+  },
+  updateLayers: function(layers) {
     this.model.layers.set(layers);
   }
 };
@@ -84,6 +86,7 @@ clientMixin.initializeClient = function initializeClient() {
     });
 
     command.apply(follower, commandArgs);
+    follower.model.trigger('app:broadcast:' + commandName, evt.data.payload);
   });
 
   this.channel = channel;
@@ -240,8 +243,7 @@ var ScreenView = View.extend(clientMixin, {
   },
 
   _ar: null,
-  _animate: function(timestamp) {
-    this.model.frametime = timestamp || 0;
+  _animate: function() {
     this._updateLayers();
     this._ar = window.requestAnimationFrame(this._animate.bind(this));
   },

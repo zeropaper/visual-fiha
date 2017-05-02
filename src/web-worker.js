@@ -128,9 +128,7 @@ function _animate() {
   });
 
   broadcastCommand('updateLayers', {
-    frametime: __dataContext.frametime,
-    audio: worker.audio,
-    layers: worker.layers.serialize().filter(o => o.name)
+    layers: worker.layers.serialize()
   });
 
 
@@ -194,12 +192,16 @@ channel.addEventListener('message', function(evt) {
  * Worker commands                                    *
 \******************************************************/
 var commands = {
-  bootstrap: function(layers, signals, mappings) {
-    worker.layers.set(layers);
-    worker.signals.set(signals);
-    worker.mappings.import(mappings, true);
+  play: function(ft) {
+    if (ft) screen.layers.frametime = __dataContext.frametime = ft;
 
-    broadcastCommand('bootstrap', {
+  },
+  pause: function() {
+
+  },
+  stop: function() {
+
+  },
   storageKeys: function() {
     localForage
       .keys()
@@ -271,9 +273,12 @@ var commands = {
 
 
 
-  heartbeat: function(frametime, audio) {
-    worker.frametime = frametime;
+  heartbeat: function(audio) {
     worker.audio = audio;
+    broadcastCommand('heartbeat', {
+      frametime: worker.screen.frametime || 0,
+      audio: audio
+    });
   },
 
 
@@ -414,13 +419,6 @@ worker.addEventListener('message', function(evt) {
     return evt.data.payload[argName];
   });
 
-  if (['heartbeat'].indexOf(commandName) < 0) {
-    // _executedCommands.push({
-    //   time: Date.now(),
-    //   command: commandName,
-    //   payload: evt.data.payload
-    // });
-  }
   var result = command.apply(worker, commandArgs);
   if (!eventId) return;
   worker.postMessage({
@@ -434,12 +432,8 @@ worker.addEventListener('message', function(evt) {
   capture: false
 });
 
-worker.layers.on('emitCommand', function(...args) {
-  emitCommand(...args);
-});
-worker.layers.on('broadcastCommand', function(...args) {
-  broadcastCommand(...args);
-});
+worker.layers.on('emitCommand', emitCommand);
+worker.layers.on('broadcastCommand', broadcastCommand);
 // --------------------------------------------------------------
 }, 'worker-deps');
 }, 'screen-state');

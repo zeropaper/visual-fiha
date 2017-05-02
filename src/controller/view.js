@@ -83,16 +83,11 @@ var ControllerView = View.extend({
     return this;
   },
 
-  _animate: function(timestamp) {
-    if (this.controllerSparkline) {
-      this.controllerSparkline.update(1000 / ((timestamp - this.model.frametime) - this.model.firstframetime));
-    }
-
+  _animate: function() {
     if (this.audioSource) {
       this.audioSource.update();
     }
 
-    this.model.frametime = timestamp - this.model.firstframetime;
     this.update();
 
     this._arId = window.requestAnimationFrame(this._animate.bind(this));
@@ -108,7 +103,6 @@ var ControllerView = View.extend({
     analyser.getByteTimeDomainData(timeDomainArray);
 
     var command = {
-      frametime: this.model.frametime,
       audio: {
         bufferLength: analyser.frequencyBinCount,
         frequency: freqArray,
@@ -179,9 +173,6 @@ var ControllerView = View.extend({
 
   play: function() {
     this.playing = true;
-    if (!this.model.firstframetime) {
-      this.model.firstframetime = performance.now();
-    }
     return this;
   },
   pause: function() {
@@ -190,7 +181,6 @@ var ControllerView = View.extend({
   },
   stop: function() {
     this.playing = false;
-    this.model.firstframetime = this.model.frametime = 0;
     return this;
   },
 
