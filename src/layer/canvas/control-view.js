@@ -10,8 +10,8 @@ var CanvasControlLayerView = LayerControlView.extend({
     <section class="canvas-layer">
       <header class="columns">
         <div class="column no-grow"><button name="active"></button></div>
-        <div class="column no-grow"><button class="edit-draw-function vfi-cog-alt"></button></div>
         <h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>
+        <div class="column no-grow"><button class="edit-draw-function vfi-cog-alt"></button></div>
         <div class="column no-grow"><button class="vfi-trash-empty" name="remove-canvas-layer"></button></div>
       </header>
     </section>
