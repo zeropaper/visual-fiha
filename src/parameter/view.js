@@ -6,6 +6,7 @@ var ParamView = View.extend({
   template: `
     <div class="columns object-prop parameter-type-default">
       <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow gutter parameter-type"></div>
       <div class="column no-grow parameter-value-reset">
         <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
@@ -65,7 +66,7 @@ var ParamView = View.extend({
 
     mapping: {
       deps: [
-        'rootView.mappings',//good idea?
+        'rootView.mappings',
         'parameterPath'
       ],
       fn: function() {
@@ -89,6 +90,14 @@ var ParamView = View.extend({
     'model.name': {
       type: 'text',
       selector: '.parameter-name'
+    },
+
+    'model.type': {
+      type: function(el, val) {
+        el.textContent = (val || 'any')[0].toUpperCase();
+        el.title = val;
+      },
+      selector: '.parameter-type'
     },
 
     value: {
@@ -247,6 +256,7 @@ ParamView.types.boolean = ParamView.extend({
   template: `
     <div class="columns object-prop parameter-type-boolean">
       <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow gutter parameter-type"></div>
       <div class="column no-grow parameter-value-reset">
         <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
@@ -307,6 +317,7 @@ ParamView.types.number = ParamView.extend({
   template: `
     <div class="columns object-prop parameter-type-number">
       <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow gutter parameter-type"></div>
       <div class="column no-grow parameter-value-reset">
         <button title="Reset to default value" class="vfi-cancel"></button>
       </div>
