@@ -146,7 +146,6 @@ module.exports = function(env) {
       new CopyWebpackPlugin([
         {from: resolve(__dirname, 'assets/styles.css'), to: 'assets/styles.css'},
         {from: resolve(__dirname, 'assets/font/vf-embedded.css'), to: 'assets/font/vf-embedded.css'},
-        {from: 'setup.js'},
         {from: 'controller.html'},
         {from: 'screen.html'},
         {from: resolve(acePath, 'worker-javascript.js')},
