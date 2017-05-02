@@ -101,9 +101,6 @@ mappings:
 layers:
   vjs:
     type: txt
-    active: false
-    opacity: 100
-    zIndex: -10
     layerStyles: |-
       text-align: center;
       font-size: 12vmin;
@@ -128,67 +125,44 @@ layers:
     clear: 1
     parameters: []
     canvasLayers:
-      - parameters:
+      - name: lines
+        parameters:
           - name: 'active'
             type: boolean
-            required: true
+            value: true
             default: true
-          - name: 'text'
-            type: string
-            required: true
-            default: Hello World!
-          - name: 'toggleA'
-            type: boolean
-            required: true
-            default: false
           - name: 'knobA'
+            value: 63
             type: number
-            required: true
             default: 127
           - name: 'knobB'
+            value: 63
             type: number
-            required: true
             default: 127
           - name: 'knobC'
+            value: 63
             type: number
-            required: true
             default: 127
-        zIndex: 50
-        name: lines
-        active: true
         drawFunction: |-
           function () {
             var l = bufferLength();
-
-            // var str = layer.text || '';
-            // var letters = str.length <= l ? repeat('', Math.round((l - str.length) / 2))
-            //               .concat(str.split('')) : str.split('');
+            var _kA = parameter('knobA', 30);
+            var _kB = parameter('knobB', 30);
+            var _kC = parameter('knobC', 30);
             var f = 0;
-            var k = Math.round(layer.knobA * 0.05);
+            var k = Math.round(_kA * 0.05);
             var p = Math.max(1, k);
             var d = Math.pow(2, p);
 
-            // textAlign('center');
-            // textBaseline('middle');
-
             grid(l, l / d, function(...args) {
-              fillStyle('black');
-              fillStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');
-              strokeStyle('hsl('+(timeDomain(f) * 3)+', '+layer.knobB+'%, '+layer.knobB+'%)');
+              var color = 'hsl('+ (timeDomain(f) * 3) +', '+ _kB +'%, '+ _kB +'%)';
+              strokeStyle(color);
 
               // circle(...args, timeDomain(f) * 0.1);
-              polygone(...args, timeDomain(f) * layer.knobC * 0.05);
-              // font('20px monospace');
-              // font('20px monospace');
-              // txt(letters[f], ...args);
+              polygone(...args, timeDomain(f) * _kC * 0.05);
               f++;
             });
           }
-        text: Hello World!
-        toggleA: false
-        knobA: 72
-        knobB: 62
-        knobC: 44
   ar:
     type: SVG
     active: true
@@ -203,8 +177,11 @@ layers:
           stroke-width:var(--stroke-width);
           stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));
           stroke-dashoffset: 0;
-    src: ./assets/algorave/algorave-stroke.svg
+
     parameters:
+      - name: src
+        type: string
+        value: ./assets/algorave/algorave-stroke.svg
       - name: 'stroke-color'
         value: white
         default: white
@@ -234,8 +211,11 @@ layers:
           stroke-linejoin:round;
           stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));
           stroke-dashoffset: 0;
-    src: ./assets/visual-fiha.svg
+
     parameters:
+      - name: src
+        type: string
+        value: ./assets/visual-fiha.svg
       - name: 'fill-color'
         value: none
         default: none

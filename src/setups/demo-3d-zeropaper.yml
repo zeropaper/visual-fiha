@@ -71,21 +71,21 @@ layers:
     layerStyles: >-
       filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01))
       rotate(calc(0.05deg * var(--frametime)));
-    src: ./assets/construction-work/1/front.png
+    parameters:
+      - name: src
+        type: string
+        value: ./assets/construction-work/1/front.png
   bgk2:
     type: img
-    active: true
-    opacity: 100
-    zIndex: 200
     layerStyles: >-
       filter: grayscale(1);transform: scale(calc(var(--vol4) * 0.01))
       rotateX(180deg) rotateY(180deg) rotate(calc(-0.05deg * var(--frametime)));
-    src: ./assets/construction-work/1/front.png
+    parameters:
+      - name: src
+        type: string
+        value: ./assets/construction-work/1/front.png
   zero:
     type: threejs
-    active: true
-    opacity: 52.69312499999994
-    zIndex: 1000
     layerStyles: ''
     currentCamera: defaultperspective
     renderFunction: "function() {\n  // var helper = new THREE.AxisHelper(20);\n  // helper.name = 'axisHelper';\n  // layer.scene.add(helper);\n\n  // helper = new THREE.GridHelper(200);\n  // helper.name = 'gridHelper';\n  // layer.scene.add(helper);\n\n  function makeClones(object, count = 1) {\n    for (var c = 1; c < count; c++) {\n      var clone = object.clone();\n      clone.traverse(function(child) {\n        if (!child.material) return;\n        child.material = child.material.clone();\n        // child.material.wireframe = true; // provokes illegal operation \uD83D\uDE22\n      });\n      clone.name = 'clone' + (c + 1);\n      layer.scene.add(clone);\n    }\n  }\n\n  var fatView = layer.loaders.views.filter(v => v.model.name === 'fat')[0];\n  layer.listenToAndRun(fatView, 'change:object', function() {\n    var fatObject = fatView.object;\n    fatObject.traverse(function(child) {\n      if (child.material) child.material.side = THREE.DoubleSide;\n    });\n    makeClones(fatObject, 8);\n  });\n}"
@@ -288,16 +288,16 @@ layers:
           z: 0
   zeropaperLogo:
     type: SVG
-    active: true
-    opacity: 47.30687500000006
-    zIndex: 1100
     layerStyles: 'mix-blend-mode: overlay;'
     svgStyles:
       '#zeropaper': >-
         fill: var(--fill-color); stroke: var(--stroke-color); stroke-width:
         var(--stroke-width);
-    src: ./assets/zeropaper/zeropaper-fat.svg
     parameters:
+      - name: src
+        value: ./assets/zeropaper/zeropaper-fat.svg
+        type: string
+        default: ''
       - name: 'fill-color'
         value: white
         default: white

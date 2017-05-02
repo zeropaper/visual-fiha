@@ -133,8 +133,10 @@ layers:
     layerStyles: |-
       filter: blur(calc(1px * var(--blur))) grayscale(1);
       transform: scale(calc(1 + (var(--blur) * 0.01)));
-    src: ./assets/construction-work/2/back.png
     parameters:
+      - name: src
+        type: string
+        value: ./assets/construction-work/2/back.png
       - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
@@ -153,8 +155,10 @@ layers:
       filter: blur(calc(1px * var(--blur))) grayscale(1);
       transform: scale(calc(1 + (var(--blur) * 0.01)))
                 rotateX(var(--r));
-    src: ./assets/trees/2/back.png
     parameters:
+      - name: src
+        type: string
+        value: ./assets/trees/2/back.png
       - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
@@ -170,8 +174,10 @@ layers:
       filter: blur(calc(1px * var(--blur))) grayscale(1);
       transform: scale(calc(1 + (var(--blur) * 0.01)))
                   rotate(calc(-1deg * var(--rotation)));
-    src: ./assets/construction-work/2/front.png
     parameters:
+      - name: src
+        type: string
+        value: ./assets/construction-work/2/front.png
       - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
@@ -188,8 +194,10 @@ layers:
 
       transform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg /
       127) * var(--rotation)));
-    src: ./assets/trees/2/front.png
     parameters:
+      - name: src
+        type: string
+        value: ./assets/trees/2/front.png
       - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
@@ -303,8 +311,10 @@ layers:
       filter: blur(calc(1px * var(--blur))) grayscale(1);
       transform: scale(calc(1 + (var(--blur) * 0.01)))
                   rotate(calc(1deg * var(--rotation)));
-    src: ./assets/construction-work/2/front.png
     parameters:
+      - name: src
+        type: string
+        value: ./assets/construction-work/2/front.png
       - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
@@ -321,8 +331,10 @@ layers:
 
       transform: scale(calc(1 + (var(--blur) * 0.01))) rotateZ(calc((360deg /
       -127) * var(--rotation)));
-    src: ./assets/trees/2/front.png
     parameters:
+      - name: src
+        type: string
+        value: ./assets/trees/2/front.png
       - name: 'blur'
         value: '0.007766449999921576'
         default: '0'
