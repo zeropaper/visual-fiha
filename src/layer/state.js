@@ -26,7 +26,6 @@ var LayerState = State.extend({
 
   baseParameters: [
     {name: 'zIndex', type: 'number', default: 0},
-    {name: 'opacity', type: 'number', default: 1, min: 0, max: 1},
     {name: 'active', type: 'boolean', default: true}
   ],
 
@@ -63,12 +62,6 @@ var LayerState = State.extend({
       deps: ['parameters.active'],
       fn: function() {
         return this.parameters.getValue('active');
-      }
-    },
-    opacity: {
-      deps: ['parameters.opacity'],
-      fn: function() {
-        return this.parameters.getValue('opacity');
       }
     },
     zIndex: {

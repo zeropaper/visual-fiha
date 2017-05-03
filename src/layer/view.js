@@ -85,11 +85,6 @@ var LayerView = View.extend({
         });
       }
     },
-    'model.opacity': {
-      type: function(el, val) {
-        this.cssRule.style.opacity = val;
-      }
-    },
     'model.zIndex': {
       type: function(el, val) {
         this.cssRule.style.zIndex = val;

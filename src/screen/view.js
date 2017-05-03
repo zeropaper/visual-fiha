@@ -259,12 +259,12 @@ var ScreenView = View.extend(clientMixin, {
     return this;
   },
 
-  _prev: null,
+  // _prev: null,
   _ar: null,
   _animate: function() {
-    var timestamp = arguments[0];
-    if (this.prev) console.info('screen last frame duration', (timestamp - this.prev).toFixed(4));
-    this.prev = timestamp;
+    // var timestamp = arguments[0];
+    // if (this.prev) console.info('screen last frame duration', (timestamp - this.prev).toFixed(4));
+    // this.prev = timestamp;
 
     var view = this;
     view._updateLayers();
