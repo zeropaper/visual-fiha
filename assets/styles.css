@@ -23,16 +23,17 @@
 *,
 :after,
 :before {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    vertical-align: baseline;
-    position: relative;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  vertical-align: middle;
+  position: relative;
 }
 html,
 body {
   margin: 0;
   padding: 0;
+  line-height: calc(1em + (1 * var(--spacing)));
 }
 
 .index-page a,
@@ -86,21 +87,32 @@ Form
 */
 button,
 select,
+select option,
 textarea,
 [contenteditable=true],
 input:not([type=checkbox]):not([type=radio]) {
   display: inline-block;
-  line-height: 1;
+  line-height: inherit;
   font-size: inherit;
+  padding: var(--spacing);
+  margin: 0;
+}
+button,
+select,
+textarea,
+[contenteditable=true],
+input:not([type=checkbox]):not([type=radio]) {
   position: relative;
   color: currentColor;
   border: 1px solid transparent;
   background: transparent;
-  margin: 0;
-  padding: var(--spacing);
   box-shadow: 0 0 1px 0 currentColor inset;
 }
+select option {
+  background-color: var(--bg-color);
+}
 button.no-border {
+  border: none;
   box-shadow: none;
 }
 select,
@@ -158,7 +170,6 @@ input:not([type=radio]):error {
 button {
   border-radius: 0.1em;
   cursor: pointer;
-  line-height: 1.2;
 }
 button[disabled] {
   cursor: not-allowed;
@@ -331,7 +342,6 @@ input.gutter-vertical {
   /* margin: calc(0 - var(--spacing)); */
 }
 .column > label:after {
-  content: ':';
 }
 
 /*
@@ -347,7 +357,6 @@ Layout
   font-weight: 400;
 }
 .controller-app:after {
-  content: '';
   display: block;
   position: fixed;
   top: 0;
@@ -523,14 +532,11 @@ Layout
 }
 
 .header {
-  min-height: 30px;
-  max-height: 30px;
-  line-height: 30px;  border-bottom: 1px solid var(--border-color);
-  overflow: hidden;
+  border-bottom: 1px solid var(--border-color);
+  min-height: 32px;
 }
 
 .header .column {
-  overflow-y: hidden;
 }
 
 .controller > .body > div:first-child {
@@ -648,7 +654,7 @@ header h3 {
   flex-grow: 2;
 }
 header .layer-type {
-  width: 10%;
+  width: 20%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -1031,6 +1037,7 @@ browser support
 \*******************/
 .vf-app-name {
   display: block;
+  cursor: pointer;
 }
 .vf-app-menu,
 .vf-app-menu > .underlay,

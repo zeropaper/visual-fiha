@@ -1,18 +1,1723 @@
-webpackJsonp([5],{
+webpackJsonp([5,0],{
 
-/***/ 266:
+/***/ 151:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var State = __webpack_require__(27);
+var assign = __webpack_require__(15);
+var DetailsView = __webpack_require__(362);
 
-var objectPath = __webpack_require__(653);
-var ParameterCollection = __webpack_require__(656);
+var LayerDetailsView = DetailsView.extend({
+  template: `
+    <section>
+      <header>
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+          <div class="column no-grow columns">
+            <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+          </div>
+        </div>
+        <h5 data-hook="object-path"></h5>
+      </header>
 
-var LayerState = State.extend({
+      <div class="rows row param-section">
+        <h5>Parameters</h5>
+        <div class="row columns">
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row parameters" ></div>
+      </div>
+    </section>
+  `,
+
+  events: assign(DetailsView.prototype.events, {
+    'click [name=show-origin]': '_showOrigin'
+  }),
+
+
+  _showOrigin: function() {
+    this.rootView.trigger('blink', this.modelPath);
+  }
+});
+
+LayerDetailsView.types = {};
+
+module.exports = LayerDetailsView;
+
+/***/ }),
+
+/***/ 152:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(345);
+var SignalDetailsView = __webpack_require__(415);
+var SignalControlView = View.extend({
+  template: '<section class="rows signal">' +
+    '<header class="row">' +
+      '<h3 class="row name"></h3>' +
+    '</header>' +
+
+    // '<div class="row gutter-horizontal columns model text-center">' +
+    //   '<div class="column input"></div>' +
+    //   '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
+    //   '<div class="column result"></div>' +
+    // '</div>' +
+
+    '<div class="row gutter-horizontal columns test text-center">' +
+      '<input class="column input" placeholder="Input" type="text"/>' +
+      '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
+      '<div class="column result"></div>' +
+    '</div>' +
+  '</section>',
+
+  session: {
+    input: 'any',
+    showMappings: ['boolean', true, false]
+  },
+
+  derived: {
+    result: {
+      deps: ['input', 'model'/*, 'model.transformations'*/],
+      fn: function() {
+        return this.model.computeSignal(this.input);
+      }
+    }
+  },
+
+  bindings: {
+    'model.name': '.name',
+    // 'model.input': '.model .input',
+    // 'model.result': '.model .result',
+    result: '.test .result'
+  },
+
+  events: {
+    'change .test .input': '_testValue',
+    'click header h3': '_showDetails'
+  },
+
+  _showDetails: function () {
+    this.rootView.showDetails(new SignalDetailsView({
+      parent: this,
+      model: this.model
+    }));
+  },
+
+  _testValue: function(evt) {
+    this.input = evt.target.value.trim();
+  },
+
+  render: function () {
+    this.renderWithTemplate();
+    var inputEl = this.query('.test .input');
+    if (inputEl && !inputEl.value) {
+      inputEl.value = this.input || null;
+    }
+    return this;
+  }
+});
+
+SignalControlView.types = {};
+
+module.exports = SignalControlView;
+
+/***/ }),
+
+/***/ 161:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(15);
+var SignalControlView = __webpack_require__(152);
+var HSLASignalControlView = SignalControlView.types.hsla = SignalControlView.extend({
+  template: [
+    '<section class="rows signal signal-color">',
+    '<header class="row">',
+    '<h3 class="name"></h3>',
+    '</header>',
+
+    '<div class="row columns gutter-horizontal gutter-bottom">',
+    '<div class="column result-color no-grow"></div>',
+    '<div class="column result gutter-left"></div>',
+    '</div>',
+
+    '<div class="row mappings props"></div>',
+    '</section>'
+  ].join(''),
+
+  bindings: assign({}, SignalControlView.prototype.bindings, {
+    'model.result': [
+      {
+        selector: '.result-color',
+        type: function(el, val) {
+          el.style.backgroundColor = val;
+        }
+      },
+      {
+        selector: '.result',
+        type: 'text'
+      }
+    ]
+  })
+});
+module.exports = HSLASignalControlView;
+
+/***/ }),
+
+/***/ 162:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(345);
+var MIDIView = View.extend({
+  template: [
+    '<li class="gutter">',
+    '<span class="name"></span> ',
+    '</li>'
+  ].join(''),
+  bindings: {
+    'model.active': {
+      type: 'booleanClass'
+    },
+    'model.state': '.state',
+    'model.name': '.name'
+  },
+
+  events: {
+    click: '_handleClick'
+  },
+
+  _handleClick: function() {
+    this.model.toggle('active');
+  }
+});
+
+var MIDIAccessView = View.extend({
+  template:
+    '<div class="midi-access">' +
+      '<div class="midi-inputs">' +
+        '<div class="gutter">Inputs</div>' +
+        '<ul></ul>' +
+      '</div>' +
+    '</div>',
+
+  render: function() {
+    var originalClass;
+    if (this.el) {
+      originalClass = this.el.className;
+    }
+    this.renderWithTemplate();
+    if (originalClass) {
+      this.el.className = originalClass;
+    }
+    this.inputsView = this.renderCollection(this.model.inputs, MIDIView, '.midi-inputs ul');
+    // this.outputsView = this.renderCollection(this.model.outputs, MIDIView, '.midi-outputs ul');
+    return this;
+  }
+});
+
+module.exports = MIDIAccessView;
+
+/***/ }),
+
+/***/ 163:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var SignalControlView = __webpack_require__(152);
+var HSLASignalControlView = __webpack_require__(161);
+
+var RGBASignalControlView = SignalControlView.types.rgba = HSLASignalControlView.extend({});
+
+module.exports = RGBASignalControlView;
+
+/***/ }),
+
+/***/ 164:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var toArr = __webpack_require__(421);
+var jsYAML = __webpack_require__(89);
+
+module.exports = function(newStr) {
+  var obj = {};
+  try {
+    obj = jsYAML.safeLoad(newStr);
+    obj.signals = toArr(obj.signals || {});
+    obj.layers = toArr(obj.layers || {});
+    obj.mappings = toArr(obj.mappings || {});
+  }
+  catch(e) {
+    console.warn(e);
+  }
+  return obj;
+};
+
+/***/ }),
+
+/***/ 335:
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = function() {
+	return new Worker(__webpack_require__.p + "worker-build.js");
+};
+
+/***/ }),
+
+/***/ 337:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var State = __webpack_require__(11);
+var View = __webpack_require__(17);
+var Collection = __webpack_require__(16);
+function noop() {}
+
+var Step = State.extend({
+  idAttribute: 'name',
+  props: {
+    title: ['string', false, null],
+    name: ['string', true, null],
+    text: ['string', true, null],
+    selector: ['string', false, null],
+    index: ['number', true, 0],
+    prepare: ['any', false, function(){ return noop; }]
+  }
+});
+
+var Steps = Collection.extend({
+  model: Step,
+  comparator: 'index'
+});
+
+var Tour = View.extend({
+  autoRender: true,
+
+  template: `
+    <div class="tour">
+      <div class="wrapper rows">
+        <div class="row columns">
+          <div class="column">
+            <h3></h3>
+          </div>
+          <div class="column no-grow">
+            <button title="Leave the tour" class="no-border close vfi-cancel"></button>
+          </div>
+        </div>
+
+        <div class="row text"></div>
+
+        <div class="row view"></div>
+
+        <div class="row columns">
+          <div class="column no-grow">
+            <button title="Previous step" class="no-border previous vfi-left-open"></button>
+          </div>
+
+          <div class="column index"></div>
+
+          <div class="column no-grow">
+            <button title="Next step" class="no-border next vfi-right-open"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+
+  props: {
+    onstepchange: ['any', false, null],
+    step: ['string', false, null],
+    active: ['boolean', true, true]
+  },
+
+  collections: {
+    steps: Steps
+  },
+
+  derived: {
+    currentStep: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.steps.get(this.step) || this.steps.at(0);
+      }
+    },
+    currentSelector: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentStep ? this.currentStep.selector : null;
+      }
+    },
+    currentTitle: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentStep ? this.currentStep.title : null;
+      }
+    },
+    currentText: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentStep ? this.currentStep.text : null;
+      }
+    },
+    currentIndex: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.steps.indexOf(this.currentStep);
+      }
+    },
+
+    previousStep: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentIndex > 0 ? this.steps.at(this.currentIndex - 1) : false;
+      }
+    },
+    nextStep: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.steps.length > this.currentIndex ? this.steps.at(this.currentIndex + 1) : false;
+      }
+    },
+
+    focusedEl: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        return this.currentSelector ? document.querySelector(this.currentSelector) : false;
+      }
+    }
+  },
+
+  bindings: {
+    active: {type: 'toggle'}
+  },
+
+  events: {
+    'click button.close': '_closeTour',
+    'click button.previous': '_goPrevious',
+    'click button.next': '_goNext'
+  },
+
+  _closeTour: function() {
+    this.active = false;
+  },
+
+  _goPrevious: function() {
+    var state = this.steps.at(this.currentIndex - 1);
+    this.step = state ? state.name : null;
+  },
+
+  _goNext: function() {
+    var state = this.steps.at(this.currentIndex === -1 ? 1 : this.currentIndex + 1);
+    this.step = state ? state.name : null;
+  },
+
+  initialize: function(options) {
+    this.step = options.step;
+    if (!this.step && this.currentStep) {
+      this.set('step', this.currentStep.name);
+    }
+    this.listenToAndRun(this, 'change:step', this.update);
+    this.listenToAndRun(this, 'change:rendered', this.setPosition);
+    window.tour = this;
+  },
+
+  setPosition: function(el) {
+    el = el && el.getBoundingClientRect ? el : this.focusedEl;
+    if (!this.el || !this.currentStep || !el) {
+      return this;
+    }
+
+    var style = this.el.style;
+    var bdy = document.body;
+    var focusedBox = el.getBoundingClientRect();
+    var top = focusedBox.top;
+    var left = focusedBox.left;
+    var right = bdy.clientWidth - focusedBox.right;
+    var bottom = bdy.clientHeight - focusedBox.bottom;
+    var vertical = Math.max(top, bottom);
+    var horizontal = Math.max(left, right);
+    var screenRatio = bdy.clientWidth / bdy.clientHeight;
+
+    var classList = this.el.classList;
+    classList.remove('up');
+    classList.remove('down');
+    classList.remove('left');
+    classList.remove('right');
+
+    if (horizontal < (vertical * screenRatio)) {
+      if (top >= bottom) {
+        style.top = (top - this.el.clientHeight) +'px';
+        classList.add('down');
+      }
+      else {
+        style.top = focusedBox.bottom +'px';
+        classList.add('up');
+      }
+      style.left = ((left + (focusedBox.width * 0.5)) - (this.el.clientWidth * 0.5)) +'px';
+    }
+    else {
+      if (left >= right) {
+        style.left = (left - this.el.clientWidth) +'px';
+        classList.add('right');
+      }
+      else {
+        style.left = focusedBox.right +'px';
+        classList.add('left');
+      }
+      style.top = ((top + (focusedBox.height * 0.5)) - (this.el.clientHeight * 0.5)) +'px';
+    }
+    return this;
+  },
+
+  blinkFocused: function(el) {
+    el = el && el.classList ? el : this.focusedEl;
+    if (!el) return this;
+    var classes = el.classList;
+    el.addEventListener('animationend', function() {
+      classes.remove('blink');
+    });
+    if (!classes.contains('blink')) {
+      classes.add('blink');
+    }
+    return this;
+  },
+
+  update: function() {
+    if (!this.el) return this;
+    var view = this;
+    var step = view.currentStep;
+    if (!step) {
+      view.el.style.display = 'none';
+      return view;
+    }
+    view.el.style.display = null;
+
+    view.query('.text').innerHTML = step.text;
+
+    var titleEl = view.query('h3');
+    titleEl.style.display = view.currentTitle ? null : 'none';
+    titleEl.textContent = view.currentTitle;
+
+    view.query('button.next').style.visibility = view.nextStep ? null : 'hidden';
+
+    view.query('button.previous').style.visibility = view.previousStep ? null : 'hidden';
+
+    view.query('.index').textContent = (view.currentIndex + 1) + ' / ' + view.steps.length;
+
+    if (typeof step.prepare === 'function') {
+      step.prepare.call(view, step);
+    }
+    if (typeof view.onstepchange === 'function') {
+      view.onstepchange.call(view, step);
+    }
+    return view.setPosition().blinkFocused();
+  },
+});
+module.exports = Tour;
+
+/***/ }),
+
+/***/ 338:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+module.exports = function(controllerView) {
+  return [
+    {
+      title: 'Screen layers',
+      name: 'layers',
+      selector: '.region-left-bottom .region-content',
+      text: 'The layers provide a way to compose an screen with different types of media.<br/>'+
+        'The aspect of a layer can be influenced by preset or custom variables.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Layers');
+      }
+    },
+    {
+      title: 'Adding a layer',
+      name: 'layer-add',
+      selector: 'section.layers header',
+      text: 'You can add a layer here by giving it a name, choosing its type and clicking on the <span class="vfi-plus"></span> button.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Layers');
+      }
+    },
+    {
+      title: 'Layer details',
+      name: 'layer-details',
+      selector: '.region-left-bottom .layers .items > section:nth-child(2) .layer-name',
+      text: 'Click on a layer name to open its details.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Layers');
+        controllerView.layersView.items.views[1]._showDetails();
+      }
+    },
+    {
+      title: 'Layer variables',
+      name: 'layer-variables',
+      selector: '.region-right .parameters',
+      text: 'The CSS variables defined here can then be used in the style editor.<br/>'+
+        'Try adding a variable name "<code>--rotation</code>" with its value "<code>calc(0.05deg * var(--frametime))</code>".<br/>'+
+        'The "<code>--frametime</code>" variable is a "screen" variable (and is available to all layers).',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Layers');
+        setTimeout(function() {
+          controllerView.layersView.items.views[1]._showDetails();
+        }, 100);
+      }
+    },
+    {
+      title: 'Layer styles',
+      name: 'layer-styles',
+      selector: 'section.layers>.items .svg-layer-control:nth-child(2) .edit-css',
+      text: 'Each layer can be styled with CSS. To do so, click the <span class="vfi-code"></span> button in the layers tab.<br/>'+
+        'Try adding<br/>'+
+        ' "<code>transform: rotate(var(--rotation));</code>" between the brakets.',
+      prepare: function() {
+        var tour = this;
+        controllerView.regionRight.focusTab('Layers');
+        setTimeout(function() {
+          controllerView.layersView.items.views[1]._editLayerStyles();
+          var editorEl = document.querySelector('.region-right .region-content');
+          tour.setPosition(editorEl).blinkFocused(editorEl);
+        }, 2000);
+      }
+    },
+    {
+      title: 'Signals',
+      name: 'signals',
+      selector: '.region-right .region-content',
+      text: 'Using signals allow to create complex variables which can be used to control the layer transformations.<br/>' +
+      'Just like layers, click the name of a signal to display its details and manipulate their parameters.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Signals');
+      }
+    },
+    {
+      title: 'Mappings',
+      name: 'mappings',
+      selector: '.region-right .region-content',
+      text: 'Mappings are the glue to connect signal outputs to layer variables.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Mappings');
+      }
+    },
+    {
+      title: 'Add a mapping',
+      name: 'mapping-add',
+      selector: '.mappings-view .add-form',
+      text: 'Give a name, select a source and click the <span class="vfi-plus"></span> to create a new mapping.<br/>' +
+      'You will probably edit the transformation function (by clicking on <span class="vfi-code"></span>),.<br/>' +
+      'After that, you can use the mapping in the layers or signals.',
+      prepare: function() {
+        controllerView.regionRight.focusTab('Mappings');
+      }
+    },
+    {
+      title: 'MIDI',
+      name: 'midi',
+      selector: '.region-left-bottom .region-content',
+      text: 'If you have a (supported) MIDI controller, plug it in you are ready map its events to your signal or layer variables.<br/>' +
+      'Read more about <a target="_blank" href="https://github.com/zeropaper/visual-fiha/wiki/MIDI-Devices">MIDI devices</a>.',
+      prepare: function() {
+        controllerView.regionLeftBottom.focusTab('MIDI');
+      }
+    }
+  ];
+};
+
+/***/ }),
+
+/***/ 339:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(345);
+var MIDIAccessView = __webpack_require__(162);
+var SignalsView = __webpack_require__(418);
+var LayersView = __webpack_require__(394);
+var SuggestionView = __webpack_require__(377);
+var AudioSource = __webpack_require__(370);
+var AceEditor = __webpack_require__(368);
+var ClockView = __webpack_require__(371);
+var RegionView = __webpack_require__(376);
+var MappingsControlView = __webpack_require__(407);
+var MenuView = __webpack_require__(375);
+var objectPath = __webpack_require__(347);
+var fromYaml = __webpack_require__(164);
+var toYaml = __webpack_require__(365);
+var ControlScreenControls = __webpack_require__(372);
+// var Timeline = require('./timeline-view');
+
+
+
+
+
+var ControllerView = View.extend({
+  initialize: function(options) {
+    var controllerView = this;
+    this.signals = options.signals;
+    this.midi = options.midi;
+    this.mappings = options.mappings;
+    if (!this.router) {
+      throw new Error('Missing router options for ControllerView');
+    }
+
+    this.listenTo(this.router, 'all', function(...args) {
+      if (args[0].indexOf('app:') === 0) this.trigger(...args);
+    });
+
+    [
+      'minDecibels',
+      'maxDecibels',
+      'smoothingTimeConstant',
+      'fftSize'
+    ].forEach(function(name) {
+      controllerView.on('change:' + name, function () {
+        if (!controllerView.audioAnalyser) return;
+        controllerView.audioAnalyser[name] = controllerView[name];
+      });
+    }, controllerView);
+
+
+    controllerView._animate();
+
+    if (options.autoStart) {
+      controllerView.play();
+    }
+
+    if (controllerView.el) {
+      controllerView._attachSuggestionHelper();
+    }
+    else {
+      controllerView.once('change:el', controllerView._attachSuggestionHelper);
+    }
+
+    controllerView.listenTo(controllerView.model.layers, 'sendCommand', function(...args) {
+      controllerView.sendCommand(...args);
+    });
+
+    this._animate();
+  },
+
+  midiSources: function() {
+    var eventNames = [];
+    this.midi.inputs.forEach(function(midiInput) {
+      var id = midiInput.getId();
+      eventNames = eventNames.concat(midiInput.mappable.source.map(function(property) {
+        return 'midi:' + id + '.' + property;
+      }));
+    });
+    return eventNames;
+  },
+
+  sendCommand: function(name, payload, callback) {
+    if (!this.router || !this.router.worker) return;
+    this.router.sendCommand(name, payload, callback);
+    return this;
+  },
+
+  _animate: function() {
+    if (this.audioSource) {
+      this.audioSource.update();
+    }
+
+    this.update();
+
+    this._arId = window.requestAnimationFrame(this._animate.bind(this));
+  },
+
+  update: function() {
+    var analyser = this.audioAnalyser;
+
+    var freqArray = this.audioFrequencyArray;
+    analyser.getByteFrequencyData(freqArray);
+
+    var timeDomainArray = this.audioTimeDomainArray;
+    analyser.getByteTimeDomainData(timeDomainArray);
+
+    var command = {
+      audio: {
+        bufferLength: analyser.frequencyBinCount,
+        frequency: freqArray,
+        timeDomain: timeDomainArray
+      }
+    };
+
+    this.sendCommand('heartbeat', command);
+  },
+
+  derived: {
+    audioContext: {
+      deps: [],
+      fn: function() {
+        return new window.AudioContext();
+      }
+    },
+    audioAnalyser: {
+      deps: ['audioContext'],
+      fn: function() {
+        var analyser = this.audioContext.createAnalyser();
+        try {
+          analyser.minDecibels = this.minDecibels;
+          analyser.maxDecibels = this.maxDecibels;
+          analyser.smoothingTimeConstant = this.smoothingTimeConstant;
+          analyser.fftSize = this.fftSize;
+        }
+        catch (e) {}
+        return analyser;
+      }
+    },
+    audioFrequencyArray: {
+      deps: ['audioAnalyser', 'fftSize'],
+      fn: function () {
+        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
+      }
+    },
+    audioTimeDomainArray: {
+      deps: ['audioAnalyser', 'fftSize'],
+      fn: function () {
+        return new window.Uint8Array(this.audioAnalyser.frequencyBinCount);
+      }
+    },
+    computedStyle: {
+      deps: ['el'],
+      fn: function() {
+        return window.getComputedStyle(this.el);
+      }
+    }
+  },
+
+  session: {
+    _arId: 'number',
+    broadcastId: ['string', true, 'vfBus'],
+    currentEditor: 'state',
+    currentDetails: 'state',
+    fftSize: ['number', true, 256],
+    maxDecibels: ['number', true, -10],
+    minDecibels: ['number', true, -90],
+    playing: ['boolean', true, false],
+    router: 'any',
+    showControlScreen: ['boolean', true, false],
+    controlScreenWidth: ['number', true, 400],
+    controlScreenHeight: ['number', true, 300],
+    smoothingTimeConstant: ['number', true, 0.85],
+    workerPerformance: 'string'
+  },
+
+  play: function() {
+    this.playing = true;
+    return this;
+  },
+  pause: function() {
+    this.playing = false;
+    return this;
+  },
+  stop: function() {
+    this.playing = false;
+    return this;
+  },
+
+  subviews: {
+    controlScreenControls: {
+      waitFor: 'el',
+      selector: '.control-screen-controls',
+      prepareView: function() {
+        var controllerView = this;
+        var router = controllerView.router;
+        var settings = router.settings;
+
+        if (router) {
+          controllerView.set({
+            showControlScreen: settings.get('showControlScreen', true),
+            controlScreenWidth: settings.get('controlScreenWidth', 400),
+            controlScreenHeight: settings.get('controlScreenHeight', 300)
+          });
+        }
+
+        var view = new ControlScreenControls({
+          active: controllerView.showControlScreen,
+          width: controllerView.controlScreenWidth,
+          height: controllerView.controlScreenHeight,
+          parent: controllerView
+        });
+
+        this.listenToAndRun(view, 'change:active', function() {
+          controllerView.showControlScreen = view.active;
+          if (router) {
+            settings.set('showControlScreen', controllerView.showControlScreen);
+          }
+        });
+        this.listenToAndRun(view, 'change:width', function() {
+          controllerView.controlScreenWidth = view.width;
+          if (router) {
+            settings.set('controlScreenWidth', controllerView.controlScreenWidth);
+          }
+        });
+        this.listenToAndRun(view, 'change:height', function() {
+          controllerView.controlScreenHeight = view.height;
+          if (router) {
+            settings.set('controlScreenHeight', controllerView.controlScreenHeight);
+          }
+        });
+        return view;
+      }
+    },
+
+    menuView: {
+      waitFor: 'el',
+      selector: '.vf-app-menu',
+      prepareView: function(el) {
+        var view = new MenuView({
+          parent: this,
+          el: el
+        });
+        return view;
+      }
+    },
+
+    clockView: {
+      waitFor: 'el',
+      selector: '.vf-clock-view',
+      prepareView: function(el) {
+        var view = new ClockView({
+          parent: this,
+          model: this.model.clock,
+          el: el
+        });
+        return view;
+      }
+    },
+
+    regionRight: {
+      waitFor: 'el',
+      selector: '.region-right',
+      prepareView: function(el) {
+        var parent = this;
+
+        parent.mappingsView = new MappingsControlView({
+          collection: parent.mappings,
+          parent: parent,
+          model: parent.model
+        });
+
+        function buildCodeEditor() {
+          parent.codeEditor = parent.codeEditor || new AceEditor({
+            parent: parent
+          });
+          var editor = parent.codeEditor;
+
+          editor.editCode({
+            autoApply: false,
+            title: 'Setup',
+            script: parent.toYaml(),
+            language: 'yaml',
+            onapply: function(str) {
+              parent.listenToOnce(parent.router, 'app:worker:yamlLoad', function(payload) {
+                parent.fromJSON(payload.setup);
+                editor.script = parent.toYaml();
+                editor.setPristine();
+              });
+              parent.sendCommand('yamlLoad', {yamlStr: str});
+            }
+          });
+          return editor;
+        }
+
+        var view = new RegionView({
+          parent: parent,
+          el: el,
+          tabs: [
+            {name: 'Setup', rebuild: buildCodeEditor, pinned: true, active: true},
+            {name: 'Mappings', view: parent.mappingsView, pinned: true}
+          ]
+        });
+
+        view.el.classList.add('region-right');
+        view.el.classList.add('column');
+        view.el.classList.add('rows');
+
+        return view;
+      }
+    },
+
+    regionLeftBottom: {
+      waitFor: 'el',
+      selector: '.region-left-bottom',
+      prepareView: function(el) {
+        var parent = this;
+        var styles = this.computedStyle;
+        function buildLayers() {
+          if (parent.layersView && parent.layersView.remove) {
+            parent.layersView.remove();
+            parent.stopListening(parent.layersView);
+          }
+          parent.layersView = new LayersView({
+            collection: parent.model.layers,
+            parent: parent,
+            model: parent.model
+          });
+          return parent.layersView;
+        }
+
+        function buildSignals() {
+          if (parent.signalsView && parent.signalsView.remove) {
+            parent.signalsView.remove();
+            parent.stopListening(parent.signalsView);
+          }
+          parent.signalsView = new SignalsView({
+            collection: parent.signals,
+            parent: parent,
+            model: parent.model
+          });
+          return parent.signalsView;
+        }
+
+        function buildAudioSource() {
+          parent.audioSource = new AudioSource({
+            audioAnalyser: parent.audioAnalyser,
+            parent: parent,
+            color: styles.color
+          });
+          return parent.audioSource;
+        }
+        buildAudioSource();
+
+        if (parent.midi) {
+          parent.MIDIAccess = new MIDIAccessView({
+            parent: parent,
+            model: parent.midi
+          });
+        }
+
+        var view = new RegionView({
+          parent: parent,
+          el: el,
+          currentView: parent.mappingsView,
+          tabs: [
+            {name: 'Layers', rebuild: buildLayers, pinned: true, active: true},
+            {name: 'Signals', rebuild: buildSignals, pinned: true},
+            {name: 'MIDI', view: parent.MIDIAccess, pinned: true},
+            {name: 'Audio', rebuild: buildAudioSource, pinned: true}
+          ]
+        });
+
+        view.el.classList.add('row');
+        view.el.classList.add('grow-l');
+        view.el.classList.add('region-left-bottom');
+
+        return view;
+      }
+    }
+  },
+
+  _attachSuggestionHelper: function() {
+    if (this.suggestionHelper) { return; }
+    this.suggestionHelper = this.registerSubview(new SuggestionView({
+      parent: this
+    }));
+  },
+
+  remove: function() {
+    View.prototype.remove.apply(this, arguments);
+  },
+
+  bindings: {
+    workerPerformance: '.vf-worker-performance',
+    showControlScreen: [
+      {
+        selector: '.control-screen',
+        type: 'toggle'
+      },
+      {
+        selector: '.control-screen',
+        type: function(el, val) {
+          el.src = !val ? '' : './screen.html#' + this.broadcastId;
+        }
+      }
+    ],
+    controlScreenWidth: {
+      selector: '.region-left',
+      type: function(el, val) {
+        var width = val +'px';
+        el.style.maxWidth = width;
+        el.style.minWidth = width;
+      }
+    },
+    controlScreenHeight: {
+      selector: '.region-left-top',
+      type: function(el, val) {
+        var height = val +'px';
+        el.style.maxHeight = height;
+        el.style.minHeight = height;
+      }
+    },
+    playing: [
+      {
+        type: 'toggle',
+        selector: '[name="play"]',
+        invert: true
+      },
+      {
+        type: 'toggle',
+        selector: '[name="pause"]'
+      }
+    ]
+  },
+
+  events: {
+    'click .vf-app-name': '_openMenu',
+    'click [name="screen"]': '_openScreen',
+    'click [name="start-tour"]': '_startTour'
+  },
+
+  _openMenu: function(evt) {
+    evt.preventDefault();
+    this.menuView.open();
+  },
+
+  _openScreen: function() {
+    window.open('./screen.html#' + this.broadcastId, 'screen', 'width=800,height=600,location=no');
+  },
+
+  _startTour: function() {
+    this.router.navigate('tour');
+  },
+
+
+  fromYaml: fromYaml,
+
+  toYaml: function(setup) {
+    return toYaml(setup || this.toJSON());
+  },
+
+  toJSON: function() {
+    return {
+      signals: this.signals.toJSON(),
+      mappings: this.mappings.toJSON(),
+      layers: this.model.layers.toJSON()
+    };
+  },
+
+  fromJSON: function(json) {
+    this.model.layers.reset(json.layers);
+    this.signals.reset(json.signals);
+    this.mappings.reset(json.mappings);
+  },
+
+  getSetupEditor: function(setup) {
+    var editor = this.regionRight.focusTab('Setup');
+    editor.script = this.toYaml(setup);
+    editor.setPristine();
+    return editor;
+  },
+
+  getEditor: function(options) {
+    var tabs = this.regionRight.tabs;
+    var tabName = options.tabName;
+    if (!tabName) throw Error('Missing tabName for getEditor');
+
+    var found = tabs.get(tabName);
+    if (!found) {
+      var editor = new AceEditor({
+        parent: this
+      });
+      this.registerSubview(editor);
+      found = tabs.add({name: tabName, view: editor});
+    }
+
+    this.regionRight.focusTab(tabName);
+    found.view.editCode(options);
+    return found.view;
+  },
+
+  showDetails: function (view) {
+    if (view === this.currentDetails) return this;
+    var region = this.regionRight;
+    var tabs = region.tabs;
+    var tabName = view.modelPath || objectPath(view.model);
+    var found = tabs.get(tabName);
+    if (!found) {
+      found = tabs.add({name: tabName, view: view});
+    }
+    else {
+      found.view = view;
+    }
+
+    region.focusTab(tabName);
+    found.view.blink();
+    return this;
+  },
+
+  render: function () {
+    this.renderWithTemplate();
+
+    this.cacheElements({
+      detailsEl: '.details'
+    });
+
+
+    return this;
+  },
+
+  autoRender: true,
+
+  /*
+  :sout=#http{dst=:8080/stream} :sout-keep
+  */
+  template: `
+    <div class="controller rows">
+      <div class="vf-app-menu"></div>
+      <div class="row columns header no-grow">
+        <a href class="column gutter no-grow vf-app-name">Visual Fiha <span class="hamburger-menu"><span></span></span></a>
+
+        <div class="column columns">
+          <div class="column gutter vf-worker-performance"></div>
+
+          <div class="vf-clock-view column columns"></div>
+
+          <div class="column no-grow control-screen-controls"></div>
+
+          <div class="column no-grow">
+            <button name="screen">Open screen</button>
+          </div>
+
+          <div class="column"></div>
+
+          <div class="column no-grow">
+            <button name="start-tour" class="vfi-info-circled"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row columns body">
+        <div class="region-left column no-grow rows">
+          <iframe class="region-left-top row control-screen"></iframe>
+
+          <div class="region-left-bottom row grow-l rows"></div>
+        </div>
+
+        <div class="region-right column rows settings">
+        </div>
+      </div>
+    </div>
+  `
+});
+module.exports = ControllerView;
+
+/***/ }),
+
+/***/ 340:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = {
+  lines: __webpack_require__(382),
+  loaders: __webpack_require__(384),
+  text: __webpack_require__(385),
+  utils: __webpack_require__(389)
+};
+
+if (typeof window !== 'undefined') {
+  window.VF = window.VF || {};
+  window.VF.canvas = module.exports;
+}
+
+
+/***/ }),
+
+/***/ 342:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(15);
+var SignalControlView = __webpack_require__(152);
+var BeatSignalControlView = SignalControlView.types.beat = SignalControlView.extend({
+  template: '<section class="rows signal signal-beat">' +
+    '<header class="row">' +
+      '<h3 class="name"></h3>' +
+    '</header>' +
+
+    '<div class="detector">' +
+      '<button class="avg">Tap</button>' +
+    '</div>' +
+
+    '<div class="row columns gutter-horizontal gutter-bottom">' +
+      '<div class="column result-dot no-grow gutter-right"></div>' +
+      '<div class="column result gutter-left">' +
+        '<input class="column input" placeholder="BPM" data-hook="input" />' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="row mappings props"></div>' +
+  '</section>',
+
+  bindings: assign({}, SignalControlView.prototype.bindings, {
+    avg: {
+      type: 'text',
+      selector: '.avg'
+    },
+    'model.input': {
+      type: 'value',
+      hook: 'input'
+    },
+    'model.result': [
+      {
+        selector: '.result-dot',
+        type: function(el, val) {
+          el.style.backgroundColor = 'hsla(190, 81%, 67%,' + (val / 100) + ')';
+        }
+      }
+    ]
+  }),
+
+  events: assign({}, SignalControlView.prototype.events, {
+    'click .detector > button': 'tap'
+  }),
+
+  commands: {
+    'change [data-hook=input]': 'propChange _updateBPM'
+  },
+
+  _updateBPM: function() {
+    return {
+      path: 'signals.' + this.model.getId(),
+      property: 'input',
+      value: parseInt(this.queryByHook('input').value.trim(), 10)
+    };
+  },
+
+  session: {
+    wait: ['number', true, 2],
+    avg: ['number', true, 0],
+    count: ['number', true, 0],
+    first: ['number', true, 0],
+    previous: ['number', true, 0]
+  },
+
+  _resetDetector: function() {
+    this.set({
+      count: 0,
+      first: 0,
+      previous: 0
+    });
+  },
+
+  tap: function() {
+    var timeSeconds = new Date();
+    var msecs = timeSeconds.getTime();
+    var wait = 2;
+
+    if ((msecs - this.previous) > 1000 * wait) {
+      this.count = 0;
+    }
+
+    if (!this.count) {
+      this.first = msecs;
+      this.count = 1;
+    }
+    else {
+      this.avg = Math.round((60000 * this.count / (msecs - this.first)) * 100) / 100;
+      this.count++;
+    }
+
+    this.sendCommand('propChange', {
+      path: 'signals.' + this.model.getId(),
+      property: 'input',
+      value: this.avg
+    });
+
+    this.previous = msecs;
+  }
+});
+module.exports = BeatSignalControlView;
+
+/***/ }),
+
+/***/ 343:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(15);
+var Collection = __webpack_require__(16);
+var SignalState = __webpack_require__(351);
+__webpack_require__(414);
+__webpack_require__(416);
+__webpack_require__(417);
+
+var SignalCollection = Collection.extend({
+  mainIndex: 'name',
+  model: function(attrs, opts) {
+    var Constructor = SignalState.types[attrs.type] || SignalState;
+    var state = new Constructor(attrs, opts);
+    return state;
+  },
+
+  toJSON: function () {
+    return this.map(function (model) {
+      if (model.toJSON) {
+        return model.toJSON();
+      }
+      else {
+        var out = {};
+        assign(out, model);
+        delete out.collection;
+        return out;
+      }
+    });
+  }
+});
+module.exports = SignalCollection;
+
+
+/***/ }),
+
+/***/ 345:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(17);
+
+function noop() {}
+
+function splitClean(str) {
+  return str.split(' ')
+            .map(p => p.trim())
+            .filter(p => p);
+}
+
+var ControlView = View.extend({
+  _commandsBound: false,
+
+  blink: function() {
+    var classes = this.el.classList;
+    this.el.addEventListener('animationend', function() {
+      classes.remove('blink');
+    });
+    if (!classes.contains('blink')) {
+      classes.add('blink');
+    }
+    return this;
+  },
+
+  initialize: function() {
+    var view = this;
+
+    function initCommands() {
+      if (view.el) {
+        view.bindCommands();
+      }
+      else if (view.el) {
+        view.unbindCommands();
+      }
+    }
+
+    view.on('change:el', initCommands);
+
+    view.listenTo(view.rootView, 'blink', function(modelPath) {
+      if (view.modelPath && view.modelPath === modelPath) view.blink();
+    });
+  },
+
+  derived:{
+    rootView:{
+      deps:['parent'],
+      fn: function() {
+        for (var inst = this; inst; inst = inst.parent) {
+          if (!inst.parent) { return inst; }
+        }
+      }
+    }
+  },
+
+  sendCommand: function(...args) {
+    this.rootView.sendCommand(...args);
+  },
+
+  _commands: function(el) {
+    var view = this;
+    var commands = [];
+    var rootView = view.rootView;
+    el = el || view.el;
+    // not sure about that...
+    if (!el) return commands;
+
+    Object.keys(view.commands || {}).forEach(function(key) {
+      var evtNameSelector = splitClean(key);
+      var evtName = evtNameSelector.shift();
+      var selector = evtNameSelector.join(' ');
+      var info = view.commands[key];
+      var serializer = noop;
+      var command;
+
+      if (typeof info === 'string') {
+        var cmdNameMethodName = splitClean(info);
+        command = cmdNameMethodName[0];
+
+        if (cmdNameMethodName[1]) {
+          serializer = view[cmdNameMethodName[1]];
+
+          if (typeof serializer !== 'function') {
+            throw new Error('Command "' + info + '" method not found');
+          }
+        }
+
+        info = {
+          passive: true
+        };
+      }
+      else {
+        command = info.command;
+        serializer = info.serializer || noop;
+      }
+
+      // var listener = throttle(function commandEventListener(...args) {
+      //   rootView.sendCommand(command, serializer(...args)/*, done*/);
+      // }, 1000 / 24);
+      var listener = function commandEventListener(...args) {
+        rootView.sendCommand(command, serializer.apply(view, ...args)/*, done*/);
+      };
+
+      var els = [el];
+      if (selector) {
+        els = el.querySelectorAll(selector);
+      }
+
+      commands.push({
+        event: evtName,
+        selector: selector,
+        listener: listener,
+        command: command,
+        listenerOptions: {
+          passive: info.passive
+        },
+        el: el,
+        elements: els
+      });
+    }, view);
+    return commands;
+  },
+
+  bindCommands: function(el) {
+    if (this._commandsBound) return this;
+    this._commands(el).forEach(function(info) {
+      for (var e = 0; e < info.elements.length; e++) {
+        info.elements[e].addEventListener(info.event, info.listener, info.listenerOptions);
+      }
+    });
+    this._commandsBound = true;
+    this.trigger('commands:bound');
+    return this;
+  },
+
+  unbindCommands: function(el) {
+    if (!this._commandsBound) return this;
+    this._commands(el).forEach(function(info) {
+      for (var e = 0; e < info.elements.length; e++) {
+        //? if (info.elements[e].removeEventListener)
+        info.elements[e].removeEventListener(info.event, info.listener, info.listenerOptions);
+      }
+    });
+    this._commandsBound = false;
+    this.trigger('commands:unbound');
+    return this;
+  },
+
+  remove: function() {
+    this.unbindCommands();
+    return View.prototype.remove.apply(this, arguments);
+  }
+});
+
+module.exports = ControlView;
+
+/***/ }),
+
+/***/ 346:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(345);
+var LayerDetailsView = __webpack_require__(151);
+var objectPath = __webpack_require__(347);
+
+var LayerControlView = View.extend({
+  template: `
+    <section class="default-layer-control">
+      <header class="columns">
+        <div class="column no-grow"><button class="active prop-toggle"></button></div>
+        <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
+        <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
+        <h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>
+        <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
+      </header>
+
+      <div class="preview gutter-horizontal"></div>
+
+      <div class="mappings props"></div>
+    </section>
+  `,
+
+  events: {
+    'click .edit-css': '_editLayerStyles',
+    'click .layer-name': '_showDetails'
+  },
+
+  editFunction: LayerDetailsView.prototype.editFunction,
+
+  _showDetails: function () {
+    var DetailsViewConstructor = LayerDetailsView.types ? LayerDetailsView.types[this.model.getType()] : false;
+    DetailsViewConstructor = DetailsViewConstructor || LayerDetailsView;
+    this.rootView.showDetails(new DetailsViewConstructor({
+      parent: this,
+      model: this.model
+    }));
+  },
+
+  _editLayerStyles: function () {
+    var view = this;
+    var rootView = view.rootView;
+    var id = view.model.getId();
+    rootView.getEditor({
+      tabName: id + ' CSS',
+      script: '#' + id + ' {\n' + this.model.layerStyles + '\n}',
+      language: 'css',
+      title: id + ' layer styles',
+      onshoworigin: function() {
+        rootView.trigger('blink', 'layers.' + id);
+      },
+      autoApply: true,
+      onvalidchange: function (str) {
+        var cleaned = str.split('{').pop().split('}').shift().trim();
+        view.sendCommand('propChange', {
+          path: 'layers.' + id,
+          property: 'layerStyles',
+          value: cleaned
+        });
+      }
+    });
+  },
+
+  commands: {
+    'click .remove-layer': 'removeLayer _layerName',
+    'click .active.prop-toggle': 'propChange _toggleActive'
+  },
+
+  _layerName: function() {
+    return {
+      layerName: this.model.name
+    };
+  },
+
+  _toggleActive: function() {
+    return {
+      path: objectPath(this.model) + '.parameters.active',
+      property: 'value',
+      value: !this.model.active
+    };
+  },
+
+  bindings: {
+    'model.active': [
+      {
+        type: 'booleanClass',
+        name: 'disabled',
+        invert: true
+      },
+
+      {
+        type: 'booleanClass',
+        selector: '.active.prop-toggle',
+        yes: 'vfi-toggle-on',
+        no: 'vfi-toggle-off'
+      }
+    ],
+    'model.name': {
+      hook: 'name',
+      type: 'text'
+    },
+    'model.type': [
+      {
+        hook: 'type',
+        type: 'text'
+      },
+      {
+        type: 'class'
+      }
+    ]
+  },
+
+  derived: {
+    modelPath: {
+      deps: ['model'],
+      fn: function() {
+        return objectPath(this.model);
+      }
+    }
+  }
+});
+
+LayerControlView.types = {};
+
+module.exports = LayerControlView;
+
+/***/ }),
+
+/***/ 351:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var State = __webpack_require__(11);
+var ParameterCollection = __webpack_require__(349);
+
+var SignalState = State.extend({
   idAttribute: 'name',
   typeAttribute: 'type',
+
+  mappable: {
+    source: ['result'],
+    target: ['input']
+  },
+
+  props: {
+    name: ['string', true, null],
+    type: ['string', true, 'default'],
+    defaultValue: ['any', true, function () { return 1; }]
+  },
 
   initialize: function() {
     var state = this;
@@ -31,9 +1736,7 @@ var LayerState = State.extend({
   },
 
   baseParameters: [
-    {name: 'zIndex', type: 'number', default: 0},
-    {name: 'opacity', type: 'number', default: 1, min: 0, max: 1},
-    {name: 'active', type: 'boolean', default: true}
+    {name: 'input', type: 'any', default: null}
   ],
 
   ensureParameters: function(definition = []) {
@@ -52,1614 +1755,5070 @@ var LayerState = State.extend({
     return this;
   },
 
-  props: {
-    name: ['string', true, null],
-    type: ['string', true, 'default'],
-    layerStyles: ['string', false, '']
-  },
-
   derived: {
+    input: {
+      deps: ['parameters.input'],
+      fn: function() {
+        return this.parameters.get('input').value;
+      }
+    },
     modelPath: {
       deps: ['name'],
       fn: function() {
-        return objectPath(this);
+        return 'signals.' + this.name;
       }
     },
-    active: {
-      deps: ['parameters.active'],
+    result: {
+      deps: ['input', 'transformations'],
       fn: function() {
-        return this.parameters.getValue('active');
-      }
-    },
-    opacity: {
-      deps: ['parameters.opacity'],
-      fn: function() {
-        return this.parameters.getValue('opacity');
-      }
-    },
-    zIndex: {
-      deps: ['parameters.zIndex'],
-      fn: function() {
-        return this.parameters.getValue('zIndex');
-      }
-    },
-    screenState: {
-      deps: ['collection', 'collection.parent'],
-      fn: function() {
-        return this.collection.parent;
-      }
-    },
-    hasDOM: {
-      deps: ['screenState'],
-      fn: function() {
-        return this.screenState && this.screenState.hasDOM;
-      }
-    },
-    isControllerState: {
-      deps: ['screenState'],
-      fn: function() {
-        return this.screenState && this.screenState.isControllerState;
-      }
-    },
-    location: {
-      deps: ['isControllerState', 'hasDOM'],
-      fn: function() {
-        return this.screenState ? this.screenState.location : false;
-      }
-    },
-
-    mappable: {
-      deps: [],
-      fn: function() {
-        var proto = this.constructor.prototype;
-        var keys = Object.keys(proto._definition || {}).concat(
-          Object.keys(proto._children || {}),
-          Object.keys(proto._collections || {})
-        ).filter(function(key) {
-          return key !== this.idAttribute && key !== this.typeAttribute;
-        }, this);
-
-        return {
-          source: [],
-          target: keys
-        };
+        return this.computeSignal();
       }
     }
   },
 
-  _log: function(...args) {
-    this.screenState._log(...args);
+  computeSignal: function(val) {
+    val = val || this.input;
+    return val;
   }
 });
 
-LayerState.types = {};
+SignalState.types = {};
 
-module.exports = LayerState;
+module.exports = SignalState;
+
 
 /***/ }),
 
-/***/ 269:
+/***/ 360:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var Collection = __webpack_require__(34);
-var ParameterCollection = __webpack_require__(656);
-var ScreenLayerState = __webpack_require__(266);
-var mockedCtx = __webpack_require__(657);
-var compileFunction = __webpack_require__(663);
-function drawLayerCtx() {
-  /*
-    You can access the canvas 2d context with the global ctx
-  */
+module.exports = function propNamesExtractor(state, excluded = []) {
+  var def = state.constructor.prototype._definition;
+
+  if (state.idAttribute) excluded.push(state.idAttribute);
+  if (state.typeAttribute) excluded.push(state.typeAttribute);
+
+  return Object.keys(def)
+    .filter(function(key) {
+      return excluded.indexOf(key) < 0;
+    });
+};
+
+/***/ }),
+
+/***/ 361:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function resolve(path, context) {
+  if (!context) throw new Error('Missing context to solve mapping path');
+
+  function solver(str) {
+    var parts = str.split('.');
+
+    var f = function(instance) {
+      if (!parts.length) return instance;
+
+      var part = parts.shift();
+      if (instance[part] && instance[part].isCollection) {
+        return f(instance[part].get(parts.shift()));
+      }
+      else if (typeof instance[part] !== 'undefined') {
+        return f(instance[part]);
+      }
+    };
+    return f;
+  }
+
+  return solver(path)(context);
 }
 
-var CanvasLayer = ScreenLayerState.extend({
-  idAttribute: 'name',
-  cache: {},
-
-  props: {
-    drawFunction: ['any', true, function() { return drawLayerCtx; }]
-  },
-
-  collections: {
-    parameters: ParameterCollection
-  },
-
-  toJSON: function(...args) {
-    return this.toJSON(...args);
-  },
-
-  derived: {
-    mappable: {
-      deps: ScreenLayerState.prototype._derived.mappable.deps,
-      fn: function() {
-        var mappable = ScreenLayerState.prototype._derived.mappable.fn.apply(this, arguments);
-        var targets = mappable.target.filter(function(key) {
-          return [
-            'drawFunction',
-            'screenState', // would make a circular reference if not excluded!
-            'draw'
-          ].indexOf(key) < 0;
-        });
-        console.info('targets for %s', this.name, targets);
-        return {
-          source: [],
-          target: targets
-        };
-      }
-    },
-
-    screenState: {
-      deps: [],
-      fn: function() {
-        return this.collection.parent.screenState;
-      }
-    },
-
-    frametime: {
-      cache: false,
-      deps: ['screenState'],
-      fn: function() {
-        if (!this.screenState) return 0;
-        return this.screenState.frametime || 0;
-      }
-    },
-    audio: {
-      cache: false,
-      deps: ['screenState'],
-      fn: function() {
-        if (!this.screenState) return {};
-        return this.screenState.audio || {};
-      }
-    },
-
-    width: {
-      deps: ['screenState', 'screenState.width'],
-      fn: function() {
-        return this.screenState.width || 400;
-      }
-    },
-    height: {
-      deps: ['screenState', 'screenState.height'],
-      fn: function() {
-        return this.screenState.height || 300;
-      }
-    },
-    draw: {
-      deps: ['drawFunction'],
-      fn: function() {
-        var fn, result, err;
-
-        try {
-          fn = compileFunction(this.drawFunction);
-          result = fn.call(this, mockedCtx);
-          err = result instanceof Error ? result : null;
-        }
-        catch(e) {
-          err = e;
-        }
-
-        if (err) {
-          console.warn('draw function error', err.stack);
-          fn = function() { return err; };
-        }
-
-        return fn.bind(this);
-      }
-    }
-  }
-});
-
-var CanvasLayers = Collection.extend({
-  mainIndex: 'name',
-  comparator: 'zIndex',
-
-  model: function (attrs, options) {
-    var inst =  new CanvasLayer(attrs, options);
-    if (options.init === false) inst.initialize();
-    return inst;
-  }
-});
-
-
-module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
-  baseParameters: ScreenLayerState.prototype.baseParameters.concat([
-    {name: 'clear', type: 'number', default: 1}
-  ]),
-
-  derived: {
-    clear: {
-      deps: ['parameters.clear'],
-      fn: function() {
-        return this.parameters.getValue('clear');
-      }
-    }
-  },
-
-  collections: {
-    canvasLayers: CanvasLayers
-  }
-});
+module.exports = resolve;
 
 /***/ }),
 
-/***/ 270:
+/***/ 362:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ScreenLayerState = __webpack_require__(266);
-module.exports = ScreenLayerState.types.img = ScreenLayerState.extend({
-  props: {
-    src: ['string', false, null]
-  },
+var assign = __webpack_require__(15);
+var View = __webpack_require__(345);
+var objectPath = __webpack_require__(347);
+var propNamesExtractor = __webpack_require__(360);
+var ParamView = __webpack_require__(412);
+
+
+var DetailsView = View.extend({
+  template: `
+    <section class="row rows">
+      <header class="row no-grow">
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+        </div>
+        <h5 data-hook="object-path"></h5>
+      </header>
+
+      <div class="rows row param-section">
+        <h5>Parameters</h5>
+        <div class="row columns">
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row parameters" ></div>
+      </div>
+    </section>
+  `,
 
   initialize: function() {
-    ScreenLayerState.prototype.initialize.apply(this, arguments);
-  }
-});
-
-/***/ }),
-
-/***/ 271:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var ScreenLayerState = __webpack_require__(266);
-var Extractor = __webpack_require__(664);
-
-module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
-  props: {
-    svgStyles: ['object', true, function() { return {}; }],
-    src: ['string', false, null]
-  },
-  session: {
-    content: ['string', false, '']
-  },
-
-  derived: {
-    mappable: {
-      deps: [],
-      fn: function() {
-        return {
-          source: [],
-          target: [
-            'active',
-            'parameters'
-          ]
-        };
+    this.listenTo(this.rootView, 'all', function(evtName) {
+      if (evtName.indexOf('app:') === 0 && evtName.indexOf('Mapping') > 0) {
+        this.trigger('change:model', this.model);
       }
-    }
-  },
-
-  initialize: function() {
-    var svgState = this;
-    ScreenLayerState.prototype.initialize.apply(svgState, arguments);
-
-    // load the svg string content from the worker only
-    if (!svgState.hasDOM) {
-      svgState.listenToAndRun(svgState, 'change:src', function() {
-        svgState.set({content: ''}, {silent: true});
-        svgState.loadSVG();
-      });
-    }
-
-    // only create an extractor for the state used in the controller
-    if (svgState.isControllerState) {
-      svgState.listenToAndRun(svgState, 'change:content', function() {
-        if (svgState.content) svgState.extractor = new Extractor({model: svgState});
-      });
-    }
-
-    svgState.listenTo(svgState.screenState, 'app:broadcast:bootstrap', function() {
-      svgState.loadSVG();
+      else if (evtName === 'blink') {
+        if(this.modelPath === arguments[1]) this.blink();
+      }
     });
   },
 
-  loadSVG: function(done) {
-    var state = this;
-    done = done || function(err/*, obj*/) {
-      if (err) {
-        // console.warn(err.message);
-        return;
+  derived: {
+    propNames: {
+      deps: ['model'],
+      fn: function() {
+        return propNamesExtractor(this.model, ['layerStyles']);
       }
-      // console.info('loaded');
-    };
+    },
 
-    var src = state.src;
-    if (!src) {
-      state.content = '';
-      return done(new Error('No src to load for ' + state.getId() + ' SVG layer'), state);
+    definition: {
+      deps: ['propNames'],
+      fn: function() {
+        var def = this.model.constructor.prototype._definition;
+        return this.propNames
+          .map(function(name) {
+            return assign({name: name}, def[name]);
+          });
+      }
+    },
+
+    modelPath: {
+      deps: ['model'],
+      fn: function() {
+        return objectPath(this.model);
+      }
+    }
+  },
+
+  events: {
+    'click [name=parameter-add]': 'addParameter'
+  },
+
+  addParameter: function() {
+    if (!this.model.parameters) return;
+    var val = this.query('[name=parameter-default]').value;
+    var parameter = {
+      name: this.query('[name=parameter-name]').value,
+      type: this.query('[name=parameter-type]').value,
+      default: val,
+      value: val
+    };
+    this.rootView.sendCommand('addParameter', {
+      path: this.modelPath,
+      parameter: parameter
+    });
+  },
+
+  editFunction: function(propName) {
+    var rootView = this.rootView;
+    var path = objectPath(this.model);
+    var script = this.model.get(propName) || ('function ' + propName + '() {\n}');
+    rootView.getEditor({
+      tabName: this.model.getId() + ' ' + propName,
+      script: script,
+      language: 'javascript',
+      title: path + '.' + propName,
+      onshoworigin: function() {
+        rootView.trigger('blink', path);
+      },
+      autoApply: true,
+      onvalidchange: function doneEditingFunction(str) {
+        rootView.sendCommand('propChange', {
+          path: path,
+          property: propName,
+          value: str
+        });
+      }
+    });
+  },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+
+    if (this.parameters) {
+      this.parameters.remove();
     }
 
-    fetch(src)
-      .then(function(res) {
-        return res.text();
-      })
-      .then(function(string) {
-        state.content = string;
-        done(null, state);
-      })
-      .catch(function(err) {
-        state.content = '';
-        done(err, state);
+    this.parameters = this.renderCollection(this.model.parameters, function (opts) {
+      var Constructor = (ParamView.names[opts.model.name] || ParamView.types[opts.model.type] || ParamView);
+      // console.info('property name: %s (%s), type: %s (%s)', opts.model.name, !!ParamView.names[opts.model.name], opts.model.type, !!ParamView.types[opts.model.type]);
+      return new Constructor(opts);
+    }, '.parameters');
+
+    this.trigger('change:model');
+    this.trigger('change:model.name');
+    this.trigger('change:modelPath');
+    return this;
+  },
+
+  bindings: {
+    'model.name': '[data-hook=name]',
+    'model.type': [
+      {
+        selector: '[name=parameter-type]',
+        type: function(el, val) {
+          if (document.activeElement === el) return;
+          el.querySelectorAll('option').forEach(o => { o.selected = false; });
+          var selectedOption = el.querySelector('option[value="' + val + '"]');
+          if (selectedOption) selectedOption.selected = true;
+        }
+      },
+      {
+        selector: '[data-hook=type]',
+        type: 'text'
+      },
+      {
+        type: function(el, val, prev) {
+          if (prev) el.classList.remove('details-' + prev);
+          el.classList.add('details');
+          el.classList.add('details-' + val);
+        }
+      }
+    ],
+    modelPath: '[data-hook="object-path"]'
+  }
+});
+
+module.exports = DetailsView;
+
+
+/***/ }),
+
+/***/ 364:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+// http://stackoverflow.com/a/9763769/662964
+
+module.exports = function pad(n, z) {
+  z = z || 2;
+  return ('00' + n).slice(-z);
+};
+
+/***/ }),
+
+/***/ 365:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var toObj = __webpack_require__(419);
+var jsYAML = __webpack_require__(89);
+module.exports = function(setup) {
+  setup.signals = toObj(setup.signals || []);
+  setup.layers = toObj(setup.layers || []);
+  setup.mappings = toObj(setup.mappings || []);
+  return jsYAML.safeDump(JSON.parse(JSON.stringify(setup)));
+};
+
+/***/ }),
+
+/***/ 368:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(17);
+var canvasCompleter = __webpack_require__(378);
+
+var AceEditor = View.extend({
+  editCode: function(options) {
+    options.autoApply = !!options.autoApply;
+    if (options.autoApply && typeof options.onvalidchange !== 'function') throw new Error('Missing onvalidchange function option');
+    if (!options.autoApply && typeof options.onapply !== 'function') throw new Error('Missing onapply function option');
+    options.original = options.script = options.script.toString();
+    this._cleanup().set(options).render();
+  },
+
+  template: `
+    <section class="row code-editor rows">
+      <header>
+        <div class="columns">
+          <h3 class="column"><span data-hook="editor-title"></span> <small data-hook="editor-language"></small></h3>
+          <div class="column no-grow show-origin"><button class="vfi-eye" name="show-origin"></button></div>
+        </div>
+      </header>
+
+      <div class="ace-editor row grow-xl"></div>
+
+      <div class="ace-controls row no-grow gutter columns">
+        <div class="column"></div>
+        <div class="column no-grow gutter-right">
+          <button class="no" name="cancel">Cancel</button>
+          <button class="yes" name="apply">Apply</button>
+        </div>
+      </div>
+    </section>
+  `,
+
+  session: {
+    title: 'string',
+    language: {
+      type: 'string',
+      values: ['javascript', 'yaml', 'css'],
+      required: true,
+      default: 'javascript'
+    },
+    autoApply: 'boolean',
+    errors: 'array',
+    editor: 'any',
+    original: ['string', true, ''],
+    script: ['string', true, ''],
+    onshoworigin: 'any',
+    onvalidchange: 'any',
+    onapply: 'any',
+    validator: 'any'
+  },
+
+  derived: {
+    pristine: {
+      deps: ['script', 'original'],
+      fn: function() {
+        return this.script === this.original;
+      }
+    }
+  },
+
+  bindings: {
+    script: {
+      type: function() {
+        if (!this.editor) return;
+        this.editor.setValue(this.script);
+      }
+    },
+
+    pristine: [
+      {
+          type: 'booleanClass',
+          name: 'pristine'
+      },
+      {
+        selector: '[name=cancel]',
+        type: 'booleanAttribute',
+        name: 'disabled'
+      },
+      {
+        selector: '[name=apply]',
+        type: 'booleanAttribute',
+        name: 'disabled'
+      }
+    ],
+
+    autoApply: {
+      type: 'booleanClass',
+      name: 'autoapply'
+    },
+
+    onshoworigin: {
+      type: 'toggle',
+      selector: '.show-origin'
+    },
+
+    title: '[data-hook=editor-title]',
+    language: '[data-hook=editor-language]'
+  },
+
+  events: {
+    'click [name=show-origin]': '_showOrigin',
+    'click [name="cancel"]': '_cancel',
+    'click [name="apply"]': '_apply'
+  },
+
+  _showOrigin: function() {
+    var fn = this.onshoworigin;
+    if (typeof fn === 'function') fn();
+  },
+
+  setPristine: function() {
+    if (this.original != this.script) this.original = this.script;
+    return this;
+  },
+
+  _cleanup: function() {
+    delete this._cache.changed;
+    delete this._cache.original;
+
+    if (typeof this.onvalidchange === 'function') {
+      this.unset('onvalidchange');
+    }
+    if (typeof this.validator === 'function') {
+      this.unset('validator');
+    }
+
+    return this;
+  },
+
+  validateScript: function(script) {
+    var validator = this.validator;
+    if (typeof validator === 'function') {
+      return validator.call(this, script);
+    }
+  },
+
+  getErrors: function() {
+    return this.editor
+      .getSession()
+      .getAnnotations()
+      .filter(function (annotation) {
+        return annotation.type === 'error';
       });
   },
 
-  serialize: function() {
-    var obj = ScreenLayerState.prototype.serialize.apply(this, arguments);
-    obj.content = this.content;
-    return obj;
+  _cancel: function() {},
+
+  _apply: function() {
+    var view = this;
+    var editor = view.editor;
+    var str = editor.getValue();
+    if (typeof view.onapply === 'function') {
+      view.onapply(str);
+    }
+    view.set('script', str, {silent: true});
+    view.set('original', str, {silent: true});
+    delete view._cache.pristine;
+    view.trigger('change:pristine', view, view.script === view.original);
   },
 
-  toJSON: function() {
-    var obj = ScreenLayerState.prototype.toJSON.apply(this, arguments);
-    delete obj.content;
-    return obj;
+  _makeEditor: function() {
+    var view = this;
+    var ace = window.ace;
+    if (view.editor) view.editor.destroy();
+
+    var hasAnnotations = ['javascript', 'css'].indexOf(view.language) > -1;
+    var editor = view.editor = ace.edit(view.query('.ace-editor'));
+
+    function changed() {
+      var errors = view.getErrors();
+      if (errors.length) {
+        return;
+      }
+
+      var str = editor.getValue();
+      if (view.autoApply && typeof view.onvalidchange === 'function' && view.script !== str) {
+        view.onvalidchange(str);
+      }
+      view.set('script', str, {silent: true});
+      delete view._cache.pristine;
+      view.trigger('change:pristine', view, view.script === view.original);
+    }
+
+    editor.$blockScrolling = Infinity;
+    editor.setTheme('ace/theme/monokai');
+    editor.setShowInvisibles();
+    editor.setFontSize(16);
+
+    if (view.language === 'javascript') {
+      var languageTools = ace.require('ace/ext/language_tools');
+      editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: false
+      });
+      languageTools.addCompleter(canvasCompleter);
+    }
+
+    var session = editor.getSession();
+    session.setMode('ace/mode/' + view.language);
+    session.setUseSoftTabs(true);
+    session.setTabSize(2);
+    session.setUseWrapMode(true);
+
+    if (hasAnnotations) {
+      session.on('changeAnnotation', changed);
+    }
+    else {
+      session.on('change', changed);
+    }
+
+    editor.setValue(view.script || view.original || '');
+
+    return view;
+  },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+
+    this._makeEditor();
+
+    return this;
+  },
+
+  remove: function() {
+    this.editor.destroy();
+    return View.prototype.remove.apply(this, arguments);
   }
 });
+module.exports = AceEditor;
 
 /***/ }),
 
-/***/ 272:
+/***/ 369:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ScreenLayerState = __webpack_require__(266);
-var State = __webpack_require__(27);
-var Collection = __webpack_require__(34);
-var ParameterCollection = __webpack_require__(656);
+var pad = __webpack_require__(364);
+module.exports = __webpack_require__(17).extend({
+  autoRender: true,
+  template: '<canvas width="200" height="200"></canvas>',
 
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-
-var Euler = State.extend({
-  props: {
-    x: ['number', true, 0],
-    y: ['number', true, 0],
-    z: ['number', true, 0]
-  }
-});
-var Vector3 = State.extend({
-  props: {
-    x: ['number', true, 0],
-    y: ['number', true, 0],
-    z: ['number', true, 0]
-  }
-});
-// var Curve = State.extend({
-
-// });
-// var CurvePath = State.extend({
-
-// });
-// var Path = CurvePath.extend({
-
-// });
-var Shape = State.extend({
-
-});
-var ShapeCollection = Collection.extend({
-  model: Shape
-});
-
-
-var Color = State.extend({
-  props: {
-    r: ['number', true, 122],
-    g: ['number', true, 122],
-    b: ['number', true, 122]
-  }
-});
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-
-
-
-var ThreeState = State.extend({
-  idAttribute: 'name',
-  typeAttribute: 'type',
-  props: {
-    visible: ['boolean', true, true],
-    type: ['string', true, null],
-    name: ['string', true, null]
+  session: {
+    lineWidth: ['number', true, 1],
+    width: ['number', true, 200],
+    height: ['number', true, 200],
+    padding: ['number', true, 2],
+    color: ['string', true, '#000']
   },
-  children: {
-    position: Vector3,
-    rotation: Euler,
-    scale: Vector3
+
+  bindings: {
+    width: {
+      type: 'attribute',
+      name: 'width'
+    },
+    height: {
+      type: 'attribute',
+      name: 'height'
+    }
+  },
+
+  derived: {
+    ctx: {
+      deps: ['el', 'width', 'height'],
+      fn: function() {
+        return this.el.getContext('2d');
+      }
+    }
+  },
+
+  drawScales: function(/*bufferLength*/) {
+    var ctx = this.ctx;
+    var x = ctx.canvas.width * 0.5;
+    var y = ((ctx.canvas.height - 30) * 0.5) + 15;
+    var r = Math.min(x, y) - 30;
+    var rad = (Math.PI * 2);
+
+    ctx.font = '10px monospace';
+    ctx.fillStyle = ctx.strokeStyle = this.color;
+    var i, a, ax, ay, bx, by, lx, ly, ca, sa;
+    ctx.globalAlpha = 0.5;
+    for (i = 0; i < 360; i += 15) {
+      a = ((rad / 360) * i) - Math.PI;
+      ca = Math.cos(a);
+      sa = Math.sin(a);
+      ax = Math.round(x + (ca * (r / 10)));
+      ay = Math.round(y + (sa * (r / 10)));
+      bx = Math.round(x + (ca * (r - 5)));
+      by = Math.round(y + (sa * (r - 5)));
+      lx = Math.round(x + (ca * r));
+      ly = Math.round(y + (sa * r));
+
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+
+      ctx.textAlign = 'center';
+      if (lx < x) {
+        ctx.textAlign = 'right';
+      }
+      else if (lx > x) {
+        ctx.textAlign = 'left';
+      }
+
+      ctx.textBaseline = 'middle';
+      if (ly < y) {
+        ctx.textBaseline = 'bottom';
+      }
+      else if (ly > y) {
+        ctx.textBaseline = 'top';
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillText(i, lx, ly);
+      ctx.globalAlpha = 0.5;
+
+      ctx.stroke();
+      ctx.closePath();
+    }
+    ctx.globalAlpha = 1;
+
+    return this;
+  },
+
+  update: function() {
+    if (!this.el) {
+      return this;
+    }
+
+    var source = this.parent;
+
+    var ctx = this.ctx;
+    var width = ctx.canvas.width;
+    var height = ctx.canvas.height;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = ctx.strokeStyle = this.color;
+
+    var analyser = source.parent.audioAnalyser;
+    var bufferLength = analyser.frequencyBinCount;
+    this.drawScales(bufferLength);
+
+    var freqArray = source.parent.audioFrequencyArray;
+    analyser.getByteFrequencyData(freqArray);
+
+    var timeDomainArray = source.parent.audioTimeDomainArray;
+    analyser.getByteTimeDomainData(timeDomainArray);
+
+    var x = width * 0.5;
+    var y = ((height - 30) * 0.5) + 15;
+    var r = Math.min(x, y) - 30;
+    var rad = Math.PI * 2;
+
+    ctx.font = '13px monospace';
+    ctx.textAlign = 'center';
+
+
+    var i, a, f, td, lx, ly, val, min = 0, max = 0, avg = 0;
+    ctx.strokeStyle = ctx.fillStyle = '#A581FF';
+    ctx.beginPath();
+    for (i = 0; i < bufferLength; i++) {
+      val = freqArray[i];
+      avg += val;
+      min = Math.min(min, val);
+      max = Math.max(max, val);
+
+      a = ((rad / bufferLength) * i) - Math.PI;
+      f = (r / 100) * (val * 0.5);
+      lx = Math.round(x + Math.cos(a) * f);
+      ly = Math.round(y + Math.sin(a) * f);
+      ctx.lineTo(lx, ly);
+    }
+    ctx.stroke();
+    ctx.textBaseline = 'top';
+    ctx.fillText('frq: ' + pad(min.toFixed(), 3) + ' - ' + pad(max.toFixed(), 3) + ' | ' + pad((avg / bufferLength).toFixed(), 3), x, 0);
+
+
+
+    min = 0;
+    max = 0;
+    avg = 0;
+    ctx.strokeStyle = ctx.fillStyle = '#66D9EF';
+    ctx.beginPath();
+    for (i = 0; i < bufferLength; i++) {
+      val = timeDomainArray[i];
+      avg += val;
+      min = Math.min(min, val);
+      max = Math.max(max, val);
+
+      a = ((rad / bufferLength) * i) - Math.PI;
+      td = (r / 100) * (val * 0.5);
+      lx = Math.round(x + Math.cos(a) * td);
+      ly = Math.round(y + Math.sin(a) * td);
+      ctx.lineTo(lx, ly);
+    }
+    ctx.stroke();
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('vol: ' + pad(min.toFixed(), 3) + ' - ' + pad(max.toFixed(), 3) + ' | ' + pad((avg / bufferLength).toFixed(), 3), x, height);
+
+    return this;
   }
 });
 
-function makeCollectionModel(StateKind) {
-  return function(attrs, opts) {
-    var Constructor = StateKind.types[attrs.type] || StateKind;
-    var state = new Constructor(attrs, opts);
-    return state;
-  };
+
+/***/ }),
+
+/***/ 370:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(345);
+var AudioMonitor = __webpack_require__(369);
+var AudioSource = View.extend({
+  autoRender: true,
+
+  // need to investigate min/max value for decibels:
+  // https://webaudio.github.io/web-audio-api/#widl-AnalyserNode-maxDecibels
+  template: `
+    <div class="column rows audio-source">
+      <!-- <audio class="row" src="http://localhost:8080/stream" controls autoplay></audio> -->
+      <div class="row columns">
+        <div class="column audio-monitor"></div>
+        <div class="column audio-controls">
+          <label>MinDb: <input type="range" name="minDecibels" value="-90" min="-200" max="-11" step="1" /></label>
+          <label>MaxDb: <input type="range" name="maxDecibels" value="-10" min="-70" max="120" step="1" /></label>
+          <label>Smoothing: <input type="range" name="smoothingTimeConstant" min="0" max="1" value="0.85" step="0.01" /></label>
+          <label>FftSize: <select type="number" name="fftSize" value="32" step="2">
+            <option value="32">32</option>
+            <option value="64">64</option>
+            <option value="128">128</option>
+            <option value="256">256</option>
+            <option value="1024">1024</option>
+            <option value="2048">2048</option>
+          </select></label>
+        </div>
+      </div>
+    </div>
+  `,
+
+  initialize: function() {
+    this.listenToAndRun(this, 'change:audioContext change:audioAnalyser', this.connectAudioSource);
+  },
+
+  // session: {
+  //   minDecibels: ['number', true, -90],
+  //   maxDecibels: ['number', true, -10],
+  //   smoothingTimeConstant: ['number', true, 0.85],
+  //   fftSize: ['number', true, 256],
+  //   audioAnalyser: 'any'
+  // },
+
+  bindings: {
+    'parent.minDecibels': {
+      selector: '[name="minDecibels"]',
+      type: 'value'
+    },
+    'parent.maxDecibels': {
+      selector: '[name="maxDecibels"]',
+      type: 'value'
+    },
+    'parent.smoothingTimeConstant': {
+      selector: '[name="smoothingTimeConstant"]',
+      type: 'value'
+    },
+    'parent.fftSize': {
+      selector: '[name="fftSize"]',
+      type: 'value'
+    }
+  },
+
+  session: {
+    color: 'string'
+  },
+
+  subviews: {
+    monitor: {
+      waitFor: 'el',
+      selector: '.audio-monitor',
+      prepareView: function(el) {
+        var view = new AudioMonitor({
+          color: this.color,
+          audioAnalyser: this.parent.audioAnalyser,
+          parent: this
+        });
+        el.appendChild(view.el);
+        return view;
+      }
+    }
+  },
+
+
+  events: {
+    'change .audio-source [name]': '_changeAudioParams'
+  },
+
+  connectAudioSource: function() {
+    var view = this;
+    var capture = {
+      audio: true
+    };
+
+    function success(stream) {
+      var source = view.parent.audioContext.createMediaStreamSource(stream);
+      source.connect(view.parent.audioAnalyser);
+    }
+    function error(err) {
+      console.warn(err);
+    }
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia(capture).then(success).catch(error);
+    }
+    else if (navigator.getUserMedia) {
+      navigator.getUserMedia(capture, success, error);
+    }
+
+    return this;
+  },
+
+  _changeAudioParams: function(evt) {
+    this.parent.set(evt.target.name, Number(evt.target.value));
+  },
+
+  update: function() {
+    if (!this.monitor) return;
+    this.monitor.update();
+  }
+});
+module.exports = AudioSource;
+
+/***/ }),
+
+/***/ 371:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(15);
+var msToTime = __webpack_require__(420);
+var ControlView = __webpack_require__(345);
+var ClockView = ControlView.extend({
+  template: `<div class="column columns no-grow">
+  <span class="column columns no-grow button-group">
+    <div class="column no-grow">
+      <button name="play" class="vfi-play"></button>
+    </div>
+    <div class="column no-grow">
+      <button name="pause" class="vfi-pause"></button>
+    </div>
+    <div class="column no-grow">
+      <button name="stop" class="vfi-stop"></button>
+    </div>
+  </span>
+  <div class="column gutter frametime"></div>
+  <div class="column gutter"><span class="result-dot"></span></div>
+  <div class="column no-grow detector">
+    <input name="bpm" />
+  </div>
+</div>`,
+
+  bindings: assign({}, ControlView.prototype.bindings, {
+    'model.bpm': {
+      type: 'value',
+      selector: '[name=bpm]'
+    },
+    'model.frametime': {
+      selector: '.frametime',
+      type: function(el, val) {
+        el.textContent = msToTime(val);
+      }
+    },
+    'model.beatprct': [
+      {
+        selector: '.result-dot',
+        type: function(el, val) {
+          el.style.backgroundColor = 'hsla(190, 81%, 67%,' + (val / 100) + ')';
+        }
+      }
+    ]
+  }),
+
+  events: assign({}, ControlView.prototype.events, {
+    'click .result-dot': 'tap'
+  }),
+
+  commands: {
+    'click [name="play"]': 'play',
+    'click [name="pause"]': 'pause',
+    'click [name="stop"]': 'stop',
+    'change [name="bpm"]': 'setBPM _setBPM'
+  },
+
+  session: {
+    wait: ['number', true, 2],
+    count: ['number', true, 0],
+    first: ['number', true, 0],
+    previous: ['number', true, 0]
+  },
+
+  _resetDetector: function() {
+    this.set({
+      count: 0,
+      first: 0,
+      previous: 0
+    });
+  },
+
+  _setBPM: function(msecs) {
+    msecs = msecs && !msecs.target ? msecs : Date.now();
+    return {
+      bpm: Math.round((60000 * this.count / (msecs - this.first)) * 100) / 100
+    };
+  },
+
+  tap: function() {
+    var msecs = Date.now();
+    var wait = 2;
+
+    if ((msecs - this.previous) > 1000 * wait) {
+      this.count = 0;
+    }
+
+    if (!this.count) {
+      this.first = msecs;
+      this.count = 1;
+    }
+    else {
+      this.count++;
+
+      this.sendCommand('setBPM', this._setBPM(msecs));
+    }
+
+
+    this.previous = msecs;
+  }
+});
+module.exports = ClockView;
+
+/***/ }),
+
+/***/ 372:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(17);
+
+var ControlScreenControls = View.extend({
+  template: `<div class="column columns control-screen-controls">
+    <div class="column no-grow">
+      <button name="control-screen">Control screen</button>
+    </div>
+
+    <div class="column no-grow columns control-screen-size">
+      <input type="text" placeholder="400x300" name="control-screen-size" />
+    </div>
+  </div>`,
+
+  props: {
+    active: ['boolean', true, true],
+    width: ['number', true, 400],
+    height: ['number', true, 300],
+  },
+
+  events: {
+    'click [name="control-screen"]': 'toggleActive',
+    'change [name="control-screen-size"]': '_handleChange'
+  },
+
+  bindings: {
+    width: {
+      type: function(el) {
+        if (document.activeElement === el) return;
+        el.value = this.width + 'x' + this.height;
+      },
+      selector: '[name=control-screen-size]'
+    },
+    height: {
+      type: function(el) {
+        if (document.activeElement === el) return;
+        el.value = this.width + 'x' + this.height;
+      },
+      selector: '[name=control-screen-size]'
+    }
+  },
+
+  toggleActive: function() {
+    this.toggle('active');
+  },
+
+  _handleChange: function(evt) {
+    var parts = (evt.target.value || '400x300').split('x').map(v => Number(v));
+    this.width = parts[0] || 400;
+    this.height = parts[1] || 300;
+    return this;
+  }
+});
+module.exports = ControlScreenControls;
+
+/***/ }),
+
+/***/ 373:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* global Request */
+
+var View = __webpack_require__(345);
+
+function resToJSON(res) {
+  return res.json();
 }
 
-
-// function collectionParse(data) {
-//   console.info('typeof data', typeof data);
-//   return data;
-// }
+var toYaml = __webpack_require__(365);
 
 
-// function collectionToJSON() {
-//   var data = {};
-//   this.forEach(function(model) {// jshint ignore:line
-//     data[model.getId()] = model.serialize();
-//     delete data[model.getId()][model.idAttribute];
-//   });
-//   // console.info('collectionToJSON', data);
-//   return data;
-// }
+var GistView = View.extend({
+  template: `
+    <div class="columns">
+      <div class="column"><input placeholder="Gist ID" name="gist-id"/></div>
+      <div class="column no-grow"><button name="save-gist">Save gist</button></div>
+      <a target="_blank">Open on GH</a>
+    </div>
+  `,
 
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-var MaterialState = State.extend({
-  idAttribute: 'name',
-  typeAttribute: 'type',
-  props: {
-    type: ['string', false, null],
-    name: ['string', false, null]
-  },
-  children: {
-    color: Color
-  }
-});
-
-MaterialState.types = {};
-
-
-
-var MaterialCollection = Collection.extend({
-  mainIndex: 'name',
-  // parse: collectionParse,
-  // toJSON: collectionToJSON,
-  // serialize: collectionToJSON,
-  model: makeCollectionModel(MaterialState)
-});
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-
-var GeometryState = ThreeState.extend({
-  children: {
-    material: MaterialState
-  }
-});
-
-GeometryState.types = {};
-// BoxBufferGeometry
-// BoxGeometry
-GeometryState.types.box = GeometryState.extend({
-  signature: ['width', 'height', 'depth'],
-  threeClassName: 'BoxGeometry',
-  props: {
-    width: ['number', true, 5],
-    height: ['number', true, 5],
-    depth: ['number', true, 5],
-  }
-});
-// CircleBufferGeometry
-// CircleGeometry
-GeometryState.types.circle = GeometryState.extend({
-  signature: ['radius', 'segments', 'thetaStart', 'thetaLength'],
-  threeClassName: 'CircleGeometry',
-  props: {
-    radius: ['number', true, 10],
-    segments: ['number', true, 8],
-    thetaStart: ['number', true, 0],
-    thetaLength: ['number', true, Math.PI * 2]
-  }
-});
-// ConeBufferGeometry
-// ConeGeometry
-GeometryState.types.cone = GeometryState.extend({
-  signature: ['radius', 'height', 'radialSegments', 'heightSegments', 'openEnded', 'thetaStart', 'thetaLength'],
-  threeClassName: 'ConeGeometry',
-  props: {
-    radius: ['number', true, 10],
-    height: ['number', true, 10],
-    radialSegments: ['number', true, 8],
-    heightSegments: ['number', true, 1],
-    openEnded: ['boolean', true, false],
-    thetaStart: ['number', true, 0],
-    thetaLength: ['number', true, Math.PI * 2]
-  }
-});
-// CylinderBufferGeometry
-// CylinderGeometry
-GeometryState.types.cylinder = GeometryState.extend({
-  signature: [
-    'radiusTop',
-    'radiusBottom',
-    'height',
-    'radialSegments',
-    'heightSegments',
-    'openEnded',
-    'thetaStart',
-    'thetaLength'
-  ],
-  threeClassName: 'CylinderGeometry',
-  props: {
-    radiusTop: ['number', true, 10],
-    radiusBottom: ['number', true, 10],
-    height: ['number', true, 10],
-    radialSegments: ['number', true, 8],
-    heightSegments: ['number', true, 1],
-    openEnded: ['boolean', true, false],
-    thetaStart: ['number', true, 0],
-    thetaLength: ['number', true, Math.PI * 2]
-  }
-});
-// DodecahedronBufferGeometry
-// DodecahedronGeometry
-// EdgesGeometry
-// ExtrudeGeometry
-GeometryState.types.extrude = GeometryState.extend({
-  signature: ['shapes', 'options'],
-  threeClassName: 'ExtrudeGeometry',
-  collections: {
-    shapes: ShapeCollection
-  },
-  props: {
-    curveSegments: 'any',// int. number of points on the curves
-    steps: 'any',// int. number of points used for subdividing segements of extrude spline
-    amount: 'any',// int. Depth to extrude the shape
-    bevelEnabled: 'any',// bool. turn on bevel
-    bevelThickness: 'any',// float. how deep into the original shape bevel goes
-    bevelSize: 'any',// float. how far from shape outline is bevel
-    bevelSegments: 'any',// int. number of bevel layers
-    extrudePath: 'any',// THREE.CurvePath. 3d spline path to extrude shape along. (creates Frames if frames aren't defined)
-    frames: 'any',// THREE.TubeGeometry.FrenetFrames. containing arrays of tangents, normals, binormals
-    material: 'any',// int. material index for front and back faces
-    extrudeMaterial: 'any',// int. material index for extrusion and beveled faces
-    UVGenerator: 'any',// Object. object that provides UV generator functions
-  }
-});
-// IcosahedronBufferGeometry
-// IcosahedronGeometry
-// LatheBufferGeometry
-// LatheGeometry
-// OctahedronBufferGeometry
-// OctahedronGeometry
-// ParametricBufferGeometry
-// ParametricGeometry
-GeometryState.types.parametric = GeometryState.extend({
-  signature: ['func', 'slices', 'stacks'],
-  threeClassName: 'ParametricGeometry',
-  props: {
-    func: ['string', true, 'function(u, v) { return new THREE.Vector3(); }'],
-    slices: ['number', true, 5],
-    stacks: ['number', true, 5]
-  }
-});
-// PlaneBufferGeometry
-// PlaneGeometry
-// PolyhedronBufferGeometry
-// PolyhedronGeometry
-// RingBufferGeometry
-// RingGeometry
-// ShapeBufferGeometry
-// ShapeGeometry
-// SphereBufferGeometry
-// SphereGeometry
-// TetrahedronBufferGeometry
-// TetrahedronGeometry
-// TextGeometry
-// TorusBufferGeometry
-// TorusGeometry
-// TorusKnotBufferGeometry
-// TorusKnotGeometry
-// TubeGeometry
-// TubeBufferGeometry
-// WireframeGeometry
-
-
-var GeometryCollection = Collection.extend({
-  mainIndex: 'name',
-  // parse: collectionParse,
-  // toJSON: collectionToJSON,
-  // serialize: collectionToJSON,
-  model: makeCollectionModel(GeometryState)
-});
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-var LightState = ThreeState.extend({
-  props: {
-    intensity: ['number', true, 1]
-  },
-  children: {
-    color: Color
-  }
-});
-
-LightState.types = {};
-// AmbientLight
-LightState.types.ambient = LightState.extend({
-  signature: [],
-  threeClassName: 'AmbientLight',
-});
-// DirectionalLight
-LightState.types.directonal = LightState.extend({
-  signature: [],
-  threeClassName: 'DirectionalLight',
-  children: {
-    lookAt: Vector3
-  }
-});
-// HemisphereLight
-// Vector3Light
-// RectAreaLight
-// SpotLight
-
-
-
-
-var LightCollection = Collection.extend({
-  mainIndex: 'name',
-  // parse: collectionParse,
-  // toJSON: collectionToJSON,
-  // serialize: collectionToJSON,
-  model: makeCollectionModel(LightState)
-});
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-var CameraState = ThreeState.extend({
-  children: {
-    lookAt: Vector3
-  }
-});
-
-CameraState.types = {};
-// CubeCamera
-// OrthographicCamera
-CameraState.types.orthographic = CameraState.extend({
-  signature: ['left', 'right', 'top', 'bottom', 'near', 'far'],
-  threeClassName: 'OrthographicCamera',
-  props: {
-    left: ['number', true, 80],
-    right: ['number', true, 80],
-    top: ['number', true, 60],
-    bottom: ['number', true, 60],
-    near: ['number', true, 0.1],
-    far: ['number', true, 2000]
-  }
-});
-// PerspectiveCamera
-CameraState.types.perspective = CameraState.extend({
-  signature: ['fov', 'aspect', 'near', 'far'],
-  threeClassName: 'PerspectiveCamera',
-  props: {
-    focus: ['number', true, 10],
-    fov: ['number', true, 50],
-    aspect: ['number', true, 1],
-    near: ['number', true, 0.1],
-    far: ['number', true, 2000],
-    zoom: ['number', true, 1]
-  }
-});
-// StereoCamera
-
-
-
-var CameraCollection = Collection.extend({
-  mainIndex: 'name',
-  // parse: collectionParse,
-  // toJSON: collectionToJSON,
-  // serialize: collectionToJSON,
-  model: makeCollectionModel(CameraState)
-});
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-var LoaderState = ThreeState.extend({
-  props: {
-    path: ['string', false, ''],
-    src: ['string', true, ''],
-  },
-  children: {
-    material: MaterialState
-  }
-});
-
-LoaderState.types = {};
-LoaderState.types.obj = LoaderState.extend({});
-LoaderState.types.objmtl = LoaderState.extend({
-  props: {
-    mtl: ['string', true, '']
-  }
-});
-
-var LoaderCollection = Collection.extend({
-  mainIndex: 'name',
-  model: makeCollectionModel(LoaderState)
-});
-
-
-
-/***************************************\
- *                                     *
- *                                     *
- *                                     *
-\***************************************/
-module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
-  props: {
-    currentCamera: ['string', false, null],
-    renderFunction: ['string', true, 'function() { console.info(\'missing renderFunction for %s\', layer.model.getId()); }'],
-    updateFunction: ['string', true, 'function() { console.info(\'missing updateFunction for %s\', layer.model.getId()); }']
+  events: {
+    'change [name="gist-id"]': '_loadGist',
+    'click [name="save-gist"]': '_saveGist'
   },
 
-  collections: {
-    parameters: ParameterCollection,
-    //
-    geometries: GeometryCollection,
-    lights: LightCollection,
-    cameras: CameraCollection,
-    materials: MaterialCollection,
-    //
-    loaders: LoaderCollection
+  session: {
+    gistId: 'string',
+    revision: 'any'
   },
 
-  // parse: function(data) {
-  //   console.info('parse three data', data);
+  derived: {
+    url: {
+      deps: ['gistId'],
+      fn: function() {
+        return this.gistId ? 'https://gist.github.com/' + this.gistId : false;
+      }
+    }
+  },
 
-  //   [
-  //     'geometries',
-  //     'lights',
-  //     'cameras',
-  //     'materials'
-  //   ].forEach(function(collectionName) {
-  //     data[collectionName] = Object.keys(data[collectionName] || {}).map(function(name) {
-  //       var obj = data[collectionName][name];
-  //       obj.name = name;
-  //       return obj;
-  //     });
-  //   });
+  bindings: {
+    gistId: [
+      {
+        type: 'value',
+        selector: '[name="gist-id"]'
+      }
+    ],
+    url: [
+      {
+        type: 'attribute',
+        name: 'href',
+        selector: 'a'
+      },
+      {
+        type: 'toggle',
+        selector: 'a'
+      }
+    ]
+  },
 
-  //   return data;
-  // },
+  _loadGist: function(done) {
+    var view = this;
+    if (!view.gistId) return done(new Error('No Gist ID'));
+    done = typeof done === 'function' ? done : function(err) { console.error('gist loading error', err.message); };
 
-  // toJSON: function() {
-  //   var data = ScreenLayerState.prototype.toJSON.apply(this, arguments);
-  //   // console.info('toJSON', data.cameras);
-  //   return data;
-  // },
+    fetch('https://api.github.com/gists/' + view.gistId)
+      .then(resToJSON)
+      .then(function(json) {
+        var content = json.files['visual-fiha-setup.yml'].content;
+        done(null, content);
+      }, done)
+      .catch(done);
+  },
 
-  // serialize: function() {
-  //   var data = ScreenLayerState.prototype.serialize.apply(this, arguments);
-  //   // console.info('serialize', data.cameras);
-  //   return data;
-  // },
 
-  initialize: function(attrs) {
-    ScreenLayerState.prototype.initialize.apply(this, arguments);
-    var noLights = !this.lights.length && (!attrs.lights || !attrs.lights.length);
-    var noCameras = !this.cameras.length && (!attrs.cameras || !attrs.cameras.length);
-    var noGeometries = !this.geometries.length && (!attrs.geometries || !attrs.geometries.length);
+  toYaml: function() {
+    return toYaml(this.parent.toJSON());
+  },
 
-    if (noLights) {
-      this.lights.add([
-        {
-          type: 'ambient',
-          name: 'defaultambient',
-          color: {
-            r: 1,
-            g: 1,
-            b: 1
-          }
-        },
-        {
-          type: 'directonal',
-          name: 'defaultdirectonal',
-          color: {
-            r: 1,
-            g: 1,
-            b: 1
-          },
-          position: {
-            x: 45,
-            y: 45,
-            z: 45
-          },
-          lookAt: {
-            x: 0,
-            y: 0,
-            z: 0
+  _saveGist: function(evt) {
+    evt.preventDefault();
+    var method = 'POST';
+    var url = 'https://api.github.com/gists';
+    var view = this;
+
+    // we can't update an anonymous gist... :/
+    // var id = this.gistId;
+    // if (id) {
+    //   url += '/' + id;
+    //   method = 'PATCH';
+    // }
+
+    var req = new Request(url, {
+      method: method,
+      body: JSON.stringify({
+        description: 'This gist is a setup information for https://zeropaper.github.io/visual-fiha',
+        public: true,
+        files: {
+          'visual-fiha-setup.yml': {
+            content: view.toYaml()
           }
         }
-      ]);
-    }
+      })
+    });
 
-    if (noCameras) {
-      this.cameras.add([
-        {
-          type: 'perspective',
-          name: 'defaultperspective',
-          position: {
-            x: 35,
-            y: 35,
-            z: 35
-          },
-          lookAt: {
-            x: 0,
-            y: 0,
-            z: 0
-          }
-        },
-        {
-          type: 'orthographic',
-          name: 'defaultortho',
-          position: {
-            x: 35,
-            y: 35,
-            z: 35
-          },
-          lookAt: {
-            x: 0,
-            y: 0,
-            z: 0
-          }
-        }
-      ]);
-    }
-
-    if (noGeometries && !attrs.loaders) {
-      this.geometries.add([
-        {
-          type: 'box',
-          name: 'defaultbox',
-          position: {
-            x: 0,
-            y: 0,
-            z: 0
-          }
-        }
-      ]);
-    }
+    fetch(req)
+      .then(resToJSON)
+      .then(function(json) {
+        view.gistId = json.id;
+      });
   }
 });
+module.exports = GistView;
+
 
 /***/ }),
 
-/***/ 273:
+/***/ 374:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var LayerState = __webpack_require__(266);
-var TxtLayerState = LayerState.types.txt = LayerState.extend({
-  props: {
-    text: ['string', false, null]
+
+
+var View = __webpack_require__(17);
+var LocalforageView = View.extend({
+  template: `
+    <div class="rows localforage-view">
+      <div class="row columns">
+        <div class="column"><input placeholder="Local ID" name="local-id"/></div>
+        <div class="column no-grow"><button name="save">Save</button></div>
+        <div class="column no-grow"><button name="restore" class="vfi-ccw" title="Reload"></button></div>
+      </div>
+    </div>
+  `,
+  events: {
+    'focus [name=local-id]': '_suggestKeys',
+    'click [name=restore]': '_restoreSetup',
+    'click [name=save]': '_saveSetup'
+  },
+  _suggestKeys: function(evt) {
+    var helper = this.parent.suggestionHelper;
+
+    this.listenToOnce(this.parent, 'app:worker:storageKeys', function(data) {
+      helper
+        .attach(evt.target, function(selected) {
+          evt.target.value = selected;
+          helper.detach();
+        })
+        .fill((data.keys || []).map(s => s.replace('local-', '')));
+    });
+
+    this.parent.sendCommand('storageKeys');
+  },
+
+  saveLocal: function(setupId, done) {
+    done = typeof done === 'function' ? done : function(err) { if(err) console.error('localforage error', err.message); };
+
+    this.listenToOnce(this.parent, 'app:worker:storageSave', function(data, x) {
+      console.info('storage save...', data, x);
+      done(data.error);
+    });
+
+    this.parent.sendCommand('storageSave', {setupId: setupId});
+  },
+
+  _restoreSetup: function() {
+    var id = 'local-' + this.query('[name=local-id]').value;
+    var router = this.parent.router;
+    router.loadSetup(id);
+  },
+  _saveSetup: function() {
+    var id = 'local-' + this.query('[name=local-id]').value;
+    var router = this.parent.router;
+    this.saveLocal(id, function() {
+      router.navigate('setup/' + id, {trigger: false, replace: false});
+    });
   }
 });
-module.exports = TxtLayerState;
+module.exports = LocalforageView;
 
 /***/ }),
 
-/***/ 274:
+/***/ 375:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ScreenLayerState = __webpack_require__(266);
-module.exports = ScreenLayerState.types.video = ScreenLayerState.extend({
-  props: {
-    src: ['string', false, null]
+var View = __webpack_require__(17);
+var GistView = __webpack_require__(373);
+var LocalforageView = __webpack_require__(374);
+
+var MenuView = View.extend({
+  template: `
+    <div class="vf-app-menu">
+      <button name="menu-close" class="vfi-cancel"></button>
+
+      <div class="inner rows">
+        <div class="row no-grow columns" data-hook="localforage"></div>
+        <div class="row no-grow columns" data-hook="gist"></div>
+
+        <div class="row columns"></div>
+
+        <div class="row columns">
+
+        </div>
+      </div>
+
+      <div class="underlay"></div>
+    </div>
+  `,
+
+  session: {
+    opened: ['boolean', true, false]
+  },
+
+  bindings: {
+    opened: {
+      type: 'booleanClass'
+    }
+  },
+
+  events: {
+    'click [name=menu-close]': 'close',
+    'click .underlay': 'close'
+  },
+
+  close: function() {
+    this.opened = false;
+  },
+
+  open: function() {
+    this.opened = true;
+  },
+
+  subviews: {
+    localforageView: {
+      waitFor: 'el',
+      selector: '[data-hook=localforage]',
+      prepareView: function() {
+        var controllerView = this.parent;
+        var view = new LocalforageView({parent: controllerView, model: controllerView.model});
+        return view;
+      }
+    },
+
+    gistView: {
+      waitFor: 'el',
+      selector: '[data-hook=gist]',
+      prepareView: function() {
+        var controllerView = this.parent;
+        var view = new GistView({parent: controllerView, model: controllerView.model});
+        return view;
+      }
+    }
+  }
+});
+module.exports = MenuView;
+
+/***/ }),
+
+/***/ 376:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var State = __webpack_require__(11);
+// var View = require('./control-view');
+var View = __webpack_require__(17);
+var Collection = __webpack_require__(16);
+var ViewSwitcher = __webpack_require__(24);
+
+var TabView = View.extend({
+  template: '<li class="tab columns">' +
+    '<div class="column gutter name"></div>' +
+    '<div class="column no-grow">' +
+      '<button class="vfi-minus-squared-alt no-border"></button>' +
+    '</div>' +
+  '</li>',
+
+  bindings: {
+    'model.name': '.name',
+    'model.active': {type: 'booleanClass', name: 'active'},
+    'model.pinned': {type: 'toggle', selector: 'button', invert: true}
+  },
+
+  events: {
+    'click .name': 'selectTab',
+    'click button': 'closeTab'
+  },
+
+  selectTab: function() {
+    var itemView = this;
+    var item = itemView.model;
+    itemView.parent._focus(item);
+  },
+
+  closeTab: function() {
+    this.parent.focusTabIndex(0);
+    this.model.collection.remove(this.model);
   },
 
   initialize: function() {
-    ScreenLayerState.prototype.initialize.apply(this, arguments);
+    if (!this.model.pinned && this.parent.parent.rootView) this.listenToOnce(this.parent.parent.rootView, 'app:broadcast:bootstrap', function() {
+      this.closeTab();
+    });
   }
 });
 
-/***/ }),
+var RegionView = View.extend({
+  collections: {
+    tabs: Collection.extend({
+      mainIndex: 'name',
 
-/***/ 653:
-/***/ (function(module, exports, __webpack_require__) {
+      find: function(fn) {
+        for (var i = 0; i < this.length; i++) {
+          if (fn(this.models[i])) return this.models[i];
+        }
+      },
 
-"use strict";
+      model: State.extend({
+        idAttribute: 'name',
 
-
-function isCollectionOfParent(o, p) {
-  if (!p || !p._collections) return;
-  for (var name in p._collections) {
-    if (p[name] === o.collection) return name + '.' + o.getId();
-  }
-}
-
-function isChildOfParent(o, p) {
-  if (!p || !p._children) return;
-  for (var name in p._children) {
-    if (p[name] === o) return name;
-  }
-}
-
-function isPropOfParent(o, p) {
-  if (!p) return;
-  for (var name in p) {
-    if (p[name] === o) return name;
-  }
-}
-
-var _paths = {};
-function objectPath(state) {
-  if (!state) return null;
-  if (_paths[state.cid]) return _paths[state.cid];
-  var parts = [];
-
-
-  function up(instance) {
-    var collectionName = instance.collection ?
-                          isCollectionOfParent(instance, instance.collection.parent) :
-                          null;
-    if (collectionName) {
-      parts.unshift(collectionName);
-      return up(instance.collection.parent);
-    }
-
-    var childName = isChildOfParent(instance, instance.parent);
-    if (childName) {
-      parts.unshift(childName);
-      return up(instance.parent);
-    }
-
-
-    var propName = isPropOfParent(instance, instance.parent);
-    if (propName) {
-      parts.unshift(propName);
-      return up(instance.parent);
-    }
-
-    if (instance.parent) up(instance.parent);
-  }
-
-  up(state);
-
-  _paths[state.cid] = parts.join('.');
-  return _paths[state.cid];
-}
-
-module.exports = objectPath;
-
-/***/ }),
-
-/***/ 656:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var ParamState = __webpack_require__(665);
-var Collection = __webpack_require__(34);
-
-var ParamCollection = Collection.extend({
-  mainIndex: 'name',
-  model: ParamState,
-
-  comparator: 'name',
-
-  toJSON: function (...args) {
-    return this.map(model => model.toJSON(...args));
+        session: {
+          pinned: 'boolean',
+          active: 'boolean',
+          name: 'string',
+          view: 'state',
+          rebuild: 'any'
+        }
+      })
+    })
   },
 
-  getValue: function(name, defaultVal) {
-    var param = this.get(name);
-    if (!param) return defaultVal;
-    var val = param.value;
-    defaultVal = arguments.length === 2 ? defaultVal : param.default;
-    return val === null || typeof val === 'undefined' ? defaultVal : val;
+  autoRender: true,
+
+  template: '<div class="region">' +
+              '<ul class="region-tabs tabs"></ul>'+
+              '<div class="region-content"></div>' +
+            '</div>',
+
+  activeIndex: function() {
+    if (!this.tabs.models.length) return -2;
+    for (var i = 0; i < this.tabs.models.length; i++) {
+      if (this.tabs.models[i].active) return i;
+    }
+    return -1;
+  },
+
+  render: function() {
+    if (this.rendered) return this;
+
+    View.prototype.render.apply(this, arguments);
+
+    this.regionSwitcher = new ViewSwitcher(this.query('.region-content'), {});
+
+    this.renderCollection(this.tabs, TabView, '.region-tabs');
+
+    this.listenToAndRun(this.tabs, 'reset add remove', function() {
+      var activeIndex = this.activeIndex();
+      if (activeIndex > -2) {
+        this.focusTabIndex(activeIndex > -1 ? activeIndex : 0);
+      }
+    });
+
+    return this;
+  },
+
+  _setView: function(view) {
+    if (!view) return;
+    this.regionSwitcher.set(view);
+    return view;
+  },
+
+  _focus: function(tabState) {
+    if (!tabState) return;
+    this.tabs.forEach(function(state) {
+      state.active = tabState === state;
+    });
+
+    var view = tabState.view;
+    if (typeof tabState.rebuild === 'function') {
+      view = tabState.rebuild();
+    }
+    if (typeof tabState.Constructor === 'function') {
+      view = new tabState.Constructor({
+        parent: this
+      });
+
+    }
+    // else {
+    //   view.trigger('change:model', view, view.model, {});
+    //   view.trigger('change', view, view, {});
+    //   var bindings = view.constructor.prototype.bindings || {};
+    //   Object.keys(bindings).forEach(function(key) {
+    //     view.trigger('change:' + key);
+    //   }, view);
+    // }
+    return this._setView(view);
+  },
+
+  focusTabIndex: function(index) {
+    return this._focus(this.tabs.at(index));
+  },
+
+  focusTab: function(name) {
+    return this._focus(this.tabs.get(name));
   }
 });
 
-module.exports = ParamCollection;
+module.exports = RegionView;
 
 /***/ }),
 
-/***/ 657:
+/***/ 377:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var noop = function(){};
-var mockedCtx = {
-  save: noop,
-  restore: noop,
-  scale: noop,
-  rotate: noop,
-  translate: noop,
-  transform: noop,
-  setTransform: noop,
-  resetTransform: noop,
-  createLinearGradient: noop,
-  createRadialGradient: noop,
-  createPattern: noop,
-  clearRect: noop,
-  fillRect: noop,
-  strokeRect: noop,
-  beginPath: noop,
-  fill: noop,
-  stroke: noop,
-  drawFocusIfNeeded: noop,
-  clip: noop,
-  isPointInPath: noop,
-  isPointInStroke: noop,
-  fillText: noop,
-  strokeText: noop,
-  measureText: noop,
-  drawImage: noop,
-  createImageData: noop,
-  getImageData: noop,
-  putImageData: noop,
-  getContextAttributes: noop,
-  setLineDash: noop,
-  getLineDash: noop,
-  closePath: noop,
-  moveTo: noop,
-  lineTo: noop,
-  quadraticCurveTo: noop,
-  bezierCurveTo: noop,
-  arcTo: noop,
-  rect: noop,
-  arc: noop,
-  ellipse: noop,
-  // properties
-  globalAlpha: 1,
-  globalCompositeOperation: 'source-over',
-  filter: 'none',
-  imageSmoothingEnabled: true,
-  imageSmoothingQuality: 'low',
-  strokeStyle: '#000000',
-  fillStyle: '#000000',
-  shadowOffsetX: 0,
-  shadowOffsetY: 0,
-  shadowBlur: 0,
-  shadowColor: 'rgba(0, 0, 0, 0)',
-  lineWidth: 1,
-  lineCap: 'butt',
-  lineJoin: 'miter',
-  miterLimit: 10,
-  lineDashOffset: 0,
-  font: '10px sans-serif',
-  textAlign: 'start',
-  textBaseline: 'alphabetic',
-  canvas: {width: 400, height: 300},
-  // utilities
-  _: {}
-};
-mockedCtx._.methods = Object.keys(mockedCtx)
-  .filter(function(name) {
-    return typeof mockedCtx[name] === 'function';
-  });
-mockedCtx._.properties = Object.keys(mockedCtx)
-  .filter(function(name) {
-    return name != '_' && typeof mockedCtx[name] !== 'function';
-  });
-module.exports = mockedCtx;
+// var View = require('./control-view');
+var View = __webpack_require__(17);
+var Collection = __webpack_require__(16);
+var State = __webpack_require__(11);
 
-/***/ }),
-
-/***/ 659:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-module.exports = function minMax(val, min = 0, max = 16) {
-  return (Math.abs(min - max) * Number(val) * (1 / 127)) - min;
-};
-
-/***/ }),
-
-/***/ 660:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-module.exports = function midi2prct(val) {
-  return (Number(val) * (1 / 127));
-};
-
-/***/ }),
-
-/***/ 661:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-module.exports = function midi2rad(val) {
-  return Math.PI * 2 * (Number(val) * (1 / 127));
-};
-
-/***/ }),
-
-/***/ 662:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-function noop() {}
-
-var utils = module.exports = {};
-
-utils.random = function random(multi = 100) {
-  return Math.random() * multi;
-};
-
-utils.between = function between(val, min, max) {
-  return Math.max(min, Math.min(max, val));
-};
-
-
-utils.log = function log(ctx, ...args) {
-  console.info(...args);
-};
-
-
-utils.midiMinMax = __webpack_require__(659);
-utils.midi2Rad = __webpack_require__(661);
-utils.midi2Prct = __webpack_require__(660);
-
-/**
- * txt
- * @param [text]
- * @param [x]
- * @param [y]
- */
-utils.txt = function txt(ctx, ...args) {
-  var text, x, y;
-  [
-    text = '',
-    x = ctx.canvas.width / 2,
-    y = ctx.canvas.height / 2,
-  ] = args;
-  ctx.fillText(text, x, y);
-};
-
-/**
- * dot
- * @param [x]
- * @param [y]
- * @param [radius]: 10
- * @param [start]: 0
- * @param [end]: 360
- */
-utils.dot = function dot(ctx, ...args) {
-  var x, y, radius, start, end;
-  [
-    x = ctx.canvas.width / 2,
-    y = ctx.canvas.height / 2,
-    radius = 10,
-    start = 0,
-    end = Math.PI * 2
-  ] = args;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, start, end);
-  ctx.closePath();
-  ctx.fill();
-};
-
-/**
- * circle
- * @param [x]: <center>
- * @param [y]: <center>
- * @param [radius]: 10
- * @param [start]: 0
- * @param [end]: 360
- */
-utils.circle = function circle(ctx, ...args) {
-  var x, y, radius, start, end;
-  [
-    x = ctx.canvas.width / 2,
-    y = ctx.canvas.height / 2,
-    radius = 10,
-    start = 0,
-    end = Math.PI * 2
-  ] = args;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, start, end);
-  ctx.closePath();
-  ctx.stroke();
-};
-
-
-utils.line = function line(ctx, ...args) {
-  ctx.beginPath();
-  if (typeof args[0] === 'string') {
-    ctx.strokeStyle = args.shift();
-  }
-  if (typeof args[0] === 'number') {
-    ctx.lineWidth = args.shift();
-  }
-  if (!args.length) return;
-  var point = args.shift();
-  ctx.moveTo(point[0], point[1]);
-  args.forEach(function(point) {
-    ctx.lineTo(point[0], point[1]);
-  });
-  ctx.stroke();
-};
-
-/**
- * polygone
- * @param [x]: <center>
- * @param [y]: <center>
- * @param [size]: 30
- * @param [sides]: 3
- */
-utils.polygone = function polygone(ctx, ...args) {
-  ctx.beginPath();
-  var sides, angle, i, x, y, lx, ly, size;
-  [
-    x,
-    y,
-    size = 30,
-    sides = 3
-  ] = args;
-  var shift = Math.PI * 0.5;
-  var rad = (Math.PI * 2) / sides;
-  for (i = 0; i < sides; i++) {
-    angle = rad * i + shift;
-    lx = Math.round(x + Math.cos(angle) * size);
-    ly = Math.round(y + Math.sin(angle) * size);
-    if (!i) {
-      ctx.beginPath();
-    }
-    ctx.lineTo(lx, ly);
-  }
-
-  ctx.closePath();
-  ctx.stroke();
-};
-
-
-utils.grid = function grid(width, height, itemsCount, rowsCount, process) {
-  process = typeof process === 'function' ? process : noop;
-  var r = 0,
-      c = 0,
-      xy = [0,0],
-      rowHeight = height / rowsCount,
-      columnsCount = itemsCount / rowsCount,
-      columnWidth = width / columnsCount
-  ;
-
-  // var args = [].slice.apply(arguments).map(item => typeof item);
-  // console.info(...args);
-  for (r = 0; r < rowsCount; r++) {
-    for (c = 0; c < columnsCount; c++) {
-      xy[1] = rowHeight * (r + 0.5);
-      xy[0] = columnWidth * (c + 0.5);
-      process(...xy);
-    }
-  }
-};
-
-
-/*
-function () {
-  var cx = width / 2;
-  var cy = height / 2;
-  var i = 0;
-  var r;
-  var s = -10;
-  fillStyle('#fff');
-  distribute(cx, cy, 12, cy, (layer.frametime % (360 * s)) / s, function(x, y, a) {
-    r = (cy / 12) * i;
-    fillText(a.toFixed(2), cx + (Math.cos(a) * r), cy + (Math.sin(a) * r));
-    i++;
-  });
+function sharedStart(array) {
+  var A = array.concat().sort(),
+      a1 = A[0],
+      a2 = A[A.length-1],
+      L = a1.length,
+      i = 0;
+  while(i < L && a1.charAt(i) === a2.charAt(i)) i++;
+  return a1.substring(0, i);
 }
-*/
-utils.distribute = function distribute(x, y, itemsCount, r, tilt, process) {
-  itemsCount = itemsCount || 2;
-  tilt = tilt || 0;
-  process = typeof process === 'function' ? process : noop;
-  var i, a, args;
-  var rad = Math.PI * 2;
-  for (i = 0; i < itemsCount; i++) {
-    a = ((rad / itemsCount) * i) - Math.PI + ((rad / 360) * tilt);
-    args = [
-      x + (Math.cos(a) * r),
-      y + (Math.sin(a) * r),
-      a
-    ];
-    process(...args);
+
+var SuggestionItem = View.extend({
+  template: '<li></li>',
+  derived: {
+    shortText: {
+      deps: ['model.text', 'model.collection.parent'],
+      fn: function() {
+        return this.model.text.substring(this.model.collection.parent.commonStart.length);
+      }
+    }
+  },
+  bindings: {
+    'model.active': {type: 'booleanClass', name: 'active'},
+    shortText: {type: 'text'}
+  },
+  events: {
+    click: '_handleClick'
+  },
+  _handleClick: function (evt) {
+    evt.preventDefault();
+    this.parent.trigger('selected', this.model.value || this.model.text);
+  }
+});
+
+var SuggestionView = View.extend({
+  autoRender: true,
+
+  attach: function (el, selectCb, newCollection) {
+    this.inputEl = typeof el === 'string' ? this.parent.query(el) : el;
+    selectCb = selectCb || function(selected) { this.inputEl.value = selected; this.detach(); }.bind(this);
+    this.off('selected');
+    this.once('selected', selectCb);
+
+    this._makeHintEl();
+
+    if (newCollection) {
+      if (newCollection.isCollection) {
+        this.collection = newCollection;
+      }
+      else {
+        this.collection.reset(newCollection);
+      }
+    }
+
+    this.filterCollection();
+
+    return this;
+  },
+
+  fill: function (arr) {
+    arr = typeof arr === 'function' ? arr(this.inputEl.value) : arr;
+    this.collection.reset(arr.map(function (v) { return {text:v}; }));
+    return this.filterCollection();
+  },
+
+  detach: function (done) {
+    done = done || function(){};
+    this._removeHintEl();
+    this.off('selected');
+    this.unset('inputEl');
+    this.collection.reset([]);
+    done();
+    return this;
+  },
+
+  filterCollection: function () {
+    var update = [];
+    if (!this.inputEl) {
+      update = this.collection.models;
+    }
+    else {
+      var inputElVal = this.inputEl.value || this.inputEl.value;
+
+      if (!inputElVal) {
+        update = this.collection.models;
+      }
+      else {
+        update = this.collection.filter(function (suggestion) {
+          return suggestion.text.indexOf(inputElVal) === 0;
+        });
+      }
+    }
+
+    if (update.length > 1) {
+      this.commonStart = sharedStart(update.map(function(state) { return state.text; }));
+    }
+    else if (update.length/* === 1*/) {
+      this.commonStart = update[0].text;
+      if (this.commonStart === this.inputEl.value) {
+        update = [];
+      }
+    }
+    else {
+      this.commonStart = '';
+      update = [];
+    }
+    this.suggestions.reset(update);
+    this.hasSuggestions = !!update.length;
+    if (this.hasSuggestions) this.suggestions.at(0).toggle('active');
+    return this;
+  },
+
+  derived: {
+    // creates an event listener with correct scope (ideal for add/removeEventListener)
+    _handleHintClick: {
+      deps: [],
+      fn: function() {
+        var view = this;
+        return function() {
+          if (!view.inputEl || !view.commonStart) return;
+          view.inputEl.value = view.commonStart;
+        };
+      }
+    },
+    styles: {
+      deps:['inputEl'],
+      fn: function() {
+        if (!this.inputEl) return {};
+        return window.getComputedStyle(this.inputEl);
+      }
+    }
+  },
+
+  session: {
+    hasSuggestions: 'boolean',
+    commonStart: 'string',
+    inputEl: 'element'
+  },
+
+  bindings: {
+    hasSuggestions: {
+      type: 'toggle'
+    },
+    commonStart: {
+      type: function() {
+        var el = this.suggestionHint;
+        if (!el) return;
+        el.textContent = this.commonStart;
+      }
+    }
+  },
+
+  _handleInput: function(evt) {
+    var suggestions = this.suggestions;
+    var activeState = suggestions.filter(function(state) {
+      return state.active;
+    })[0];
+    var activeIndex = activeState ? suggestions.indexOf(activeState) : -1;
+    var inputElVal = this.inputEl.value;
+
+
+    if (evt.type === 'keydown') {
+      // that way, autocomplete can be done using the Tab keyup
+      if (evt.key === 'Tab' && this.commonStart !== inputElVal) {
+        evt.preventDefault();
+      }
+      else if (evt.key === 'Enter') {
+        if (this.items.views[activeIndex]) {
+          this.items.views[activeIndex]._handleClick(evt);
+        }
+        else {
+          this.trigger('selected', inputElVal);
+        }
+      }
+      return;
+    }
+
+    // keyup
+    switch (evt.key) {
+      case 'ArrowRight':
+      case 'Tab':
+        this._handleHintClick();
+        break;
+      case 'ArrowUp':
+      case 'ArrowDown':
+        activeIndex += evt.key === 'ArrowDown' ? 1 : -1;
+
+        if (activeIndex < 0) {
+          activeIndex = suggestions.length - 1;
+        }
+        else if (activeIndex >= suggestions.length) {
+          activeIndex = 0;
+        }
+
+        suggestions.forEach(function(state, index) {
+          state.active = index === activeIndex;
+        });
+
+        this.query('li.active').scrollIntoView();
+        break;
+      default:
+        this.filterCollection();
+    }
+  },
+
+  _makeHintEl: function() {
+    var parentNode = this.inputEl.parentNode;
+    if (!parentNode) return this;
+    this._removeHintEl();
+
+    var div = this.suggestionHint = document.createElement('div');
+    div.className = 'suggestion--hint';
+    [
+      'display',
+      'paddingTop',
+      'paddingBottom',
+      'paddingLeft',
+      'paddingRight',
+      'marginTop',
+      'marginBottom',
+      'marginLeft',
+      'marginRight',
+      'top',
+      'bottom',
+      'left',
+      'right',
+      'borderWidth',
+      'borderStyle',
+      'lineHeight',
+      'fontSize',
+      'fontFamily',
+      'textAlign',
+      'color'
+    ].forEach(function(copy) {
+      div.style[copy] = this.styles[copy];
+    }, this);
+
+    div.style.cursor = 'pointer';
+    div.style.pointerEvents = 'none';
+    div.style.borderColor = 'transparent';
+    div.style.position = 'absolute';
+    div.style.zIndex = this.styles.zIndex + 1;
+    div.style.opacity = 0.5;
+
+    parentNode.appendChild(div);
+    this.inputEl.addEventListener('click', this._handleHintClick);
+  },
+
+  _removeHintEl: function() {
+    if (!this.suggestionHint || !this.suggestionHint.parentNode) return this;
+
+    this.inputEl.removeEventListener('click', this._handleHintClick);
+    this.suggestionHint.parentNode.removeChild(this.suggestionHint);
+    this.suggestionHint = null;
+    return this;
+  },
+
+  resetPosition: function() {
+    var view = this;
+    if (!view.el || !view.el.parentNode || !view.inputEl) { return view; }
+    view.el.style.visibility = 'hidden';
+
+    setTimeout(function () {
+      var parentNode = view.el.parentNode;
+      if (!view.el || !parentNode || !view.inputEl) { return; }
+      var ipos = view.inputEl.getBoundingClientRect();
+      var bpos = view.el.getBoundingClientRect();
+
+      // determine which of above or below has most available space and set position and max-height accordingly
+      if (ipos.top > parentNode.clientHeight * 0.5) {
+        view.el.style.maxHeight = Math.max(ipos.top, parentNode.clientHeight * 0.33) + 'px';
+        view.el.style.top = ((ipos.top - view.el.clientHeight) - 3) + 'px';
+      }
+      else {
+        view.el.style.maxHeight = Math.max(ipos.bottom, parentNode.clientHeight * 0.33) + 'px';
+        view.el.style.top = (ipos.bottom + 3) + 'px';
+      }
+
+      var s = window.getComputedStyle(view.inputEl);
+      var exceed = parentNode && (bpos.left + bpos.width) > parentNode.clientWidth;
+      view.el.style.textAlign = s.textAlign;
+      if (s.textAlign === 'right' || exceed) {
+        view.el.style.left = (ipos.left - (bpos.width - ipos.width)) + 'px';
+      }
+      else {
+        view.el.style.left = (ipos.left) + 'px';
+      }
+
+      view.el.style.visibility = 'visible';
+    });
+
+    return view;
+  },
+
+  initialize: function () {
+    if (!this.parent) { throw new Error('Suggestion view need a parent view'); }
+
+    this.collection = this.collection || new Collection([], {parent: this});
+
+    this.on('change:collection', function () {
+      this.listenToAndRun(this.collection, 'add remove reset', this.filterCollection);
+    });
+
+    this.listenTo(this.suggestions, 'add remove reset', this.resetPosition);
+
+    var _handleInput = this._handleInput.bind(this);
+
+    this.on('change:inputEl', function() {
+      var previous = this.previousAttributes();
+      if (previous.inputEl) {
+        previous.inputEl.removeEventListener('keydown', _handleInput);
+        previous.inputEl.removeEventListener('keyup', _handleInput);
+      }
+
+      var list = this.el;
+      var holderEl = this.parent.el;
+      var inputEl = this.inputEl;
+
+      if (!inputEl) {
+        if (this.el && this.el.parentNode === holderEl) {
+          holderEl.removeChild(this.el);
+        }
+        return;
+      }
+
+      if (!list || !holderEl) { return; }
+      if (list.parentNode !== holderEl) {
+
+        var holderElStyle = window.getComputedStyle(holderEl);
+        if (holderElStyle.position === 'static') {
+          holderEl.style.position = 'relative';
+        }
+
+        holderEl.appendChild(list);
+      }
+
+      this.resetPosition();
+      inputEl.addEventListener('keydown', _handleInput, false);
+      inputEl.addEventListener('keyup', _handleInput, false);
+    });
+
+    var _handleHolderClick = function (evt) {
+      if (evt.target !== this.inputEl && !this.el.contains(evt.target)) {
+        this.detach();
+      }
+    }.bind(this);
+
+    this.listenToAndRun(this.parent, 'change:el', function() {
+      var previous = this.parent.previousAttributes();
+      if (previous.el) {
+        previous.el.removeEventListener('click', _handleHolderClick);
+      }
+      if (this.parent.el) {
+        this.parent.el.addEventListener('click', _handleHolderClick, false);
+      }
+    });
+  },
+
+  collections: {
+    suggestions: Collection.extend({
+      model: State.extend({
+        props: {
+          active: 'boolean',
+          text: ['string', true, ''],
+          value: ['any', false, null]
+        }
+      })
+    })
+  },
+
+  template: '<ul class="suggestion-view"></ul>',
+
+  render: function () {
+    this.renderWithTemplate();
+
+    this.items = this.renderCollection(this.suggestions, SuggestionItem, this.el);
+
+    return this;
+  }
+});
+module.exports = SuggestionView;
+
+/***/ }),
+
+/***/ 378:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// http://plnkr.co/edit/6MVntVmXYUbjR0DI82Cr
+
+var mockedCtx = __webpack_require__(350);
+
+var entries = [].concat(mockedCtx._.properties, mockedCtx._.methods);
+
+
+// https://gist.github.com/andrei-m/982927#gistcomment-1931258
+function levenshteinDistance(a, b) {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  let tmp, i, j, prev, val, row;
+  // swap to save some memory O(min(a,b)) instead of O(a)
+  if (a.length > b.length) {
+    tmp = a;
+    a = b;
+    b = tmp;
+  }
+
+  row = Array(a.length + 1);
+  // init the row
+  for (i = 0; i <= a.length; i++) {
+    row[i] = i;
+  }
+
+  // fill in the rest
+  for (i = 1; i <= b.length; i++) {
+    prev = i;
+    for (j = 1; j <= a.length; j++) {
+      if (b[i-1] === a[j-1]) {
+        val = row[j-1]; // match
+      } else {
+        val = Math.min(row[j-1] + 1, // substitution
+              Math.min(prev + 1,     // insertion
+                       row[j] + 1));  // deletion
+      }
+      row[j - 1] = prev;
+      prev = val;
+    }
+    row[a.length] = prev;
+  }
+  return row[a.length];
+}
+
+var canvasCompleter = {
+  getCompletions: function(editor, session, pos, prefix, callback) {
+    // if (!prefix.length) { return callback(null, []); }
+    // console.info('canvasCompleter', editor, session, prefix);
+
+    var filtered = entries
+      .filter(function(entry) {
+        // console.info('distance', prefix, entry, levenshteinDistance(prefix, entry));
+        return !prefix || entry.indexOf(prefix) > -1;
+      })
+      .map(function(entry) {
+        return {
+          name: entry,
+          value: entry + '()',
+          score: 1,
+          meta: 'livecode'
+        };
+      });
+
+    callback(null, filtered);
   }
 };
+module.exports = canvasCompleter;
 
 
+/***/ }),
 
-utils.repeat = function repeat(times, process, ...args) {
-  process = typeof process === 'function' ? process : noop;
-  for (var i = 0; i < times; i++) {
-    process(i, ...args);
+/***/ 379:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var LayerControlView = __webpack_require__(346);
+var assign = __webpack_require__(15);
+var objectPath = __webpack_require__(347);
+
+var CanvasLayerDetailsView = __webpack_require__(380);
+
+var CanvasControlLayerView = LayerControlView.extend({
+  template: `
+    <section class="canvas-layer">
+      <header class="columns">
+        <div class="column no-grow"><button name="active"></button></div>
+        <h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>
+        <div class="column no-grow"><button class="edit-draw-function vfi-cog-alt"></button></div>
+        <div class="column no-grow"><button class="vfi-trash-empty" name="remove-canvas-layer"></button></div>
+      </header>
+    </section>
+  `,
+
+  events: {
+    'click .edit-draw-function': '_editDrawFunction',
+    'click .canvas-layer-name': '_showDetails'
+  },
+
+  commands: {
+    'click [name=remove-canvas-layer]': 'removeLayer _layerName',
+    'click [name="active"]': 'propChange _toggleActive',
+  },
+
+  _editDrawFunction: function () {
+    var rootView = this.rootView;
+    var path = objectPath(this.model);
+    rootView.getEditor({
+      tabName: this.model.getId() + ' drawFunction',
+      script: this.model.drawFunction || '',
+      language: 'javascript',
+      title: path + '.drawFunction',
+      onshoworigin: function() {
+        rootView.trigger('blink', path);
+      },
+      autoApply: true,
+      onvalidchange: function doneEditingCanvasDrawFunction(str) {
+        rootView.sendCommand('propChange', {
+          path: path,
+          property: 'drawFunction',
+          value: str
+        });
+      }
+    });
+  },
+
+  _showDetails: function () {
+    this.rootView.showDetails(new CanvasLayerDetailsView({
+      parent: this,
+      model: this.model
+    }));
+  },
+
+  bindings: {
+    'model.active': [
+      {
+        type: 'booleanClass',
+        name: 'disabled',
+        invert: true
+      },
+
+      {
+        type: 'booleanClass',
+        selector: '[name="active"]',
+        yes: 'vfi-toggle-on',
+        no: 'vfi-toggle-off'
+      }
+    ],
+
+    drawFunction: '[data-hook=drawFunction]',
+    'model.name': '[data-hook=name]',
+    'model.duration': '[data-hook=duration]',
+    'model.fps': '[data-hook=fps]',
+    'model.frametime': '[data-hook=frametime]'
   }
-};
+});
+
+module.exports = LayerControlView.types.canvas = LayerControlView.extend({
+  template: `
+    <section class="row canvas-control">
+      <header class="rows">
+        <div class="row columns">
+          <div class="column no-grow"><button class="active prop-toggle"></button></div>
+          <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
+          <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
+          <h3 class="column layer-name" data-hook="name"></h3>
+          <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
+        </div>
+
+        <div class="row columns new-layer">
+          <div class="column no-grow gutter"><label>New sub-layer</label></div>
+          <div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>
+          <div class="column no-grow">
+            <button name="add-layer" class="vfi-plus"></button>
+          </div>
+        </div>
+      </header>
+
+      <div class="layers">
+        <div class="items"></div>
+      </div>
+    </section>
+  `,
+
+  events: assign({
+    'change [data-hook=new-layer-name]': '_inputLayerName',
+    'click [name=add-layer]': '_addLayer'
+  }, LayerControlView.prototype.events),
+
+  _inputLayerName: function() {
+    this.query('[name=add-layer]').disabled = !this.queryByHook('new-layer-name').value.trim();
+  },
+
+  _addLayer: function(evt) {
+    evt.preventDefault();
+    var nameEl = this.queryByHook('new-layer-name');
+    var name = nameEl.value.trim();
+
+    var res = this.model.canvasLayers.add({
+      name: name,
+      drawFunction: 'function(ctx) {\n  // ' + name + ' drawFunction\n}'
+    });
+
+    if (!res) {
+      return;
+    }
+    nameEl.value = '';
+
+    this.rootView.sendCommand('propChange', {
+      path: objectPath(this.model),
+      property: 'canvasLayers',
+      value: this.model.canvasLayers.serialize()
+    });
+  },
+
+  initialize: function () {
+    LayerControlView.prototype.initialize.apply(this, arguments);
+    this.once('change:rendered', this._inputLayerName);
+  },
 
 
-utils.cacheContext = function cacheContext(ctx, cache, max) {
-  max = max || 0;
-  if (!max) return;
+  subviews: {
+    canvasLayersView: {
+      waitFor: 'el',
+      selector: '.layers .items',
+      prepareView: function (el) {
+        return this.renderCollection(this.model.canvasLayers, CanvasControlLayerView, el);
+      }
+    }
+  }
+});
 
+/***/ }),
+
+/***/ 380:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var assign = __webpack_require__(15);
+var LayerDetailsView = __webpack_require__(151);
+
+var CanvasLayerDetailsView = LayerDetailsView.extend({
+  template: `
+    <section>
+      <header>
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small>sublayer</small></h3>
+          <div class="columns no-grow column">
+            <div class="column no-grow"><button name="edit-draw-function">Draw</button></div>
+            <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+          </div>
+        </div>
+        <h5 data-hook="object-path"></h5>
+      </header>
+
+      <div class="rows row param-section">
+        <h5>Canvas layer parameters</h5>
+        <div class="row columns">
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row parameters" ></div>
+      </div>
+    </section>
+  `,
+
+  events: assign({
+    'click [name=edit-draw-function]': '_editDrawFunction'
+  }, LayerDetailsView.prototype.bindings),
+
+  _editDrawFunction: function() {
+    this.editFunction('drawFunction');
+  }
+});
+
+module.exports = CanvasLayerDetailsView;
+
+/***/ }),
+
+/***/ 381:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/* global module */
+module.exports = function lineGrid(ctx) {
+  ctx.strokeStyle = this.lineColor || '#000';
+  ctx.fillStyle = this.lineColor || '#000';
+  var rows = Math.max(this.pointRows || 4, 1);
+  var lw = this.lineWidth || 0;
+  var radius = Math.max(this.pointRadius || lw, 1);
+  var vol = this.screenState.audio.timeDomain;
+  var freq = this.screenState.audio.frequency;
+  var count = vol.length;//Math.max(this.pointsCount || 1, 1);
+  var twoPI = Math.PI * 2;
   var w = ctx.canvas.width;
   var h = ctx.canvas.height;
-  cache.unshift(ctx.getImageData(0, 0, w, h));
-  if (cache.length >= max) cache.pop();
-};
+  var sh = h / rows;
+  var cols = Math.round(count / rows);
+  var sw = w / cols;
+  var row = -0.5;
+  var prow;
+  // var rand = this.randFactor || 0;
+  var i;
+  var x;
+  var y;
+  var px;
+  var py;
+  var p;
+  var point;
+  var points = [];
 
-utils.restoreContexts = function restoreContexts(ctx, cache, count, preprocess, postprocess) {
-  count = count || 1;
-  preprocess = preprocess || noop;
-  postprocess = postprocess || noop;
-  // console.info(cache.length);
-  for (var c = 1; c < count && c < cache.length; c++) {
-    if (cache[c] instanceof ImageData) {
-      try {
-        ctx.putImageData(preprocess(cache[c]), 0, 0);
-        postprocess();
+
+  // function random(factor) {
+  //   factor = factor || rand;
+  //   return Math.random() * rand * (Math.random() > 0.5 ? 1 : -1);
+  // }
+
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = lw;
+  for (i = 0; i < count; i++) {
+    if (i % cols < 1) {
+      row++;
+    }
+    y = (sh * row) + (freq[i] - 12);// + random(freq[i]);
+    x = (sw * 0.5) + (sw * (i % cols));// + (freq[i] - 12);// + random(freq[i]);
+    points.push([x, y]);
+
+    if (lw) {
+      if (!px) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
       }
-      catch (e) {
-        console.info(e.message, cache[c] instanceof ImageData);
+      else {
+        if (row != prow) {
+          ctx.stroke();
+          ctx.moveTo(x, y);
+        }
+        else {
+          ctx.lineTo(x, y);
+        }
       }
     }
+
+    px = x;
+    py = y;
+    prow = row;
+  }
+  ctx.stroke();
+  ctx.closePath();
+
+  for (p in points) {
+    point = points[p];
+    ctx.beginPath();
+    ctx.arc(point[0], point[1], Math.min(Math.max(vol[p] * radius * 0.01, 1), sh * 0.5), 0, twoPI);
+    ctx.closePath();
+    ctx.fill();
   }
 };
 
 
 /***/ }),
 
-/***/ 663:
+/***/ 382:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var mockedCtx = __webpack_require__(657);
-var utils = __webpack_require__(662);// jshint ignore:line
+/*global module, require*/
+module.exports = {
+  grid: __webpack_require__(381),
+  roundFrequencies: __webpack_require__(383)
+};
 
-// proxy the method and parameters of the canvas context
-var ctxProperties = '';
-mockedCtx._.methods
-  .forEach(function(name) {
-    ctxProperties += '\nvar ' + name + ' = function(...args) { try { ctx.' + name + '(...args); } catch(e){} };';
+/***/ }),
+
+/***/ 383:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/* global module */
+module.exports = function roundFrequencies(ctx) {
+  var audio = this.screenState.audio || {};
+  var bufferLength = audio.bufferLength;
+  var freqArray = audio.frequency;
+  var timeDomainArray = audio.timeDomain;
+
+  if (!bufferLength || !freqArray || !timeDomainArray) return;
+
+  var x = ctx.canvas.width * 0.5;
+  var y = ctx.canvas.height * 0.5;
+  var r = Math.min(x, y) - 20;
+  // var first;
+  var rad = Math.PI * 2;
+
+  var i = 0, a, td, lx, ly;
+  var original = {
+    lineWidth: ctx.lineWidth,
+    lineCap: ctx.lineCap,
+    lineJoin: ctx.lineJoin,
+    strokeStyle: ctx.strokeStyle,
+  };
+
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  ctx.strokeStyle = 'red';
+  var col;
+  for (var lw = y*2; lw >= y*0.2; lw-=y*0.2) {
+    col = col === 'white' ? 'black' : 'white';
+    ctx.strokeStyle = col;
+    ctx.lineWidth = lw;
+
+    // ctx.beginPath();
+    // for (i = 0; i < bufferLength; i++) {
+    //   a = ((rad / bufferLength) * i) - Math.PI;
+    //   f = (r / 100) * (freqArray[i] / 2);
+    //   lx = Math.round(x + Math.cos(a) * f);
+    //   ly = Math.round(y + Math.sin(a) * f);
+    //   ctx.lineTo(lx, ly);
+    // }
+    // ctx.stroke();
+
+    ctx.beginPath();
+    for (i = 0; i < bufferLength; i++) {
+      a = ((rad / bufferLength) * i) - Math.PI;
+      td = (r / 100) * (timeDomainArray[i] / 2);
+      lx = Math.round(x + Math.cos(a) * td);
+      ly = Math.round(y + Math.sin(a) * td);
+      ctx.lineTo(lx, ly);
+    }
+    ctx.stroke();
+  }
+
+  ctx.lineWidth = original.lineWidth;
+  ctx.lineCap = original.lineCap;
+  ctx.lineJoin = original.lineJoin;
+  ctx.strokeStyle = original.strokeStyle;
+};
+
+
+/***/ }),
+
+/***/ 384:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/* global module */
+var _cacheImgs = {};
+function loadImg(url, done) {
+  // loaded
+  if (_cacheImgs[url]) {
+    return done(null, _cacheImgs[url]);
+  }
+  // loading
+  if (_cacheImgs[url] === false) {
+    return done();
+  }
+
+  var img = new Image();
+  _cacheImgs[url] = false;
+  img.onload = function() {
+    _cacheImgs[url] = img;
+  };
+  img.src = url;
+}
+
+var _cacheVideos = {};
+function loadVideo(url, done) {
+  // loaded
+  if (_cacheVideos[url]) {
+    return done(null, _cacheVideos[url]);
+  }
+  // loading
+  if (_cacheVideos[url] === false) {
+    return done();
+  }
+
+  var video = document.createElement('video');
+  _cacheVideos[url] = false;
+
+  video.loop = true;
+  video.autoplay = true;
+  video.autostart = true;
+  video.muted = true;
+  video.volume = 0;
+  video.controls = false;
+  video.oncanplaythrough = function() {
+    if (_cacheVideos[url]) return;
+    video.width = video.videoWidth;
+    video.height = video.videoHeight;
+    _cacheVideos[url] = video;
+  };
+  video.src = url;
+}
+
+
+
+module.exports = {
+  img: loadImg,
+  video: loadVideo
+};
+
+/***/ }),
+
+/***/ 385:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*global module, require*/
+module.exports = {
+  wrap: __webpack_require__(386)
+};
+
+/***/ }),
+
+/***/ 386:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* global module */
+
+// borrowed from http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
+module.exports = function wrapText(context, text, x, y, maxWidth, lineHeight) {
+  var words = text.split(' ');
+  var line = '';
+
+  for(var n = 0; n < words.length; n++) {
+    var testLine = line + words[n] + ' ';
+    var metrics = context.measureText(testLine);
+    var testWidth = metrics.width;
+    if (testWidth > maxWidth && n > 0) {
+      context.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    }
+    else {
+      line = testLine;
+    }
+  }
+  context.fillText(line, x, y);
+};
+
+/***/ }),
+
+/***/ 387:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*global module */
+module.exports = function fps(ctx) {
+  var cx = ctx.canvas.width * 0.5;
+  var cy = ctx.canvas.height * 0.5;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = (cy * 0.25) + 'px monospace';
+
+  var cache = this.cache;
+  var screen = this.screenState;
+
+  cache.previous = cache.previous || 0;
+  var fps = Math.round(1000 / (screen.frametime - cache.previous)) + 'fps';
+  ctx.lineWidth = 3;
+  ctx.fillStyle = '#000';
+  ctx.strokeStyle = '#fff';
+  ctx.fillText(fps, cx, cy);
+  ctx.strokeText(fps, cx, cy);
+  cache.previous = screen.frametime;
+};
+
+/***/ }),
+
+/***/ 388:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*global module */
+module.exports = function frametime(ctx) {
+  var cx = ctx.canvas.width * 0.5;
+  var cy = ctx.canvas.height * 0.5;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = (cy * 0.25) + 'px monospace';
+  var ft = Math.round(this.screenState.frametime) + 'ms';
+  ctx.fillStyle = '#000';
+  ctx.strokeStyle = '#fff';
+  ctx.fillText(ft, cx, cy);
+  ctx.strokeText(ft, cx, cy);
+};
+
+/***/ }),
+
+/***/ 389:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*global module, require*/
+module.exports = {
+  fps: __webpack_require__(387),
+  frametime: __webpack_require__(388)
+};
+
+/***/ }),
+
+/***/ 392:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var ScreenLayerControlView = __webpack_require__(346);
+module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.extend({
+});
+
+/***/ }),
+
+/***/ 394:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(346);
+
+var LayerControlView = __webpack_require__(346);
+__webpack_require__(379);
+__webpack_require__(398);
+__webpack_require__(392);
+__webpack_require__(405);
+__webpack_require__(403);
+__webpack_require__(395);
+__webpack_require__(401);
+
+var LayersView = View.extend({
+  commands: {
+    'click [name="add-layer"]': 'addLayer _addLayer'
+  },
+
+  events:{
+    'focus [data-hook="layer-type"]': '_suggestLayerType'
+  },
+
+  bindings: {},
+
+  _suggestLayerType: function() {
+    var helper = this.parent.suggestionHelper;
+    var el = this.queryByHook('layer-type');
+    helper.attach(el, function(selected) {
+      el.value = selected;
+      helper.detach();
+    }).fill(Object.keys(LayerControlView.types));
+  },
+
+  _addLayer: function() {
+    var typeEl = this.queryByHook('layer-type');
+    var nameEl = this.queryByHook('layer-name');
+    var type = typeEl.value;
+    var name = nameEl.value;
+    if (!type || !name) { return; }
+    return {
+      layer: {
+        name: name,
+        type: type
+      }
+    };
+  },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+    this.items = this.renderCollection(this.collection, function (opts) {
+      var type = opts.model.getType();
+      var Constructor = LayerControlView.types[type] || LayerControlView;
+      return new Constructor(opts);
+    }, '.items');
+    return this;
+  },
+
+  template: `
+    <section class="row layers">
+      <header class="columns">
+        <div class="column no-grow gutter">
+          <label for="new-layer-name">New layer</label>
+        </div>
+        <div class="column">
+          <input id="new-layer-name" data-hook="layer-name" placeholder="Name" type="text"/>
+        </div>
+        <div class="column">
+          <input data-hook="layer-type" placeholder="Type" type="text"/>
+        </div>
+        <div class="column no-grow">
+          <button name="add-layer" class="vfi-plus"></button>
+        </div>
+      </header>
+      <div class="items"></div>
+    </section>
+  `
+});
+module.exports = LayersView;
+
+/***/ }),
+
+/***/ 395:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var LayerControlView = __webpack_require__(346);
+var P5DetailsView = __webpack_require__(396);
+var assign = __webpack_require__(15);
+
+var P5LayerControlView = LayerControlView.types.p5 = LayerControlView.extend({
+  template: `
+    <section class="default-layer-control">
+      <header class="columns">
+        <div class="column no-grow"><button class="active prop-toggle"></button></div>
+        <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
+        <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
+        <h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>
+        <div class="column columns no-grow">
+          <div class="column no-grow text-right"><button name="edit-setup-function">setup</button></div>
+          <div class="column no-grow text-right"><button name="edit-draw-function">draw</button></div>
+          <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
+        </div>
+      </header>
+
+      <div class="preview gutter-horizontal"></div>
+
+      <div class="mappings props"></div>
+    </section>
+  `,
+
+  events: assign(LayerControlView.prototype.events, {
+    'click [name=edit-setup-function]': '_editSetupFunction',
+    'click [name=edit-draw-function]': '_editDrawFunction'
+  }),
+
+  _editSetupFunction: function() {
+    this.editFunction('setupFunction');
+  },
+  _editDrawFunction: function() {
+    this.editFunction('drawFunction');
+  },
+
+  _showDetails: function () {
+    this.rootView.showDetails(new P5DetailsView({
+      parent: this,
+      model: this.model
+    }));
+  }
+});
+module.exports = P5LayerControlView;
+
+/***/ }),
+
+/***/ 396:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(15);
+var DetailsView = __webpack_require__(151);
+
+module.exports = DetailsView.types.p5 = DetailsView.extend({
+  template: `
+    <section>
+      <header>
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+          <div class="column no-grow columns">
+            <div class="column no-grow"><button class="yes" title="Edit setup function" name="edit-setup-function">setup</button></div>
+            <div class="column no-grow"><button class="yes" title="Edit draw function" name="edit-draw-function">draw</button></div>
+            <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+          </div>
+        </div>
+        <h5 data-hook="object-path"></h5>
+      </header>
+
+      <div class="rows row param-section">
+        <h5>CSS variables</h5>
+        <div class="row columns">
+          <div class="columns"><input type="text" name="style-prop-name" placeholder="--css-var-name" /></div>
+          <div class="columns"><input type="text" name="style-prop-default" placeholder="2px, 100%, " /></div>
+          <div class="columns no-grow"><button name="style-prop-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row style-props" ></div>
+      </div>
+
+      <div class="rows row param-section">
+        <h5>Layer properties</h5>
+        <div class="row mappings props"></div>
+      </div>
+    </section>
+  `,
+
+  events: assign(DetailsView.prototype.events, {
+    'click [name=edit-setup-function]': '_editSetupFunction',
+    'click [name=edit-draw-function]': '_editDrawFunction'
+  }),
+
+  _editSetupFunction: function() {
+    this.editFunction('setupFunction');
+  },
+
+  _editDrawFunction: function() {
+    this.editFunction('drawFunction');
+  }
+});
+
+/***/ }),
+
+/***/ 398:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(15);
+var ScreenLayerControlView = __webpack_require__(346);
+var SVGDetailsView = __webpack_require__(399);
+
+module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
+  template: `
+    <section class="svg-layer-control">
+      <header class="columns">
+        <div class="column no-grow"><button class="active prop-toggle"></button></div>
+        <div class="column no-grow"><button title="Edit layer CSS" class="edit-css vfi-code"></button></div>
+        <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
+        <h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>
+        <div class="column columns no-grow">
+          <div class="column no-grow text-right"><button name="edit-svg-css">CSS</button></div>
+          <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
+        </div>
+      </header>
+
+      <div class="preview gutter-horizontal"></div>
+
+      <div class="mappings props"></div>
+    </section>
+  `,
+
+  events: assign(ScreenLayerControlView.prototype.events, {
+    'click [name=edit-svg-css]': '_editSvgStyles'
+  }),
+
+  session: {
+    svgStyles: ['object', true, function() { return {}; }]
+  },
+
+  _editSvgStyles: SVGDetailsView.prototype._editSvgStyles,
+
+  _showDetails: function () {
+    this.rootView.showDetails(new SVGDetailsView({
+      parent: this,
+      model: this.model
+    }));
+  }
+});
+
+/***/ }),
+
+/***/ 399:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var DetailsView = __webpack_require__(151);
+var propNamesExtractor = __webpack_require__(360);
+var assign = __webpack_require__(15);
+
+var SVGDetailsView = DetailsView.extend({
+  template: `
+    <section>
+      <header>
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+          <div class="column no-grow columns">
+            <div class="column no-grow"><button class="yes" name="edit-svg-styles">CSS</button></div>
+            <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+          </div>
+        </div>
+        <h5 data-hook="object-path"></h5>
+      </header>
+
+      <div class="rows row param-section">
+        <h5>Parameters</h5>
+        <div class="row columns">
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row parameters" ></div>
+      </div>
+    </section>
+  `,
+
+
+  events: assign(DetailsView.prototype.events, {
+    'click [name=show-origin]': '_showOrigin',
+    'click [name=edit-svg-styles]': '_editSvgStyles',
+    'click [name=style-prop-add]': 'addParameter'
+  }),
+
+  _editSvgStyles: function() {
+    var view = this;
+    var id = view.model.getId();
+
+    var cssStr = '';
+
+    var styles = view.model.svgStyles;
+    var selectors = Object.keys(styles);
+    selectors.forEach(function(selector) {
+      cssStr += `${ selector } {\n  ${ styles[selector].split(';').map(s => s.trim()).join(';\n  ').trim() }\n}`;
+    });
+
+    view.rootView.getEditor({
+      tabName: id + ' SVG CSS',
+      script: cssStr,
+      language: 'css',
+      title: id + ' layer styles',
+      onshoworigin: function() {
+        view.rootView.trigger('blink', 'layers.' + id);
+      },
+      autoApply: true,
+      onvalidchange: function (str) {
+        var parsed = {};
+        str.split(/([^\{\}]+\{[^\{\}]+\})/igm).forEach(function(match) {
+          match = match.trim();
+          if (!match) return;
+          match = match.split('{').map(s => s.split('}')[0].trim());
+          parsed[match[0]] = match[1];
+        });
+
+        view.sendCommand('propChange', {
+          path: 'layers.' + id,
+          property: 'svgStyles',
+          value: parsed
+        });
+      }
+    });
+  },
+
+  derived: {
+    propNames: {
+      deps: ['model'],
+      fn: function() {
+        return propNamesExtractor(this.model, [
+          'content',
+          'svgStyles',
+          'layerStyles'
+        ]);
+      }
+    }
+  }
+});
+
+module.exports = SVGDetailsView;
+
+/***/ }),
+
+/***/ 401:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var ThreeJSDetailsView = __webpack_require__(402);
+var assign = __webpack_require__(15);
+
+var ScreenLayerControlView = __webpack_require__(346);
+module.exports = ScreenLayerControlView.types.threejs = ScreenLayerControlView.extend({
+  template: `
+    <section class="default-layer-control">
+      <header class="columns">
+        <div class="column no-grow"><button class="active prop-toggle"></button></div>
+        <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
+        <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
+        <h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>
+        <div class="column columns no-grow">
+          <div class="column no-grow text-right"><button name="edit-render-function">render</button></div>
+          <div class="column no-grow text-right"><button name="edit-update-function">update</button></div>
+          <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
+        </div>
+      </header>
+
+      <div class="preview gutter-horizontal"></div>
+
+      <div class="mappings props"></div>
+    </section>
+  `,
+
+  events: assign(ScreenLayerControlView.prototype.events, {
+    'click [name=edit-render-function]': '_editRenderFunction',
+    'click [name=edit-update-function]': '_editUpdateFunction'
+  }),
+
+  _editRenderFunction: function() {
+    this.editFunction('renderFunction');
+  },
+  _editUpdateFunction: function() {
+    this.editFunction('updateFunction');
+  },
+
+  _showDetails: function () {
+    this.rootView.showDetails(new ThreeJSDetailsView({
+      parent: this,
+      model: this.model
+    }));
+  }
+});
+
+/***/ }),
+
+/***/ 402:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var DetailsView = __webpack_require__(151);
+var assign = __webpack_require__(15);
+var propNamesExtractor = __webpack_require__(360);
+
+var ThreeJSDetailsView = DetailsView.extend({
+  template: `
+    <section>
+      <header>
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+          <div class="column no-grow columns">
+            <div class="column no-grow"><button class="yes" title="Edit render function" name="edit-render-function">Render</button></div>
+            <div class="column no-grow"><button class="yes" title="Edit update function" name="edit-update-function">Update</button></div>
+            <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
+          </div>
+        </div>
+        <h5 data-hook="object-path"></h5>
+      </header>
+
+      <div class="rows row param-section">
+        <h5>Parameters</h5>
+        <div class="row columns">
+          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+          <div class="column"><select name="parameter-type">
+            <option value="string">string</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+            <option value="any">any</option>
+          </select></div>
+          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+        </div>
+        <div class="row parameters" ></div>
+      </div>
+    </section>
+  `,
+
+  events: assign(DetailsView.prototype.events, {
+    'click [name=edit-render-function]': '_editRenderFunction',
+    'click [name=edit-update-function]': '_editUpdateFunction'
+  }),
+
+  _editRenderFunction: function() {
+    this.editFunction('renderFunction');
+  },
+  _editUpdateFunction: function() {
+    this.editFunction('updateFunction');
+  },
+
+  derived: {
+    propNames: {
+      deps: ['model'],
+      fn: function() {
+        return propNamesExtractor(this.model, [
+          'renderFunction',
+          'updateFunction',
+          'layerStyles'
+        ]);
+      }
+    }
+  }
+});
+
+module.exports = ThreeJSDetailsView;
+
+/***/ }),
+
+/***/ 403:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var LayerControlView = __webpack_require__(346);
+var TxtLayerControlView = LayerControlView.types.txt = LayerControlView.extend({
+});
+module.exports = TxtLayerControlView;
+
+/***/ }),
+
+/***/ 405:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var ScreenLayerControlView = __webpack_require__(346);
+module.exports = ScreenLayerControlView.types.video = ScreenLayerControlView.extend({
+});
+
+/***/ }),
+
+/***/ 407:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var Collection = __webpack_require__(16);
+var State = __webpack_require__(11);
+var View = __webpack_require__(345);
+var uniq = __webpack_require__(94);
+
+function filterEmpty(v) { return !!v; }
+
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
+function sourceSuggestions(origin) {
+  var results = [];
+  if (!origin || typeof origin !== 'object') return results;
+
+  var kepts = [];
+  if (origin.mappable && origin.mappable.source) {
+    kepts = (origin.mappable.source || []);
+  }
+
+  function filterKeys(key) {
+    var excluded = [
+      'mappable',
+      'parent',
+      'collection',
+      origin.idAttribute,
+      origin.typeAttribute
+    ];
+    return excluded.indexOf(key) < 0 && kepts.indexOf(key) > -1;
+  }
+
+  var proto = origin.constructor && origin.constructor.prototype ? origin.constructor.prototype : {};
+  var propNames = Object.keys(proto._definition || {});
+  var derivedNames = Object.keys(proto._derived || {});
+  var childNames = Object.keys(proto._children || {});
+  var collectionNames = Object.keys(proto._collections || {});
+
+  propNames.concat(derivedNames, childNames)
+    .filter(filterKeys)
+    .forEach(function(key) {
+      var sub = sourceSuggestions(origin[key]);
+      if (!sub.length) {
+        if (childNames.indexOf(key) < 0) {
+          results.push(key);
+        }
+        return;
+      }
+
+      results = results.concat(sub.map(function(name) {
+        return key + '.' + name;
+      }));
+    });
+
+  kepts.concat(collectionNames)
+    .filter(filterKeys)
+    .forEach(function(collectionName) {
+      if (!origin[collectionName] || typeof origin[collectionName].forEach !== 'function') return;
+
+      origin[collectionName].forEach(function(model) {
+        var id = model.getId();
+        var suggestions = sourceSuggestions(model);
+        results = results.concat(suggestions.filter(filterEmpty).map(function(name) {
+          return collectionName + '.' + id + '.' + name;
+        }));
+      });
+    });
+
+  return uniq(results);
+}
+
+
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
+function targetSuggestions(origin) {
+  var results = [];
+  if (!origin || typeof origin !== 'object') return results;
+  var kepts = [];
+  if (origin.mappable && origin.mappable.target) {
+    kepts = (origin.mappable.target || []);
+  }
+
+  function filterKeys(key) {
+    var excluded = [
+      'mappable',
+      'parent',
+      'collection',
+      origin.idAttribute,
+      origin.typeAttribute
+    ];
+    return excluded.indexOf(key) < 0 && kepts.indexOf(key) > -1;
+  }
+
+  var proto = origin.constructor && origin.constructor.prototype ? origin.constructor.prototype : {};
+  var propNames = Object.keys(proto._definition || {});
+  var childNames = Object.keys(proto._children || {});
+  var collectionNames = Object.keys(proto._collections || {});
+
+  propNames.concat(childNames)
+    .filter(filterKeys)
+    .forEach(function(key) {
+      var sub = targetSuggestions(origin[key]);
+      if (!sub.length) {
+        if (childNames.indexOf(key) < 0) {
+          results.push(key);
+        }
+        return;
+      }
+
+      results = results.concat(sub.map(function(name) {
+        return key + '.' + name;
+      }));
+    });
+
+  kepts.concat(collectionNames)
+    .filter(filterKeys)
+    .forEach(function(collectionName) {
+      if (!origin[collectionName] || typeof origin[collectionName].forEach !== 'function') return;
+
+      origin[collectionName].forEach(function(model) {
+        var id = model.getId();
+        var suggestions = targetSuggestions(model);
+        results = results.concat(suggestions.filter(filterEmpty).map(function(name) {
+          return collectionName + '.' + id + '.' + name;
+        }));
+      });
+    });
+
+  return uniq(results);
+}
+
+
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
+var EmitterTargetView = View.extend({
+  template: `<div class="mapping-emitter-target-view columns">
+  <div class="column"><input type="text" name="target-path" /></div>
+  <div class="column no-grow"><button name="remove-target" class="vfi-trash-empty"></button></div>
+</div>`,
+
+  bindings: {
+    'model.path': {
+      type: 'value',
+      selector: '[name="target-path"]'
+    }
+  },
+
+  events: {
+    'focus [name="target-path"]': '_handleTargetPathFocus',
+    'change [name="target-path"]': '_handleTargetPathChange',
+    'click [name="remove-target"]': '_handleRemoveTarget'
+  },
+
+  _handleTargetPathFocus: function(evt) {
+    var targetView = this;
+    var rootView = targetView.rootView;
+    var suggestions = targetSuggestions({layers: rootView.model.layers, signals: rootView.signals, mappable: {target: ['layers', 'signals']}});
+    var index = targetView.collection.indexOf(targetView.model);
+    var mapping = targetView.parent.model;
+    rootView.suggestionHelper.attach(evt.target, function(selected) {
+      mapping.targets[index] = selected;
+      targetView.parent.updateWorkerMapping();
+      rootView.suggestionHelper.detach();
+    }).fill(suggestions);
+  },
+
+  _handleTargetPathChange: function(evt) {
+    this.model.path = evt.target.value;
+    this.parent.updateWorkerMapping();
+  },
+
+  _handleRemoveTarget: function() {
+    this.collection.remove(this.model);
+    this.parent.updateWorkerMapping();
+  }
+});
+
+
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
+var EmitterView = View.extend({
+  initialize: function() {
+    this.listenToAndRun(this.model, 'change:targets', function() {
+      this.targets.reset((this.model.targets || []).map(function(path) {
+        return {path: path};
+      }));
+    });
+  },
+
+  collections: {
+    targets: Collection.extend({
+      model: State.extend({
+        props: {
+          path: 'string'
+        }
+      })
+    })
+  },
+
+  template: `<section class="mapping-emitter-view">
+  <header class="columns">
+    <div class="column emitter-name gutter"></div>
+    <div class="column no-grow"><button name="edit-transform-function" class="vfi-code"></button></div>
+    <div class="column"><input type="text" name="emitter-source" /></div>
+    <div class="column no-grow"><button name="remove-emitter" class="vfi-trash-empty"></button></div>
+  </header>
+  <div class="columns">
+    <div class="column"><input type="text" name="new-emitter-target" placeholder="new target path" /></div>
+    <div class="column no-grow"><button name="add-emitter-target" class="vfi-plus"></button></div>
+  </div>
+  <div class="items"></div>
+</section>`,
+
+  bindings: {
+    'model.name': '.emitter-name',
+    'model.source': {
+      type: 'value',
+      selector: '[name="emitter-source"]'
+    }
+  },
+
+  events: {
+    'click [name="remove-emitter"]': '_handleRemoveEmitter',
+    'focus [name="new-emitter-target"]': '_handleEmitterTargetPathFocus',
+    'click [name="add-emitter-target"]': '_handleAddEmitterTarget',
+    'click [name="edit-transform-function"]': '_handleEditEmitterTransform'
+  },
+
+  _handleRemoveEmitter: function() {
+    this.rootView.sendCommand('removeMapping', {name: this.model.getId()});
+  },
+
+  updateWorkerMapping: function(serialized) {
+    if (!serialized) {
+      serialized = this.model.serialize();
+      serialized.targets = this.targets.serialize().map(function(obj) { return obj.path; });
+    }
+    this.rootView.sendCommand('updateMapping', {mapping: serialized});
+  },
+
+  _handleEmitterTargetPathFocus: function(evt) {
+    var view = this;
+    var rootView = view.rootView;
+    var suggestions = targetSuggestions({layers: rootView.model.layers, signals: rootView.signals, mappable: {target: ['layers', 'signals']}});
+
+    rootView.suggestionHelper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      view._handleAddEmitterTarget();
+      rootView.suggestionHelper.detach();
+    }).fill(suggestions);
+  },
+
+  _handleAddEmitterTarget: function() {
+    var el = this.query('[name="new-emitter-target"]');
+    if (this.model.targets.indexOf(el.value) < 0) {
+      this.targets.add({path: el.value});
+      this.updateWorkerMapping();
+    }
+    el.value = '';
+  },
+
+  _handleEditEmitterTransform: function() {
+    var mappingView = this;
+    var rootView = this.rootView;
+    var model = this.model;
+    rootView.getEditor({
+      tabName: this.model.getId() + ' transformation',
+      script: (model.transformFunction || function(val) { return val; }).toString(),
+      autoApply: true,
+      language: 'javascript',
+      onvalidchange: function doneEditingTransformFunction(str) {
+        var mapping = model.serialize();
+        mapping.transformFunction = str;
+        mappingView.updateWorkerMapping(mapping);
+      }
+    });
+  },
+
+  subviews: {
+    mappingsList: {
+      waitFor: 'targets',
+      selector: '.items',
+      prepareView: function(el) {
+        return this.renderCollection(this.targets, EmitterTargetView, el);
+      }
+    }
+  },
+
+  derived: {
+    codeEditor: {
+      deps: ['rootView'],
+      fn: function () {
+        return this.rootView.codeEditor;
+      }
+    }
+  }
+});
+
+
+/**********************************************************************************\
+ *                                                                                *
+ *                                                                                *
+\**********************************************************************************/
+var MappingsControlView = View.extend({
+  template: `<section class="mappings-view">
+  <header>
+    <div class="add-form columns">
+      <div class="column add-form--name">
+        <input placeholder="new mapping name" name="new-source-name" />
+      </div>
+
+      <div class="column add-form--source-path">
+        <input placeholder="new source event" name="new-source-path" />
+      </div>
+
+      <div class="column no-grow">
+        <button name="add-mapping" class="vfi-plus"></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="items"></div>
+</section>`,
+
+  events: {
+    'focus [name=new-source-path]': '_handleSourceFocus',
+  },
+
+  _handleSourceFocus: function(evt) {
+    var rootView = this.rootView;
+    var helper = rootView.suggestionHelper;
+    var midiSources = this.rootView.midiSources();
+
+    var results = [];
+    rootView.signals.forEach(function(model) {
+      var id = model.getId();
+      results = results.concat(sourceSuggestions(model).filter(filterEmpty).map(function(name) {
+        return 'signals.' + id + '.' + name;
+      }));
+    });
+
+    results = midiSources.concat(results);
+
+    helper.attach(evt.target, function(selected) {
+      evt.target.value = selected;
+      helper.detach();
+    }).fill(results);
+  },
+
+  commands:{
+    'click [name="add-mapping"]': 'addMapping _handleAddMapping'
+  },
+
+  _handleAddMapping: function() {
+    return {
+      mapping: {
+        name: this.query('[name="new-source-name"]').value,
+        source: this.query('[name="new-source-path"]').value
+      }
+    };
+  },
+
+
+  derived: {
+    suggestionHelper: {
+      deps: ['rootView'],
+      fn: function () {
+        return this.rootView.suggestionHelper;
+      }
+    }
+  },
+
+  render: function() {
+    View.prototype.render.apply(this, arguments);
+    this.mappingsList = this.renderCollection(this.collection, EmitterView, this.query('.items'));
+    return this;
+  }
+});
+
+module.exports = MappingsControlView;
+
+/***/ }),
+
+/***/ 408:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function toPrct(val) {
+  return (100 / 127) * (val || 0);
+}
+
+var mappings = {
+  prefix: '<something>',
+
+  type: {
+    128: 'noteOn',
+    144: 'noteOff',
+    176: 'change',
+    192: 'search',
+    248: 'idle'
+  },
+
+  note: {
+    1: 'k1',
+    2: 'k2',
+    3: 'k3',
+    4: 'k4',
+    5: 'k5',
+    6: 'k6',
+    7: 'k7',
+    8: 'k8',
+
+    36: 'p1',
+    38: 'p2',
+    40: 'p3',
+    41: 'p4',
+    43: 'p5',
+    45: 'p6',
+    47: 'p7',
+    48: 'p8',
+  },
+
+  velocity: {
+    0: function(type, note, velocity) {
+      if (note > 23) {
+        return false;
+      }
+      return velocity;
+    },
+
+    127: function(type, note, velocity) {
+      if (note > 23) {
+        return true;
+      }
+      return toPrct(velocity);
+    }
+  }
+};
+
+module.exports = function(data) {
+  var type = data[0] || 0;
+  if (type === 248) { return {}; }
+
+  var note = data[1] || 0;
+  var velocity = data[2] || 0;
+
+  var name = mappings.note[note];
+  console.info('MIDI evt on %s (%s) => %s', name, note, velocity, data);
+  return {
+    name: name,
+    velocity: velocity,
+    type: type
+  };
+};
+module.exports.note = mappings.note;
+module.exports.prefix = mappings.prefix;
+
+
+/***/ }),
+
+/***/ 409:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function toPrct(val) {
+  return (100 / 127) * (val || 0);
+}
+
+var KP3ToggleButoons = [
+  49,
+  50,
+  51,
+  52,
+  53,
+  54,
+  55,
+  56,
+
+  92,
+  95
+];
+
+var KP3LetterButoons = [
+  36,
+  37,
+  38,
+  39
+];
+
+var mappings = {
+  prefix: 'kp3',
+
+  type: {
+    128: 'noteOn',
+    144: 'noteOff',
+    176: 'change',
+    192: 'search',
+    248: 'idle'
+  },
+
+  note: {
+    36: 'buttonA',
+    37: 'buttonB',
+    38: 'buttonC',
+    39: 'buttonD',
+
+    49: 'num1',
+    50: 'num2',
+    51: 'num3',
+    52: 'num4',
+    53: 'num5',
+    54: 'num6',
+    55: 'num7',
+    56: 'num8',
+
+    70: 'padX',
+    71: 'padY',
+    72: 'pad72',
+    73: 'pad73',
+    74: 'pad74',
+    75: 'pad75',
+    76: 'pad76',
+
+    92: 'pad',
+    93: 'effectSlider',
+    94: 'effectKnob',
+    95: 'hold'
+  },
+
+  velocity: {
+    0: function(type, note, velocity) {
+      if (KP3ToggleButoons.indexOf(note) > -1) {
+        return false;
+      }
+      return velocity;
+    },
+
+    64: function(type, note, velocity) {
+      if (KP3LetterButoons.indexOf(note) > -1) {
+        return false;
+      }
+      return toPrct(velocity);
+    },
+
+    100: function(type, note, velocity) {
+      if (KP3LetterButoons.indexOf(note) > -1) {
+        return true;
+      }
+      return toPrct(velocity);
+    },
+
+    127: function(type, note, velocity) {
+      if (KP3ToggleButoons.indexOf(note) > -1) {
+        return true;
+      }
+      return toPrct(velocity);
+    }
+  },
+
+  signalNames: [
+    'buttonA:noteOn',
+    'buttonA:noteOff',
+    'buttonB:noteOn',
+    'buttonB:noteOff',
+    'buttonC:noteOn',
+    'buttonC:noteOff',
+    'buttonD:noteOn',
+    'buttonD:noteOff',
+
+    'num1:noteOn',
+    'num1:noteOff',
+    'num2:noteOn',
+    'num2:noteOff',
+    'num3:noteOn',
+    'num3:noteOff',
+    'num4:noteOn',
+    'num4:noteOff',
+    'num5:noteOn',
+    'num5:noteOff',
+    'num6:noteOn',
+    'num6:noteOff',
+    'num7:noteOn',
+    'num7:noteOff',
+    'num8:noteOn',
+    'num8:noteOff',
+
+    'pad:noteOn',
+    'pad:noteOff',
+
+    'padX:change',
+    'padY:change',
+    'pad72:change',
+    'pad73:change',
+    'pad74:change',
+    'pad75:change',
+    'pad76:change',
+
+    'effectKnob:change',
+    'effectSlider:change'
+  ]
+};
+
+function _result(note, data) {
+  // that sucks! KP3
+  if (data[0] === 192) {
+    return 'bpmKnob';
+  }
+
+  var val = mappings.note[''+note];
+
+  if (typeof val === 'function') {
+    return val(data[0], data[1], data[2]);
+  }
+
+  return val;
+}
+
+module.exports = function(data) {
+  var type = data[0] || 0;
+  if (type === 248) { return {}; }
+
+  var note = data[1] || 0;
+  var velocity = data[2] || 0;
+
+  var name = _result(note, data);
+  if (name === 'bpmKnob') {
+    velocity = note;
+  }
+  return {
+    name: name,
+    velocity: velocity,
+    type: type
+  };
+};
+module.exports.note = mappings.note;
+module.exports.prefix = mappings.prefix;
+
+
+/***/ }),
+
+/***/ 410:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function toPrct(val) {
+  return (100 / 127) * (val || 0);
+}
+
+var mappings = {
+  prefix: 'nk2',
+
+  type: {
+    128: 'noteOn',
+    144: 'noteOff',
+    176: 'change',
+    192: 'search',
+    248: 'idle'
+  },
+
+  note: {
+    0: 'slider1',
+    1: 'slider2',
+    2: 'slider3',
+    3: 'slider4',
+    4: 'slider5',
+    5: 'slider6',
+    6: 'slider7',
+    7: 'slider8',
+
+    16: 'knob1',
+    17: 'knob2',
+    18: 'knob3',
+    19: 'knob4',
+    20: 'knob5',
+    21: 'knob6',
+    22: 'knob7',
+    23: 'knob8',
+
+    32: 's1',
+    33: 's2',
+    34: 's3',
+    35: 's4',
+    36: 's5',
+    37: 's6',
+    38: 's7',
+    39: 's8',
+
+    41: 'play',
+    42: 'stop',
+    43: 'rewind',
+    44: 'forward',
+    45: 'record',
+    46: 'cycle',
+
+    48: 'm1',
+    49: 'm2',
+    50: 'm3',
+    51: 'm4',
+    52: 'm5',
+    53: 'm6',
+    54: 'm7',
+    55: 'm8',
+
+    58: 'trackprevious',
+    59: 'tracknext',
+    60: 'markerset',
+    61: 'markerprevious',
+    62: 'markernext',
+
+    64: 'r1',
+    65: 'r2',
+    66: 'r3',
+    67: 'r4',
+    68: 'r5',
+    69: 'r6',
+    70: 'r7',
+    71: 'r8'
+  },
+
+  velocity: {
+    0: function(type, note, velocity) {
+      if (note > 23) {
+        return false;
+      }
+      return velocity;
+    },
+
+    127: function(type, note, velocity) {
+      if (note > 23) {
+        return true;
+      }
+      return toPrct(velocity);
+    }
+  }
+};
+
+module.exports = function(data) {
+  var type = data[0] || 0;
+  if (type === 248) { return {}; }
+
+  var note = data[1] || 0;
+  var velocity = data[2] || 0;
+
+  var name = mappings.note[note];
+  // console.info('nk2 MIDI evt on %s (%s) => %s', name, note, velocity, type);
+  return {
+    name: name,
+    velocity: velocity,
+    type: type
+  };
+};
+module.exports.note = mappings.note;
+module.exports.prefix = mappings.prefix;
+
+
+/***/ }),
+
+/***/ 411:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* global module, console */
+
+
+function toPrct(val) {
+  return (100 / 127) * (val || 0);
+}
+
+var mappings = {
+  prefix: '<something>',
+
+  type: {
+    128: 'noteOn',
+    144: 'noteOff',
+    176: 'change',
+    192: 'search',
+    248: 'idle'
+  },
+
+  note: {
+    0: 'pA1',
+    1: 'pA2',
+    2: 'pA3',
+    3: 'pA4',
+    4: 'pA5',
+    5: 'pA6',
+    6: 'pA7',
+    7: 'pA8',
+
+    16: 'pB1',
+    17: 'pB2',
+    18: 'pB3',
+    19: 'pB4',
+    20: 'pB5',
+    21: 'pB6',
+    22: 'pB7',
+    23: 'pB8',
+
+    32: 'pC1',
+    33: 'pC2',
+    34: 'pC3',
+    35: 'pC4',
+    36: 'pC5',
+    37: 'pC6',
+    38: 'pC7',
+    39: 'pC8',
+
+    48: 'pD1',
+    49: 'pD2',
+    50: 'pD3',
+    51: 'pD4',
+    52: 'pD5',
+    53: 'pD6',
+    54: 'pD7',
+    55: 'pD8',
+
+    64: 'pE1',
+    65: 'pE2',
+    66: 'pE3',
+    67: 'pE4',
+    68: 'pE5',
+    69: 'pE6',
+    70: 'pE7',
+    71: 'pE8',
+
+    80: 'pF1',
+    81: 'pF2',
+    82: 'pF3',
+    83: 'pF4',
+    84: 'pF5',
+    85: 'pF6',
+    86: 'pF7',
+    87: 'pF8',
+
+    96: 'pI1',
+    97: 'pI2',
+    98: 'pI3',
+    99: 'pI4',
+    100: 'pI5',
+    101: 'pI6',
+    102: 'pI7',
+    103: 'pI8',
+
+    112: 'pJ1',
+    113: 'pJ2',
+    114: 'pJ3',
+    115: 'pJ4',
+    116: 'pJ5',
+    117: 'pJ6',
+    118: 'pJ7',
+    119: 'pJ8',
+  },
+
+  velocity: {
+    0: function(type, note, velocity) {
+      if (note > 23) {
+        return false;
+      }
+      return velocity;
+    },
+
+    127: function(type, note, velocity) {
+      if (note > 23) {
+        return true;
+      }
+      return toPrct(velocity);
+    }
+  },
+
+  signalNames: [
+  ]
+};
+
+module.exports = function(data) {
+  var type = data[0] || 0;
+  if (type === 248) { return {}; }
+
+  var note = data[1] || 0;
+  var velocity = data[2] || 0;
+
+  var name = mappings.note[note];
+  return {
+    name: name,
+    velocity: velocity,
+    type: type
+  };
+};
+module.exports.note = mappings.note;
+module.exports.prefix = mappings.prefix;
+
+
+/***/ }),
+
+/***/ 412:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(15);
+var View = __webpack_require__(345);
+
+var ParamView = View.extend({
+  template: `
+    <div class="columns object-prop parameter-type-default">
+      <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow gutter parameter-type"></div>
+      <div class="column no-grow parameter-value-reset">
+        <button title="Reset to default value" class="vfi-cancel"></button>
+      </div>
+      <div class="column parameter-value">
+        <input name="value" type="text" />
+      </div>
+      <div class="column parameter-mapping-clear no-grow">
+        <button title="Remove mapping" class="vfi-unlink"></button>
+      </div>
+      <div class="column parameter-mapping-name">
+        <input placeholder="mappingName" name="mapping-name" type="text" />
+      </div>
+      <div class="column no-grow">
+        <button title="Mapping details" class="mapping-details"></button>
+      </div>
+    </div>
+  `,
+
+  initialize: function() {
+    View.prototype.initialize.apply(this, arguments);
+    this.listenTo(this.rootView.mappings, 'change', function mappingsChange(...args) {
+      this.trigger('change:rootView.mappings', ...args);
+    });
+  },
+
+  derived: {
+    suggestionHelper: {
+      cache: false,
+      deps: [],
+      fn: function() {
+        var view = this.parent;
+        while (view) {
+          if (view.suggestionHelper) return view.suggestionHelper;
+          view = view.parent;
+        }
+        return false;
+      }
+    },
+
+    value: {
+      deps: [
+        'model.value'
+      ],
+      fn: function() {
+        return this.model.value;
+      }
+    },
+
+    parameterPath: {
+      deps: [
+        'model.modelPath'
+      ],
+      fn: function() {
+        return this.model.modelPath + '.value';
+      }
+    },
+
+    mapping: {
+      deps: [
+        'rootView.mappings',
+        'parameterPath'
+      ],
+      fn: function() {
+        return this.rootView.mappings.findMappingByTarget(this.parameterPath);
+      }
+    }
+  },
+
+  bindings: {
+    isProperty: {
+      type: 'booleanClass',
+      name: 'instance-property'
+    },
+
+    parameterPath: {
+      type: 'attribute',
+      name: 'title',
+      selector: '.parameter-name'
+    },
+
+    'model.name': {
+      type: 'text',
+      selector: '.parameter-name'
+    },
+
+    'model.type': {
+      type: function(el, val) {
+        el.textContent = (val || 'any')[0].toUpperCase();
+        el.title = val;
+      },
+      selector: '.parameter-type'
+    },
+
+    value: {
+      type: function(el, val) {
+        if (el === document.activeElement) return;
+        el.value = val;
+      },
+      selector: 'input[name=value]',
+    },
+
+    'mapping.name': [
+      {
+        type: 'booleanAttribute',
+        selector: '.parameter-mapping-clear button',
+        name: 'disabled',
+        invert: true
+      },
+      {
+        type: 'value',
+        selector: '[name="mapping-name"]'
+      },
+      {
+        type: 'booleanClass',
+        selector: '.mapping-details',
+        yes: 'vfi-eye',
+        no: 'vfi-eye-off'
+      },
+      {
+        type: 'booleanAttribute',
+        selector: '.mapping-details',
+        name: 'disabled',
+        invert: true
+      },
+      {
+        type: 'booleanAttribute',
+        selector: '.parameter-value-reset button',
+        name: 'disabled'
+      }
+    ]
+  },
+
+  commands: {
+    'click .parameter-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
+    'change [name="value"]': 'propChange _handleChange',
+    'click .parameter-value-reset button': 'propChange _handleReset'
+  },
+
+  _handleRemoveMappingTarget: function() {
+    var parameterPath = this.parameterPath;
+    var mapping = this.mapping.serialize();
+    mapping.targets = mapping.targets.filter(function(target) {
+      return target !== parameterPath;
+    });
+    return {mapping: mapping};
+  },
+
+  _handleChange: function() {
+    return {
+      path: this.model.modelPath,
+      property: 'value',
+      value: this.query('[name="value"]').value
+    };
+  },
+
+  _handleReset: function() {
+    return {
+      path: this.model.modelPath,
+      property: 'value',
+      value: this.model.default
+    };
+  },
+
+  events: {
+    'focus [name="mapping-name"]': '_suggestMapping',
+    'focus [type="text"][name="value"]': '_suggestValues',
+    'click button.mapping-details': '_showMapping'
+  },
+
+  _suggestMapping: function(evt) {
+    var view = this;
+    var helper = view.suggestionHelper;
+    var mappings = this.rootView.mappings;
+    var parameterPath = this.parameterPath;
+
+    helper.attach(evt.target, function(selected) {
+      var mappingState = mappings.get(selected);
+      if (!mappingState) return;
+      var mapping = mappingState.serialize();
+      mapping.targets.push(parameterPath);
+      view.sendCommand('updateMapping', {
+        mapping: mapping
+      });
+      helper.detach();
+    }).fill(mappings.map(function(state) { return state.name; }));
+  },
+
+  _suggestValues: function(evt) {
+    var view = this;
+    var helper = view.suggestionHelper;
+    if (!helper || !view.model.values || !view.model.values.length) return;
+
+    var model = view.model;
+    var el = evt.target;
+    helper.attach(el, function(selected) {
+      // console.info('set %s . %s = %s', objectPath(parent), model.name, selected, el.value !== selected);
+
+      view.sendCommand('propChange', {
+        path: model.modelPath,
+        property: 'value',
+        value: selected
+      });
+
+      el.value = selected;
+      helper.detach();
+    }).fill(model.values);
+  },
+
+  _showMapping: function() {
+    var mapping = this.mapping;
+    var rootView = this.rootView;
+    rootView.regionRight.focusTab('Mappings');
+    rootView.mappingsView.mappingsList.views.forEach(function(view) {
+      if (view.model === mapping) {
+        view.el.scrollIntoView();
+        view.blink();
+      }
+    });
+  }
+});
+
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+
+ParamView.types = {};
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+ParamView.types.boolean = ParamView.extend({
+  template: `
+    <div class="columns object-prop parameter-type-boolean">
+      <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow gutter parameter-type"></div>
+      <div class="column no-grow parameter-value-reset">
+        <button title="Reset to default value" class="vfi-cancel"></button>
+      </div>
+      <div class="column parameter-value">
+        <button class="parameter-toggle-btn"></button>
+      </div>
+      <div class="column parameter-mapping-clear no-grow">
+        <button title="Remove mapping" class="vfi-unlink"></button>
+      </div>
+      <div class="column parameter-mapping-name">
+        <input placeholder="mappingName" name="mapping-name" type="text" />
+      </div>
+      <div class="column no-grow">
+        <button title="Mapping details" class="mapping-details"></button>
+      </div>
+    </div>
+  `,
+
+  bindings: assign({}, ParamView.prototype.bindings, {
+    value: {
+      selector: 'button.parameter-toggle-btn',
+      type: 'booleanClass',
+      yes: 'vfi-toggle-on',
+      no: 'vfi-toggle-off'
+    }
+  }),
+
+  commands: {
+    'click .parameter-mapping-clear button': 'updateMapping _handleRemoveMappingTarget',
+    'click button.parameter-toggle-btn': 'propChange _handleChange',
+    'click .parameter-value-reset button': 'propChange _handleReset'
+  },
+
+  events: assign({}, ParamView.prototype.events, {
+    'focus [name="mapping-name"]': '_suggestMapping'
+  }),
+
+  _handleChange: function() {
+    return {
+      path: this.model.modelPath,
+      property: 'value',
+      value: !this.model.value
+    };
+  }
+});
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+ParamView.types.number = ParamView.extend({
+  template: `
+    <div class="columns object-prop parameter-type-number">
+      <div class="column gutter text-right parameter-name"></div>
+      <div class="column no-grow gutter parameter-type"></div>
+      <div class="column no-grow parameter-value-reset">
+        <button title="Reset to default value" class="vfi-cancel"></button>
+      </div>
+      <div class="column parameter-value">
+        <input name="value" type="number" />
+      </div>
+      <div class="column parameter-mapping-clear no-grow">
+        <button title="Remove mapping" class="vfi-unlink"></button>
+      </div>
+      <div class="column parameter-mapping-name">
+        <input placeholder="mappingName" name="mapping-name" type="text" />
+      </div>
+      <div class="column no-grow">
+        <button title="Mapping details" class="mapping-details"></button>
+      </div>
+    </div>
+  `,
+
+  bindings: assign({}, ParamView.prototype.bindings, {
+    min: [
+      {
+        selector: '[name=value]',
+        type: function(el, val) {
+          if (val !== null && typeof val !== 'undefined') {
+            el.setAttribute('min', val);
+          }
+          else {
+            el.removeAttribute('min');
+          }
+        }
+      }
+    ],
+    max: [
+      {
+        selector: '[name=value]',
+        type: function(el, val) {
+          if (val !== null && typeof val !== 'undefined') {
+            el.setAttribute('max', val);
+          }
+          else {
+            el.removeAttribute('max');
+          }
+        }
+      }
+    ],
+  }),
+
+  session: {
+    min: ['number', false, null],
+    max: ['number', false, null]
+  },
+
+  _handleChange: function() {
+    var payload = ParamView.prototype._handleChange.apply(this, arguments);
+    payload.value = Number(payload.value);
+    return payload;
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+
+
+
+ParamView.names = {};
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+ParamView.names.active = ParamView.types.boolean.extend({});
+
+
+
+
+/***************************************\
+ *                                     *
+ *                                     *
+ *                                     *
+\***************************************/
+
+
+ParamView.names.opacity = ParamView.types.number.extend({
+  session: {
+    min: ['number', false, 0],
+    max: ['number', false, 1]
+  }
+});
+
+
+module.exports = ParamView;
+
+/***/ }),
+
+/***/ 414:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var SignalState = __webpack_require__(351);
+
+var BeatState = SignalState.types.beat = SignalState.extend({
+  initialize: function() {
+    SignalState.prototype.initialize.apply(this, arguments);
+    this.listenTo(this.collection, 'frametime', function(frametime) {
+      this.frametime = frametime;
+    });
+  },
+
+  session: {
+    frametime: ['number', true, 0]
+  },
+
+  mappable: {
+    source: ['result', 'beatlength', 'beatnum'],
+    target: ['input']
+  },
+
+  derived: {
+    result: {
+      deps: ['beatlength', 'frametime'],
+      fn: function() {
+        return this.computeSignal();
+      }
+    },
+    beatnum: {
+      deps: ['beatlength', 'frametime'],
+      fn: function() {
+        return this.frametime ? Math.floor(this.frametime / this.beatlength) : 0;
+      }
+    },
+    beatlength: {
+      deps: ['input'],
+      fn: function() {
+        return (60 * 1000) / Math.max(this.input, 1);
+      }
+    }
+  },
+
+  computeSignal: function() {
+    var ft = this.frametime;
+    var tbb = this.beatlength;
+    return !ft ? 0 : (100 - (((ft % tbb) / tbb) * 100));
+  }
+});
+
+module.exports = BeatState;
+
+/***/ }),
+
+/***/ 415:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(15);
+var DetailsView = __webpack_require__(362);
+var SignalDetailsView = DetailsView.extend({
+  derived: {
+    modelPath: {
+      deps: [],
+      fn: function() {
+        return 'signals.' + this.model.getId();
+      }
+    }
+  },
+
+  bindings: assign({
+    'model.name': '[data-hook=name]'
+  }, DetailsView.prototype.bindings)
+});
+module.exports = SignalDetailsView;
+
+/***/ }),
+
+/***/ 416:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var SignalState = __webpack_require__(351);
+
+var _360 = {
+  type: 'number',
+  required: true,
+  default: 180,
+  min: 0,
+  max: 360
+};
+var _100 = {
+  type: 'number',
+  required: true,
+  default: 100,
+  min: 0,
+  max: 100
+};
+
+var HSLASignalState = SignalState.types.hsla = SignalState.extend({
+  props: {
+    hue: _360,
+    saturation: _100,
+    lightness: _100,
+    alpha: _100
+  },
+
+  mappable: {
+    source: ['result', 'hue', 'saturation', 'lightness', 'alpha'],
+    target: ['hue', 'saturation', 'lightness', 'alpha']
+  },
+
+  derived: {
+    result: {
+      deps: ['hue', 'saturation', 'lightness', 'alpha'],
+      fn: function() {
+        return this.computeSignal();
+      }
+    }
+  },
+  // parseInput: function() {
+  //   var values = _colorValues(this.input);
+  //   return {
+  //     hue: values[0],
+  //     saturation: values[1],
+  //     lightness: values[2],
+  //     alpha: values[3]
+  //   };
+  // },
+  computeSignal: function() {
+    return 'hsla(' + Math.round(this.hue) + ',' + Math.round(this.saturation) + '%,' + Math.round(this.lightness) + '%,' + (Math.round(this.alpha) / 100) + ')';
+  }
+});
+
+module.exports = HSLASignalState;
+
+/***/ }),
+
+/***/ 417:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var SignalState = __webpack_require__(351);
+var _255 = {
+  type: 'number',
+  required: true,
+  default: 180,
+  min: 0,
+  max: 255
+};
+var _100 = {
+  type: 'number',
+  required: true,
+  default: 100,
+  min: 0,
+  max: 100
+};
+var RGBASignalState = SignalState.types.rgba = SignalState.extend({
+  props: {
+    red: _255,
+    green: _255,
+    blue: _255,
+    alpha: _100
+  },
+
+  mappable: {
+    source: ['result', 'red', 'green', 'blue', 'alpha'],
+    target: ['red', 'green', 'blue', 'alpha']
+  },
+
+  derived: {
+    result: {
+      deps: ['red', 'green', 'blue', 'alpha'],
+      fn: function() {
+        return this.computeSignal();
+      }
+    }
+  },
+  // parseInput: function() {
+  //   var values = _colorValues(this.input);
+  //   return {
+  //     red: values[0],
+  //     green: values[1],
+  //     blue: values[2],
+  //     alpha: values[3]
+  //   };
+  // },
+  computeSignal: function() {
+    return 'rgba(' + Math.round(this.red) + ',' + Math.round(this.green) + ',' + Math.round(this.blue) + ',' + (Math.round(this.alpha) / 100) + ')';
+  }
+});
+module.exports = RGBASignalState;
+
+/***/ }),
+
+/***/ 418:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var View = __webpack_require__(345);
+
+var SignalControlView = __webpack_require__(152);
+__webpack_require__(161);
+__webpack_require__(163);
+
+var SignalsView = View.extend({
+  commands: {
+    'click [name="add-signal"]': 'addSignal _addSignal'
+  },
+  events:{
+    'focus [data-hook="signal-type"]': '_suggestSignalType'
+  },
+
+  _suggestSignalType: function() {
+    var helper = this.parent.suggestionHelper;
+    var el = this.queryByHook('signal-type');
+    helper.attach(this.queryByHook('signal-type'), function(selected) {
+      el.value = selected;
+      helper.detach();
+    }).fill(Object.keys(SignalControlView.types));
+  },
+
+  _addSignal: function() {
+    var typeEl = this.queryByHook('signal-type');
+    var nameEl = this.queryByHook('signal-name');
+    var type = typeEl.value;
+    var name = nameEl.value;
+    return {
+      signal: {
+        type: type,
+        name: name
+      }
+    };
+  },
+
+  subviews: {
+    items: {
+      selector: '.items',
+      waitFor: 'el',
+      prepareView: function(el) {
+        return this.renderCollection(this.collection, function (opts) {
+          var type = opts.model.getType();
+          var Constructor = SignalControlView.types[type] || SignalControlView;
+          return new Constructor(opts);
+        }, el);
+      }
+    }
+  },
+
+  template: `
+    <section class="row signals">
+      <header class="columns">
+        <div class="column">
+          <input data-hook="signal-name" placeholder="Name" type="text"/>
+        </div>
+        <div class="column">
+          <input data-hook="signal-type" placeholder="Type" type="text"/>
+        </div>
+        <div class="column no-grow">
+          <button name="add-signal" class="vfi-plus"></button>
+        </div>
+      </header>
+      <div class="items"></div>
+    </section>
+  `
+});
+module.exports = SignalsView;
+
+/***/ }),
+
+/***/ 419:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+module.exports = function toObj(arr) {
+  var obj = {};
+  arr.forEach(function(o) {
+    obj[o.name] = o;
+    delete obj[o.name].name;
   });
-mockedCtx._.properties
-  .forEach(function(name) {
-    if (name !== 'canvas') ctxProperties += '\nvar ' + name + ' = function(val) { if (val !== undefined) { ctx.' + name + ' = val; } return ctx.' + name + '; };';
+  return obj;
+};
+
+/***/ }),
+
+/***/ 420:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+// http://stackoverflow.com/a/9763769/662964
+
+var pad = __webpack_require__(364);
+module.exports = function msToTime(s) {
+  var ms = s % 1000;
+  s = (s - ms) / 1000;
+  var secs = s % 60;
+  s = (s - secs) / 60;
+  var mins = s % 60;
+  var hrs = (s - mins) / 60;
+
+  return pad(hrs) + ':' + pad(mins) + ':' + pad(secs) + '.' + pad(ms, 3);
+};
+
+/***/ }),
+
+/***/ 421:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+module.exports = function toArr(obj) {
+  var keys = Object.keys(obj);
+  return keys.map(function(key) {
+    obj[key].name = key;
+    return obj[key];
   });
+};
 
-function compileFunction(drawFunction) {
-  var fn;// jshint ignore:line
+/***/ }),
 
-  var evaled = `fn = (function() {
+/***/ 85:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var resolve = __webpack_require__(361);
+var assign = __webpack_require__(15);
+var State = __webpack_require__(11);
+var Collection = __webpack_require__(16);
+
+function cleanFnFromExport(item) {
+  item.transformFunction = item.transformFunction || (item.fn || '').toString();
+  delete item.fn;
+  return item;
+}
+
+function compileTransformFunction(fn) {
+  fn = fn || function(val) { return val; };
+  var compiled;
+
+  var str = `compiled = (function() {
   // override some stuff that should not be used
   var navigator, window, global, document, module, exports;
 
-  return function(ctx) {
-    var width = (ctx.canvas || {}).width || 400;
-    var height = (ctx.canvas || {}).height || 300;
-    var layer = this;
-    var store = layer.cache;
-    var frametime = layer ? layer.frametime : 0;
-    var audio = layer ? layer.audio : {};
-    var bufferLength = function() { return ((layer.audio || {}).bufferLength) || 128; };
-    var frequency = function(x) {
-      return ((layer.audio || {}).frequency || [])[x] || 0;
-    };
-    var timeDomain = function(x) {
-      return ((layer.audio || {}).timeDomain || [])[x] || 0;
-    };
-
-    var parameter = function(name, defaultVal) {
-      return layer.parameters.getValue(name, defaultVal);
-    };
-
-    ${ ctxProperties }
-    var random = utils.random;
-    var between = utils.between;
-    var midiMinMax = utils.midiMinMax;
-    var midi2rad = utils.midi2rad;
-    var midi2prct = utils.midi2prct;
-
-    var grid = function(...args) { utils.grid(width, height, ...args); };
-    var distribute = function(...args) { utils.distribute(...args); };
-    var repeat = function(...args) { utils.repeat(...args); };
-    var log = function(...args) { utils.log(ctx, ...args); };
-    var txt = function(...args) { utils.txt(ctx, ...args); };
-    var dot = function(...args) { utils.dot(ctx, ...args); };
-    var circle = function(...args) { utils.circle(ctx, ...args); };
-    var polygone = function(...args) { utils.polygone(ctx, ...args); };
-    var line = function(...args) { utils.line(ctx, ...args); };
-    var cacheContext = function(...args) { utils.cacheContext(ctx, ...args); };
-    var restoreContexts = function(...args) { utils.restoreContexts(ctx, ...args); };
-
-
-    return (${ drawFunction.toString() })(ctx);
+  return function(val, oldVal) {
+    var result;
+    try {
+      result = (${ fn.toString() })(val, oldVal);
+    }
+    catch(e) {
+      result = e;
+    }
+    return result;
   };
 })();`;
-  eval(evaled);// jshint ignore:line
-  return fn;
+  try {
+    eval(str);// jshint ignore:line
+  }
+  catch (e) {
+    compiled = function(val) { return val; };
+  }
+  return compiled;
 }
 
-module.exports = compileFunction;
-
-/***/ }),
-
-/***/ 664:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var State = __webpack_require__(27);
-
-var Extractor = State.extend({
-  autoRender: true,
-  template: '<div style="display: none"></div>',
-
-  extractStyles: function() {
-    var styles = {};
-    var existingStyles = this.model.svgStyles || {};
-
-    this.svg.querySelectorAll('[style][id]').forEach(function(styledEl) {
-      styles['#' + styledEl.id] = existingStyles['#' + styledEl.id] || styledEl.getAttribute('style');
-      styledEl.style = null;
-    });
-
-    return styles;
-  },
-
-  removeStylesFromContent: function() {
-    this.svg.querySelectorAll('[style][id]').forEach(function(styledEl) {
-      styledEl.style = null;
-    });
-    return this;
-  },
-
-  setPathLengths: function() {
-    var paths = this.el.querySelectorAll('path');
-    for (var p = 0; p < paths.length; p++) {
-      paths[p].style.setProperty('--path-length', paths[p].getTotalLength());
-    }
-    return this;
-  },
-
-  extractProps: function() {
-    var props = [];
-    var name, value;
-
-    for (var p = 0; p < this.svg.style.length; p++) {
-      name = this.svg.style[p].slice(2);
-      value = this.svg.style.getPropertyValue(name).trim();
-      props.push({
-        name: name,
-        value: value,
-        default: value
-      });
-    }
-
-    this.svg.style = null;
-
-    var previousParameters = this.model.parameters.serialize();
-    return props.concat(previousParameters);
-  },
-
-  extract: function() {
-    if (!this.el || this.el.innerHTML === this.model.content) return;
-    this.el.innerHTML = this.model.content;
-
-    this.svg = this.el.querySelector('svg');
-    if (!this.svg) return;
-    var svgState = this.model;
-
-    var layer = {};
-    layer[svgState.idAttribute] = svgState.getId();
-
-    layer.svgStyles = Object.keys(svgState.svgStyles).length ? this.removeStylesFromContent().model.svgStyles : this.extractStyles();
-
-    this.model.parameters.set(this.setPathLengths().extractProps());
-    layer.parameters = this.model.parameters.serialize();
-
-    layer.content = this.el.innerHTML;
-
-    svgState.once('change:svgStyles', function() { svgState.trigger('svg:extracted'); });
-    svgState.trigger('sendCommand', 'updateLayer', {layer: layer, broadcast: true});
-
-    svgState.set('content', layer.content, {silent: true});
-
-    return this;
-  },
-
-  initialize: function(options) {
-    this.model = options.model;
-    this.el = document.createElement('div');
-    this.listenToAndRun(this.model, 'change:content', this.extract);
-  }
-});
-module.exports = Extractor;
-
-/***/ }),
-
-/***/ 665:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var State = __webpack_require__(27);
-var objectPath = __webpack_require__(653);
-
-var ParamState = State.extend({
+var MappingEmitter = State.extend({
   idAttribute: 'name',
 
-  mappable: {
-    target: ['value']
-  },
-
   props: {
-    name: ['string', true, ''],
-    type: ['string', false, ''],
-    value: ['any', false, ''],
-    default: ['any', false, '']
+    targets: ['array', true, function() { return []; }],
+    transformFunction: ['string', true, 'function(val){return val;}'],
+    source: ['string', false, ''],
+    name: ['string', true, null]
   },
 
   derived: {
-    modelPath: {
-      deps: ['name'],
+    fn: {
+      deps: ['transformFunction'],
       fn: function() {
-        return objectPath(this);
+        return compileTransformFunction(this.transformFunction);
       }
     },
-    typeSafe: {
-      deps: ['value', 'type'],
+    sourceState: {
+      deps: ['source'],
       fn: function() {
-        if (this.type === 'boolean') return !!this.value;
-        if (this.type === 'string') return (this.value || '').toString();
-        if (this.type === 'number') return Number(this.value || 0);
-        return this.value;
+        if (this.source.indexOf('midi:') === 0) return;
+        var sourcePath = this.source.split('.');
+        sourcePath.pop();
+        sourcePath = sourcePath.join('.');
+        return this.collection.resolve(sourcePath);
+      }
+    },
+    sourceParameter: {
+      deps: ['source'],
+      fn: function() {
+        if (this.source.indexOf('midi:') === 0) return;
+        var sourcePath = this.source.split('.');
+        return sourcePath.pop();
       }
     }
+  },
+
+  hasTarget: function(targetPath) {
+    return this.targets.indexOf(targetPath) > -1;
   }
 });
 
-module.exports = ParamState;
+var Mappings = Collection.extend({
+  model: MappingEmitter,
+
+  initialize: function(models, options) {
+    if (!options.context) throw new Error('Missing context option for Mappings');
+    var readonly;
+    if (typeof options.readonly === 'undefined') {
+      readonly = this.readonly = typeof DedicatedWorkerGlobalScope === 'undefined';
+    }
+    else {
+      readonly = this.readonly = options.readonly;
+    }
+
+    this.on('reset', function(collection, info) {
+      this.unbindMappings(info.previousModels).bindMappings(collection.models);
+    });
+    this.on('remove', function(model) {
+      this.unbindMappings([model]);
+    });
+    this.on('add', function(model) {
+      this.bindMappings([model]);
+    });
+
+    this.context = options.context;
+  },
+
+
+  bindMappings: function(mappings) {
+    if (this.readonly) return this;
+
+    (mappings || []).forEach(function(mapping) {
+      if (!mapping.sourceState) return;
+      this.listenTo(mapping.sourceState, 'all', function(evtName, source, value) {
+        if (evtName !== 'change:' + mapping.sourceParameter) return;
+        this.process([mapping], value);
+      });
+    }, this);
+
+    return this;
+  },
+
+  unbindMappings: function(mappings) {
+    if (this.readonly) return this;
+
+    (mappings || []).forEach(function(mapping) {
+      if (!mapping.sourceState) return;
+      this.stopListening(mapping.sourceState, 'all');
+    }, this);
+
+    return this;
+  },
+
+
+  findMappingsBySource: function(path) {
+    return this.models.filter(function(mapping) {
+      return mapping.source === path;
+    });
+  },
+
+  findMappingByTarget: function(path) {
+    return this.models.find(function(mapping) {
+      return mapping.hasTarget(path);
+    });
+  },
+
+  import: function(data, reset) {
+    if (reset) {
+      this.reset(data);
+    }
+    else {
+      this.set(data);
+    }
+    return this;
+  },
+
+  serialize: function() {
+    return Collection.prototype
+            .serialize.apply(this, arguments)
+            .map(cleanFnFromExport);
+  },
+
+  toJSON: function () {
+    return this.map(function (model) {
+      if (model.toJSON) {
+        return model.toJSON();
+      }
+      else {
+        var out = {};
+        assign(out, model);
+        delete out.collection;
+        return out;
+      }
+    })
+    .map(cleanFnFromExport);
+  },
+
+  export: function() {
+    return this.serialize();
+  },
+
+  resolve: function(path) {
+    return resolve(path, this.context);
+  },
+
+  process: function(sources, value) {
+    sources.forEach(function(info) {
+      info.targets.forEach(function(target) {
+        var parts = target.split('.');
+        var targetParameter = parts.pop();
+        var targetStatePath = parts.join('.');
+        var state;
+        try {
+          state = this.resolve(targetStatePath);
+        } catch(e) {}
+        if (!state) return;
+
+        var finalValue = info.fn(value, state.get(targetParameter));
+        if (finalValue instanceof Error) return;
+
+        if (state.type === 'boolean') finalValue = finalValue === 'false' ? false : !!finalValue;
+        if (state.type === 'string') finalValue = (finalValue || '').toString();
+        if (state.type === 'number') finalValue = Number(finalValue || 0);
+        try {
+          state.set(targetParameter, finalValue);
+        }
+        catch (e) {
+          console.info(e.message);
+        }
+      }, this);
+    }, this);
+
+    return this;
+  },
+
+  processMIDI: function(deviceName, property, value) {
+    var sources = this.findMappingsBySource('midi:' + deviceName + '.' + property);
+    if (!sources || !sources.length) return this;
+    return this.process(sources, value);
+  }
+});
+
+module.exports = Mappings;
+
+/***/ }),
+
+/***/ 86:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var assign = __webpack_require__(15);
+
+function Settings(name, defaults) {
+  this.name = name;
+  var loaded = {};
+  try {
+    loaded = JSON.parse(localStorage.getItem(name) || '{}');
+  }
+  catch (e) {
+    console.warn('settings loading error', e);
+  }
+  this._vars = assign({}, defaults, loaded);
+}
+
+Settings.prototype._vars = {};
+
+Settings.prototype.set = function(name, value) {
+  this._vars[name] = value;
+  try {
+    localStorage.setItem(this.name, JSON.stringify(this._vars));
+  }
+  catch (e) {
+    console.warn('error while trying to store %s', name, e);
+  }
+  return value;
+};
+
+Settings.prototype.get = function(name, defaultValue) {
+  return this._vars[name] === undefined ? defaultValue : this._vars[name];
+};
+
+module.exports = Settings;
+
+/***/ }),
+
+/***/ 87:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var State = __webpack_require__(11);
+var Collection = __webpack_require__(16);
+
+var midiMappings = {
+  'KORG INC.': {
+    'KP3 MIDI 1': __webpack_require__(409),
+    'nanoKONTROL2 MIDI 1': __webpack_require__(410)
+  },
+  'AKAI professional LLC': {
+    'LPD8 MIDI 1': __webpack_require__(408)
+  },
+  'Focusrite A.E. Ltd': {
+    'Launchpad Mini MIDI 1': __webpack_require__(411)
+  }
+};
+
+
+var MIDIState = State.extend({
+  props: {
+    manufacturer: 'string',
+    name: 'string'
+  },
+
+  session: {
+    active: ['boolean', true, true],
+    connection: 'string',
+    state: 'string',
+    type: 'string',
+    id: 'string',
+    version: 'string'
+  }
+});
+
+
+
+function getMappings(manufacturer, name) {
+  var m = midiMappings || {};
+  if (!m[manufacturer] || !m[manufacturer][name]) {
+    return;
+  }
+  return m[manufacturer][name] || function(){};
+}
+
+
+function handleMIDIMessage(accessState, model) {
+  // var setThrottled = throttle(function(name, velocity) {
+  //   model.set(name, velocity);
+  // }, 1000 / 16);
+  var _mappings = getMappings(model.manufacturer, model.name);
+
+  return function(MIDIMessageEvent) {
+    if (!model.active) { return; }
+    var info = _mappings(MIDIMessageEvent.data);
+    // if (info.name) setThrottled(info.name, info.velocity);
+    if (model.collection.parent && info.name) model.collection.parent.trigger('midi:change', model.id, info.name, info.velocity);
+  };
+}
+
+
+var MIDIAccessState = State.extend({
+  mappable: {
+    source: ['inputs'],
+    target: []
+  },
+
+  registerInput: function(info) {
+    var accessState = this;
+    var _mappings = getMappings(info.manufacturer, info.name);
+    if (!_mappings) {
+      if (info.name !== 'Midi Through Port-0') {
+        // console..warn('Unrecognized MIDI controller %s from %s', info.name, info.manufacturer);
+      }
+      return;
+    }
+
+    var props = {};
+    var sources = [];
+
+    Object.keys(_mappings.note || {}).forEach(function(key) {
+      sources.push(_mappings.note[key]);
+      props[_mappings.note[key]] = ['number', true, 0];
+    });
+
+    var Constructor = MIDIState.extend({
+      mappable: {
+        source: sources,
+        target: []
+      },
+      props: props
+    });
+
+    var model = new Constructor({
+      connection: info.connection,
+      state: info.state,
+      type: info.type,
+      id: _mappings.prefix,//info.id,
+      manufacturer: info.manufacturer,
+      name: info.name,
+      version: info.version
+    });
+
+    if (typeof info.onmidimessage !== 'undefined') {
+      info.onmidimessage = handleMIDIMessage(this, model);
+    }
+
+    model.on('all', function(evtName, name, velocity) {
+      if (evtName.slice(0, 5) === 'midi:') accessState.trigger(name, velocity);
+    });
+
+    accessState.inputs.add(model);
+  },
+
+  initialize: function(options) {
+    options = options || {};
+    var accessState = this;
+
+
+    function MIDIAccessChanged() {
+      if (!accessState.MIDIAccess) {
+        accessState.inputs.reset([]);
+        return;
+      }
+      accessState.inputs.reset();
+      accessState.MIDIAccess.inputs.forEach(accessState.registerInput, accessState);
+      accessState.trigger('change:inputs');
+    }
+
+    accessState.on('change:MIDIAccess', MIDIAccessChanged);
+
+    if (typeof options.MIDIAccess === 'undefined') {
+      if (!navigator.requestMIDIAccess) {
+        accessState.MIDIAccess = false;
+        return;
+      }
+
+      navigator.requestMIDIAccess()
+        .then(function(MIDIAccess) {
+          accessState.MIDIAccess = MIDIAccess;
+          accessState.MIDIAccess.onstatechange = function(evt) {
+            accessState.MIDIAccess = evt.currentTarget;
+            MIDIAccessChanged();
+          };
+        }, function() {
+          accessState.MIDIAccess = false;
+        });
+    }
+  },
+
+  session: {
+    MIDIAccess: {
+      type: 'any',
+      default: false
+    }
+  },
+
+  collections: {
+    inputs: Collection.extend({
+    })
+  },
+
+  toJSON: function() {
+    var obj = {};
+    obj.inputs = this.inputs.toJSON();
+    return obj;
+  }
+});
+
+module.exports = MIDIAccessState;
+
 
 /***/ })
 

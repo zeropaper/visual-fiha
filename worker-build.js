@@ -86,12 +86,12 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 15);
+/******/ 	return __webpack_require__(__webpack_require__.s = 17);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 15:
+/***/ 17:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -99,12 +99,13 @@
 
 var worker = self;
 __webpack_require__.e/* require.ensure */(0).then((function() {
-__webpack_require__.e/* require.ensure */(3).then((function() {
-__webpack_require__.e/* require.ensure */(1).then((function() {
 __webpack_require__.e/* require.ensure */(4).then((function() {
 __webpack_require__.e/* require.ensure */(2).then((function() {
+__webpack_require__.e/* require.ensure */(3).then((function() {
+__webpack_require__.e/* require.ensure */(1).then((function() {
 // ---------------------------------------------------------------
 var resolve = __webpack_require__(0);
+var fromYaml = __webpack_require__(16);
 
 var Mappings = __webpack_require__(1);
 
@@ -117,7 +118,16 @@ var SignalCollection = __webpack_require__(3);
 worker.signals = new SignalCollection({
   parent: worker.screen
 });
+worker.signals.listenTo(worker.screen.clock, 'change:frametime', function(...args) {
+  worker.signals.trigger('change:frametime', ...args);
+});
+var localForage = __webpack_require__(15);
 
+
+localForage.installSetups(function(err) {
+  if (err) return emitCommand('storageSetupInstalled', {error: err});
+  emitCommand('storageSetupInstalled');
+});
 
 
 var __dataContext = {
@@ -181,27 +191,23 @@ function broadcastCommand(name, payload) {
 /******************************************************\
  * Worker   clock                                     *
 \******************************************************/
-var _fps = 45;
+var _fps = 60;
 var _prev = performance.now();
 var _frameMillis = 1000 / _fps;
 var _internalTimeout;
 var _frameCounter = 0;
 var _samplesCount = _fps * 2;
 var _prevSamples = _prev;
-var _animationStartTime = performance.now();
 
 function _animate() {
-  worker.screen.frametime = __dataContext.frametime = performance.now() - _animationStartTime;
-  worker.signals.trigger('frametime', __dataContext.frametime);
+  __dataContext.frametime = worker.screen.clock.refresh().frametime;
 
   emitCommand('updateSignals', {
     signals: worker.signals.serialize().filter(o => o.name)
   });
 
   broadcastCommand('updateLayers', {
-    frametime: __dataContext.frametime,
-    audio: worker.audio,
-    layers: worker.layers.serialize().filter(o => o.name)
+    layers: worker.layers.serialize()
   });
 
 
@@ -265,16 +271,79 @@ channel.addEventListener('message', function(evt) {
  * Worker commands                                    *
 \******************************************************/
 var commands = {
-  bootstrap: function(layers, signals, mappings) {
-    worker.layers.set(layers);
-    worker.signals.set(signals);
-    worker.mappings.import(mappings, true);
+  play: function() {
+    worker.screen.clock.play();
+  },
+  pause: function() {
+    worker.screen.clock.pause();
+  },
+  stop: function() {
+    worker.screen.clock.stop();
+  },
+  setBPM: function(bpm) {
+    worker.screen.clock.bpm = bpm;
+  },
 
-    broadcastCommand('bootstrap', {
+  storageKeys: function() {
+    localForage
+      .keys()
+        .then(function(keys) {
+          emitCommand('storageKeys', {keys: keys});
+        })
+        .catch(function(err) {
+          emitCommand('storageKeys', {error: err});
+        });
+  },
+  storageSave: function(setupId) {
+    var setup = {
+      layers: worker.layers.serialize(),
       signals: worker.signals.serialize(),
-      mappings: worker.mappings.export(),
+      mappings: worker.mappings.serialize()
+    };
+
+    localForage
+      .setItem(setupId, setup)
+        .then(function() {
+          emitCommand('storageSave', {setup: setup, setupId: setupId});
+        })
+        .catch(function(err) {
+          emitCommand('storageSave', {error: err, setupId: setupId});
+        });
+  },
+  storageLoad: function(setupId) {
+    localForage
+      .getItem(setupId)
+        .then(function(setup) {
+          worker.layers.reset(setup.layers);
+          worker.signals.reset(setup.signals);
+          worker.mappings.reset(setup.mappings);
+
+          setup = {
+            signals: worker.signals.serialize(),
+            mappings: worker.mappings.serialize(),
+            layers: worker.layers.serialize()
+          };
+          broadcastCommand('bootstrap', {layers: setup.layers});
+          emitCommand('storageLoad', {setup: setup, setupId: setupId});
+        })
+        .catch(function(err) {
+          emitCommand('storageLoad', {error: err, setupId: setupId});
+        });
+  },
+
+  yamlLoad: function(yamlStr) {
+    var setup = fromYaml(yamlStr);
+    worker.layers.reset(setup.layers);
+    worker.signals.reset(setup.signals);
+    worker.mappings.reset(setup.mappings);
+
+    setup = {
+      signals: worker.signals.serialize(),
+      mappings: worker.mappings.serialize(),
       layers: worker.layers.serialize()
-    });
+    };
+    broadcastCommand('bootstrap', {layers: setup.layers});
+    emitCommand('yamlLoad', {setup: setup});
   },
 
 
@@ -284,9 +353,12 @@ var commands = {
 
 
 
-  heartbeat: function(frametime, audio) {
-    worker.frametime = frametime;
+  heartbeat: function(audio) {
     worker.audio = audio;
+    broadcastCommand('heartbeat', {
+      clock: worker.screen.clock.serialize(),
+      audio: audio
+    });
   },
 
 
@@ -387,6 +459,12 @@ var commands = {
     var state = worker.layers.get(layer.name);
     state.set(layer);
     if (broadcast) broadcastCommand('updateLayer', {layer: layer});
+  },
+
+  addParameter: function(path, parameter) {
+    var obj = resolve(path, __dataContext);
+    if (!obj || !obj.parameters) return;
+    obj.parameters.add(parameter);
   }
 };
 
@@ -427,13 +505,6 @@ worker.addEventListener('message', function(evt) {
     return evt.data.payload[argName];
   });
 
-  if (['heartbeat'].indexOf(commandName) < 0) {
-    // _executedCommands.push({
-    //   time: Date.now(),
-    //   command: commandName,
-    //   payload: evt.data.payload
-    // });
-  }
   var result = command.apply(worker, commandArgs);
   if (!eventId) return;
   worker.postMessage({
@@ -447,12 +518,8 @@ worker.addEventListener('message', function(evt) {
   capture: false
 });
 
-worker.layers.on('emitCommand', function(...args) {
-  emitCommand(...args);
-});
-worker.layers.on('broadcastCommand', function(...args) {
-  broadcastCommand(...args);
-});
+worker.layers.on('emitCommand', emitCommand);
+worker.layers.on('broadcastCommand', broadcastCommand);
 // --------------------------------------------------------------
 }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);

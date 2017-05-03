@@ -1,6 +1,6 @@
 webpackJsonp([3],{
 
-/***/ 644:
+/***/ 336:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8,10 +8,10 @@ webpackJsonp([3],{
 
 Promise.resolve().then((function() {
 Promise.resolve().then((function() {
-__webpack_require__.e/* require.ensure */(1).then((function() {
-__webpack_require__.e/* require.ensure */(5).then((function() {
 __webpack_require__.e/* require.ensure */(0).then((function() {
-__webpack_require__.e/* require.ensure */(4).then((function(require) {
+__webpack_require__.e/* require.ensure */(6).then((function() {
+__webpack_require__.e/* require.ensure */(4).then((function() {
+__webpack_require__.e/* require.ensure */(5).then((function(require) {
 // ---------------------------------------------------------------
 
 
@@ -20,18 +20,18 @@ __webpack_require__.e/* require.ensure */(4).then((function(require) {
 function auid() {
   return parseInt((Math.random() + '.' + performance.now()).replace(/\./g, ''), 10);
 }
-var LoadedWorker = __webpack_require__(643);
-var ControllerView = __webpack_require__(647);
-var ScreenState = __webpack_require__(32);
-var MIDIAccessState = __webpack_require__(146);
-var Mappings = __webpack_require__(143);
-var Tour = __webpack_require__(645);
-var installSetups = __webpack_require__(144).installSetups;
+var LoadedWorker = __webpack_require__(335);
+var ControllerView = __webpack_require__(339);
+var ScreenState = __webpack_require__(14);
+var MIDIAccessState = __webpack_require__(87);
+var Mappings = __webpack_require__(85);
+var Tour = __webpack_require__(337);
+var fromYaml = __webpack_require__(164);
 
-var DetailsView = __webpack_require__(267);
-var Settings = __webpack_require__(145);
+var DetailsView = __webpack_require__(151);
+var Settings = __webpack_require__(86);
 
-var SignalCollection = __webpack_require__(650);
+var SignalCollection = __webpack_require__(343);
 
 var signals = new SignalCollection([]);
 
@@ -40,7 +40,7 @@ VF.setups = VF.setups || {};
 
 // var _executedCommands = [];
 
-var AppRouter = __webpack_require__(96).extend({
+var AppRouter = __webpack_require__(53).extend({
   _workerInit: false,
 
   _handleBroadcastMessages: function(evt) {
@@ -48,7 +48,6 @@ var AppRouter = __webpack_require__(96).extend({
     var screen = router.model;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
-    // logger.info('app incoming broadcast command "%s"', command);
 
     switch (command) {
       case 'bootstrap':
@@ -71,17 +70,17 @@ var AppRouter = __webpack_require__(96).extend({
         break;
 
       case 'updateLayers':
-        var ft = payload.frametime || 0;
-        signals.trigger('frametime', ft);
-        screen.layers.trigger('frametime', ft);
         screen.layers.set(payload.layers);
+        break;
+
+      case 'heartbeat':
+        screen.clock.set(payload.clock);
         break;
 
       default:
         console.info('unrecognized broadcast command "%s"', command);
     }
     router.trigger('app:broadcast:' + command, payload);
-    screen.trigger('app:broadcast:' + command, payload);
   },
 
   _handleWorkerMessages: function(evt) {
@@ -89,7 +88,6 @@ var AppRouter = __webpack_require__(96).extend({
     var screen = router.model;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
-    // logger.info('app incoming worker command "%s"', command);
 
     switch (command) {
       case 'health':
@@ -144,11 +142,26 @@ var AppRouter = __webpack_require__(96).extend({
         router.view.timeline.addEntries(payload.commands);
         break;
 
+      case 'storageSetupInstalled':
+        router.history.start({
+          root: location.pathname,
+          pushState: false
+        });
+        break;
+
+      case 'storageSave':
+      case 'storageLoad':
+        router.navigate('/setup/' + payload.setupId, {trigger: false, replace: false});
+        break;
+
+      case 'yamlLoad':
+      case 'storageKeys':
+        break;
+
       default:
         console.info('unrecognized worker command "%s"', command);
     }
     router.trigger('app:worker:' + command, payload);
-    screen.trigger('app:worker:' + command, payload);
   },
 
   initialize: function(options) {
@@ -159,6 +172,9 @@ var AppRouter = __webpack_require__(96).extend({
 
     var screen = router.model = new ScreenState({}, {
       router: this
+    });
+    router.on('all', function(...args) {
+      if (args[0] && args[0].indexOf('app:') === 0) screen.trigger(...args);
     });
 
     var mappingContext = {
@@ -199,14 +215,8 @@ var AppRouter = __webpack_require__(96).extend({
       router: router,
       signals: signals,
       mappings: router.mappings,
-      el: document.querySelector('.controller')
+      el: options.el
     });
-
-    router.defaultSetup = options.setup || {
-      layers: [],
-      signals: [],
-      mappings: []
-    };
   },
 
   sendCommand: function(name, payload, callback) {
@@ -243,12 +253,13 @@ var AppRouter = __webpack_require__(96).extend({
 
   tour: function(step) {
     var router = this;
-    var steps = __webpack_require__(646)(router.view).map(function(item, i) {
+    var steps = __webpack_require__(338)(router.view).map(function(item, i) {
       item.index = i;
       return item;
     });
 
-    function tourReady() {
+    function tourReady(err) {
+      if (err) throw err;
       if (!router.tourView) {
         router.tourView = new Tour({
           parent: router,
@@ -262,98 +273,67 @@ var AppRouter = __webpack_require__(96).extend({
       }
 
       router.tourView.step = step;
-      router._tourBotstrapped = true;
+      router._tourBootstrapped = true;
     }
 
-    if (router._tourBotstrapped) return tourReady();
-    router._sendBootstrap(router.defaultSetup, tourReady);
+    if (router._tourBootstrapped) return tourReady();
+    // load the default setup
+    router.loadSetup(null, tourReady);
   },
 
-  _sendBootstrap: function(setup, done) {
-    done = typeof done === 'function' ? done : function() { console.info('APP bootstraped'); };
-    var cl = document.body.classList;
-    cl.add('bootstraping');
-    cl.remove('bootstraped');
+  loadSetup: function(setupId, next) {
+    console.time(setupId);
 
-    this.once('app:broadcast:bootstrap', function() {
-      cl.remove('bootstraping');
-      cl.add('bootstraped');
-
-      cl.add('initialized');
-
-      done.apply(this, arguments);
-    });
-
-    this.sendCommand('bootstrap', {
-      layers: setup.layers,
-      signals: setup.signals,
-      mappings: setup.mappings
-    });
-  },
-
-  _defaultBootstrap: function() {
-    console.time();
-    this._sendBootstrap(this.defaultSetup, function() {
-      console.timeEnd();
-    });
-  },
-
-  loadSetup: function(setupId) {
     var router = this;
+    setupId = setupId || 'local-demo-3d-zeropaper';
+
+    next = typeof next === 'function' ? next : function(){};
 
     function done(err, setup) {
-      if (err || !setup || !setup.layers || !setup.signals || !setup.mappings) {
-        return router._defaultBootstrap();
-      }
-
-      console.time();
-      router._sendBootstrap(setup, function() {
-        console.timeEnd();
-        router.navigate('setup/' + setupId, {replace: false, trigger: false});
-      });
+      console.timeEnd(setupId);
+      if (err) return next(err);
+      // router.navigate('setup/' + setupId, {replace: false, trigger: false});
+      router.view.getSetupEditor(setup);
+      next();
     }
 
-    if (!setupId) {
-      router._defaultBootstrap();
-    }
-    else if (setupId.indexOf('local-') === 0) {
-      router.loadLocal(setupId, done);
+    if (setupId.indexOf('local-') === 0) {
+      router._loadLocal(setupId, done);
     }
     else {
-      router.loadGist(setupId, done);
+      router._loadGist(setupId, done);
     }
   },
 
-  loadLocal: function(localId, done) {
-    var localforageView = this.view.menuView.localforageView;
-    localforageView.loadLocal(localId, done);
+  _loadLocal: function(setupId, done) {
+    done = typeof done === 'function' ? done : function(err) {
+      if(err) console.error('localforage error', err.message);
+    };
+
+    this.once('app:worker:storageLoad', function(data) {
+      done(data.error, data.setup);
+    });
+
+    this.sendCommand('storageLoad', {setupId: setupId});
   },
 
-  loadGist: function(gistId, done) {
+  _loadGist: function(gistId, done) {
     var gistView = this.view.gistView;
     var same = gistView.gistId === gistId;
     gistView.gistId = gistId;
-    if (!same) gistView._loadGist(done);
+    if (!same) {
+      gistView._loadGist(function(err, content) {
+        if (err) return done(err);
+        done(null, fromYaml(content));
+      });
+    }
   }
 });
 
 
-
-
-var controllerSetup = VF._defaultSetup;
-controllerSetup.el = document.querySelector('.controller');
-
-var vf = window.visualFiha = new AppRouter({
-  setup: controllerSetup
+window.visualFiha = new AppRouter({
+  el: document.querySelector('.controller')
 });
-installSetups(function(err) {
-  vf.history.start({
-    root: location.pathname,
-    pushState: false
-  });
-});
-
-
 
 // ---------------------------------------------------------------
 }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
@@ -365,5 +345,5 @@ installSetups(function(err) {
 
 /***/ })
 
-},[644]);
+},[336]);
 //# sourceMappingURL=controller-build.js.map
