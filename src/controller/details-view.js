@@ -85,11 +85,10 @@ var DetailsView = View.extend({
       default: val,
       value: val
     };
-    console.info('addParameter', parameter);
-    // this.rootView.sendCommand('addParameter', {
-    //   path: this.modelPath,
-    //   parameter: parameter
-    // });
+    this.rootView.sendCommand('addParameter', {
+      path: this.modelPath,
+      parameter: parameter
+    });
   },
 
   editFunction: function(propName) {

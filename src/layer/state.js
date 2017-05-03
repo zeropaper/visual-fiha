@@ -16,8 +16,6 @@ var LayerState = State.extend({
     state.listenToAndRun(state.parameters, 'change', function() {
       state.trigger('change:parameters', state, state.parameters, {parameters: true});
     });
-
-    state.listenToAndRun(state.parameters, 'sort', state.ensureParameters);
   },
 
   collections: {
