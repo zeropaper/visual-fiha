@@ -19,7 +19,7 @@ var SignalsView = View.extend({
     helper.attach(this.queryByHook('signal-type'), function(selected) {
       el.value = selected;
       helper.detach();
-    }).fill(Object.keys(SignalControlView.types));
+    }).fill(Object.keys(SignalControlView.types).concat(['function']));
   },
 
   _addSignal: function() {
