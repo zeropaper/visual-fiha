@@ -1,47 +1,12 @@
 'use strict';
-var State = require('ampersand-state');
-
 var objectPath = require('./../utils/object-path');
-var ParameterCollection = require('./../parameter/collection');
-
-var LayerState = State.extend({
+var parameterizedState = require('./../parameter/mixin');
+var LayerState = parameterizedState([
+  {name: 'zIndex', type: 'number', default: 0},
+  {name: 'active', type: 'boolean', default: true}
+]).extend({
   idAttribute: 'name',
   typeAttribute: 'type',
-
-  initialize: function() {
-    var state = this;
-
-    state.ensureParameters();
-
-    state.listenToAndRun(state.parameters, 'change', function() {
-      state.trigger('change:parameters', state, state.parameters, {parameters: true});
-    });
-  },
-
-  collections: {
-    parameters: ParameterCollection
-  },
-
-  baseParameters: [
-    {name: 'zIndex', type: 'number', default: 0},
-    {name: 'active', type: 'boolean', default: true}
-  ],
-
-  ensureParameters: function(definition = []) {
-    (this.baseParameters || [])
-      .concat(definition)
-      .forEach(function(parameterDef) {
-        var existing = this.parameters.get(parameterDef.name);
-        if (!existing) {
-          var created = this.parameters.add(parameterDef);
-          this.listenTo(created, 'change:value', function(...args) {
-            this.trigger('change:parameters.' + created.name, ...args);
-          });
-          created.value = parameterDef.default;
-        }
-      }, this);
-    return this;
-  },
 
   props: {
     name: ['string', true, null],
@@ -54,18 +19,6 @@ var LayerState = State.extend({
       deps: ['name'],
       fn: function() {
         return objectPath(this);
-      }
-    },
-    active: {
-      deps: ['parameters.active'],
-      fn: function() {
-        return this.parameters.getValue('active');
-      }
-    },
-    zIndex: {
-      deps: ['parameters.zIndex'],
-      fn: function() {
-        return this.parameters.getValue('zIndex');
       }
     },
     screenState: {

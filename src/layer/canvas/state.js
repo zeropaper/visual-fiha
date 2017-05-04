@@ -1,9 +1,11 @@
 'use strict';
 var Collection = require('ampersand-collection');
-var ParameterCollection = require('./../../parameter/collection');
 var ScreenLayerState = require('./../state');
 var mockedCtx = require('./mocked-canvas-2d-context');
 var compileFunction = require('./compile-draw-function');
+
+var parameterizedState = require('./../../parameter/mixin');
+
 function drawLayerCtx() {
   /*
     You can access the canvas 2d context with the global ctx
@@ -18,10 +20,6 @@ var CanvasLayer = ScreenLayerState.extend({
     drawFunction: ['any', true, function() { return drawLayerCtx; }]
   },
 
-  collections: {
-    parameters: ParameterCollection
-  },
-
   toJSON: function(...args) {
     return this.toJSON(...args);
   },
@@ -30,18 +28,9 @@ var CanvasLayer = ScreenLayerState.extend({
     mappable: {
       deps: ScreenLayerState.prototype._derived.mappable.deps,
       fn: function() {
-        var mappable = ScreenLayerState.prototype._derived.mappable.fn.apply(this, arguments);
-        var targets = mappable.target.filter(function(key) {
-          return [
-            'drawFunction',
-            'screenState', // would make a circular reference if not excluded!
-            'draw'
-          ].indexOf(key) < 0;
-        });
-        console.info('targets for %s', this.name, targets);
         return {
           source: [],
-          target: targets
+          target: ['parameters']
         };
       }
     },
@@ -119,20 +108,9 @@ var CanvasLayers = Collection.extend({
 });
 
 
-module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
-  baseParameters: ScreenLayerState.prototype.baseParameters.concat([
-    {name: 'clear', type: 'number', default: 1}
-  ]),
-
-  derived: {
-    clear: {
-      deps: ['parameters.clear'],
-      fn: function() {
-        return this.parameters.getValue('clear');
-      }
-    }
-  },
-
+module.exports = ScreenLayerState.types.canvas = parameterizedState(ScreenLayerState.prototype.baseParameters.concat([
+  {name: 'clear', type: 'number', default: 1}
+]), ScreenLayerState).extend({
   collections: {
     canvasLayers: CanvasLayers
   }
