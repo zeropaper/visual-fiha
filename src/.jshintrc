@@ -1,10 +1,13 @@
 {
+  "node": false,
   "browser": true,
   "browserify": true,
   "strict": true,
+  "esnext": true,
+  "undef": true,
+  "unused": true,
   "globals": {
     "BroadcastChannel": false,
-    "console": false,
-    "VF": true
+    "console": false
   }
 }
