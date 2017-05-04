@@ -219,9 +219,9 @@ var commands = {
   },
   storageSave: function(setupId) {
     var setup = {
-      layers: worker.layers.serialize(),
-      signals: worker.signals.serialize(),
-      mappings: worker.mappings.serialize()
+      layers: worker.layers.toJSON(),
+      signals: worker.signals.toJSON(),
+      mappings: worker.mappings.toJSON()
     };
 
     localForage
@@ -241,11 +241,6 @@ var commands = {
           worker.signals.reset(setup.signals);
           worker.mappings.reset(setup.mappings);
 
-          setup = {
-            signals: worker.signals.serialize(),
-            mappings: worker.mappings.serialize(),
-            layers: worker.layers.serialize()
-          };
           broadcastCommand('bootstrap', {layers: setup.layers});
           emitCommand('storageLoad', {setup: setup, setupId: setupId});
         })
@@ -260,11 +255,6 @@ var commands = {
     worker.signals.reset(setup.signals);
     worker.mappings.reset(setup.mappings);
 
-    setup = {
-      signals: worker.signals.serialize(),
-      mappings: worker.mappings.serialize(),
-      layers: worker.layers.serialize()
-    };
     broadcastCommand('bootstrap', {layers: setup.layers});
     emitCommand('yamlLoad', {setup: setup});
   },
