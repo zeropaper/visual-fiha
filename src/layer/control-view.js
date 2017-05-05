@@ -13,10 +13,6 @@ var LayerControlView = View.extend({
         <h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>
         <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
       </header>
-
-      <div class="preview gutter-horizontal"></div>
-
-      <div class="mappings props"></div>
     </section>
   `,
 
