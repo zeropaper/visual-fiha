@@ -2,23 +2,12 @@
 var View = require('./../controller/control-view');
 var SignalDetailsView = require('./details-view');
 var SignalControlView = View.extend({
-  template: '<section class="rows signal">' +
-    '<header class="row">' +
-      '<h3 class="row name"></h3>' +
-    '</header>' +
-
-    // '<div class="row gutter-horizontal columns model text-center">' +
-    //   '<div class="column input"></div>' +
-    //   '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
-    //   '<div class="column result"></div>' +
-    // '</div>' +
-
-    '<div class="row gutter-horizontal columns test text-center">' +
-      '<input class="column input" placeholder="Input" type="text"/>' +
-      '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
-      '<div class="column result"></div>' +
-    '</div>' +
-  '</section>',
+  template: `<section class="rows signal signal-default">
+    <header class="columns">
+      <h3 class="column signal-name gutter-horizontal" data-hook="name"></h3>
+      <div class="column no-grow text-right"><button class="vfi-trash-empty remove-signal"></button></div>
+    </header>
+  </section>`,
 
   session: {
     input: 'any',
@@ -35,10 +24,8 @@ var SignalControlView = View.extend({
   },
 
   bindings: {
-    'model.name': '.name',
-    // 'model.input': '.model .input',
-    // 'model.result': '.model .result',
-    result: '.test .result'
+    'model.name': '[data-hook=name]',
+    'model.type': '[data-hook=type]'
   },
 
   events: {
@@ -47,7 +34,9 @@ var SignalControlView = View.extend({
   },
 
   _showDetails: function () {
-    this.rootView.showDetails(new SignalDetailsView({
+    var DetailsViewConstructor = SignalDetailsView.types ? SignalDetailsView.types[this.model.getType()] : false;
+    DetailsViewConstructor = DetailsViewConstructor || SignalDetailsView;
+    this.rootView.showDetails(new DetailsViewConstructor({
       parent: this,
       model: this.model
     }));

@@ -56,10 +56,6 @@ var Settings = require('./controller/settings');
 
 var SignalCollection = require('./signal/collection');
 
-var signals = new SignalCollection([]);
-
-var VF = window.VF || {};
-VF.setups = VF.setups || {};
 
 // var _executedCommands = [];
 
@@ -75,7 +71,6 @@ var AppRouter = require('ampersand-router').extend({
     switch (command) {
       case 'bootstrap':
         screen.layers.reset(payload.layers || []);
-        signals.reset(payload.signals || []);
         router.mappings.import(payload.mappings || [], true);
         break;
 
@@ -109,6 +104,7 @@ var AppRouter = require('ampersand-router').extend({
   _handleWorkerMessages: function(evt) {
     var router = this;
     var screen = router.model;
+    var signals = router.signals;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
 
@@ -134,11 +130,11 @@ var AppRouter = require('ampersand-router').extend({
           model: signals.get(payload.signal.name)
         }));
         break;
+      case 'updateSignalResult':
+        signals.get(payload.name).workerResult = payload.workerResult;
+        break;
       case 'updateSignal':
-        var signalState = signals.get(payload.signal.name);
-        if (signalState) {
-          signalState.set(payload.signal);
-        }
+        signals.get(payload.signal.name).set(payload.signal);
         break;
       case 'updateSignals':
         signals.set(payload.signals);
@@ -174,10 +170,15 @@ var AppRouter = require('ampersand-router').extend({
 
       case 'storageSave':
       case 'storageLoad':
+        if (command === 'storageLoad') {
+          signals.reset(payload.setup.signals);
+        }
         router.navigate('/setup/' + payload.setupId, {trigger: false, replace: false});
         break;
 
       case 'yamlLoad':
+        signals.reset(payload.setup.signals);
+        break;
       case 'storageKeys':
         break;
 
@@ -196,13 +197,16 @@ var AppRouter = require('ampersand-router').extend({
     var screen = router.model = new ScreenState({}, {
       router: this
     });
+    var signals = router.signals = new SignalCollection([], {clock: screen.clock});
+
+
     router.on('all', function(...args) {
       if (args[0] && args[0].indexOf('app:') === 0) screen.trigger(...args);
     });
 
     var mappingContext = {
       context: {
-        signals: signals,
+        signals: router.signals,
         layers: screen.layers
       }
     };

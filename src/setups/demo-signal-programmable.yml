@@ -1,0 +1,41 @@
+signals:
+  func:
+    type: programmable
+    defaultValue: 1
+    updateFunction: |
+      // console.info('beatnum', beatnum);
+      return beatnum;
+    parameters:
+      - name: input
+        type: any
+        value: null
+        default: null
+mappings:
+  txtText:
+    targets:
+      - layers.txt.parameters.text.value
+    transformFunction: |
+      function(val){
+        console.info(val);
+        return val;
+      }
+    source: signals.func.result
+layers:
+  txt:
+    type: txt
+    layerStyles: |
+      color: #fff;
+      font-size: 30vmax;
+    parameters:
+      - name: active
+        type: boolean
+        value: true
+        default: true
+      - name: text
+        type: string
+        value: bla
+        default: ''
+      - name: zIndex
+        type: number
+        value: 0
+        default: 0

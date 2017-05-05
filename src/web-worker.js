@@ -38,8 +38,8 @@ worker.screen = new ScreenState();
 worker.layers = worker.screen.layers;
 
 var SignalCollection = require('./signal/collection');
-worker.signals = new SignalCollection({
-  parent: worker.screen
+worker.signals = new SignalCollection([], {
+  clock: worker.screen.clock
 });
 worker.signals.listenTo(worker.screen.clock, 'change:frametime', function(...args) {
   worker.signals.trigger('change:frametime', ...args);
@@ -221,7 +221,7 @@ var commands = {
     var setup = {
       layers: worker.layers.toJSON(),
       signals: worker.signals.toJSON(),
-      mappings: worker.mappings.toJSON()
+      mappings: worker.mappings.export()
     };
 
     localForage
@@ -433,6 +433,7 @@ worker.addEventListener('message', function(evt) {
 
 worker.layers.on('emitCommand', emitCommand);
 worker.layers.on('broadcastCommand', broadcastCommand);
+worker.signals.on('emitCommand', emitCommand);
 // --------------------------------------------------------------
 }, 'worker-deps');
 }, 'screen-state');

@@ -18,6 +18,10 @@ var SignalState = parameterizedState([
     defaultValue: ['any', true, function () { return 1; }]
   },
 
+  session: {
+    workerResult: ['any', false, null]
+  },
+
   derived: {
     modelPath: {
       deps: ['name'],
@@ -25,12 +29,43 @@ var SignalState = parameterizedState([
         return 'signals.' + this.name;
       }
     },
-    result: {
-      deps: ['input', 'transformations'],
+    location: {
+      deps: [],
       fn: function() {
-        return this.computeSignal();
+        return typeof document !== 'undefined' ? 'worker' : 'controller';
+      }
+    },
+    result: {
+      deps: ['input', 'workerResult'],
+      fn: function() {
+        return this.location !== 'worker' ?
+          (this.workerResult || this.defaultValue) :
+          this.computeSignal();
       }
     }
+  },
+
+
+  initialize: function() {
+    var state = this;
+    if (!state.collection) throw new Error('Signal instance ' + state.name + ' has no collection');
+    var signals = state.collection;
+    var id = state.getId();
+
+    state._ensureBaseParameters();
+
+    state.listenToAndRun(state.parameters, 'change', function() {
+      state.trigger('change:parameters', state, state.parameters, {parameters: true});
+    });
+
+    if (state.location !== 'worker') return;
+    state.on('change:result', function() {
+      state.workerResult = state.result;
+      signals.trigger('emitCommand', 'updateSignalResult', {
+        name: id,
+        workerResult: state.result
+      });
+    });
   },
 
   computeSignal: function(val) {

@@ -1,7 +1,7 @@
 'use strict';
 var View = require('./../controller/control-view');
-
 var SignalControlView = require('./control-view');
+require('./programmable/control-view');
 require('./hsla/control-view');
 require('./rgba/control-view');
 
@@ -19,7 +19,7 @@ var SignalsView = View.extend({
     helper.attach(this.queryByHook('signal-type'), function(selected) {
       el.value = selected;
       helper.detach();
-    }).fill(Object.keys(SignalControlView.types).concat(['function']));
+    }).fill(Object.keys(SignalControlView.types));
   },
 
   _addSignal: function() {
@@ -35,19 +35,17 @@ var SignalsView = View.extend({
     };
   },
 
-  subviews: {
-    items: {
-      selector: '.items',
-      waitFor: 'el',
-      prepareView: function(el) {
-        return this.renderCollection(this.collection, function (opts) {
-          var type = opts.model.getType();
-          var Constructor = SignalControlView.types[type] || SignalControlView;
-          return new Constructor(opts);
-        }, el);
-      }
-    }
+
+  render: function() {
+    SignalControlView.prototype.render.apply(this, arguments);
+    this.items = this.renderCollection(this.collection, function (opts) {
+      var type = opts.model.getType();
+      var Constructor = SignalControlView.types[type] || SignalControlView;
+      return new Constructor(opts);
+    }, '.items');
+    return this;
   },
+
 
   template: `
     <section class="row signals">
