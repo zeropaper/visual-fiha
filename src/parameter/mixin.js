@@ -13,8 +13,17 @@ module.exports = function parameterizedState(baseParameters, State = AmpersandSt
   });
 
   return State.extend({
+    // is only need for derived updates, the non-baseParameters ar not relevant
+    _bindValueChange: function(paramState) {
+      if (!paramState) return;
+      this.listenTo(paramState, 'change:value', function(...args) {
+        this.trigger('change:parameters.' + paramState.name, ...args);
+      });
+    },
+
     initialize: function() {
       var state = this;
+      State.prototype.initialize.apply(state, arguments);
 
       state._ensureBaseParameters();
 
@@ -39,9 +48,7 @@ module.exports = function parameterizedState(baseParameters, State = AmpersandSt
           var existing = this.parameters.get(parameterDef.name);
           if (!existing) {
             var created = this.parameters.add(parameterDef);
-            this.listenTo(created, 'change:value', function(...args) {
-              this.trigger('change:parameters.' + created.name, ...args);
-            });
+            this._bindValueChange(created);
             created.value = parameterDef.default;
           }
         }, this);
