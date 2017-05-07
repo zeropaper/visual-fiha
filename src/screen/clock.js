@@ -2,11 +2,6 @@
 var State = require('ampersand-state');
 
 var Clock = State.extend({
-  mappable: {
-    source: ['frametime', 'pausetime', 'starttime', 'bpm', 'beatprct', 'beatnum', 'beatlength'],
-    target: ['beatdelay', 'bpm']
-  },
-
   play: function() {
     var now = Date.now();
     this.starttime = this.pausetime ? this.starttime + (now - this.pausetime) : now;
@@ -29,7 +24,21 @@ var Clock = State.extend({
 
   refresh: function() {
     if (this.playing) this.frametime = Date.now() - this.starttime;
+    this.duration = Math.max(this.duration, this.frametime);
     return this;
+  },
+
+  props: {
+    pausetime: ['number', true, 0],
+    starttime: ['number', true, Date.now],
+    frametime: ['number', true, 0],
+    beatdelay: ['number', true, 0],
+    bpm: ['number', true, 120]
+  },
+
+  mappable: {
+    source: ['frametime', 'pausetime', 'starttime', 'bpm', 'beatprct', 'beatnum', 'beatlength'],
+    target: ['beatdelay', 'bpm']
   },
 
   derived: {
@@ -78,14 +87,6 @@ var Clock = State.extend({
         return (60 * 1000) / Math.max(this.bpm, 1);
       }
     }
-  },
-
-  props: {
-    pausetime: ['number', true, 0],
-    starttime: ['number', true, Date.now],
-    frametime: ['number', true, 0],
-    beatdelay: ['number', true, 0],
-    bpm: ['number', true, 120]
   }
 });
 

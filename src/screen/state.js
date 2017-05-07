@@ -8,8 +8,8 @@ var ScreenState = State.extend({
   },
 
   mappable: {
-    source: ['midi', 'frametime', 'clock', 'signals'],
-    target: ['layers', 'signals', 'clock']
+    source: ['midi', 'clock'],
+    target: ['layers', 'clock']
   },
 
   session: {
