@@ -65,7 +65,6 @@ module.exports = SignalState.types.programmable = SignalState.extend({
     }
     catch (err) {
       console.warn('Error', err.message);
-      result = err;
     }
     return result;
   }
