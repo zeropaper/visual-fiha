@@ -120,13 +120,7 @@ var AppRouter = require('ampersand-router').extend({
         break;
 
       case 'updateLayer':
-        var layerState = layers.get(payload.layer.name);
-        if(layerState) {
-          layerState.set(payload.layer);
-        }
-        else {
-          layers.add(payload.layer);
-        }
+        layers.get(payload.layer.name).set(payload.layer);
         break;
 
       case 'addSignal':
