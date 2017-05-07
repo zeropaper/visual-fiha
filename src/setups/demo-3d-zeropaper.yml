@@ -88,63 +88,91 @@ layers:
     type: threejs
     layerStyles: ''
     currentCamera: defaultperspective
-    renderFunction: "function() {\n  // var helper = new THREE.AxisHelper(20);\n  // helper.name = 'axisHelper';\n  // layer.scene.add(helper);\n\n  // helper = new THREE.GridHelper(200);\n  // helper.name = 'gridHelper';\n  // layer.scene.add(helper);\n\n  function makeClones(object, count = 1) {\n    for (var c = 1; c < count; c++) {\n      var clone = object.clone();\n      clone.traverse(function(child) {\n        if (!child.material) return;\n        child.material = child.material.clone();\n        // child.material.wireframe = true; // provokes illegal operation \uD83D\uDE22\n      });\n      clone.name = 'clone' + (c + 1);\n      layer.scene.add(clone);\n    }\n  }\n\n  var fatView = layer.loaders.views.filter(v => v.model.name === 'fat')[0];\n  layer.listenToAndRun(fatView, 'change:object', function() {\n    var fatObject = fatView.object;\n    fatObject.traverse(function(child) {\n      if (child.material) child.material.side = THREE.DoubleSide;\n    });\n    makeClones(fatObject, 8);\n  });\n}"
-    updateFunction: |-
-      function() {
-        var screenState = layer.model.screenState;
-        var audio = screenState.audio;
-        var freq = audio.frequency;
-        var vol = audio.timeDomain;
+    renderFunction: |
+      // var helper = new THREE.AxisHelper(20);
+      // helper.name = 'axisHelper';
+      // layer.scene.add(helper);
 
-        var scale = freq[12] * 0.1;
-        var speed = 1000;
-        var dist = 200;
-        var deg = (screenState.frametime % (speed * 360) / speed);
-        var tilt = vol[4] - 127;
+      // helper = new THREE.GridHelper(200);
+      // helper.name = 'gridHelper';
+      // layer.scene.add(helper);
 
-        layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);
-        layer.camera.lookAt(layer.scene.position);
-
-        var fat = layer.scene.getObjectByName('fat');
-        fat.scale.set(scale + 1, scale + 1, scale + 1);
-        fat.rotation.set(Math.PI * 0.35, midi2rad(parameter('knob1', 0)), midi2rad(parameter('knob2', 0)));
-
-        function alterMaterials(c) {
-          return function(child) {
-            if (child.material && child.material.color) {
-              child.material.wireframe = true;
-              child.material.color = new THREE.Color('hsl('+ freq[c * 4] +', ' + parameter('slider1', 50) + '%, ' + parameter('slider2', 50) + '%)');
-            }
-          }
+      function makeClones(object, count = 1) {
+        for (var c = 1; c < count; c++) {
+          var clone = object.clone();
+          clone.traverse(function(child) {
+            if (!child.material) return;
+            child.material = child.material.clone();
+            // child.material.wireframe = true; // provokes illegal operation \uD83D\uDE22
+          });
+          clone.name = 'clone' + (c + 1);
+          layer.scene.add(clone);
         }
-
-        function applyClones(count = 1) {
-          var cap = midiMinMax(parameter('knob3', 0), 0, count);
-          for (var c = 0; c < count; c++) {
-            var clone = layer.scene.getObjectByName('clone' + (c + 1));
-            if (clone) {
-              if (cap < c) {
-                clone.visible = false;
-                return;
-              }
-
-              clone.visible = true;
-              clone.traverse(alterMaterials(c));
-
-              var s = fat.scale.toArray();
-              clone.scale.set(...s);
-
-              var r = fat.rotation.toArray();
-              clone.rotation.set(...r);
-
-              var p = fat.position.toArray();
-              p[Math.round(midiMinMax(parameter('slider3', 0), 0, 2))] = (c * vol[4] * 0.01 * (tilt * (c % 2 === 0 ? 1 : -1)));
-              clone.position.set(...p);
-            }
-          }
-        }
-        applyClones(8);
       }
+
+      var fatView = layer.loaders.views.filter(v => v.model.name === 'fat')[0];
+      layer.listenToAndRun(fatView, 'change:object', function() {
+        var fatObject = fatView.object;
+        fatObject.traverse(function(child) {
+          if (child.material) child.material.side = THREE.DoubleSide;
+        });
+        makeClones(fatObject, 8);
+      });
+
+    updateFunction: |
+      var screenState = layer.model.screenState;
+      var audio = screenState.audio;
+      var freq = audio.frequency;
+      var vol = audio.timeDomain;
+
+      var scale = freq[12] * 0.1;
+      var speed = 1000;
+      var dist = 200;
+      var deg = (screenState.frametime % (speed * 360) / speed);
+      var tilt = vol[4] - 127;
+
+      layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);
+      layer.camera.lookAt(layer.scene.position);
+
+      var fat = layer.scene.getObjectByName('fat');
+      fat.scale.set(scale + 1, scale + 1, scale + 1);
+      fat.rotation.set(Math.PI * 0.35, midi2rad(parameter('knob1', 0)), midi2rad(parameter('knob2', 0)));
+
+      function alterMaterials(c) {
+        return function(child) {
+          if (child.material && child.material.color) {
+            child.material.wireframe = true;
+            child.material.color = new THREE.Color('hsl('+ freq[c * 4] +', ' + parameter('slider1', 50) + '%, ' + parameter('slider2', 50) + '%)');
+          }
+        }
+      }
+
+      function applyClones(count = 1) {
+        var cap = midiMinMax(parameter('knob3', 0), 0, count);
+        for (var c = 0; c < count; c++) {
+          var clone = layer.scene.getObjectByName('clone' + (c + 1));
+          if (clone) {
+            if (cap < c) {
+              clone.visible = false;
+              return;
+            }
+
+            clone.visible = true;
+            clone.traverse(alterMaterials(c));
+
+            var s = fat.scale.toArray();
+            clone.scale.set(...s);
+
+            var r = fat.rotation.toArray();
+            clone.rotation.set(...r);
+
+            var p = fat.position.toArray();
+            p[Math.round(midiMinMax(parameter('slider3', 0), 0, 2))] = (c * vol[4] * 0.01 * (tilt * (c % 2 === 0 ? 1 : -1)));
+            clone.position.set(...p);
+          }
+        }
+      }
+      applyClones(8);
     parameters:
       - name: knob1
         value: '63'

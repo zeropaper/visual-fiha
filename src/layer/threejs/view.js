@@ -26,31 +26,26 @@ function compileFunction(func) {
   var navigator, window, global, document, module, exports;
 
   return function() {
-    var layer = this;
-    var width = layer.width || 400;
-    var height = layer.height || 300;
-    var store = layer.cache = (layer.cache || {});
-    var frametime = layer ? layer.frametime : 0;
-    var audio = layer ? layer.audio : {};
+    const layer = this;
+    const width = layer.width || 400;
+    const height = layer.height || 300;
+    const store = layer.cache = (layer.cache || {});
+    const frametime = layer ? layer.frametime : 0;
+    const audio = layer ? layer.audio : {};
 
-    var getLoaderViewByName = function(name) {
-      var filtered = layer.loaders.views.filter(v => v.model.name === name);
-      return filtered.length ? filtered[0] : false;
-    };
-
-    var bufferLength = function() {
+    const bufferLength = function() {
       return ((layer.audio || {}).bufferLength) || 128;
     };
 
-    var frequency = function(x) {
+    const frequency = function(x) {
       return ((layer.audio || {}).frequency || [])[x] || 0;
     };
 
-    var timeDomain = function(x) {
+    const timeDomain = function(x) {
       return ((layer.audio || {}).timeDomain || [])[x] || 0;
     };
 
-    var parameter = function (name, deflt) {
+    const parameter = function (name, deflt) {
       var val = layer.model.parameters.get(name);
       return val ? val.value : deflt;
     };
@@ -59,7 +54,14 @@ function compileFunction(func) {
     ${ midi2Rad.toString() }
     ${ midi2Prct.toString() }
 
-    return (${ func.toString() })();
+    const getLoaderViewByName = function(name) {
+      var filtered = layer.loaders.views.filter(v => v.model.name === name);
+      return filtered.length ? filtered[0] : false;
+    };
+
+    return (function() {
+      ${ func.toString() }
+    })();
   };
 })();`;
 

@@ -8,35 +8,29 @@ layers:
     zIndex: 1000
     layerStyles: ''
     currentCamera: perspective
-    renderFunction: |-
-      function() {
-        var helper = new THREE.AxisHelper(20);
-        helper.name = 'axisHelper';
-        layer.scene.add(helper);
+    renderFunction: |
+      var helper = new THREE.AxisHelper(20);
+      helper.name = 'axisHelper';
+      layer.scene.add(helper);
 
-        helper = new THREE.GridHelper(200);
-        helper.name = 'gridHelper';
-        layer.scene.add(helper);
-        console.info(layer.scene.children.map(o => o.name));
-      }
-    updateFunction: |-
-      function() {
-        var screenState = layer.model.screenState;
-        var audio = screenState.audio;
-        var freq = audio.frequency;
-        var vol = audio.timeDomain;
+      helper = new THREE.GridHelper(200);
+      helper.name = 'gridHelper';
+      layer.scene.add(helper);
+      console.info(layer.scene.children.map(o => o.name));
+    updateFunction: |
+      var screenState = layer.model.screenState;
+      var audio = screenState.audio;
+      var freq = audio.frequency;
+      var vol = audio.timeDomain;
 
-        var scale = freq[12] * 0.1;
-        var speed = 1000;
-        var dist = 80;
-        var deg = (screenState.frametime % (speed * 360) / speed);
-        var tilt = vol[4] - 127;
+      var scale = freq[12] * 0.1;
+      var speed = 1000;
+      var dist = 80;
+      var deg = (screenState.frametime % (speed * 360) / speed);
+      var tilt = vol[4] - 127;
 
-        layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);
-        layer.camera.lookAt(layer.scene.position);
-        /*
-        */
-      }
+      layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);
+      layer.camera.lookAt(layer.scene.position);
     parameters: []
     geometries:
       - visible: true

@@ -143,26 +143,24 @@ layers:
             value: 63
             type: number
             default: 127
-        drawFunction: |-
-          function () {
-            var l = bufferLength();
-            var _kA = parameter('knobA', 30);
-            var _kB = parameter('knobB', 30);
-            var _kC = parameter('knobC', 30);
-            var f = 0;
-            var k = Math.round(_kA * 0.05);
-            var p = Math.max(1, k);
-            var d = Math.pow(2, p);
+        drawFunction: |
+          var l = bufferLength();
+          var _kA = parameter('knobA', 30);
+          var _kB = parameter('knobB', 30);
+          var _kC = parameter('knobC', 30);
+          var f = 0;
+          var k = Math.round(_kA * 0.05);
+          var p = Math.max(1, k);
+          var d = Math.pow(2, p);
 
-            grid(l, l / d, function(...args) {
-              var color = 'hsl('+ (timeDomain(f) * 3) +', '+ _kB +'%, '+ _kB +'%)';
-              strokeStyle(color);
+          grid(l, l / d, function(...args) {
+            var color = 'hsl('+ (timeDomain(f) * 3) +', '+ _kB +'%, '+ _kB +'%)';
+            strokeStyle(color);
 
-              // circle(...args, timeDomain(f) * 0.1);
-              polygone(...args, timeDomain(f) * _kC * 0.05);
-              f++;
-            });
-          }
+            // circle(...args, timeDomain(f) * 0.1);
+            polygone(...args, timeDomain(f) * _kC * 0.05);
+            f++;
+          });
   ar:
     type: SVG
     active: true

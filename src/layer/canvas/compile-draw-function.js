@@ -59,7 +59,9 @@ function compileFunction(drawFunction) {
     const restoreContexts = function(...args) { utils.restoreContexts(ctx, ...args); };
 
 
-    return (${ drawFunction.toString() })(ctx);
+    return (function draw(){
+      ${ drawFunction }
+    })(ctx);
   };
 })();`;
   eval(evaled);// jshint ignore:line

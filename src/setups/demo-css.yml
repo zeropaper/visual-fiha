@@ -222,12 +222,10 @@ layers:
         zIndex: 0
         name: bottom
         active: true
-        drawFunction: |-
-          function drawLayerCtx() {
-            /*
-              You can access the canvas 2d context with the global ctx
-            */
-          }
+        drawFunction: |
+          /*
+            You can access the canvas 2d context with the global ctx
+          */
       - props:
           active:
             type: boolean
