@@ -59,9 +59,7 @@ function compileFunction(func) {
       return filtered.length ? filtered[0] : false;
     };
 
-    return (function() {
-      ${ func.toString() }
-    })();
+    ${ func.toString() }
   };
 })();`;
 

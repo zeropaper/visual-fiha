@@ -1,32 +1,22 @@
 'use strict';
 /**
- * compileFunction(name, prologue, [arg1, arg2, ...] body, context)
+ * compileFunction(name, prologue, [arg1, arg2, ...] body)
  */
 module.exports = function compileFunction(...args) {
   var name = args.shift();
   var prologue = args.shift();
-  var context = args.pop();
   var body = args.pop();
   var fn;
-  var template = `fn = function ${ name }(${ args.join(', ') }) {
-  // override some stuff that should not be used
-  var navigator, window, top, global, document, module, exports;
 
-  // ${ name } prologue
-  ${ prologue }
-
-  // ${ name } body
-  ${ body }
-};`;
+  console.time('compileFunction ' + name);
   try {
-    eval(template);// jshint ignore:line
-    var type = typeof fn;
-    if (type !== 'function') throw new Error('Function compilation error, returned not function');
-    fn.bind(context);
+    fn = new Function(...args, prologue + body);// jshint ignore:line
+    if (typeof fn !== 'function') throw new Error('Function compilation error, returned not function');
   }
   catch (e) {
-    console.error('compilation error: %s\n%s', e.message, template);
-    return e;
+    console.log('%c compilation error: %s', 'color:red', e.message);
+    fn = e;
   }
+  console.timeEnd('compileFunction ' + name);
   return fn;
 };
