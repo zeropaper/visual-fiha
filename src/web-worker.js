@@ -45,7 +45,9 @@ var fromYaml = require('./utils/yaml-to-setup');
 var Mappings = require('./mapping/data');
 
 var ScreenState = require('./screen/state');
-worker.screen = new ScreenState();
+worker.screen = new ScreenState({}, {
+  worker: worker
+});
 
 worker.layers = worker.screen.layers;
 
@@ -216,7 +218,7 @@ var commands = {
           emitCommand('storageKeys', {keys: keys});
         })
         .catch(function(err) {
-          emitCommand('storageKeys', {error: err});
+          emitCommand('storageKeys', {error: {message: err.message, stack: err.stack}});
         });
   },
   storageSave: function(setupId) {
@@ -232,7 +234,7 @@ var commands = {
           emitCommand('storageSave', {setup: setup, setupId: setupId});
         })
         .catch(function(err) {
-          emitCommand('storageSave', {error: err, setupId: setupId});
+          emitCommand('storageSave', {error: {message: err.message, stack: err.stack}, setupId: setupId});
         });
   },
   storageLoad: function(setupId) {
@@ -247,7 +249,7 @@ var commands = {
           emitCommand('storageLoad', {setup: setup, setupId: setupId});
         })
         .catch(function(err) {
-          emitCommand('storageLoad', {error: err, setupId: setupId});
+          emitCommand('storageLoad', {error: {message: err.message, stack: err.stack}, setupId: setupId});
         });
   },
 
