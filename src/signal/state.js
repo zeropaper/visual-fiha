@@ -1,9 +1,7 @@
 'use strict';
 
 var parameterizedState = require('./../parameter/mixin');
-var SignalState = parameterizedState([
-  {name: 'input', type: 'any', default: null}
-]).extend({
+var SignalState = parameterizedState([]).extend({
   idAttribute: 'name',
   typeAttribute: 'type',
 
@@ -32,7 +30,7 @@ var SignalState = parameterizedState([
     location: {
       deps: [],
       fn: function() {
-        return typeof document !== 'undefined' ? 'worker' : 'controller';
+        return this.collection.location;
       }
     },
     result: {
@@ -47,25 +45,31 @@ var SignalState = parameterizedState([
 
 
   initialize: function() {
-    var state = this;
-    if (!state.collection) throw new Error('Signal instance ' + state.name + ' has no collection');
-    var signals = state.collection;
-    var id = state.getId();
+    var signal = this;
+    var id = signal.getId();
+    var signals = signal.collection;
+    if (!signal.collection) throw new Error('Missing collection for ' + signal.name);
 
-    state._ensureBaseParameters();
+    signal._ensureBaseParameters();
 
-    state.listenToAndRun(state.parameters, 'change', function() {
-      state.trigger('change:parameters', state, state.parameters, {parameters: true});
+    signal.listenTo(signal.parameters, 'change', function() {
+      signal.trigger('change:parameters', signal, signal.parameters, {parameters: true});
     });
 
-    if (state.location !== 'worker') return;
-    state.on('change:result', function() {
-      state.workerResult = state.result;
-      signals.trigger('emitCommand', 'updateSignalResult', {
-        name: id,
-        workerResult: state.result
+    if (signal.location === 'worker') {
+      signal.on('change:result', function() {
+        if (signals !== signal.collection) return; // may happen when bootstraping a new setup
+        signals.emitCommand('updateSignalResult', {
+          name: id,
+          workerResult: signal.result
+        });
       });
-    });
+    }
+    else {
+      signal.on('change:workerResult', function() {
+        signal.trigger('change:result', signal, signal.result);
+      });
+    }
   },
 
   computeSignal: function(val) {

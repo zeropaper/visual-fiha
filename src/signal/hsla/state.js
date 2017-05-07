@@ -1,35 +1,60 @@
 'use strict';
 var SignalState = require('./../state');
 
-var _360 = {
-  type: 'number',
-  required: true,
-  default: 180,
-  min: 0,
-  max: 360
-};
-var _100 = {
-  type: 'number',
-  required: true,
-  default: 100,
-  min: 0,
-  max: 100
-};
+function _360(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 180,
+    min: 0,
+    max: 360
+  };
+}
+function _100(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 100,
+    min: 0,
+    max: 100
+  };
+}
+function _1(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 1,
+    min: 0,
+    max: 1
+  };
+}
+function derivedParameter(name) {
+  return {
+    deps: ['parameters.' + name],
+    fn: function() {
+      return this.parameters.getValue(name);
+    }
+  };
+}
 
 var HSLASignalState = SignalState.types.hsla = SignalState.extend({
-  props: {
-    hue: _360,
-    saturation: _100,
-    lightness: _100,
-    alpha: _100
-  },
+  baseParameters: [
+    _360('hue'),
+    _100('saturation'),
+    _100('lightness'),
+    _1('alpha')
+  ],
 
   mappable: {
     source: ['result', 'hue', 'saturation', 'lightness', 'alpha'],
-    target: ['hue', 'saturation', 'lightness', 'alpha']
+    target: ['parameters']
   },
 
   derived: {
+    hue: derivedParameter('hue'),
+    saturation: derivedParameter('saturation'),
+    lightness: derivedParameter('lightness'),
+    alpha: derivedParameter('alpha'),
     result: {
       deps: ['hue', 'saturation', 'lightness', 'alpha'],
       fn: function() {
@@ -47,7 +72,7 @@ var HSLASignalState = SignalState.types.hsla = SignalState.extend({
   //   };
   // },
   computeSignal: function() {
-    return 'hsla(' + Math.round(this.hue) + ',' + Math.round(this.saturation) + '%,' + Math.round(this.lightness) + '%,' + (Math.round(this.alpha) / 100) + ')';
+    return 'hsla(' + Math.round(this.hue) + ',' + Math.round(this.saturation) + '%,' + Math.round(this.lightness) + '%,' + (Math.round(100 * this.alpha) / 100) + ')';
   }
 });
 
