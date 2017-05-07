@@ -10,6 +10,7 @@ require.ensure([
   './mapping/data',
 ], function() {
 require.ensure([
+  './screen/state',
   './layer/state',
   './layer/svg/state',
   './layer/img/state',
@@ -20,11 +21,11 @@ require.ensure([
   './layer/canvas/state',
 ], function() {
 require.ensure([
-  './screen/state',
+  './signal/state',
+  './signal/collection',
 ], function() {
 require.ensure([
-  './utils/resolve',
-  './signal/collection'
+  './utils/resolve'
 ], function() {
 // ---------------------------------------------------------------
 var resolve = require('./utils/resolve');
@@ -436,7 +437,7 @@ worker.layers.on('broadcastCommand', broadcastCommand);
 worker.signals.on('emitCommand', emitCommand);
 // --------------------------------------------------------------
 }, 'worker-deps');
-}, 'screen-state');
+}, 'signal-state');
 }, 'layer-state');
 }, 'mapping-data');
 }, 'ampersand-data');
