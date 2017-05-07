@@ -138,14 +138,14 @@ function targetSuggestions(origin) {
 \**********************************************************************************/
 var EmitterTargetView = View.extend({
   template: `<div class="mapping-emitter-target-view columns">
-  <div class="column"><input type="text" name="target-path" /></div>
+  <div class="column gutter target-path"></div>
   <div class="column no-grow"><button name="remove-target" class="vfi-trash-empty"></button></div>
 </div>`,
 
   bindings: {
     'model.path': {
-      type: 'value',
-      selector: '[name="target-path"]'
+      type: 'text',
+      selector: '.target-path'
     }
   },
 
@@ -205,9 +205,9 @@ var EmitterView = View.extend({
 
   template: `<section class="mapping-emitter-view">
   <header class="columns">
-    <div class="column emitter-name gutter"></div>
+    <div class="column gutter emitter-name"></div>
     <div class="column no-grow"><button name="edit-transform-function" class="vfi-code"></button></div>
-    <div class="column"><input type="text" name="emitter-source" /></div>
+    <div class="column gutter emitter-source"></div>
     <div class="column no-grow"><button name="remove-emitter" class="vfi-trash-empty"></button></div>
   </header>
   <div class="columns">
@@ -219,10 +219,7 @@ var EmitterView = View.extend({
 
   bindings: {
     'model.name': '.emitter-name',
-    'model.source': {
-      type: 'value',
-      selector: '[name="emitter-source"]'
-    }
+    'model.source': '.emitter-source'
   },
 
   events: {
@@ -344,8 +341,7 @@ var MappingsControlView = View.extend({
         return 'signals.' + id + '.' + name;
       }));
     });
-
-    results = midiSources.concat(results);
+    results = sourceSuggestions(rootView.model).concat(midiSources, results);
 
     helper.attach(evt.target, function(selected) {
       evt.target.value = selected;
