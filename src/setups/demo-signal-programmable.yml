@@ -1,41 +1,62 @@
 signals:
   func:
     type: programmable
-    defaultValue: 1
     updateFunction: |
       // console.info('beatnum', beatnum);
       return beatnum;
+  hsla:
+    type: hsla
     parameters:
-      - name: input
-        type: any
-        value: null
-        default: null
+      - name: saturation
+        value: 50
+        default: 50
+        type: number
+      - name: lightness
+        value: 50
+        default: 50
+        type: number
+  rgba:
+    type: rgba
 mappings:
   txtText:
     targets:
       - layers.txt.parameters.text.value
     transformFunction: |
       function(val){
-        console.info(val);
+        // console.info('txtText', val);
         return val;
       }
     source: signals.func.result
+  knob1:
+    targets:
+      - layers.txt.parameters.zIndex.value
+    transformFunction: |
+      function(val){
+        // console.info('knob1', val);
+        return val;
+      }
+    source: 'midi:nk2.knob1'
+  color1:
+    targets:
+      - layers.txt.parameters.color1.value
+    transformFunction: |
+      function(val){
+        // console.info('color1', val);
+        return val;
+      }
+    source: signals.hsla.result
 layers:
   txt:
     type: txt
     layerStyles: |
-      color: #fff;
+      color: var(--color1);
       font-size: 30vmax;
     parameters:
-      - name: active
-        type: boolean
-        value: true
-        default: true
+      - name: color1
+        type: string
+        value: '#fff'
+        default: '#fff'
       - name: text
         type: string
         value: bla
         default: ''
-      - name: zIndex
-        type: number
-        value: 0
-        default: 0
