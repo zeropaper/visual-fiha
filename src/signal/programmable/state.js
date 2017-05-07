@@ -7,10 +7,12 @@ var updatePrologue = ``;
 module.exports = SignalState.types.programmable = SignalState.extend({
   initialize: function() {
     SignalState.prototype.initialize.apply(this, arguments);
+
+    // this forces the refresh of 'result' derived on worker everytime the clock is ticking
     if (this.location !== 'worker') return;
-    // this.on('change:result', function() {console.info(this.name + ' change:result');});
-    this.listenTo(this.collection.clock, 'change:frametime', function(...args) {
-      this.trigger('change:input', this, args[1], args[2]);
+    this.listenTo(this.collection.clock, 'change:frametime', function() {
+      delete this._cache.result;
+      this.trigger('change:input');
     });
   },
 
@@ -52,11 +54,19 @@ module.exports = SignalState.types.programmable = SignalState.extend({
     });
 
     var fn = this.update;
-    return typeof fn === 'function' ? fn(
-      clock.frametime,
-      clock.bpm,
-      clock.beatnum,
-      clock.beatprct
-    ) : 0;
+    var result = 0;
+    try {
+      result = fn(
+        clock.frametime,
+        clock.bpm,
+        clock.beatnum,
+        clock.beatprct
+      );
+    }
+    catch (err) {
+      console.warn('Error', err.message);
+      result = err;
+    }
+    return result;
   }
 });
