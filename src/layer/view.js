@@ -17,10 +17,14 @@ var LayerView = View.extend({
     `;
   },
 
+  updateParameter: function(parameter) {
+    if (!parameter) return;
+    this.setProperty('--' + parameter.name, parameter.value);
+  },
+
   initialize: function() {
-    this.listenTo(this.model.parameters, 'change', function(prop) {
-      this.setProperty('--' + prop.name, prop.value);
-    });
+    this.listenTo(this.model.parameters, 'change:value', this.updateParameter);
+    this.model.parameters.forEach(this.updateParameter, this);
   },
 
   derived: {

@@ -17,20 +17,7 @@ module.exports = DetailsView.types.p5 = DetailsView.extend({
         <h5 data-hook="object-path"></h5>
       </header>
 
-      <div class="rows row param-section">
-        <h5>CSS variables</h5>
-        <div class="row columns">
-          <div class="columns"><input type="text" name="style-prop-name" placeholder="--css-var-name" /></div>
-          <div class="columns"><input type="text" name="style-prop-default" placeholder="2px, 100%, " /></div>
-          <div class="columns no-grow"><button name="style-prop-add" class="vfi-plus"></button></div>
-        </div>
-        <div class="row style-props" ></div>
-      </div>
-
-      <div class="rows row param-section">
-        <h5>Layer properties</h5>
-        <div class="row mappings props"></div>
-      </div>
+      <div class="content"></div>
     </section>
   `,
 

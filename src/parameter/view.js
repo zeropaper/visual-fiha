@@ -27,8 +27,8 @@ var ParamView = View.extend({
 
   initialize: function() {
     View.prototype.initialize.apply(this, arguments);
-    this.listenTo(this.rootView.mappings, 'change', function mappingsChange(...args) {
-      this.trigger('change:rootView.mappings', ...args);
+    this.listenTo(this.rootView, 'app:worker:addMapping app:worker:updateMapping app:worker:removeMapping', function() {
+      this.trigger('change:mappings');
     });
   },
 
@@ -66,7 +66,7 @@ var ParamView = View.extend({
 
     mapping: {
       deps: [
-        'rootView.mappings',
+        'mappings',
         'parameterPath'
       ],
       fn: function() {

@@ -1,6 +1,5 @@
 'use strict';
 var State = require('ampersand-state');
-var objectPath = require('./../utils/object-path');
 
 var ParamState = State.extend({
   idAttribute: 'name',
@@ -11,7 +10,7 @@ var ParamState = State.extend({
 
   props: {
     name: ['string', true, ''],
-    type: ['string', false, ''],
+    type: ['string', false, 'any'],
     value: ['any', false, ''],
     default: ['any', false, '']
   },
@@ -20,7 +19,7 @@ var ParamState = State.extend({
     modelPath: {
       deps: ['name'],
       fn: function() {
-        return objectPath(this);
+        return this.collection.parent.modelPath + '.parameters.' + this.name;
       }
     }
   }

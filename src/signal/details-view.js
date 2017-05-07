@@ -15,21 +15,7 @@ var SignalDetailsView = DetailsView.extend({
         <div>Result: <span data-hook="result"></span></div>
       </div>
 
-      <div class="rows row param-section">
-        <h5>Parameters</h5>
-        <div class="row columns">
-          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
-          <div class="column"><select name="parameter-type">
-            <option value="string">string</option>
-            <option value="number">number</option>
-            <option value="boolean">boolean</option>
-            <option value="any">any</option>
-          </select></div>
-          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
-          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
-        </div>
-        <div class="row parameters" ></div>
-      </div>
+      <div class="content"></div>
     </section>
   `,
 
