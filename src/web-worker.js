@@ -28,6 +28,17 @@ require.ensure([
   './utils/resolve'
 ], function() {
 // ---------------------------------------------------------------
+
+
+
+function emitCommand(name, payload) {
+  worker.postMessage({
+    command: name,
+    payload: payload
+  });
+}
+
+
 var resolve = require('./utils/resolve');
 var fromYaml = require('./utils/yaml-to-setup');
 
@@ -42,8 +53,7 @@ var SignalCollection = require('./signal/collection');
 worker.signals = new SignalCollection([], {
   clock: worker.screen.clock
 });
-worker.signals.listenTo(worker.screen.clock, 'change:frametime', function(...args) {
-  worker.signals.trigger('change:frametime', ...args);
+  emitCommand: emitCommand, // I tried listening to emitCommand events on the collection, nope...
 });
 var localForage = require('./storage');
 
@@ -90,16 +100,6 @@ function registerCommand(commandName, command) {
   }
   signatures[commandName] = signature(command);
 }
-
-
-
-function emitCommand(name, payload) {
-  worker.postMessage({
-    command: name,
-    payload: payload
-  });
-}
-
 
 var screens = {};
 var channel = new BroadcastChannel('spike');
