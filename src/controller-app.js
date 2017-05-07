@@ -199,7 +199,9 @@ var AppRouter = require('ampersand-router').extend({
     var screen = router.model = new ScreenState({}, {
       router: this
     });
-    var signals = router.signals = new SignalCollection([], {clock: screen.clock});
+    var signals = router.signals = new SignalCollection([], {
+      clock: screen.clock
+    });
 
 
     router.on('all', function(...args) {

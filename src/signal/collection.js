@@ -1,5 +1,4 @@
 'use strict';
-var assign = require('lodash.assign');
 var Collection = require('ampersand-collection');
 var SignalState = require('./state');
 require('./programmable/state');
@@ -10,6 +9,8 @@ var SignalCollection = Collection.extend({
   mainIndex: 'name',
 
   clock: null,
+  audio: null,
+  worker: null,
 
   model: function(attrs, opts) {
     var Constructor = SignalState.types[attrs.type] || SignalState;
@@ -18,7 +19,10 @@ var SignalCollection = Collection.extend({
   },
 
   initialize: function(models, options) {
+    this.location = typeof DedicatedWorkerGlobalScope !== 'undefined' ? 'worker' : 'controller';
     this.clock = options.clock;
+    this.audio = options.audio;
+    this.emitCommand = options.emitCommand;
   },
 
   toJSON: function () {
@@ -27,10 +31,7 @@ var SignalCollection = Collection.extend({
         return model.toJSON();
       }
       else {
-        var out = {};
-        assign(out, model);
-        delete out.collection;
-        return out;
+        return model;
       }
     });
   }

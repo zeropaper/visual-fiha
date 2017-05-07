@@ -4,7 +4,6 @@ var SignalControlView = require('./../control-view');
 var ProgrammableSignalControlView = SignalControlView.types.programmable = SignalControlView.extend({
   template: `<section class="rows signal signal-programmable">
     <header class="columns">
-      <!-- <h5 class="column no-grow signal-type"><span data-hook="type"></span></h5> -->
       <h3 class="column signal-name gutter-horizontal" data-hook="name"></h3>
       <div class="column no-grow"><button class="edit-update-function vfi-cog-alt"></button></div>
       <div class="column no-grow text-right"><button class="vfi-trash-empty remove-signal"></button></div>

@@ -50,11 +50,13 @@ worker.screen = new ScreenState();
 worker.layers = worker.screen.layers;
 
 var SignalCollection = require('./signal/collection');
+worker.audio = {};
 worker.signals = new SignalCollection([], {
-  clock: worker.screen.clock
-});
   emitCommand: emitCommand, // I tried listening to emitCommand events on the collection, nope...
+  clock: worker.screen.clock,
+  audio: worker.audio
 });
+
 var localForage = require('./storage');
 
 
@@ -63,11 +65,10 @@ localForage.installSetups(function(err) {
   emitCommand('storageSetupInstalled');
 });
 
-
+// this has become very messy
 var __dataContext = {
-  frametime: 0,
-  firstframetime: 0,
-  audio: {},
+  clock: worker.screen.clock,
+  audio: worker.audio,
   layers: worker.layers,
   signals: worker.signals
 };
