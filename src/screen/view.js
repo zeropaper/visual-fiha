@@ -283,12 +283,12 @@ var ScreenView = View.extend(clientMixin, {
       li++;
       af += audio.frequency[l];
       av += audio.timeDomain[l];
-      this.setProperty('--freq' + li, audio.frequency[l]);
+      this.setProperty('--frq' + li, audio.frequency[l]);
       this.setProperty('--vol' + li, audio.timeDomain[l]);
     }
 
-    this.setProperty('--freqAvg', af / length);
-    this.setProperty('--volAvg', av / length);
+    this.setProperty('--frq', af / length);
+    this.setProperty('--vol', av / length);
     return this;
   },
 
