@@ -33,6 +33,16 @@ var SignalControlView = View.extend({
     'click header h3': '_showDetails'
   },
 
+  commands: {
+    'click .remove-signal': 'removeSignal _removeSignal'
+  },
+
+  _removeSignal: function() {
+    return {
+      signalName: this.model.name
+    };
+  },
+
   _showDetails: function () {
     var DetailsViewConstructor = SignalDetailsView.types ? SignalDetailsView.types[this.model.getType()] : false;
     DetailsViewConstructor = DetailsViewConstructor || SignalDetailsView;

@@ -28,7 +28,7 @@ module.exports = SignalState.types.programmable = SignalState.extend({
         return this.computeSignal();
       }
     },
-    update: {
+    updateFn: {
       deps: ['updateFunction'],
       fn: function() {
         return compileFunction(
@@ -38,8 +38,7 @@ module.exports = SignalState.types.programmable = SignalState.extend({
           'bpm',
           'beatnum',
           'beatprct',
-          this.updateFunction,
-          this
+          this.updateFunction
         );
       }
     }
@@ -53,7 +52,7 @@ module.exports = SignalState.types.programmable = SignalState.extend({
       beatprct: 0,
     });
 
-    var fn = this.update;
+    var fn = this.updateFn;
     var result = 0;
     try {
       result = fn(
