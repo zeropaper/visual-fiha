@@ -2,7 +2,7 @@
 var LayerView = require('./../view');
 var p5 = require('p5');
 
-function compileSketch(setupFunction, drawFunction) {
+function compileSketch(setupFunction, updateFunction) {
   var fn;// jshint ignore:line
 
   var evaled = `(function() {
@@ -24,10 +24,8 @@ function compileSketch(setupFunction, drawFunction) {
       return ((layer.audio || {}).timeDomain || [])[x] || 0;
     };
 
-    var param = function(name, defaultVal) {
-      var param = layer.model.parameters.get(name)
-      if (!param) return defaultVal;
-      return typeof param.value !== 'undefined' ? param.value : defaultVal;
+    var parameter = function(name, defaultVal) {
+      return layer.model.parameters.getValue(name)
     };
 
     p.setup = function() {
@@ -41,7 +39,7 @@ function compileSketch(setupFunction, drawFunction) {
     p.draw = function() {
       var frametime = screen.clock.frametime || 0;
       try {
-        ${ drawFunction.toString() }
+        ${ updateFunction.toString() }
       } catch(e) {}
     };
   };
@@ -90,10 +88,10 @@ var P5LayerView = LayerView.types.p5 = LayerView.extend({
     },
     draw: {
       deps: [
-        'model.drawFunction'
+        'model.updateFunction'
       ],
       fn: function() {
-        var sketch = compileSketch(this.model.setupFunction, this.model.drawFunction).bind(this);// jshint ignore:line
+        var sketch = compileSketch(this.model.setupFunction, this.model.updateFunction).bind(this);// jshint ignore:line
         sketch(this.p5);
         return this.p5.draw;
       }
@@ -103,7 +101,7 @@ var P5LayerView = LayerView.types.p5 = LayerView.extend({
         'model.setupFunction'
       ],
       fn: function() {
-        return compileSketch(this.model.setupFunction, this.model.drawFunction).bind(this);
+        return compileSketch(this.model.setupFunction, this.model.updateFunction).bind(this);
       }
     }
   },

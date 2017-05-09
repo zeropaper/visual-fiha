@@ -9,8 +9,8 @@ module.exports = DetailsView.types.p5 = DetailsView.extend({
         <div class="columns">
           <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
           <div class="column no-grow columns">
-            <div class="column no-grow"><button class="yes" title="Edit setup function" name="edit-setup-function">setup</button></div>
-            <div class="column no-grow"><button class="yes" title="Edit draw function" name="edit-draw-function">draw</button></div>
+            <div class="column no-grow"><button class="yes" title="Edit setup function" name="edit-setup-function">Setup</button></div>
+            <div class="column no-grow"><button class="yes" title="Edit draw function" name="edit-draw-function">Update</button></div>
             <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
           </div>
         </div>
@@ -27,7 +27,9 @@ module.exports = DetailsView.types.p5 = DetailsView.extend({
   }),
 
   _editSetupFunction: function() {
-    this.editFunction('setupFunction');
+    this.editFunction('setupFunction', {
+      importantNote: 'Do not forget to call <code>ready()</code>'
+    });
   },
 
   _editDrawFunction: function() {
