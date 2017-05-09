@@ -8,23 +8,21 @@ layers:
   canvas:
     type: canvas
     clear: 1
-    canvasLayers:
-        name: lines
-        drawFunction: |
-          var l = bufferLength();
-          var f = 0;
-          var k = 3;
-          var p = Math.max(1, k);
-          var d = Math.pow(2, p);
+    updateFunction: |
+      var l = bufferLength();
+      var f = 0;
+      var k = 3;
+      var p = Math.max(1, k);
+      var d = Math.pow(2, p);
 
-          grid(l, l / d, function(...args) {
-            var ff = Math.round((l * 0.125) + (f * 0.125));
-            strokeStyle('hsl('+frequency(ff)+', 50%, 50%)');
-            var sides = Math.round(frequency(ff) * (1 / 10));
-            sides = Math.min(sides, 10);
-            sides = Math.max(sides, 3);
-            lineWidth(10 - sides);
-            circle(...args, timeDomain(ff) * 0.25);
-            polygone(...args, timeDomain(ff) + 50, sides);
-            f++;
-          });
+      grid(l, l / d, function(...args) {
+        var ff = Math.round((l * 0.125) + (f * 0.125));
+        strokeStyle('hsl(' + frq(ff) + ', 50%, 50%)');
+        var sides = Math.round(frq(ff) * (1 / 10));
+        sides = Math.min(sides, 10);
+        sides = Math.max(sides, 3);
+        lineWidth(10 - sides);
+        circle(...args, vol(ff) * 0.25);
+        polygone(...args, vol(ff) + 50, sides);
+        f++;
+      });

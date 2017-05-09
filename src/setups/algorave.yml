@@ -1,37 +1,9 @@
-signals:
-  beatA:
-    type: beat
-    defaultValue: 1
-    input: 151.53
-  colorA:
-    type: hsla
-    defaultValue: '180,50%,50%,1'
-    input: null
-    hue: 180
-    saturation: 50
-    lightness: 50
-    alpha: 100
+signals: {}
 mappings:
-  beatOpacity:
-    targets:
-      - layers.no-signal.opacity
-    transformFunction: |-
-      function (value) {
-        return value > 90 ? 100 : 15;
-      }
-    source: signals.beatA.result
-  nk2.r1:
-    targets:
-      - layers.no-signal.active
-    transformFunction: |-
-      function (value, currentValue) {
-        if (!value) return currentValue;
-              return !currentValue;
-      }
-    source: 'midi:nk2.r1'
   nk2.knob1:
     targets:
-      - layers.canvas.canvasLayers.lines.knobA
+      - layers.canvas.knobA
+      - layers.canvas.parameters.knobA.value
     transformFunction: |-
       function (value) {
         return value;
@@ -39,7 +11,8 @@ mappings:
     source: 'midi:nk2.knob1'
   nk2.knob2:
     targets:
-      - layers.canvas.canvasLayers.lines.knobB
+      - layers.canvas.knobB
+      - layers.canvas.parameters.knobB.value
     transformFunction: |-
       function (value) {
         return value;
@@ -47,29 +20,13 @@ mappings:
     source: 'midi:nk2.knob2'
   nk2.knob3:
     targets:
-      - layers.canvas.canvasLayers.lines.knobC
+      - layers.canvas.knobC
+      - layers.canvas.parameters.knobC.value
     transformFunction: |-
       function (value) {
         return value;
       }
     source: 'midi:nk2.knob3'
-  beatnum20Str:
-    targets:
-      - layers.ar.parameters.beat.value
-      - layers.vf.parameters.beat.value
-    transformFunction: |-
-      function (value) {
-        return (value % 20).toString();
-      }
-    source: signals.beatA.beatnum
-  beatKnob:
-    targets:
-      - signals.beatA.input
-    transformFunction: |-
-      function (value) {
-        return value + 63;
-      }
-    source: 'midi:nk2.knob8'
   beatnum100Str:
     targets:
       - layers.vjs.text
@@ -98,6 +55,17 @@ mappings:
         return names[index];
       }
     source: signals.beatA.beatnum
+  ft:
+    targets:
+      - layers.vf.parameters.frametime.value
+    transformFunction: 'function(val){return val;}'
+    source: clock.frametime
+  bn:
+    targets:
+      - layers.ar.parameters.beat.value
+      - layers.vf.parameters.beat.value
+    transformFunction: 'function(val){return val % 10;}'
+    source: clock.beatnum
 layers:
   vjs:
     type: txt
@@ -114,58 +82,67 @@ layers:
                   ,6px 6px 0 #fff
                   ,-1px -1px 0 #666
                   ;
-    text: Renick Bell (JP)
-    parameters: []
+    parameters:
+      - name: active
+        type: boolean
+        value: true
+        default: true
+      - name: text
+        type: string
+        value: ''
+        default: ''
+      - name: zIndex
+        type: number
+        value: 0
+        default: 0
   canvas:
     type: canvas
-    active: true
-    opacity: 100
-    zIndex: 0
     layerStyles: ''
-    clear: 1
-    parameters: []
-    canvasLayers:
-      - name: lines
-        parameters:
-          - name: 'active'
-            type: boolean
-            value: true
-            default: true
-          - name: 'knobA'
-            value: 63
-            type: number
-            default: 127
-          - name: 'knobB'
-            value: 63
-            type: number
-            default: 127
-          - name: 'knobC'
-            value: 63
-            type: number
-            default: 127
-        drawFunction: |
-          var l = bufferLength();
-          var _kA = parameter('knobA', 30);
-          var _kB = parameter('knobB', 30);
-          var _kC = parameter('knobC', 30);
-          var f = 0;
-          var k = Math.round(_kA * 0.05);
-          var p = Math.max(1, k);
-          var d = Math.pow(2, p);
-
-          grid(l, l / d, function(...args) {
-            var color = 'hsl('+ (timeDomain(f) * 3) +', '+ _kB +'%, '+ _kB +'%)';
-            strokeStyle(color);
-
-            // circle(...args, timeDomain(f) * 0.1);
-            polygone(...args, timeDomain(f) * _kC * 0.05);
-            f++;
-          });
+    updateFunction: |
+      var l = bufferLength();
+      var _kA = param('knobA', 30);
+      var _kB = param('knobB', 30);
+      var _kC = param('knobC', 30);
+      var f = 0;
+      var k = Math.round(_kA * 0.05);
+      var p = Math.max(1, k);
+      var d = Math.pow(2, p);
+      //
+      ctx.clearRect(0, 0, width, height);
+      grid(l, l / d, function(...args) {
+        var color = 'hsl('+ (vol(f) * 3) +', '+ _kB +'%, '+ _kB +'%)';
+        ctx.strokeStyle = color;
+        // circle(...args, vol(f) * 0.1);
+        polygone(...args, vol(f) * _kC * 0.05);
+        f++;
+      });
+    parameters:
+      - name: active
+        type: boolean
+        value: true
+        default: true
+      - name: clear
+        type: number
+        value: 1
+        default: 1
+      - name: knobA
+        type: number
+        value: 110
+        default: 127
+      - name: knobB
+        type: number
+        value: 63
+        default: 127
+      - name: knobC
+        type: number
+        value: 63
+        default: 127
+      - name: zIndex
+        type: number
+        value: 0
+        default: 0
   ar:
     type: SVG
-    active: true
-    opacity: 50
-    zIndex: 0
     layerStyles: ''
     svgStyles:
       '#algorave': |-
@@ -175,28 +152,37 @@ layers:
           stroke-width:var(--stroke-width);
           stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));
           stroke-dashoffset: 0;
-
     parameters:
+      - name: active
+        type: boolean
+        value: true
+        default: true
+      - name: beat
+        type: any
+        value: 5
+        default: '0'
       - name: src
         type: string
         value: ./assets/algorave/algorave-stroke.svg
-      - name: 'stroke-color'
+        default: ''
+      - name: stroke-color
+        type: any
         value: white
         default: white
-      - name: 'stroke-width'
+      - name: stroke-width
+        type: any
         value: '22'
         default: '22'
-      - name: 'beat'
-        value: '9'
-        default: '0'
-      - name: 'translate-y'
+      - name: translate-y
+        type: any
         value: '-20vh'
         default: '-20vh'
+      - name: zIndex
+        type: number
+        value: 0
+        default: 0
   vf:
     type: SVG
-    active: true
-    opacity: 50
-    zIndex: 0
     layerStyles: ''
     svgStyles:
       '#fiha': |-
@@ -209,26 +195,40 @@ layers:
           stroke-linejoin:round;
           stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));
           stroke-dashoffset: 0;
-
     parameters:
+      - name: active
+        type: boolean
+        value: true
+        default: true
+      - name: beat
+        type: any
+        value: 5
+        default: '0'
+      - name: fill-color
+        type: any
+        value: none
+        default: none
+      - name: frametime
+        type: any
+        value: 407950
+        default: '0'
       - name: src
         type: string
         value: ./assets/visual-fiha.svg
-      - name: 'fill-color'
-        value: none
-        default: none
-      - name: 'stroke-color'
+        default: ''
+      - name: stroke-color
+        type: any
         value: white
         default: white
-      - name: 'stroke-width'
+      - name: stroke-width
+        type: any
         value: '22'
         default: '22'
-      - name: 'frametime'
-        value: '0'
-        default: '0'
-      - name: 'beat'
-        value: '9'
-        default: '0'
-      - name: 'translate-y'
+      - name: translate-y
+        type: any
         value: 20vh
         default: 20vh
+      - name: zIndex
+        type: number
+        value: 0
+        default: 0

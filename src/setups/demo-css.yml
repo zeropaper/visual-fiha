@@ -6,32 +6,32 @@ signals:
 mappings:
   knob1:
     targets:
-      - layers.canvas.canvasLayers.mid.knobA
+      - layers.canvas.knobA
     transformFunction: 'function(val) { return val; }'
     source: 'midi:nk2.knob1'
   knob2:
     targets:
-      - layers.canvas.canvasLayers.mid.knobB
+      - layers.canvas.knobB
     transformFunction: 'function(val) { return val; }'
     source: 'midi:nk2.knob2'
   knob3:
     targets:
-      - layers.canvas.canvasLayers.mid.knobC
+      - layers.canvas.knobC
     transformFunction: 'function(val) { return val; }'
     source: 'midi:nk2.knob3'
   slider1:
     targets:
-      - layers.canvas.canvasLayers.mid.sliderA
+      - layers.canvas.sliderA
     transformFunction: 'function(val) { return val; }'
     source: 'midi:nk2.slider1'
   slider2:
     targets:
-      - layers.canvas.canvasLayers.mid.sliderB
+      - layers.canvas.sliderB
     transformFunction: 'function(val) { return val; }'
     source: 'midi:nk2.slider2'
   slider3:
     targets:
-      - layers.canvas.canvasLayers.mid.sliderC
+      - layers.canvas.sliderC
     transformFunction: 'function(val) { return val; }'
     source: 'midi:nk2.slider3'
   slider7Str:
@@ -211,95 +211,44 @@ layers:
     zIndex: 50
     layerStyles: ''
     clear: 1
-    parameters: []
-    canvasLayers:
-      - props:
-          active:
-            type: boolean
-            required: true
-            default: true
-            allowNull: false
-        zIndex: 0
-        name: bottom
-        active: true
-        drawFunction: |
-          /*
-            You can access the canvas 2d context with the global ctx
-          */
-      - props:
-          active:
-            type: boolean
-            required: true
-            default: true
-            allowNull: false
-          knobA:
-            type: number
-            required: true
-            default: 0
-            allowNull: false
-          knobB:
-            type: number
-            required: true
-            default: 0
-            allowNull: false
-          knobC:
-            type: number
-            required: true
-            default: 0
-            allowNull: false
-          sliderA:
-            type: number
-            required: true
-            default: 0
-            allowNull: false
-          sliderB:
-            type: number
-            required: true
-            default: 0
-            allowNull: false
-          sliderC:
-            type: number
-            required: true
-            default: 0
-            allowNull: false
-        zIndex: 50
-        name: mid
-        active: true
-        drawFunction: |-
-          function drawLayerCtx() {
-            var count = 128;
-            var rows = 8;
-            var col = 'hsl('+Math.round(layer.knobA * (1 / 127) * 360)+','+Math.round(layer.knobB * (1 / 127) * 100)+'%,'+Math.round(layer.knobC * (1 / 127) * 100)+'%)';
-            //var col = 'rgb('+Math.round(layer.knobA * (1 / 127) * 255)+','+Math.round(layer.knobB * (1 / 127) * 255)+','+Math.round(layer.knobC * (1 / 127) * 255)+')';
-            strokeStyle(col);
-            var i = 0;
-            grid(count, rows, function (x, y) {
-              lineWidth(frequency(i) * 0.025 * between(layer.sliderC * (1 / (127 / 16)),1,16));
-              polygone(x, y, timeDomain(i) * 0.1 * between(layer.sliderA,1,127), between(Math.round(layer.sliderB * (1 / (127 / 9))),3,9));
-              i++;
-            });
-          }
-        knobA: 22
-        knobB: 87
-        knobC: 47
-        sliderA: 61
-        sliderB: 38
-        sliderC: 3
-      - props:
-          active:
-            type: boolean
-            required: true
-            default: true
-            allowNull: false
-        zIndex: 100
-        name: top
-        active: true
-        drawFunction: |-
-          function drawLayerCtx() {
-            /*
-              You can access the canvas 2d context with the global ctx
-            */
-          }
+    parameters:
+      - name: knobA
+        type: number
+        default: 63
+      - name: knobB
+        type: number
+        default: 63
+      - name: knobC
+        type: number
+        default: 63
+      - name: sliderA
+        type: number
+        default: 63
+      - name: sliderB
+        type: number
+        default: 63
+      - name: sliderC
+        type: number
+        default: 63
+    updateFunction: |-
+      var count = 128;
+      var rows = 8;
+      var i = 0;
+
+      var kA = param('knobA');
+      var kB = param('knobB');
+      var kC = param('knobC');
+      var sA = param('sliderA');
+      var sB = param('sliderB');
+      var sC = param('sliderC');
+
+      var col = 'hsl('+Math.round(kA * (1 / 127) * 360)+','+Math.round(kB * (1 / 127) * 100)+'%,'+Math.round(kC * (1 / 127) * 100)+'%)';
+
+      grid(count, rows, function (x, y) {
+        lineWidth(frq(i) * 0.025 * between(sC * (1 / (127 / 16)),1,16));
+        polygone(x, y, timeDomain(i) * 0.1 * between(sA,1,127), between(Math.round(sB * (1 / (127 / 9))),3,9));
+        i++;
+      });
   front:
     type: img
     active: true

@@ -8,7 +8,7 @@ layers:
     zIndex: 1000
     layerStyles: ''
     currentCamera: perspective
-    renderFunction: |
+    setupFunction: |
       var helper = new THREE.AxisHelper(20);
       helper.name = 'axisHelper';
       layer.scene.add(helper);
@@ -16,20 +16,15 @@ layers:
       helper = new THREE.GridHelper(200);
       helper.name = 'gridHelper';
       layer.scene.add(helper);
-      console.info(layer.scene.children.map(o => o.name));
+      ready();
     updateFunction: |
-      var screenState = layer.model.screenState;
-      var audio = screenState.audio;
-      var freq = audio.frequency;
-      var vol = audio.timeDomain;
-
-      var scale = freq[12] * 0.1;
+      var tilt = vol(4) - 127;
+      var scale = frq(12) * 1;
       var speed = 1000;
-      var dist = 80;
-      var deg = (screenState.frametime % (speed * 360) / speed);
-      var tilt = vol[4] - 127;
+      var dist = 80 + scale;
+      var deg = (frametime % (speed * 360)) / speed;
 
-      layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);
+      layer.camera.position.set(Math.cos(deg) * dist, tilt, Math.sin(deg) * dist);
       layer.camera.lookAt(layer.scene.position);
     parameters: []
     geometries:
