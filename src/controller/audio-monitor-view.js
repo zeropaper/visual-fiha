@@ -118,7 +118,7 @@ module.exports = require('ampersand-view').extend({
 
 
     var i, a, f, td, lx, ly, val, min = 0, max = 0, avg = 0;
-    ctx.strokeStyle = ctx.fillStyle = '#A581FF';
+    ctx.strokeStyle = ctx.fillStyle = '#e6db74';
     ctx.beginPath();
     for (i = 0; i < bufferLength; i++) {
       val = freqArray[i];
