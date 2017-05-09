@@ -58,11 +58,11 @@ var DetailsView = View.extend({
     }
   },
 
-  editFunction: function(propName) {
+  editFunction: function(propName, options = {}) {
     var rootView = this.rootView;
     var path = objectPath(this.model);
-    var script = this.model.get(propName) || ('function ' + propName + '() {\n}');
-    rootView.getEditor({
+    var script = this.model.get(propName) || '';
+    rootView.getEditor(assign({}, {
       tabName: this.model.getId() + ' ' + propName,
       script: script,
       language: 'javascript',
@@ -78,7 +78,7 @@ var DetailsView = View.extend({
           value: str
         });
       }
-    });
+    }, options));
   },
 
   subviews: {

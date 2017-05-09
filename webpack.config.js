@@ -160,6 +160,7 @@ module.exports = function(env) {
           'ext-beautify.js',
           'ext-error_marker.js',
           'ext-language_tools.js',
+          'ext-keybinding_menu.js',
           'ext-searchbox.js',
           'ext-settings_menu.js',
           'ext-split.js',

@@ -1,6 +1,8 @@
 'use strict';
+var ace = window.ace;
 var View = require('ampersand-view');
-var canvasCompleter = require('./../layer/canvas/canvas-completer');
+// var canvasCompleter = require('./../layer/canvas/canvas-completer');
+var getEditorKeybordShortcuts = ace.require('ace/ext/menu_tools/get_editor_keyboard_shortcuts').getEditorKeybordShortcuts;
 
 var AceEditor = View.extend({
   editCode: function(options) {
@@ -16,11 +18,33 @@ var AceEditor = View.extend({
       <header>
         <div class="columns">
           <h3 class="column"><span data-hook="editor-title"></span> <small data-hook="editor-language"></small></h3>
+          <div class="column no-grow show-origin"><button class="vfi-info-circled" name="show-info"></button></div>
           <div class="column no-grow show-origin"><button class="vfi-eye" name="show-origin"></button></div>
         </div>
+        <div class="important-note gutter text-center"></div>
       </header>
 
-      <div class="ace-editor row grow-xl"></div>
+      <div class="row columns editor-holder">
+        <div class="ace-editor column grow-xl"></div>
+
+        <div class="column rows editor-info">
+          <div class="gutter row reference-holder">
+            <div>
+              <input type="search" placeholder="search reference" name="search-reference" />
+            </div>
+
+            <div class="reference"></div>
+          </div>
+
+          <div class="gutter row shortcuts-holder">
+            <div>
+              <input type="search" placeholder="search shortcuts" name="search-shortcuts" />
+            </div>
+
+            <div class="shortcuts"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="ace-controls row no-grow gutter columns">
         <div class="column"></div>
@@ -33,6 +57,10 @@ var AceEditor = View.extend({
   `,
 
   session: {
+    showInfo: 'boolean',
+    importantNote: 'string',
+    reference: 'string',
+    shortcuts: 'string',
     title: 'string',
     language: {
       type: 'string',
@@ -52,6 +80,35 @@ var AceEditor = View.extend({
   },
 
   derived: {
+    styleEl: {
+      deps: [],
+      fn: function() {
+        var id = 'editor-search-' + this.cid;
+        var el = document.getElementById('style-' + id);
+        if (!el) {
+          el = document.createElement('style');
+          el.id = 'style-' + id;
+          el.appendChild(document.createTextNode(''));
+          document.head.appendChild(el);
+        }
+        return el;
+      }
+    },
+    sheet: {
+      deps: ['styleEl'],
+      fn: function() {
+        var sheet = this.styleEl.sheet;
+        return sheet;
+      }
+    },
+
+    hasInfo: {
+      deps: ['reference', 'shortcuts'],
+      fn: function() {
+        return this.showInfo && (this.reference || this.shortcuts);
+      }
+    },
+
     pristine: {
       deps: ['script', 'original'],
       fn: function() {
@@ -61,6 +118,49 @@ var AceEditor = View.extend({
   },
 
   bindings: {
+    hasInfo: {
+      selector: '.editor-info',
+      type: 'toggle'
+    },
+
+    importantNote: [
+      {
+        selector: '.important-note',
+        type: 'toggle'
+      },
+      {
+        selector: '.important-note',
+        type: 'innerHTML'
+      }
+    ],
+
+    reference: [
+      {
+        selector: '.reference-holder',
+        type: 'toggle'
+      },
+      {
+        selector: '.reference',
+        type: 'innerHTML'
+      }
+    ],
+
+    shortcuts: [
+      {
+        selector: '.shortcuts-holder',
+        type: 'toggle'
+      },
+      {
+        selector: '.shortcuts',
+        type: 'innerHTML'
+      }
+    ],
+
+    showInfo: {
+      selector: '.editor-info',
+      type: 'toggle'
+    },
+
     script: {
       type: function() {
         if (!this.editor) return;
@@ -92,7 +192,7 @@ var AceEditor = View.extend({
 
     onshoworigin: {
       type: 'toggle',
-      selector: '.show-origin'
+      selector: '[name="show-origin"]'
     },
 
     title: '[data-hook=editor-title]',
@@ -100,9 +200,30 @@ var AceEditor = View.extend({
   },
 
   events: {
+    'change [name="search-reference"],[name="search-shortcuts"]': '_search',
+    'keyup [name="search-reference"],[name="search-shortcuts"]': '_search',
+    'click [name=show-info]': '_showInfo',
     'click [name=show-origin]': '_showOrigin',
     'click [name="cancel"]': '_cancel',
-    'click [name="apply"]': '_apply'
+    'click [name="apply"]': '_apply',
+  },
+
+  _search: function(evt) {
+    var searched = evt.target.name.split('-').pop();
+    var sheet = this.sheet;
+    var index = sheet.cssRules.length;
+    for (var i = index - 1; i >= 0; i--) {
+      if (sheet.cssRules[i].selectorText.indexOf('.' + searched + ' li[class]:not') === 0) {
+        sheet.deleteRule(i);
+      }
+    }
+    if (!evt.target.value) return;
+    sheet.insertRule('.' + searched + ' li[class]:not([class*="' + evt.target.value + '"]) { display: none; }', sheet.cssRules.length);
+  },
+
+  _showInfo: function() {
+    this.toggle('showInfo');
+    this.editor.resize();
   },
 
   _showOrigin: function() {
@@ -162,7 +283,6 @@ var AceEditor = View.extend({
 
   _makeEditor: function() {
     var view = this;
-    var ace = window.ace;
     if (view.editor) view.editor.destroy();
 
     var hasAnnotations = ['javascript', 'css'].indexOf(view.language) > -1;
@@ -189,13 +309,13 @@ var AceEditor = View.extend({
     editor.setFontSize(16);
 
     if (view.language === 'javascript') {
-      var languageTools = ace.require('ace/ext/language_tools');
+      // var languageTools = ace.require('ace/ext/language_tools');
       editor.setOptions({
         enableBasicAutocompletion: true,
         enableSnippets: true,
-        enableLiveAutocompletion: false
+        enableLiveAutocompletion: true
       });
-      languageTools.addCompleter(canvasCompleter);
+      // languageTools.addCompleter(canvasCompleter);
     }
 
     var session = editor.getSession();
@@ -212,6 +332,28 @@ var AceEditor = View.extend({
     }
 
     editor.setValue(view.script || view.original || '');
+
+    var shortcuts = getEditorKeybordShortcuts(editor);
+    view.shortcuts = '<ul>' + shortcuts.map(sc => `<li class="${ sc.command }">
+      <label>${ sc.command }</label>
+      <div>
+        <span class="keys">${ sc.key.split('|').join('</span> or <span class="keys">') }</span>
+      </div>
+    </li>`).join('') + '</ul>';
+
+
+    var toggleBlockComment = editor.commands.commands.toggleBlockComment;
+    if (toggleBlockComment) {
+      toggleBlockComment.bindKey.mac = toggleBlockComment.bindKey.mac + '|Command-Alt-7';
+      toggleBlockComment.bindKey.win = toggleBlockComment.bindKey.win + '|Ctrl-Alt-7';
+      editor.commands.addCommand(toggleBlockComment);
+    }
+    var toggleComment = editor.commands.commands.togglecomment;
+    if (toggleComment) {
+      toggleComment.bindKey.mac = toggleComment.bindKey.mac + '|Command-Shift-7';
+      toggleComment.bindKey.win = toggleComment.bindKey.win + '|Ctrl-Shift-7';
+      editor.commands.addCommand(toggleComment);
+    }
 
     return view;
   },

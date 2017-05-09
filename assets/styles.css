@@ -128,6 +128,15 @@ input[disabled]:not([type=checkbox]):not([type=radio]) {
   color: currentColor;
 }
 
+
+/*this might seems absurd... but the :not selector seems to have "weight"*/
+input[type=search]:not([type=checkbox]):not([type=radio]) {
+  border-radius: 4em;
+  width: 100%;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
 input::-webkit-input-placeholder,
 textarea::-webkit-input-placeholder {
   color: var(--info-color);
@@ -459,7 +468,7 @@ Layout
 .code-editor > header {
   flex-grow: 0;
 }
-.code-editor .ace-editor {
+.code-editor .editor-holder {
   overflow: hidden;
   height: calc(100% - 37px);
 }
@@ -469,6 +478,33 @@ Layout
 }
 .code-editor.autoapply .ace-controls {
   display: none;
+}
+.code-editor .editor-info {
+  width: 20%;
+}
+.code-editor .shortcuts li {
+  display: flex;
+  flex-direction: row;
+}
+.code-editor .shortcuts ul {
+  padding: 0;
+}
+.code-editor .shortcuts li > label {
+  flex-grow: 1;
+}
+.code-editor .shortcuts li > div {
+  flex-grow: 0;
+  text-align: right;
+}
+.code-editor .shortcuts .keys {
+  color: var(--text-color-alt);
+}
+
+.code-editor .property {
+  color: var(--info-color);
+}
+.code-editor .function {
+  color: var(--editable-color);
 }
 
 .tabs {
