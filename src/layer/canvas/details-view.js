@@ -2,15 +2,16 @@
 
 var assign = require('lodash.assign');
 var LayerDetailsView = require('./../details-view');
+var reference = require('./reference');
 
 var CanvasLayerDetailsView = LayerDetailsView.extend({
   template: `
     <section>
       <header>
         <div class="columns">
-          <h3 class="column">Details for <span data-hook="name"></span> <small>sublayer</small></h3>
-          <div class="columns no-grow column">
-            <div class="column no-grow"><button name="edit-draw-function">Draw</button></div>
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+          <div class="column no-grow columns">
+            <div class="column no-grow"><button class="yes" title="Edit update function" name="edit-update-function">Update</button></div>
             <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
           </div>
         </div>
@@ -21,12 +22,14 @@ var CanvasLayerDetailsView = LayerDetailsView.extend({
     </section>
   `,
 
-  events: assign({
-    'click [name=edit-draw-function]': '_editDrawFunction'
-  }, LayerDetailsView.prototype.bindings),
+  events: assign(LayerDetailsView.prototype.events, {
+    'click [name=edit-update-function]': '_editUpdateFunction'
+  }),
 
-  _editDrawFunction: function() {
-    this.editFunction('drawFunction');
+  _editUpdateFunction: function() {
+    this.editFunction('updateFunction', {
+      reference: reference
+    });
   }
 });
 

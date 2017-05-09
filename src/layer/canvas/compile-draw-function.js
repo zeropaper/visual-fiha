@@ -1,7 +1,7 @@
 'use strict';
 var mockedCtx = require('./mocked-canvas-2d-context');
 var utils = require('./canvas-utils');// jshint ignore:line
-
+var layerPrologue = require('./../function-prologue');
 // proxy the method and parameters of the canvas context
 var ctxProperties = '';
 mockedCtx._.methods
@@ -13,7 +13,7 @@ mockedCtx._.properties
     if (name !== 'canvas') ctxProperties += '\nvar ' + name + ' = function(val) { if (val !== undefined) { ctx.' + name + ' = val; } return ctx.' + name + '; };';
   });
 
-function compileFunction(drawFunction) {
+function compileFunction(updateFunction) {
   var fn;// jshint ignore:line
 
   var evaled = `fn = (function() {
@@ -21,30 +21,11 @@ function compileFunction(drawFunction) {
   var navigator, window, global, document, module, exports;
 
   return function(ctx) {
-    const width = (ctx.canvas || {}).width || 400;
-    const height = (ctx.canvas || {}).height || 300;
-    const layer = this;
-    const store = layer.cache;
-    const frametime = layer ? layer.frametime : 0;
-    const audio = layer ? layer.audio : {};
-    const bufferLength = function() { return ((layer.audio || {}).bufferLength) || 128; };
-    const frequency = function(x) {
-      return ((layer.audio || {}).frequency || [])[x] || 0;
-    };
-    const timeDomain = function(x) {
-      return ((layer.audio || {}).timeDomain || [])[x] || 0;
-    };
-
-    const parameter = function(name, defaultVal) {
-      return layer.parameters.getValue(name, defaultVal);
-    };
+    ${ layerPrologue }
 
     ${ ctxProperties }
     const random = utils.random;
     const between = utils.between;
-    const midiMinMax = utils.midiMinMax;
-    const midi2rad = utils.midi2rad;
-    const midi2prct = utils.midi2prct;
 
     const grid = function(...args) { utils.grid(width, height, ...args); };
     const distribute = function(...args) { utils.distribute(...args); };
@@ -59,7 +40,7 @@ function compileFunction(drawFunction) {
     const restoreContexts = function(...args) { utils.restoreContexts(ctx, ...args); };
 
 
-    ${ drawFunction }
+    ${ updateFunction }
   };
 })();`;
   eval(evaled);// jshint ignore:line

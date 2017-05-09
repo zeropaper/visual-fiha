@@ -1,156 +1,39 @@
 'use strict';
-var LayerControlView = require('./../control-view');
 var assign = require('lodash.assign');
-var objectPath = require('./../../utils/object-path');
-
-var CanvasLayerDetailsView = require('./details-view');
-
-var CanvasControlLayerView = LayerControlView.extend({
-  template: `
-    <section class="canvas-layer">
-      <header class="columns">
-        <div class="column no-grow"><button name="active"></button></div>
-        <h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>
-        <div class="column no-grow"><button class="edit-draw-function vfi-cog-alt"></button></div>
-        <div class="column no-grow"><button class="vfi-trash-empty" name="remove-canvas-layer"></button></div>
-      </header>
-    </section>
-  `,
-
-  events: {
-    'click .edit-draw-function': '_editDrawFunction',
-    'click .canvas-layer-name': '_showDetails'
-  },
-
-  commands: {
-    'click [name=remove-canvas-layer]': 'removeLayer _layerName',
-    'click [name="active"]': 'propChange _toggleActive',
-  },
-
-  _editDrawFunction: function () {
-    var rootView = this.rootView;
-    var path = objectPath(this.model);
-    rootView.getEditor({
-      tabName: this.model.getId() + ' drawFunction',
-      script: this.model.drawFunction || '',
-      language: 'javascript',
-      title: path + '.drawFunction',
-      onshoworigin: function() {
-        rootView.trigger('blink', path);
-      },
-      autoApply: true,
-      onvalidchange: function doneEditingCanvasDrawFunction(str) {
-        rootView.sendCommand('propChange', {
-          path: path,
-          property: 'drawFunction',
-          value: str
-        });
-      }
-    });
-  },
-
-  _showDetails: function () {
-    this.rootView.showDetails(new CanvasLayerDetailsView({
-      parent: this,
-      model: this.model
-    }));
-  },
-
-  bindings: {
-    'model.active': [
-      {
-        type: 'booleanClass',
-        name: 'disabled',
-        invert: true
-      },
-
-      {
-        type: 'booleanClass',
-        selector: '[name="active"]',
-        yes: 'vfi-toggle-on',
-        no: 'vfi-toggle-off'
-      }
-    ],
-
-    drawFunction: '[data-hook=drawFunction]',
-    'model.name': '[data-hook=name]',
-    'model.duration': '[data-hook=duration]',
-    'model.fps': '[data-hook=fps]',
-    'model.frametime': '[data-hook=frametime]'
-  }
-});
+var LayerControlView = require('./../control-view');
+var CanvasDetailsView = require('./details-view');
+var reference = require('./reference');
 
 module.exports = LayerControlView.types.canvas = LayerControlView.extend({
   template: `
     <section class="row canvas-control">
-      <header class="rows">
-        <div class="row columns">
-          <div class="column no-grow"><button class="active prop-toggle"></button></div>
-          <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
-          <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
-          <h3 class="column layer-name" data-hook="name"></h3>
+      <header class="columns">
+        <div class="column no-grow"><button class="active prop-toggle"></button></div>
+        <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
+        <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
+        <h3 class="column layer-name" data-hook="name"></h3>
+        <div class="column columns no-grow">
+          <div class="column no-grow text-right"><button name="edit-update-function">update</button></div>
           <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
         </div>
-
-        <div class="row columns new-layer">
-          <div class="column no-grow gutter"><label>New sub-layer</label></div>
-          <div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>
-          <div class="column no-grow">
-            <button name="add-layer" class="vfi-plus"></button>
-          </div>
-        </div>
       </header>
-
-      <div class="layers">
-        <div class="items"></div>
-      </div>
     </section>
   `,
 
-  events: assign({
-    'change [data-hook=new-layer-name]': '_inputLayerName',
-    'click [name=add-layer]': '_addLayer'
-  }, LayerControlView.prototype.events),
+  events: assign(LayerControlView.prototype.events, {
+    'click [name=edit-update-function]': '_editUpdateFunction'
+  }),
 
-  _inputLayerName: function() {
-    this.query('[name=add-layer]').disabled = !this.queryByHook('new-layer-name').value.trim();
-  },
-
-  _addLayer: function(evt) {
-    evt.preventDefault();
-    var nameEl = this.queryByHook('new-layer-name');
-    var name = nameEl.value.trim();
-
-    var res = this.model.canvasLayers.add({
-      name: name,
-      drawFunction: 'function(ctx) {\n  // ' + name + ' drawFunction\n}'
-    });
-
-    if (!res) {
-      return;
-    }
-    nameEl.value = '';
-
-    this.rootView.sendCommand('propChange', {
-      path: objectPath(this.model),
-      property: 'canvasLayers',
-      value: this.model.canvasLayers.serialize()
+  _editUpdateFunction: function() {
+    this.editFunction('updateFunction', {
+      reference: reference
     });
   },
 
-  initialize: function () {
-    LayerControlView.prototype.initialize.apply(this, arguments);
-    this.once('change:rendered', this._inputLayerName);
-  },
-
-
-  subviews: {
-    canvasLayersView: {
-      waitFor: 'el',
-      selector: '.layers .items',
-      prepareView: function (el) {
-        return this.renderCollection(this.model.canvasLayers, CanvasControlLayerView, el);
-      }
-    }
+  _showDetails: function () {
+    this.rootView.showDetails(new CanvasDetailsView({
+      parent: this,
+      model: this.model
+    }));
   }
 });
