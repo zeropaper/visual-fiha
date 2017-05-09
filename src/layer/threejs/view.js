@@ -1,6 +1,8 @@
 'use strict';
 // var assign = require('lodash.assign');
 var ScreenLayerView = require('./../view');
+var programmableMixin = require('./../../programmable/mixin-view');
+var utils = require('./../canvas/canvas-utils');
 
 var THREE = require('three');
 window.THREE = window.THREE || THREE;
@@ -11,61 +13,8 @@ require('three/examples/js/loaders/MTLLoader');
 require('three/examples/js/loaders/OBJLoader');
 
 
-var midiMinMax = require('./../../utils/midi-min-max');
-var midi2Rad = require('./../../utils/midi2rad');
-var midi2Prct = require('./../../utils/midi2prct');
-
 
 function noop() {}
-
-function compileFunction(func) {
-  var fn;
-
-  var evaled = `fn = (function() {
-  // override some stuff that should not be used
-  var navigator, window, global, document, module, exports;
-
-  return function() {
-    const layer = this;
-    const width = layer.width || 400;
-    const height = layer.height || 300;
-    const store = layer.cache = (layer.cache || {});
-    const frametime = layer ? layer.frametime : 0;
-    const audio = layer ? layer.audio : {};
-
-    const bufferLength = function() {
-      return ((layer.audio || {}).bufferLength) || 128;
-    };
-
-    const frequency = function(x) {
-      return ((layer.audio || {}).frequency || [])[x] || 0;
-    };
-
-    const timeDomain = function(x) {
-      return ((layer.audio || {}).timeDomain || [])[x] || 0;
-    };
-
-    const parameter = function (name, deflt) {
-      var val = layer.model.parameters.get(name);
-      return val ? val.value : deflt;
-    };
-
-    ${ midiMinMax.toString() }
-    ${ midi2Rad.toString() }
-    ${ midi2Prct.toString() }
-
-    const getLoaderViewByName = function(name) {
-      var filtered = layer.loaders.views.filter(v => v.model.name === name);
-      return filtered.length ? filtered[0] : false;
-    };
-
-    ${ func.toString() }
-  };
-})();`;
-
-  eval(evaled);// jshint ignore:line
-  return fn;
-}
 
 function bindObjectChange(source, destination, keys = ['x', 'y', 'z']) {
   keys.forEach(function(key) {
@@ -160,6 +109,7 @@ var ThreeObject = State.extend({
 
   remove: function() {
     var object = this.object;
+    console.info('remove object', !!object);
     if (object) object.remove();
     if (State.prototype.remove) State.prototype.remove.apply(this, arguments);
     return this;
@@ -333,8 +283,9 @@ ThreeLoader.types.objmtl = ThreeLoader.extend({
 });
 
 
-
-module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
+var programmable = require('./programmable');
+module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend(programmableMixin(programmable,
+{
   template: function() {
     return '<div class="layer-threejs" id="' + this.model.getId() + '" view-id="' + this.cid + '"></div>';
   },
@@ -342,10 +293,11 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
   initialize: function() {
     var view = this;
     ScreenLayerView.prototype.initialize.apply(view, arguments);
-    window.THREE = window.THREE || THREE;
-    window['_threejsView' + view.cid] = view;
+
     view.on('change:width change:height', view.resize);
-    view.on('change:model.renderFunction', function() {
+
+    view.on('change:model.setupFunction', function() {
+      console.info('reboot threejs %s', view.model.getId());
       view._cleanupScene()._renderScene();
     });
   },
@@ -359,20 +311,6 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
   },
 
   derived: {
-    renderFn: {
-      deps: ['model.renderFunction'],
-      fn: function() {
-        var fn = compileFunction(this.model.renderFunction);
-        return fn.bind(this);
-      }
-    },
-    updateFn: {
-      deps: ['model.updateFunction'],
-      fn: function() {
-        var fn = compileFunction(this.model.updateFunction);
-        return fn.bind(this);
-      }
-    },
     manager: {
       deps: [],
       fn: function() {
@@ -452,6 +390,15 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
       }
     }
 
+    [
+      'geometries',
+      'cameras',
+      'lights'
+    ].forEach(function(collectionName) {
+      if (this[collectionName]) this[collectionName].remove();
+      this[collectionName] = null;
+    }, this);
+
     cancelAnimationFrame(scene.id);// Stop the animation
     this.renderer.domElement.addEventListener('dblclick', null, false); //remove listener to render
     scene.scene = null;
@@ -473,7 +420,6 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
 
   _renderScene: function() {
     var view = this;
-    var fn = view.renderFn;
 
     view.el.appendChild(view.renderer.domElement);
 
@@ -492,15 +438,7 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
       return new Constructor({model: options.model}, {parent: view});
     });
 
-
-    if (typeof fn === 'function') {
-      try {
-        fn.call(view);
-      }
-      catch(up) {
-        console.log('renderFunction', up.message);
-      }
-    }
+    view.callSetup();
 
     return view;
   },
@@ -516,16 +454,31 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
 
   update: function() {
     if (!this.camera) return;
+    var layer = this;
+    var clock = layer.model.screenState.clock;
+    var audio = layer.model.screenState.audio || {};
 
-    var fn = this.updateFn;
-    if (typeof fn === 'function') {
-      try {
-        fn.call(this);
-      }
-      catch(up) {
-        console.log('updateFunction', up.message);
-      }
-    }
+    layer.callUpdate({
+      frametime: clock.frametime,
+      bpm: clock.bpm,
+      beatnum: clock.beatnum,
+      beatprct: clock.beatprct,
+      beatlength: clock.beatlength,
+
+      bufferLength: function() { return audio.bufferLength || 128; },
+      vol: function(x) {
+        return (audio.timeDomain || [])[x] || 0;
+      },
+      frq: function(x) {
+        return (audio.frequency || [])[x] || 0;
+      },
+
+      param: function(...args) { return layer.model.parameters.getValue(...args); },
+
+      scene: layer.scene,
+
+      utils: utils
+    });
 
     this.renderer.render(this.scene, this.camera);
   },
@@ -534,4 +487,4 @@ module.exports = ScreenLayerView.types.threejs = ScreenLayerView.extend({
     this._cleanupScene();
     ScreenLayerView.prototype.remove.apply(this, arguments);
   }
-});
+}));

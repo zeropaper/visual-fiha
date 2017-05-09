@@ -3,6 +3,7 @@ var ScreenLayerState = require('./../state');
 var State = require('ampersand-state');
 var Collection = require('ampersand-collection');
 var ParameterCollection = require('./../../parameter/collection');
+var programmableMixin = require('./../../programmable/mixin-state');
 
 /***************************************\
  *                                     *
@@ -415,10 +416,11 @@ var LoaderCollection = Collection.extend({
  *                                     *
  *                                     *
 \***************************************/
-module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
+var programmable = require('./programmable');
+module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend(programmableMixin(programmable, {
   props: {
     currentCamera: ['string', false, null],
-    renderFunction: ['string', true, 'function() { console.info(\'missing renderFunction for %s\', layer.model.getId()); }'],
+    setupFunction: ['string', true, 'function() { console.info(\'missing setupFunction for %s\', layer.model.getId()); }'],
     updateFunction: ['string', true, 'function() { console.info(\'missing updateFunction for %s\', layer.model.getId()); }']
   },
 
@@ -467,4 +469,4 @@ module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
 
 
 
-});
+}));
