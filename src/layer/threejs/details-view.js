@@ -32,19 +32,7 @@ var ThreeJSDetailsView = DetailsView.extend({
   },
   _editUpdateFunction: function() {
     this.editFunction('updateFunction');
-  },
 
-  derived: {
-    propNames: {
-      deps: ['model'],
-      fn: function() {
-        return propNamesExtractor(this.model, [
-          'renderFunction',
-          'updateFunction',
-          'layerStyles'
-        ]);
-      }
-    }
   }
 });
 

@@ -2,7 +2,6 @@
 var assign = require('lodash.assign');
 var View = require('./control-view');
 var objectPath = require('./../utils/object-path');
-var propNamesExtractor = require('./../utils/prop-names');
 var ParameterListView = require('./../parameter/list-view');
 
 
@@ -32,23 +31,7 @@ var DetailsView = View.extend({
   },
 
   derived: {
-    propNames: {
-      deps: ['model'],
-      fn: function() {
-        return propNamesExtractor(this.model, ['layerStyles']);
-      }
-    },
 
-    definition: {
-      deps: ['propNames'],
-      fn: function() {
-        var def = this.model.constructor.prototype._definition;
-        return this.propNames
-          .map(function(name) {
-            return assign({name: name}, def[name]);
-          });
-      }
-    },
 
     modelPath: {
       deps: ['model'],

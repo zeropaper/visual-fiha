@@ -1,6 +1,5 @@
 'use strict';
 var DetailsView = require('./../details-view');
-var propNamesExtractor = require('./../../utils/prop-names');
 var assign = require('lodash.assign');
 
 var SVGDetailsView = DetailsView.extend({
@@ -65,19 +64,7 @@ var SVGDetailsView = DetailsView.extend({
         });
       }
     });
-  },
 
-  derived: {
-    propNames: {
-      deps: ['model'],
-      fn: function() {
-        return propNamesExtractor(this.model, [
-          'content',
-          'svgStyles',
-          'layerStyles'
-        ]);
-      }
-    }
   }
 });
 
