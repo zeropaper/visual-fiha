@@ -3,6 +3,7 @@
 var assign = require('lodash.assign');
 var LayerDetailsView = require('./../details-view');
 var reference = require('./reference');
+var snippets = require('./snippets');
 
 var CanvasLayerDetailsView = LayerDetailsView.extend({
   template: `
@@ -28,7 +29,8 @@ var CanvasLayerDetailsView = LayerDetailsView.extend({
 
   _editUpdateFunction: function() {
     this.editFunction('updateFunction', {
-      reference: reference
+      reference: reference,
+      snippets: snippets
     });
   }
 });

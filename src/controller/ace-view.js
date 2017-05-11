@@ -61,6 +61,7 @@ var AceEditor = View.extend({
     importantNote: 'string',
     reference: 'string',
     shortcuts: 'string',
+    snippets: 'any',
     title: 'string',
     language: {
       type: 'string',
@@ -309,13 +310,22 @@ var AceEditor = View.extend({
     editor.setFontSize(16);
 
     if (view.language === 'javascript') {
-      // var languageTools = ace.require('ace/ext/language_tools');
       editor.setOptions({
         enableBasicAutocompletion: true,
         enableSnippets: true,
-        enableLiveAutocompletion: true
+        enableLiveAutocompletion: false
       });
+
+      // var languageTools = ace.require('ace/ext/language_tools');
       // languageTools.addCompleter(canvasCompleter);
+
+      console.info('view.snippets', view.snippets);
+      if (view.snippets) {
+        var snippetManager = ace.require('ace/snippets').snippetManager;
+        var snippets = snippetManager.parseSnippetFile(view.snippets);
+        console.info('snippetManager', snippets);
+        snippetManager.register(snippets, 'javascript');
+      }
     }
 
     var session = editor.getSession();

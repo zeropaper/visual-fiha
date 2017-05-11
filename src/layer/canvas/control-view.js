@@ -3,6 +3,7 @@ var assign = require('lodash.assign');
 var LayerControlView = require('./../control-view');
 var CanvasDetailsView = require('./details-view');
 var reference = require('./reference');
+var snippets = require('./snippets');
 
 module.exports = LayerControlView.types.canvas = LayerControlView.extend({
   template: `
@@ -26,7 +27,8 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
 
   _editUpdateFunction: function() {
     this.editFunction('updateFunction', {
-      reference: reference
+      reference: reference,
+      snippets: snippets
     });
   },
 
