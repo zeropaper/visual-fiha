@@ -42,6 +42,7 @@
     "ampersand-view": "^10.0.1",
     "ampersand-view-switcher": "^2.1.0",
     "copy-webpack-plugin": "^4.0.1",
+    "glitch-canvas": "^1.0.2",
     "js-yaml": "^3.7.0",
     "localforage": "^1.4.3",
     "lodash.assign": "^4.2.0",
