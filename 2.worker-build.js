@@ -5,15 +5,25 @@ webpackChunk([2],{
 
 "use strict";
 
-var LayerState = __webpack_require__(5);
+var ScreenLayerState = __webpack_require__(4);
+module.exports = ScreenLayerState.types.img = ScreenLayerState.extend({
+  baseParameters: [
+    {name: 'src', type: 'string', default: ''}
+  ].concat(ScreenLayerState.prototype.baseParameters),
 
-var P5LayerState = LayerState.types.p5 = LayerState.extend({
-  props: {
-    setupFunction: ['string', false, 'console.info("no p5 setupFunction set");'],
-    drawFunction: ['string', false, 'console.info("no p5 drawFunction set");']
+  derived: {
+    src: {
+      deps: ['parameters.src'],
+      fn: function() {
+        return this.parameters.getValue('src');
+      }
+    }
+  },
+
+  initialize: function() {
+    ScreenLayerState.prototype.initialize.apply(this, arguments);
   }
 });
-module.exports = P5LayerState;
 
 /***/ }),
 
@@ -22,8 +32,25 @@ module.exports = P5LayerState;
 
 "use strict";
 
-var ScreenLayerState = __webpack_require__(5);
-var Extractor = __webpack_require__(298);
+var LayerState = __webpack_require__(4);
+
+var P5LayerState = LayerState.types.p5 = LayerState.extend({
+  props: {
+    setupFunction: ['string', false, 'console.info("no p5 setupFunction set");'],
+    drawFunction: ['string', false, 'console.info("no p5 updateFunction set");']
+  }
+});
+module.exports = P5LayerState;
+
+/***/ }),
+
+/***/ 12:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var ScreenLayerState = __webpack_require__(4);
+var Extractor = __webpack_require__(299);
 
 module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
   baseParameters: [
@@ -127,15 +154,85 @@ module.exports = ScreenLayerState.types.SVG = ScreenLayerState.extend({
 
 /***/ }),
 
-/***/ 12:
+/***/ 127:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ScreenLayerState = __webpack_require__(5);
-var State = __webpack_require__(4);
+module.exports = `
+const layer = this;
+const width = layer.width || 400;
+const height = layer.height || 300;
+`;
+
+
+/***/ }),
+
+/***/ 128:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var ParamState = __webpack_require__(301);
 var Collection = __webpack_require__(6);
-var ParameterCollection = __webpack_require__(53);
+
+var ParamCollection = Collection.extend({
+  mainIndex: 'name',
+  model: ParamState,
+
+  comparator: 'name',
+
+  toJSON: function (...args) {
+    return this.map(model => model.toJSON(...args));
+  },
+
+  getValue: function(name, defaultVal) {
+    var param = this.get(name);
+    if (!param) return defaultVal;
+    var val = param.value;
+    defaultVal = arguments.length === 2 ? defaultVal : param.default;
+    return val === null || typeof val === 'undefined' ? defaultVal : val;
+  }
+});
+
+module.exports = ParamCollection;
+
+/***/ }),
+
+/***/ 129:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function programmableState(config, prototype = {}) {
+  // var update = config.update;
+  var setup = config.setup;
+
+  prototype.props = prototype.props || {};
+  prototype.derived = prototype.derived || {};
+
+  prototype.props.updateFunction = ['string', true, ''];
+
+  if (!setup) return prototype;
+
+  prototype.props.setupFunction = ['string', true, ''];
+
+  return prototype;
+};
+
+/***/ }),
+
+/***/ 13:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var ScreenLayerState = __webpack_require__(4);
+var State = __webpack_require__(5);
+var Collection = __webpack_require__(6);
+var ParameterCollection = __webpack_require__(128);
+var programmableMixin = __webpack_require__(129);
 
 /***************************************\
  *                                     *
@@ -548,10 +645,11 @@ var LoaderCollection = Collection.extend({
  *                                     *
  *                                     *
 \***************************************/
-module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
+var programmable = __webpack_require__(300);
+module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend(programmableMixin(programmable, {
   props: {
     currentCamera: ['string', false, null],
-    renderFunction: ['string', true, 'function() { console.info(\'missing renderFunction for %s\', layer.model.getId()); }'],
+    setupFunction: ['string', true, 'function() { console.info(\'missing setupFunction for %s\', layer.model.getId()); }'],
     updateFunction: ['string', true, 'function() { console.info(\'missing updateFunction for %s\', layer.model.getId()); }']
   },
 
@@ -597,254 +695,19 @@ module.exports = ScreenLayerState.types.threejs = ScreenLayerState.extend({
   //   return data;
   // },
 
-  initialize: function(attrs) {
-    ScreenLayerState.prototype.initialize.apply(this, arguments);
-    var noLights = !this.lights.length && (!attrs.lights || !attrs.lights.length);
-    var noCameras = !this.cameras.length && (!attrs.cameras || !attrs.cameras.length);
-    var noGeometries = !this.geometries.length && (!attrs.geometries || !attrs.geometries.length);
 
-    if (noLights) {
-      this.lights.add([
-        {
-          type: 'ambient',
-          name: 'defaultambient',
-          color: {
-            r: 1,
-            g: 1,
-            b: 1
-          }
-        },
-        {
-          type: 'directonal',
-          name: 'defaultdirectonal',
-          color: {
-            r: 1,
-            g: 1,
-            b: 1
-          },
-          position: {
-            x: 45,
-            y: 45,
-            z: 45
-          },
-          lookAt: {
-            x: 0,
-            y: 0,
-            z: 0
-          }
-        }
-      ]);
-    }
 
-    if (noCameras) {
-      this.cameras.add([
-        {
-          type: 'perspective',
-          name: 'defaultperspective',
-          position: {
-            x: 35,
-            y: 35,
-            z: 35
-          },
-          lookAt: {
-            x: 0,
-            y: 0,
-            z: 0
-          }
-        },
-        {
-          type: 'orthographic',
-          name: 'defaultortho',
-          position: {
-            x: 35,
-            y: 35,
-            z: 35
-          },
-          lookAt: {
-            x: 0,
-            y: 0,
-            z: 0
-          }
-        }
-      ]);
-    }
 
-    if (noGeometries && !attrs.loaders) {
-      this.geometries.add([
-        {
-          type: 'box',
-          name: 'defaultbox',
-          position: {
-            x: 0,
-            y: 0,
-            z: 0
-          }
-        }
-      ]);
-    }
-  }
-});
+}));
 
 /***/ }),
 
-/***/ 127:
+/***/ 14:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var noop = function(){};
-var mockedCtx = {
-  save: noop,
-  restore: noop,
-  scale: noop,
-  rotate: noop,
-  translate: noop,
-  transform: noop,
-  setTransform: noop,
-  resetTransform: noop,
-  createLinearGradient: noop,
-  createRadialGradient: noop,
-  createPattern: noop,
-  clearRect: noop,
-  fillRect: noop,
-  strokeRect: noop,
-  beginPath: noop,
-  fill: noop,
-  stroke: noop,
-  drawFocusIfNeeded: noop,
-  clip: noop,
-  isPointInPath: noop,
-  isPointInStroke: noop,
-  fillText: noop,
-  strokeText: noop,
-  measureText: noop,
-  drawImage: noop,
-  createImageData: noop,
-  getImageData: noop,
-  putImageData: noop,
-  getContextAttributes: noop,
-  setLineDash: noop,
-  getLineDash: noop,
-  closePath: noop,
-  moveTo: noop,
-  lineTo: noop,
-  quadraticCurveTo: noop,
-  bezierCurveTo: noop,
-  arcTo: noop,
-  rect: noop,
-  arc: noop,
-  ellipse: noop,
-  // properties
-  globalAlpha: 1,
-  globalCompositeOperation: 'source-over',
-  filter: 'none',
-  imageSmoothingEnabled: true,
-  imageSmoothingQuality: 'low',
-  strokeStyle: '#000000',
-  fillStyle: '#000000',
-  shadowOffsetX: 0,
-  shadowOffsetY: 0,
-  shadowBlur: 0,
-  shadowColor: 'rgba(0, 0, 0, 0)',
-  lineWidth: 1,
-  lineCap: 'butt',
-  lineJoin: 'miter',
-  miterLimit: 10,
-  lineDashOffset: 0,
-  font: '10px sans-serif',
-  textAlign: 'start',
-  textBaseline: 'alphabetic',
-  canvas: {width: 400, height: 300},
-  // utilities
-  _: {}
-};
-mockedCtx._.methods = Object.keys(mockedCtx)
-  .filter(function(name) {
-    return typeof mockedCtx[name] === 'function';
-  });
-mockedCtx._.properties = Object.keys(mockedCtx)
-  .filter(function(name) {
-    return name != '_' && typeof mockedCtx[name] !== 'function';
-  });
-module.exports = mockedCtx;
-
-/***/ }),
-
-/***/ 128:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-function isCollectionOfParent(o, p) {
-  if (!p || !p._collections) return;
-  for (var name in p._collections) {
-    if (p[name] === o.collection) return name + '.' + o.getId();
-  }
-}
-
-function isChildOfParent(o, p) {
-  if (!p || !p._children) return;
-  for (var name in p._children) {
-    if (p[name] === o) return name;
-  }
-}
-
-function isPropOfParent(o, p) {
-  if (!p) return;
-  for (var name in p) {
-    if (p[name] === o) return name;
-  }
-}
-
-var _paths = {};
-function objectPath(state) {
-  if (!state) return null;
-  if (_paths[state.cid]) return _paths[state.cid];
-  var parts = [];
-
-
-  function up(instance) {
-    var collectionName = instance.collection ?
-                          isCollectionOfParent(instance, instance.collection.parent) :
-                          null;
-    if (collectionName) {
-      parts.unshift(collectionName);
-      return up(instance.collection.parent);
-    }
-
-    var childName = isChildOfParent(instance, instance.parent);
-    if (childName) {
-      parts.unshift(childName);
-      return up(instance.parent);
-    }
-
-
-    var propName = isPropOfParent(instance, instance.parent);
-    if (propName) {
-      parts.unshift(propName);
-      return up(instance.parent);
-    }
-
-    if (instance.parent) up(instance.parent);
-  }
-
-  up(state);
-
-  _paths[state.cid] = parts.join('.');
-  return _paths[state.cid];
-}
-
-module.exports = objectPath;
-
-/***/ }),
-
-/***/ 13:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var LayerState = __webpack_require__(5);
+var LayerState = __webpack_require__(4);
 var TxtLayerState = LayerState.types.txt = LayerState.extend({
   baseParameters: [
     {name: 'text', type: 'string', default: ''}
@@ -863,12 +726,12 @@ module.exports = TxtLayerState;
 
 /***/ }),
 
-/***/ 14:
+/***/ 15:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ScreenLayerState = __webpack_require__(5);
+var ScreenLayerState = __webpack_require__(4);
 module.exports = ScreenLayerState.types.video = ScreenLayerState.extend({
   baseParameters: [
     {name: 'src', type: 'string', default: ''}
@@ -886,315 +749,126 @@ module.exports = ScreenLayerState.types.video = ScreenLayerState.extend({
 
 /***/ }),
 
-/***/ 295:
+/***/ 2:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+/* global Uint8Array*/
 
-function noop() {}
+var State = __webpack_require__(5);
+var ScreenState = State.extend({
+  initialize: function(attributes, options = {}) {
+    this._isControllerState = !!options.router;
+  },
 
-var utils = module.exports = {};
+  mappable: {
+    source: ['midi', 'clock'],
+    target: ['layers', 'clock']
+  },
 
-utils.random = function random(multi = 100) {
-  return Math.random() * multi;
-};
+  session: {
+    audio: ['object', true, function() { return {
+      bufferLength: 128,
+      frequency: new Uint8Array(128),
+      timeDomain: new Uint8Array(128)
+    }; }],
+    latency: ['number', true, 0]
+  },
 
-utils.between = function between(val, min, max) {
-  return Math.max(min, Math.min(max, val));
-};
+  children: {
+    clock: __webpack_require__(302)
+  },
 
+  collections: {
+    layers: __webpack_require__(298)
+  },
 
-utils.log = function log(ctx, ...args) {
-  console.info(...args);
-};
-
-
-utils.midiMinMax = __webpack_require__(304);
-utils.midi2Rad = __webpack_require__(306);
-utils.midi2Prct = __webpack_require__(305);
-
-/**
- * txt
- * @param [text]
- * @param [x]
- * @param [y]
- */
-utils.txt = function txt(ctx, ...args) {
-  var text, x, y;
-  [
-    text = '',
-    x = ctx.canvas.width / 2,
-    y = ctx.canvas.height / 2,
-  ] = args;
-  ctx.fillText(text, x, y);
-};
-
-/**
- * dot
- * @param [x]
- * @param [y]
- * @param [radius]: 10
- * @param [start]: 0
- * @param [end]: 360
- */
-utils.dot = function dot(ctx, ...args) {
-  var x, y, radius, start, end;
-  [
-    x = ctx.canvas.width / 2,
-    y = ctx.canvas.height / 2,
-    radius = 10,
-    start = 0,
-    end = Math.PI * 2
-  ] = args;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, start, end);
-  ctx.closePath();
-  ctx.fill();
-};
-
-/**
- * circle
- * @param [x]: <center>
- * @param [y]: <center>
- * @param [radius]: 10
- * @param [start]: 0
- * @param [end]: 360
- */
-utils.circle = function circle(ctx, ...args) {
-  var x, y, radius, start, end;
-  [
-    x = ctx.canvas.width / 2,
-    y = ctx.canvas.height / 2,
-    radius = 10,
-    start = 0,
-    end = Math.PI * 2
-  ] = args;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, start, end);
-  ctx.closePath();
-  ctx.stroke();
-};
-
-
-utils.line = function line(ctx, ...args) {
-  ctx.beginPath();
-  if (typeof args[0] === 'string') {
-    ctx.strokeStyle = args.shift();
-  }
-  if (typeof args[0] === 'number') {
-    ctx.lineWidth = args.shift();
-  }
-  if (!args.length) return;
-  var point = args.shift();
-  ctx.moveTo(point[0], point[1]);
-  args.forEach(function(point) {
-    ctx.lineTo(point[0], point[1]);
-  });
-  ctx.stroke();
-};
-
-/**
- * polygone
- * @param [x]: <center>
- * @param [y]: <center>
- * @param [size]: 30
- * @param [sides]: 3
- */
-utils.polygone = function polygone(ctx, ...args) {
-  ctx.beginPath();
-  var sides, angle, i, x, y, lx, ly, size;
-  [
-    x,
-    y,
-    size = 30,
-    sides = 3
-  ] = args;
-  var shift = Math.PI * 0.5;
-  var rad = (Math.PI * 2) / sides;
-  for (i = 0; i < sides; i++) {
-    angle = rad * i + shift;
-    lx = Math.round(x + Math.cos(angle) * size);
-    ly = Math.round(y + Math.sin(angle) * size);
-    if (!i) {
-      ctx.beginPath();
-    }
-    ctx.lineTo(lx, ly);
-  }
-
-  ctx.closePath();
-  ctx.stroke();
-};
-
-
-utils.grid = function grid(width, height, itemsCount, rowsCount, process) {
-  process = typeof process === 'function' ? process : noop;
-  var r = 0,
-      c = 0,
-      xy = [0,0],
-      rowHeight = height / rowsCount,
-      columnsCount = itemsCount / rowsCount,
-      columnWidth = width / columnsCount
-  ;
-
-  // var args = [].slice.apply(arguments).map(item => typeof item);
-  // console.info(...args);
-  for (r = 0; r < rowsCount; r++) {
-    for (c = 0; c < columnsCount; c++) {
-      xy[1] = rowHeight * (r + 0.5);
-      xy[0] = columnWidth * (c + 0.5);
-      process(...xy);
-    }
-  }
-};
-
-
-/*
-function () {
-  var cx = width / 2;
-  var cy = height / 2;
-  var i = 0;
-  var r;
-  var s = -10;
-  fillStyle('#fff');
-  distribute(cx, cy, 12, cy, (layer.frametime % (360 * s)) / s, function(x, y, a) {
-    r = (cy / 12) * i;
-    fillText(a.toFixed(2), cx + (Math.cos(a) * r), cy + (Math.sin(a) * r));
-    i++;
-  });
-}
-*/
-utils.distribute = function distribute(x, y, itemsCount, r, tilt, process) {
-  itemsCount = itemsCount || 2;
-  tilt = tilt || 0;
-  process = typeof process === 'function' ? process : noop;
-  var i, a, args;
-  var rad = Math.PI * 2;
-  for (i = 0; i < itemsCount; i++) {
-    a = ((rad / itemsCount) * i) - Math.PI + ((rad / 360) * tilt);
-    args = [
-      x + (Math.cos(a) * r),
-      y + (Math.sin(a) * r),
-      a
-    ];
-    process(...args);
-  }
-};
-
-
-
-utils.repeat = function repeat(times, process, ...args) {
-  process = typeof process === 'function' ? process : noop;
-  for (var i = 0; i < times; i++) {
-    process(i, ...args);
-  }
-};
-
-
-utils.cacheContext = function cacheContext(ctx, cache, max) {
-  max = max || 0;
-  if (!max) return;
-
-  var w = ctx.canvas.width;
-  var h = ctx.canvas.height;
-  cache.unshift(ctx.getImageData(0, 0, w, h));
-  if (cache.length >= max) cache.pop();
-};
-
-utils.restoreContexts = function restoreContexts(ctx, cache, count, preprocess, postprocess) {
-  count = count || 1;
-  preprocess = preprocess || noop;
-  postprocess = postprocess || noop;
-  // console.info(cache.length);
-  for (var c = 1; c < count && c < cache.length; c++) {
-    if (cache[c] instanceof ImageData) {
-      try {
-        ctx.putImageData(preprocess(cache[c]), 0, 0);
-        postprocess();
+  derived: {
+    frametime: {
+      deps: ['clock.frametime'],
+      fn: function() {
+        return this.clock.frametime;
       }
-      catch (e) {
-        console.info(e.message, cache[c] instanceof ImageData);
+    },
+    hasDOM: {
+      deps: [],
+      fn: function() {
+        return typeof DedicatedWorkerGlobalScope === 'undefined';
+      }
+    },
+    isControllerState: {
+      deps: [],
+      fn: function() {
+        return this._isControllerState;
+      }
+    },
+    location: {
+      deps: ['hasDOM', 'isControllerState'],
+      fn: function() {
+        return this.isControllerState ? 'control' : (this.hasDOM ? 'screen' : 'worker');
       }
     }
+  },
+
+  _log: function(...args) {
+    var color = this.location === 'screen' ? 'lightblue' : (this.location === 'control' ? 'lightgreen' : 'pink');
+    var txt = args.shift();
+    console.log('%c'+ this.location[0].toUpperCase() + ': ' + txt, 'color:' + color, ...args);
+  },
+
+  toJSON: function() {
+    var obj = State.prototype.toJSON.apply(this, arguments);
+    delete obj.audio;
+    return obj;
   }
-};
+});
+
+module.exports = ScreenState;
 
 
 /***/ }),
 
-/***/ 296:
+/***/ 297:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var mockedCtx = __webpack_require__(127);
-var utils = __webpack_require__(295);// jshint ignore:line
+var layerPrologue = __webpack_require__(127);
+module.exports = {
+  setup: false,
+  update: {
+    prologue: layerPrologue,// + canvasPrologue,
+    argNames: [
+      'frametime',
+      'bpm',
+      'beatnum',
+      'beatprct',
+      'beatlength',
 
-// proxy the method and parameters of the canvas context
-var ctxProperties = '';
-mockedCtx._.methods
-  .forEach(function(name) {
-    ctxProperties += '\nvar ' + name + ' = function(...args) { try { ctx.' + name + '(...args); } catch(e){} };';
-  });
-mockedCtx._.properties
-  .forEach(function(name) {
-    if (name !== 'canvas') ctxProperties += '\nvar ' + name + ' = function(val) { if (val !== undefined) { ctx.' + name + ' = val; } return ctx.' + name + '; };';
-  });
+      'bufferLength',
+      'vol',
+      'frq',
 
-function compileFunction(drawFunction) {
-  var fn;// jshint ignore:line
+      'param',
 
-  var evaled = `fn = (function() {
-  // override some stuff that should not be used
-  var navigator, window, global, document, module, exports;
+      'ctx',
 
-  return function(ctx) {
-    const width = (ctx.canvas || {}).width || 400;
-    const height = (ctx.canvas || {}).height || 300;
-    const layer = this;
-    const store = layer.cache;
-    const frametime = layer ? layer.frametime : 0;
-    const audio = layer ? layer.audio : {};
-    const bufferLength = function() { return ((layer.audio || {}).bufferLength) || 128; };
-    const frequency = function(x) {
-      return ((layer.audio || {}).frequency || [])[x] || 0;
-    };
-    const timeDomain = function(x) {
-      return ((layer.audio || {}).timeDomain || [])[x] || 0;
-    };
-
-    const parameter = function(name, defaultVal) {
-      return layer.parameters.getValue(name, defaultVal);
-    };
-
-    ${ ctxProperties }
-    const random = utils.random;
-    const between = utils.between;
-    const midiMinMax = utils.midiMinMax;
-    const midi2rad = utils.midi2rad;
-    const midi2prct = utils.midi2prct;
-
-    const grid = function(...args) { utils.grid(width, height, ...args); };
-    const distribute = function(...args) { utils.distribute(...args); };
-    const repeat = function(...args) { utils.repeat(...args); };
-    const log = function(...args) { utils.log(ctx, ...args); };
-    const txt = function(...args) { utils.txt(ctx, ...args); };
-    const dot = function(...args) { utils.dot(ctx, ...args); };
-    const circle = function(...args) { utils.circle(ctx, ...args); };
-    const polygone = function(...args) { utils.polygone(ctx, ...args); };
-    const line = function(...args) { utils.line(ctx, ...args); };
-    const cacheContext = function(...args) { utils.cacheContext(ctx, ...args); };
-    const restoreContexts = function(...args) { utils.restoreContexts(ctx, ...args); };
-
-
-    return (${ drawFunction.toString() })(ctx);
-  };
-})();`;
-  eval(evaled);// jshint ignore:line
-  return fn;
-}
-
-module.exports = compileFunction;
+      'utils',
+      'grid',
+      'distribute',
+      'repeat',
+      'log',
+      'txt',
+      'dot',
+      'circle',
+      'polygone',
+      'line',
+      'cacheContext',
+      'restoreContexts'
+    ]
+  }
+};
 
 /***/ }),
 
@@ -1203,7 +877,52 @@ module.exports = compileFunction;
 
 "use strict";
 
-var State = __webpack_require__(4);
+var assign = __webpack_require__(8);
+var Collection = __webpack_require__(6);
+var LayerState = __webpack_require__(4);
+__webpack_require__(9);
+__webpack_require__(15);
+__webpack_require__(12);
+__webpack_require__(10);
+__webpack_require__(14);
+__webpack_require__(11);
+__webpack_require__(13);
+
+module.exports = Collection.extend({
+  comparator: 'zIndex',
+  mainIndex: 'name',
+  model: function(attrs, opts) {
+    var Constructor = LayerState.types[attrs.type] || LayerState;
+    var state = new Constructor(attrs, opts);
+    // state.on('change', function() {
+    //   opts.collection.trigger('change:layer', state);
+    // });
+    return state;
+  },
+
+  toJSON: function () {
+    return this.map(function (model) {
+      if (model.toJSON) {
+        return model.toJSON();
+      }
+      else {
+        var out = {};
+        assign(out, model);
+        delete out.collection;
+        return out;
+      }
+    });
+  }
+});
+
+/***/ }),
+
+/***/ 299:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var State = __webpack_require__(5);
 
 var Extractor = State.extend({
   autoRender: true,
@@ -1292,13 +1011,43 @@ module.exports = Extractor;
 
 /***/ }),
 
-/***/ 299:
+/***/ 300:
+/***/ (function(module, exports, __webpack_require__) {
+
+var layerPrologue = __webpack_require__(127);
+module.exports = {
+  setup: {
+    prologue: layerPrologue,
+    argNames: []
+  },
+  update: {
+    prologue: layerPrologue,
+    argNames: [
+      'frametime',
+      'bpm',
+      'beatnum',
+      'beatprct',
+      'beatlength',
+
+      'bufferLength',
+      'vol',
+      'frq',
+
+      'param',
+      'scene',
+      'utils'
+    ]
+  }
+};
+
+/***/ }),
+
+/***/ 301:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var State = __webpack_require__(4);
-var objectPath = __webpack_require__(128);
+var State = __webpack_require__(5);
 
 var ParamState = State.extend({
   idAttribute: 'name',
@@ -1309,7 +1058,7 @@ var ParamState = State.extend({
 
   props: {
     name: ['string', true, ''],
-    type: ['string', false, ''],
+    type: ['string', false, 'any'],
     value: ['any', false, ''],
     default: ['any', false, '']
   },
@@ -1318,7 +1067,7 @@ var ParamState = State.extend({
     modelPath: {
       deps: ['name'],
       fn: function() {
-        return objectPath(this);
+        return this.collection.parent.modelPath + '.parameters.' + this.name;
       }
     }
   }
@@ -1328,36 +1077,103 @@ module.exports = ParamState;
 
 /***/ }),
 
-/***/ 304:
+/***/ 302:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-module.exports = function minMax(val, min = 0, max = 16) {
-  return (Math.abs(min - max) * Number(val) * (1 / 127)) - min;
-};
+var State = __webpack_require__(5);
 
-/***/ }),
+var Clock = State.extend({
+  play: function() {
+    var now = Date.now();
+    this.starttime = this.pausetime ? this.starttime + (now - this.pausetime) : now;
+    this.pausetime = 0;
+    return this.refresh();
+  },
 
-/***/ 305:
-/***/ (function(module, exports, __webpack_require__) {
+  pause: function() {
+    this.pausetime = Date.now();
+    return this.refresh();
+  },
 
-"use strict";
+  stop: function() {
+    var now = Date.now();
+    this.pausetime = now;
+    this.starttime = now;
+    this.frametime = 0;
+    return this;
+  },
 
-module.exports = function midi2prct(val) {
-  return __webpack_require__(308)(val, 127);
-};
+  refresh: function() {
+    if (this.playing) this.frametime = Date.now() - this.starttime;
+    this.duration = Math.max(this.duration, this.frametime);
+    return this;
+  },
 
-/***/ }),
+  props: {
+    pausetime: ['number', true, 0],
+    starttime: ['number', true, Date.now],
+    frametime: ['number', true, 0],
+    beatdelay: ['number', true, 0],
+    bpm: ['number', true, 120]
+  },
 
-/***/ 306:
-/***/ (function(module, exports, __webpack_require__) {
+  mappable: {
+    source: ['frametime', 'pausetime', 'starttime', 'bpm', 'beatprct', 'beatnum', 'beatlength'],
+    target: ['beatdelay', 'bpm']
+  },
 
-"use strict";
+  derived: {
+    modelPath: {
+      deps: [],
+      fn: function() {
+        return 'clock';
+      }
+    },
+    playing: {
+      deps: ['pausetime'],
+      fn: function() {
+        return !this.pausetime;
+      }
+    },
+    paused: {
+      deps: ['pausetime', 'starttime'],
+      fn: function() {
+        return this.pausetime > this.starttime;
+      }
+    },
+    stopped: {
+      deps: ['pausetime', 'starttime'],
+      fn: function() {
+        return this.pausetime === this.starttime;
+      }
+    },
+    beatprct: {
+      deps: ['beatlength', 'frametime'],
+      fn: function() {
+        var ft = this.frametime;
+        var bl = this.beatlength;
+        return !ft ? 0 : (100 - (((ft % bl) / bl) * 100));
+      }
+    },
+    beatnum: {
+      deps: ['beatlength', 'beatdelay', 'frametime'],
+      fn: function() {
+        var ft = this.frametime + this.beatdelay;
+        return ft ? Math.floor(ft / this.beatlength) : 0;
+      }
+    },
+    beatlength: {
+      deps: ['bpm'],
+      fn: function() {
+        return (60 * 1000) / Math.max(this.bpm, 1);
+      }
+    }
+  }
+});
 
-module.exports = function midi2rad(val) {
-  return Math.PI * 2 * (Number(val) * (1 / 127));
-};
+module.exports = Clock;
 
 /***/ }),
 
@@ -1366,61 +1182,83 @@ module.exports = function midi2rad(val) {
 
 "use strict";
 
-module.exports = function prct(val, max = 255) {
-  if (!val || !max) return 0;
-  return (100 / max) * Number(val);
-};
+
+function isCollectionOfParent(o, p) {
+  if (!p || !p._collections) return;
+  for (var name in p._collections) {
+    if (p[name] === o.collection) return name + '.' + o.getId();
+  }
+}
+
+function isChildOfParent(o, p) {
+  if (!p || !p._children) return;
+  for (var name in p._children) {
+    if (p[name] === o) return name;
+  }
+}
+
+function isPropOfParent(o, p) {
+  if (!p) return;
+  for (var name in p) {
+    if (p[name] === o) return name;
+  }
+}
+
+var _paths = {};
+function objectPath(state) {
+  if (!state) return null;
+  if (_paths[state.cid]) return _paths[state.cid];
+  var parts = [];
+
+
+  function up(instance) {
+    var collectionName = instance.collection ?
+                          isCollectionOfParent(instance, instance.collection.parent) :
+                          null;
+    if (collectionName) {
+      parts.unshift(collectionName);
+      return up(instance.collection.parent);
+    }
+
+    var childName = isChildOfParent(instance, instance.parent);
+    if (childName) {
+      parts.unshift(childName);
+      return up(instance.parent);
+    }
+
+
+    var propName = isPropOfParent(instance, instance.parent);
+    if (propName) {
+      parts.unshift(propName);
+      return up(instance.parent);
+    }
+
+    if (instance.parent) up(instance.parent);
+  }
+
+  up(state);
+
+  _paths[state.cid] = parts.join('.');
+  return _paths[state.cid];
+}
+
+module.exports = objectPath;
 
 /***/ }),
 
-/***/ 5:
+/***/ 4:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var State = __webpack_require__(4);
-
-var objectPath = __webpack_require__(128);
-var ParameterCollection = __webpack_require__(53);
-
-var LayerState = State.extend({
+var objectPath = __webpack_require__(308);
+var parameterizedState = __webpack_require__(78);
+var LayerState = parameterizedState([
+  {name: 'zIndex', type: 'number', default: 0},
+  {name: 'active', type: 'boolean', default: true}
+]).extend({
   idAttribute: 'name',
   typeAttribute: 'type',
-
-  initialize: function() {
-    var state = this;
-
-    state.ensureParameters();
-
-    state.listenToAndRun(state.parameters, 'change', function() {
-      state.trigger('change:parameters', state, state.parameters, {parameters: true});
-    });
-  },
-
-  collections: {
-    parameters: ParameterCollection
-  },
-
-  baseParameters: [
-    {name: 'zIndex', type: 'number', default: 0},
-    {name: 'active', type: 'boolean', default: true}
-  ],
-
-  ensureParameters: function(definition = []) {
-    (this.baseParameters || [])
-      .concat(definition)
-      .forEach(function(parameterDef) {
-        var existing = this.parameters.get(parameterDef.name);
-        if (!existing) {
-          var created = this.parameters.add(parameterDef);
-          this.listenTo(created, 'change:value', function(...args) {
-            this.trigger('change:parameters.' + created.name, ...args);
-          });
-          created.value = parameterDef.default;
-        }
-      }, this);
-    return this;
-  },
 
   props: {
     name: ['string', true, null],
@@ -1433,18 +1271,6 @@ var LayerState = State.extend({
       deps: ['name'],
       fn: function() {
         return objectPath(this);
-      }
-    },
-    active: {
-      deps: ['parameters.active'],
-      fn: function() {
-        return this.parameters.getValue('active');
-      }
-    },
-    zIndex: {
-      deps: ['parameters.zIndex'],
-      fn: function() {
-        return this.parameters.getValue('zIndex');
       }
     },
     screenState: {
@@ -1502,180 +1328,68 @@ module.exports = LayerState;
 
 /***/ }),
 
-/***/ 53:
+/***/ 78:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ParamState = __webpack_require__(299);
-var Collection = __webpack_require__(6);
-
-var ParamCollection = Collection.extend({
-  mainIndex: 'name',
-  model: ParamState,
-
-  comparator: 'name',
-
-  toJSON: function (...args) {
-    return this.map(model => model.toJSON(...args));
-  },
-
-  getValue: function(name, defaultVal) {
-    var param = this.get(name);
-    if (!param) return defaultVal;
-    var val = param.value;
-    defaultVal = arguments.length === 2 ? defaultVal : param.default;
-    return val === null || typeof val === 'undefined' ? defaultVal : val;
-  }
-});
-
-module.exports = ParamCollection;
-
-/***/ }),
-
-/***/ 8:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var Collection = __webpack_require__(6);
-var ParameterCollection = __webpack_require__(53);
-var ScreenLayerState = __webpack_require__(5);
-var mockedCtx = __webpack_require__(127);
-var compileFunction = __webpack_require__(296);
-function drawLayerCtx() {
-  /*
-    You can access the canvas 2d context with the global ctx
-  */
-}
-
-var CanvasLayer = ScreenLayerState.extend({
-  idAttribute: 'name',
-  cache: {},
-
-  props: {
-    drawFunction: ['any', true, function() { return drawLayerCtx; }]
-  },
-
-  collections: {
-    parameters: ParameterCollection
-  },
-
-  toJSON: function(...args) {
-    return this.toJSON(...args);
-  },
-
-  derived: {
-    mappable: {
-      deps: ScreenLayerState.prototype._derived.mappable.deps,
+var AmpersandState = __webpack_require__(5);
+var ParameterCollection = __webpack_require__(128);
+module.exports = function parameterizedState(baseParameters, State = AmpersandState) {
+  var derived = {};
+  baseParameters.forEach(function(param) {
+    derived[param.name] = {
+      deps: ['parameters.' + param.name],
       fn: function() {
-        var mappable = ScreenLayerState.prototype._derived.mappable.fn.apply(this, arguments);
-        var targets = mappable.target.filter(function(key) {
-          return [
-            'drawFunction',
-            'screenState', // would make a circular reference if not excluded!
-            'draw'
-          ].indexOf(key) < 0;
-        });
-        console.info('targets for %s', this.name, targets);
-        return {
-          source: [],
-          target: targets
-        };
+        return this.parameters.getValue(param.name);
       }
+    };
+  });
+
+  return State.extend({
+    initialize: function() {
+      var state = this;
+      State.prototype.initialize.apply(state, arguments);
+
+      state._ensureBaseParameters();
+
+      state.listenToAndRun(state.parameters, 'change', function() {
+        state.trigger('change:parameters', state, state.parameters, {parameters: true});
+      });
     },
 
-    screenState: {
-      deps: [],
-      fn: function() {
-        return this.collection.parent.screenState;
-      }
+    collections: {
+      parameters: ParameterCollection
     },
 
-    frametime: {
-      cache: false,
-      deps: ['screenState'],
-      fn: function() {
-        if (!this.screenState) return 0;
-        return this.screenState.clock.frametime || 0;
-      }
-    },
-    audio: {
-      cache: false,
-      deps: ['screenState'],
-      fn: function() {
-        if (!this.screenState) return {};
-        return this.screenState.audio || {};
-      }
+    baseParameters: baseParameters,
+
+    derived: derived,
+
+    // is only needed for derived updates, the non-baseParameters do not haved derived
+    _bindValueChange: function(paramState) {
+      if (!paramState) return;
+      this.listenTo(paramState, 'change:value', function(...args) {
+        this.trigger('change:parameters.' + paramState.name, ...args);
+      });
     },
 
-    width: {
-      deps: ['screenState', 'screenState.width'],
-      fn: function() {
-        return this.screenState.width || 400;
-      }
+    // in order to "clear" the cached value of the derived
+    _ensureBaseParameters: function(definition = []) {
+      (this.baseParameters || [])
+        .concat(definition)
+        .forEach(function(parameterDef) {
+          var existing = this.parameters.get(parameterDef.name);
+          if (!existing) {
+            var created = this.parameters.add(parameterDef);
+            this._bindValueChange(created);
+            created.value = parameterDef.default;
+          }
+        }, this);
+      return this;
     },
-    height: {
-      deps: ['screenState', 'screenState.height'],
-      fn: function() {
-        return this.screenState.height || 300;
-      }
-    },
-    draw: {
-      deps: ['drawFunction'],
-      fn: function() {
-        var fn, result, err;
-
-        try {
-          fn = compileFunction(this.drawFunction);
-          result = fn.call(this, mockedCtx);
-          err = result instanceof Error ? result : null;
-        }
-        catch(e) {
-          err = e;
-        }
-
-        if (err) {
-          console.warn('draw function error', err.stack);
-          fn = function() { return err; };
-        }
-
-        return fn.bind(this);
-      }
-    }
-  }
-});
-
-var CanvasLayers = Collection.extend({
-  mainIndex: 'name',
-  comparator: 'zIndex',
-
-  model: function (attrs, options) {
-    var inst =  new CanvasLayer(attrs, options);
-    if (options.init === false) inst.initialize();
-    return inst;
-  }
-});
-
-
-module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
-  baseParameters: ScreenLayerState.prototype.baseParameters.concat([
-    {name: 'clear', type: 'number', default: 1}
-  ]),
-
-  derived: {
-    clear: {
-      deps: ['parameters.clear'],
-      fn: function() {
-        return this.parameters.getValue('clear');
-      }
-    }
-  },
-
-  collections: {
-    canvasLayers: CanvasLayers
-  }
-});
+  });
+};
 
 /***/ }),
 
@@ -1684,25 +1398,23 @@ module.exports = ScreenLayerState.types.canvas = ScreenLayerState.extend({
 
 "use strict";
 
-var ScreenLayerState = __webpack_require__(5);
-module.exports = ScreenLayerState.types.img = ScreenLayerState.extend({
-  baseParameters: [
-    {name: 'src', type: 'string', default: ''}
-  ].concat(ScreenLayerState.prototype.baseParameters),
+var ScreenLayerState = __webpack_require__(4);
 
-  derived: {
-    src: {
-      deps: ['parameters.src'],
-      fn: function() {
-        return this.parameters.getValue('src');
-      }
-    }
-  },
+var parameterizedState = __webpack_require__(78);
+var baseParameters = ScreenLayerState.prototype.baseParameters.concat([
+  {name: 'clear', type: 'number', default: 1, min: 0, max: Infinity}
+]);
 
-  initialize: function() {
-    ScreenLayerState.prototype.initialize.apply(this, arguments);
-  }
-});
+var programmableState = __webpack_require__(129);
+
+var prototype = {
+};
+
+var programmable = __webpack_require__(297);
+ScreenLayerState.types.canvas = parameterizedState(baseParameters, ScreenLayerState)
+                                .extend(programmableState(programmable, prototype));
+
+module.exports = ScreenLayerState.types.canvas;
 
 /***/ })
 

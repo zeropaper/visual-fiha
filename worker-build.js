@@ -86,12 +86,12 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 17);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 17:
+/***/ 18:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -104,24 +104,38 @@ __webpack_require__.e/* require.ensure */(2).then((function() {
 __webpack_require__.e/* require.ensure */(3).then((function() {
 __webpack_require__.e/* require.ensure */(1).then((function() {
 // ---------------------------------------------------------------
+
+
+
+function emitCommand(name, payload) {
+  worker.postMessage({
+    command: name,
+    payload: payload
+  });
+}
+
+
 var resolve = __webpack_require__(0);
-var fromYaml = __webpack_require__(16);
+var fromYaml = __webpack_require__(17);
 
 var Mappings = __webpack_require__(1);
 
 var ScreenState = __webpack_require__(2);
-worker.screen = new ScreenState();
+worker.screen = new ScreenState({}, {
+  worker: worker
+});
 
 worker.layers = worker.screen.layers;
 
 var SignalCollection = __webpack_require__(3);
-worker.signals = new SignalCollection({
-  parent: worker.screen
+worker.audio = {};
+worker.signals = new SignalCollection([], {
+  emitCommand: emitCommand, // I tried listening to emitCommand events on the collection, nope...
+  clock: worker.screen.clock,
+  audio: worker.audio
 });
-worker.signals.listenTo(worker.screen.clock, 'change:frametime', function(...args) {
-  worker.signals.trigger('change:frametime', ...args);
-});
-var localForage = __webpack_require__(15);
+
+var localForage = __webpack_require__(16);
 
 
 localForage.installSetups(function(err) {
@@ -129,11 +143,10 @@ localForage.installSetups(function(err) {
   emitCommand('storageSetupInstalled');
 });
 
-
+// this has become very messy
 var __dataContext = {
-  frametime: 0,
-  firstframetime: 0,
-  audio: {},
+  clock: worker.screen.clock,
+  audio: worker.audio,
   layers: worker.layers,
   signals: worker.signals
 };
@@ -166,16 +179,6 @@ function registerCommand(commandName, command) {
   }
   signatures[commandName] = signature(command);
 }
-
-
-
-function emitCommand(name, payload) {
-  worker.postMessage({
-    command: name,
-    payload: payload
-  });
-}
-
 
 var screens = {};
 var channel = new BroadcastChannel('spike');
@@ -291,14 +294,14 @@ var commands = {
           emitCommand('storageKeys', {keys: keys});
         })
         .catch(function(err) {
-          emitCommand('storageKeys', {error: err});
+          emitCommand('storageKeys', {error: {message: err.message, stack: err.stack}});
         });
   },
   storageSave: function(setupId) {
     var setup = {
-      layers: worker.layers.serialize(),
-      signals: worker.signals.serialize(),
-      mappings: worker.mappings.serialize()
+      layers: worker.layers.toJSON(),
+      signals: worker.signals.toJSON(),
+      mappings: worker.mappings.export()
     };
 
     localForage
@@ -307,7 +310,7 @@ var commands = {
           emitCommand('storageSave', {setup: setup, setupId: setupId});
         })
         .catch(function(err) {
-          emitCommand('storageSave', {error: err, setupId: setupId});
+          emitCommand('storageSave', {error: {message: err.message, stack: err.stack}, setupId: setupId});
         });
   },
   storageLoad: function(setupId) {
@@ -318,16 +321,11 @@ var commands = {
           worker.signals.reset(setup.signals);
           worker.mappings.reset(setup.mappings);
 
-          setup = {
-            signals: worker.signals.serialize(),
-            mappings: worker.mappings.serialize(),
-            layers: worker.layers.serialize()
-          };
           broadcastCommand('bootstrap', {layers: setup.layers});
           emitCommand('storageLoad', {setup: setup, setupId: setupId});
         })
         .catch(function(err) {
-          emitCommand('storageLoad', {error: err, setupId: setupId});
+          emitCommand('storageLoad', {error: {message: err.message, stack: err.stack}, setupId: setupId});
         });
   },
 
@@ -337,11 +335,6 @@ var commands = {
     worker.signals.reset(setup.signals);
     worker.mappings.reset(setup.mappings);
 
-    setup = {
-      signals: worker.signals.serialize(),
-      mappings: worker.mappings.serialize(),
-      layers: worker.layers.serialize()
-    };
     broadcastCommand('bootstrap', {layers: setup.layers});
     emitCommand('yamlLoad', {setup: setup});
   },
@@ -520,6 +513,7 @@ worker.addEventListener('message', function(evt) {
 
 worker.layers.on('emitCommand', emitCommand);
 worker.layers.on('broadcastCommand', broadcastCommand);
+worker.signals.on('emitCommand', emitCommand);
 // --------------------------------------------------------------
 }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);

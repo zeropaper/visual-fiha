@@ -1,6 +1,6 @@
 webpackChunk([1],{
 
-/***/ 132:
+/***/ 133:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -122,7 +122,7 @@ function fromByteArray (uint8) {
 
 /***/ }),
 
-/***/ 133:
+/***/ 134:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -136,9 +136,9 @@ function fromByteArray (uint8) {
 
 
 
-var base64 = __webpack_require__(132)
-var ieee754 = __webpack_require__(136)
-var isArray = __webpack_require__(134)
+var base64 = __webpack_require__(133)
+var ieee754 = __webpack_require__(137)
+var isArray = __webpack_require__(135)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -1916,11 +1916,11 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(77)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(76)))
 
 /***/ }),
 
-/***/ 134:
+/***/ 135:
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -1932,7 +1932,7 @@ module.exports = Array.isArray || function (arr) {
 
 /***/ }),
 
-/***/ 135:
+/***/ 136:
 /***/ (function(module, exports, __webpack_require__) {
 
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -8339,7 +8339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 
-/***/ 136:
+/***/ 137:
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -8430,21 +8430,6 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 /***/ }),
 
-/***/ 137:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-
-var yaml = __webpack_require__(138);
-
-
-module.exports = yaml;
-
-
-/***/ }),
-
 /***/ 138:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -8452,42 +8437,10 @@ module.exports = yaml;
 
 
 
-var loader = __webpack_require__(140);
-var dumper = __webpack_require__(139);
+var yaml = __webpack_require__(139);
 
 
-function deprecated(name) {
-  return function () {
-    throw new Error('Function ' + name + ' is deprecated and cannot be used.');
-  };
-}
-
-
-module.exports.Type                = __webpack_require__(18);
-module.exports.Schema              = __webpack_require__(28);
-module.exports.FAILSAFE_SCHEMA     = __webpack_require__(55);
-module.exports.JSON_SCHEMA         = __webpack_require__(81);
-module.exports.CORE_SCHEMA         = __webpack_require__(80);
-module.exports.DEFAULT_SAFE_SCHEMA = __webpack_require__(32);
-module.exports.DEFAULT_FULL_SCHEMA = __webpack_require__(35);
-module.exports.load                = loader.load;
-module.exports.loadAll             = loader.loadAll;
-module.exports.safeLoad            = loader.safeLoad;
-module.exports.safeLoadAll         = loader.safeLoadAll;
-module.exports.dump                = dumper.dump;
-module.exports.safeDump            = dumper.safeDump;
-module.exports.YAMLException       = __webpack_require__(31);
-
-// Deprecated schema names from JS-YAML 2.0.x
-module.exports.MINIMAL_SCHEMA = __webpack_require__(55);
-module.exports.SAFE_SCHEMA    = __webpack_require__(32);
-module.exports.DEFAULT_SCHEMA = __webpack_require__(35);
-
-// Deprecated functions from JS-YAML 1.x.x
-module.exports.scan           = deprecated('scan');
-module.exports.parse          = deprecated('parse');
-module.exports.compose        = deprecated('compose');
-module.exports.addConstructor = deprecated('addConstructor');
+module.exports = yaml;
 
 
 /***/ }),
@@ -8498,12 +8451,59 @@ module.exports.addConstructor = deprecated('addConstructor');
 "use strict";
 
 
+
+var loader = __webpack_require__(141);
+var dumper = __webpack_require__(140);
+
+
+function deprecated(name) {
+  return function () {
+    throw new Error('Function ' + name + ' is deprecated and cannot be used.');
+  };
+}
+
+
+module.exports.Type                = __webpack_require__(19);
+module.exports.Schema              = __webpack_require__(29);
+module.exports.FAILSAFE_SCHEMA     = __webpack_require__(54);
+module.exports.JSON_SCHEMA         = __webpack_require__(81);
+module.exports.CORE_SCHEMA         = __webpack_require__(80);
+module.exports.DEFAULT_SAFE_SCHEMA = __webpack_require__(33);
+module.exports.DEFAULT_FULL_SCHEMA = __webpack_require__(36);
+module.exports.load                = loader.load;
+module.exports.loadAll             = loader.loadAll;
+module.exports.safeLoad            = loader.safeLoad;
+module.exports.safeLoadAll         = loader.safeLoadAll;
+module.exports.dump                = dumper.dump;
+module.exports.safeDump            = dumper.safeDump;
+module.exports.YAMLException       = __webpack_require__(32);
+
+// Deprecated schema names from JS-YAML 2.0.x
+module.exports.MINIMAL_SCHEMA = __webpack_require__(54);
+module.exports.SAFE_SCHEMA    = __webpack_require__(33);
+module.exports.DEFAULT_SCHEMA = __webpack_require__(36);
+
+// Deprecated functions from JS-YAML 1.x.x
+module.exports.scan           = deprecated('scan');
+module.exports.parse          = deprecated('parse');
+module.exports.compose        = deprecated('compose');
+module.exports.addConstructor = deprecated('addConstructor');
+
+
+/***/ }),
+
+/***/ 140:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 /*eslint-disable no-use-before-define*/
 
-var common              = __webpack_require__(27);
-var YAMLException       = __webpack_require__(31);
-var DEFAULT_FULL_SCHEMA = __webpack_require__(35);
-var DEFAULT_SAFE_SCHEMA = __webpack_require__(32);
+var common              = __webpack_require__(28);
+var YAMLException       = __webpack_require__(32);
+var DEFAULT_FULL_SCHEMA = __webpack_require__(36);
+var DEFAULT_SAFE_SCHEMA = __webpack_require__(33);
 
 var _toString       = Object.prototype.toString;
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -9301,7 +9301,7 @@ module.exports.safeDump = safeDump;
 
 /***/ }),
 
-/***/ 140:
+/***/ 141:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9309,11 +9309,11 @@ module.exports.safeDump = safeDump;
 
 /*eslint-disable max-len,no-use-before-define*/
 
-var common              = __webpack_require__(27);
-var YAMLException       = __webpack_require__(31);
-var Mark                = __webpack_require__(141);
-var DEFAULT_SAFE_SCHEMA = __webpack_require__(32);
-var DEFAULT_FULL_SCHEMA = __webpack_require__(35);
+var common              = __webpack_require__(28);
+var YAMLException       = __webpack_require__(32);
+var Mark                = __webpack_require__(142);
+var DEFAULT_SAFE_SCHEMA = __webpack_require__(33);
+var DEFAULT_FULL_SCHEMA = __webpack_require__(36);
 
 
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -10900,14 +10900,14 @@ module.exports.safeLoad    = safeLoad;
 
 /***/ }),
 
-/***/ 141:
+/***/ 142:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 
-var common = __webpack_require__(27);
+var common = __webpack_require__(28);
 
 
 function Mark(name, buffer, position, line, column) {
@@ -10984,7 +10984,7 @@ module.exports = Mark;
 
 /***/ }),
 
-/***/ 142:
+/***/ 143:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10997,10 +10997,10 @@ var NodeBuffer;
 try {
   // A trick for browserified version, to not include `Buffer` shim
   var _require = require;
-  NodeBuffer = __webpack_require__(133).Buffer;
+  NodeBuffer = __webpack_require__(134).Buffer;
 } catch (__) {}
 
-var Type       = __webpack_require__(18);
+var Type       = __webpack_require__(19);
 
 
 // [ 64, 65, 66 ] -> [ padding, CR, LF ]
@@ -11130,13 +11130,13 @@ module.exports = new Type('tag:yaml.org,2002:binary', {
 
 /***/ }),
 
-/***/ 143:
+/***/ 144:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 function resolveYamlBoolean(data) {
   if (data === null) return false;
@@ -11173,14 +11173,14 @@ module.exports = new Type('tag:yaml.org,2002:bool', {
 
 /***/ }),
 
-/***/ 144:
+/***/ 145:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var common = __webpack_require__(27);
-var Type   = __webpack_require__(18);
+var common = __webpack_require__(28);
+var Type   = __webpack_require__(19);
 
 var YAML_FLOAT_PATTERN = new RegExp(
   // 2.5e4, 2.5 and integers
@@ -11297,14 +11297,14 @@ module.exports = new Type('tag:yaml.org,2002:float', {
 
 /***/ }),
 
-/***/ 145:
+/***/ 146:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var common = __webpack_require__(27);
-var Type   = __webpack_require__(18);
+var common = __webpack_require__(28);
+var Type   = __webpack_require__(19);
 
 function isHexCode(c) {
   return ((0x30/* 0 */ <= c) && (c <= 0x39/* 9 */)) ||
@@ -11477,7 +11477,7 @@ module.exports = new Type('tag:yaml.org,2002:int', {
 
 /***/ }),
 
-/***/ 146:
+/***/ 147:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11495,13 +11495,13 @@ var esprima;
 try {
   // workaround to exclude package from browserify list.
   var _require = require;
-  esprima = __webpack_require__(135);
+  esprima = __webpack_require__(136);
 } catch (_) {
   /*global window */
   if (typeof window !== 'undefined') esprima = window.esprima;
 }
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 function resolveJavascriptFunction(data) {
   if (data === null) return false;
@@ -11569,13 +11569,13 @@ module.exports = new Type('tag:yaml.org,2002:js/function', {
 
 /***/ }),
 
-/***/ 147:
+/***/ 148:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 function resolveJavascriptRegExp(data) {
   if (data === null) return false;
@@ -11637,13 +11637,13 @@ module.exports = new Type('tag:yaml.org,2002:js/regexp', {
 
 /***/ }),
 
-/***/ 148:
+/***/ 149:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 function resolveJavascriptUndefined() {
   return true;
@@ -11673,13 +11673,13 @@ module.exports = new Type('tag:yaml.org,2002:js/undefined', {
 
 /***/ }),
 
-/***/ 149:
+/***/ 150:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 module.exports = new Type('tag:yaml.org,2002:map', {
   kind: 'mapping',
@@ -11689,87 +11689,13 @@ module.exports = new Type('tag:yaml.org,2002:map', {
 
 /***/ }),
 
-/***/ 15:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var localForage = __webpack_require__(165);
-
-localForage.config({
-  // driver      : localforage.WEBSQL, // Force WebSQL; same as using setDriver()
-  name        : 'visualFiha',
-  version     : 1.0,
-  size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
-  storeName   : 'keyvaluepairs', // Should be alphanumeric, with underscores.
-  description : 'Visual Fiha storage'
-});
-
-var setups = {};
-
-
-setups.empty = {mappings: {}, layers: {}, signals: {}};
-setups.algorave = __webpack_require__(158);
-setups['demo-css'] = __webpack_require__(162);
-setups['demo-canvas'] = __webpack_require__(161);
-setups['demo-3d-zeropaper'] = __webpack_require__(160);
-setups['demo-3d-cubes'] = __webpack_require__(159);
-setups['demo-p5js'] = __webpack_require__(163);
-
-
-function toArr(obj) {
-  var keys = Object.keys(obj);
-  return keys.map(function(key) {
-    obj[key].name = key;
-    return obj[key];
-  });
-}
-
-function setupArr(setup) {
-  setup = setup || {};
-  return {
-    layers: toArr(setup.layers || {}),
-    mappings: toArr(setup.mappings || {}),
-    signals: toArr(setup.signals || {})
-  };
-}
-
-
-function saveSetup(setupId, setup, done) {
-  return localForage.setItem('local-' + setupId, setupArr(setup))
-          .then(function() {
-            done();
-          })
-          .catch(done);
-}
-
-localForage.installSetups = function(done) {
-  done = typeof done === 'function' ? done : function() { console.info('...finished'); };
-  var funcs = Object.keys(setups)
-    .map(setupId => {
-      return function(done) {
-        saveSetup(setupId, setups[setupId], function(err) {
-          if (err) return done(err);
-          if (funcs.length) return funcs.shift()(done);
-          done();
-        });
-      };
-    });
-  funcs.shift()(done);
-};
-
-module.exports = localForage;
-
-
-/***/ }),
-
-/***/ 150:
+/***/ 151:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 function resolveYamlMerge(data) {
   return data === '<<' || data === null;
@@ -11783,13 +11709,13 @@ module.exports = new Type('tag:yaml.org,2002:merge', {
 
 /***/ }),
 
-/***/ 151:
+/***/ 152:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 function resolveYamlNull(data) {
   if (data === null) return true;
@@ -11825,13 +11751,13 @@ module.exports = new Type('tag:yaml.org,2002:null', {
 
 /***/ }),
 
-/***/ 152:
+/***/ 153:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
 var _toString       = Object.prototype.toString;
@@ -11877,13 +11803,13 @@ module.exports = new Type('tag:yaml.org,2002:omap', {
 
 /***/ }),
 
-/***/ 153:
+/***/ 154:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 var _toString = Object.prototype.toString;
 
@@ -11938,13 +11864,13 @@ module.exports = new Type('tag:yaml.org,2002:pairs', {
 
 /***/ }),
 
-/***/ 154:
+/***/ 155:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 module.exports = new Type('tag:yaml.org,2002:seq', {
   kind: 'sequence',
@@ -11954,13 +11880,13 @@ module.exports = new Type('tag:yaml.org,2002:seq', {
 
 /***/ }),
 
-/***/ 155:
+/***/ 156:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -11991,13 +11917,13 @@ module.exports = new Type('tag:yaml.org,2002:set', {
 
 /***/ }),
 
-/***/ 156:
+/***/ 157:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 module.exports = new Type('tag:yaml.org,2002:str', {
   kind: 'scalar',
@@ -12007,13 +11933,13 @@ module.exports = new Type('tag:yaml.org,2002:str', {
 
 /***/ }),
 
-/***/ 157:
+/***/ 158:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Type = __webpack_require__(18);
+var Type = __webpack_require__(19);
 
 var YAML_DATE_REGEXP = new RegExp(
   '^([0-9][0-9][0-9][0-9])'          + // [1] year
@@ -12103,76 +12029,35 @@ module.exports = new Type('tag:yaml.org,2002:timestamp', {
 
 /***/ }),
 
-/***/ 158:
+/***/ 159:
 /***/ (function(module, exports) {
 
 module.exports = {
-	"signals": {
-		"beatA": {
-			"type": "beat",
-			"defaultValue": 1,
-			"input": 151.53
-		},
-		"colorA": {
-			"type": "hsla",
-			"defaultValue": "180,50%,50%,1",
-			"input": null,
-			"hue": 180,
-			"saturation": 50,
-			"lightness": 50,
-			"alpha": 100
-		}
-	},
+	"signals": {},
 	"mappings": {
-		"beatOpacity": {
-			"targets": [
-				"layers.no-signal.opacity"
-			],
-			"transformFunction": "function (value) {\n  return value > 90 ? 100 : 15;\n}",
-			"source": "signals.beatA.result"
-		},
-		"nk2.r1": {
-			"targets": [
-				"layers.no-signal.active"
-			],
-			"transformFunction": "function (value, currentValue) {\n  if (!value) return currentValue;\n        return !currentValue;\n}",
-			"source": "midi:nk2.r1"
-		},
 		"nk2.knob1": {
 			"targets": [
-				"layers.canvas.canvasLayers.lines.knobA"
+				"layers.canvas.knobA",
+				"layers.canvas.parameters.knobA.value"
 			],
 			"transformFunction": "function (value) {\n  return value;\n}",
 			"source": "midi:nk2.knob1"
 		},
 		"nk2.knob2": {
 			"targets": [
-				"layers.canvas.canvasLayers.lines.knobB"
+				"layers.canvas.knobB",
+				"layers.canvas.parameters.knobB.value"
 			],
 			"transformFunction": "function (value) {\n  return value;\n}",
 			"source": "midi:nk2.knob2"
 		},
 		"nk2.knob3": {
 			"targets": [
-				"layers.canvas.canvasLayers.lines.knobC"
+				"layers.canvas.knobC",
+				"layers.canvas.parameters.knobC.value"
 			],
 			"transformFunction": "function (value) {\n  return value;\n}",
 			"source": "midi:nk2.knob3"
-		},
-		"beatnum20Str": {
-			"targets": [
-				"layers.ar.parameters.beat.value",
-				"layers.vf.parameters.beat.value"
-			],
-			"transformFunction": "function (value) {\n  return (value % 20).toString();\n}",
-			"source": "signals.beatA.beatnum"
-		},
-		"beatKnob": {
-			"targets": [
-				"signals.beatA.input"
-			],
-			"transformFunction": "function (value) {\n  return value + 63;\n}",
-			"source": "midi:nk2.knob8"
 		},
 		"beatnum100Str": {
 			"targets": [
@@ -12180,137 +12065,202 @@ module.exports = {
 			],
 			"transformFunction": "function (value, old) {\n  var names = [\n    '#### AUDIO ####',\n    'Sick Lincoln (UK) - Remote performance',\n    'H.AL.I.C. (BE)',\n    'Chaim (US/NL) ',\n    'Yaxu (UK/DE)',\n    'Alexandra Cárdenas & Camilla Vatne Barratt-Due (CO/NO)',\n    'Qirky (UK)',\n    'coï¿¥ï¾¡pt (UK) ',\n    'Renick Bell (JP)',\n    'codepage (DK/DE) ',\n    'Hlodver Sigurdsson (IS)',\n\n    '#### VISUAL ####',\n    'zeropaper (CH)',\n    'Fredrik Olofsson (SE)',\n    'Miri Kat (UK)',\n  ];\n\n  var index = Math.floor((value * 0.4) % names.length);\n  return names[index];\n}",
 			"source": "signals.beatA.beatnum"
+		},
+		"ft": {
+			"targets": [
+				"layers.vf.parameters.frametime.value"
+			],
+			"transformFunction": "function(val){return val;}",
+			"source": "clock.frametime"
+		},
+		"bn": {
+			"targets": [
+				"layers.ar.parameters.beat.value",
+				"layers.vf.parameters.beat.value"
+			],
+			"transformFunction": "function(val){return val % 10;}",
+			"source": "clock.beatnum"
 		}
 	},
 	"layers": {
 		"vjs": {
 			"type": "txt",
 			"layerStyles": "text-align: center;\nfont-size: 12vmin;\ncolor: black;\nfont-family: monospace;\ntext-shadow: 1px 1px 0 #fff\n            ,2px 2px 0 #fff\n            ,3px 3px 0 #fff\n            ,4px 4px 0 #fff\n            ,5px 5px 0 #fff\n            ,6px 6px 0 #fff\n            ,-1px -1px 0 #666\n            ;",
-			"text": "Renick Bell (JP)",
-			"parameters": []
+			"parameters": [
+				{
+					"name": "active",
+					"type": "boolean",
+					"value": true,
+					"default": true
+				},
+				{
+					"name": "text",
+					"type": "string",
+					"value": "",
+					"default": ""
+				},
+				{
+					"name": "zIndex",
+					"type": "number",
+					"value": 0,
+					"default": 0
+				}
+			]
 		},
 		"canvas": {
 			"type": "canvas",
-			"active": true,
-			"opacity": 100,
-			"zIndex": 0,
 			"layerStyles": "",
-			"clear": 1,
-			"parameters": [],
-			"canvasLayers": [
+			"updateFunction": "var l = bufferLength();\nvar _kA = param('knobA', 30);\nvar _kB = param('knobB', 30);\nvar _kC = param('knobC', 30);\nvar f = 0;\nvar k = Math.round(_kA * 0.05);\nvar p = Math.max(1, k);\nvar d = Math.pow(2, p);\n//\nctx.clearRect(0, 0, width, height);\ngrid(l, l / d, function(...args) {\n  var color = 'hsl('+ (vol(f) * 3) +', '+ _kB +'%, '+ _kB +'%)';\n  ctx.strokeStyle = color;\n  // circle(...args, vol(f) * 0.1);\n  polygone(...args, vol(f) * _kC * 0.05);\n  f++;\n});\n",
+			"parameters": [
 				{
-					"name": "lines",
-					"parameters": [
-						{
-							"name": "active",
-							"type": "boolean",
-							"value": true,
-							"default": true
-						},
-						{
-							"name": "knobA",
-							"value": 63,
-							"type": "number",
-							"default": 127
-						},
-						{
-							"name": "knobB",
-							"value": 63,
-							"type": "number",
-							"default": 127
-						},
-						{
-							"name": "knobC",
-							"value": 63,
-							"type": "number",
-							"default": 127
-						}
-					],
-					"drawFunction": "function () {\n  var l = bufferLength();\n  var _kA = parameter('knobA', 30);\n  var _kB = parameter('knobB', 30);\n  var _kC = parameter('knobC', 30);\n  var f = 0;\n  var k = Math.round(_kA * 0.05);\n  var p = Math.max(1, k);\n  var d = Math.pow(2, p);\n\n  grid(l, l / d, function(...args) {\n    var color = 'hsl('+ (timeDomain(f) * 3) +', '+ _kB +'%, '+ _kB +'%)';\n    strokeStyle(color);\n\n    // circle(...args, timeDomain(f) * 0.1);\n    polygone(...args, timeDomain(f) * _kC * 0.05);\n    f++;\n  });\n}"
+					"name": "active",
+					"type": "boolean",
+					"value": true,
+					"default": true
+				},
+				{
+					"name": "clear",
+					"type": "number",
+					"value": 1,
+					"default": 1
+				},
+				{
+					"name": "knobA",
+					"type": "number",
+					"value": 110,
+					"default": 127
+				},
+				{
+					"name": "knobB",
+					"type": "number",
+					"value": 63,
+					"default": 127
+				},
+				{
+					"name": "knobC",
+					"type": "number",
+					"value": 63,
+					"default": 127
+				},
+				{
+					"name": "zIndex",
+					"type": "number",
+					"value": 0,
+					"default": 0
 				}
 			]
 		},
 		"ar": {
 			"type": "SVG",
-			"active": true,
-			"opacity": 50,
-			"zIndex": 0,
 			"layerStyles": "",
 			"svgStyles": {
 				"#algorave": "transform: translateY(var(--translate-y));\n  fill:none;\n  stroke:var(--stroke-color);\n  stroke-width:var(--stroke-width);\n  stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));\n  stroke-dashoffset: 0;"
 			},
 			"parameters": [
 				{
+					"name": "active",
+					"type": "boolean",
+					"value": true,
+					"default": true
+				},
+				{
+					"name": "beat",
+					"type": "any",
+					"value": 5,
+					"default": "0"
+				},
+				{
 					"name": "src",
 					"type": "string",
-					"value": "./assets/algorave/algorave-stroke.svg"
+					"value": "./assets/algorave/algorave-stroke.svg",
+					"default": ""
 				},
 				{
 					"name": "stroke-color",
+					"type": "any",
 					"value": "white",
 					"default": "white"
 				},
 				{
 					"name": "stroke-width",
+					"type": "any",
 					"value": "22",
 					"default": "22"
 				},
 				{
-					"name": "beat",
-					"value": "9",
-					"default": "0"
-				},
-				{
 					"name": "translate-y",
+					"type": "any",
 					"value": "-20vh",
 					"default": "-20vh"
+				},
+				{
+					"name": "zIndex",
+					"type": "number",
+					"value": 0,
+					"default": 0
 				}
 			]
 		},
 		"vf": {
 			"type": "SVG",
-			"active": true,
-			"opacity": 50,
-			"zIndex": 0,
 			"layerStyles": "",
 			"svgStyles": {
 				"#fiha": "transform: translateY(var(--translate-y));\n  filter:url(#glow);\n  fill:var(--fill-color);\n  stroke:var(--stroke-color);\n  stroke-width:var(--stroke-width);\n  stroke-linecap:round;\n  stroke-linejoin:round;\n  stroke-dasharray: calc(var(--path-length) * (1 / 20) * var(--beat)) calc(var(--path-length) * (1 / 20) * var(--beat));\n  stroke-dashoffset: 0;"
 			},
 			"parameters": [
 				{
-					"name": "src",
-					"type": "string",
-					"value": "./assets/visual-fiha.svg"
+					"name": "active",
+					"type": "boolean",
+					"value": true,
+					"default": true
+				},
+				{
+					"name": "beat",
+					"type": "any",
+					"value": 5,
+					"default": "0"
 				},
 				{
 					"name": "fill-color",
+					"type": "any",
 					"value": "none",
 					"default": "none"
 				},
 				{
+					"name": "frametime",
+					"type": "any",
+					"value": 407950,
+					"default": "0"
+				},
+				{
+					"name": "src",
+					"type": "string",
+					"value": "./assets/visual-fiha.svg",
+					"default": ""
+				},
+				{
 					"name": "stroke-color",
+					"type": "any",
 					"value": "white",
 					"default": "white"
 				},
 				{
 					"name": "stroke-width",
+					"type": "any",
 					"value": "22",
 					"default": "22"
 				},
 				{
-					"name": "frametime",
-					"value": "0",
-					"default": "0"
-				},
-				{
-					"name": "beat",
-					"value": "9",
-					"default": "0"
-				},
-				{
 					"name": "translate-y",
+					"type": "any",
 					"value": "20vh",
 					"default": "20vh"
+				},
+				{
+					"name": "zIndex",
+					"type": "number",
+					"value": 0,
+					"default": 0
 				}
 			]
 		}
@@ -12319,7 +12269,82 @@ module.exports = {
 
 /***/ }),
 
-/***/ 159:
+/***/ 16:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var localForage = __webpack_require__(167);
+
+localForage.config({
+  // driver      : localforage.WEBSQL, // Force WebSQL; same as using setDriver()
+  name        : 'visualFiha',
+  version     : 1.0,
+  size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
+  storeName   : 'keyvaluepairs', // Should be alphanumeric, with underscores.
+  description : 'Visual Fiha storage'
+});
+
+var setups = {};
+
+
+setups.empty = {mappings: {}, layers: {}, signals: {}};
+setups.algorave = __webpack_require__(159);
+setups['demo-css'] = __webpack_require__(163);
+setups['demo-canvas'] = __webpack_require__(162);
+setups['demo-3d-zeropaper'] = __webpack_require__(161);
+setups['demo-3d-cubes'] = __webpack_require__(160);
+setups['demo-p5js'] = __webpack_require__(164);
+setups['demo-signal-programmable'] = __webpack_require__(165);
+
+
+function toArr(obj) {
+  var keys = Object.keys(obj);
+  return keys.map(function(key) {
+    obj[key].name = key;
+    return obj[key];
+  });
+}
+
+function setupArr(setup) {
+  setup = setup || {};
+  return {
+    layers: toArr(setup.layers || {}),
+    mappings: toArr(setup.mappings || {}),
+    signals: toArr(setup.signals || {})
+  };
+}
+
+
+function saveSetup(setupId, setup, done) {
+  return localForage.setItem('local-' + setupId, setupArr(setup))
+          .then(function() {
+            done();
+          })
+          .catch(done);
+}
+
+localForage.installSetups = function(done) {
+  done = typeof done === 'function' ? done : function() { console.info('...finished'); };
+  var funcs = Object.keys(setups)
+    .map(setupId => {
+      return function(done) {
+        saveSetup(setupId, setups[setupId], function(err) {
+          if (err) return done(err);
+          if (funcs.length) return funcs.shift()(done);
+          done();
+        });
+      };
+    });
+  funcs.shift()(done);
+};
+
+module.exports = localForage;
+
+
+/***/ }),
+
+/***/ 160:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -12333,8 +12358,8 @@ module.exports = {
 			"zIndex": 1000,
 			"layerStyles": "",
 			"currentCamera": "perspective",
-			"renderFunction": "function() {\n  var helper = new THREE.AxisHelper(20);\n  helper.name = 'axisHelper';\n  layer.scene.add(helper);\n\n  helper = new THREE.GridHelper(200);\n  helper.name = 'gridHelper';\n  layer.scene.add(helper);\n  console.info(layer.scene.children.map(o => o.name));\n}",
-			"updateFunction": "function() {\n  var screenState = layer.model.screenState;\n  var audio = screenState.audio;\n  var freq = audio.frequency;\n  var vol = audio.timeDomain;\n\n  var scale = freq[12] * 0.1;\n  var speed = 1000;\n  var dist = 80;\n  var deg = (screenState.frametime % (speed * 360) / speed);\n  var tilt = vol[4] - 127;\n\n  layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);\n  layer.camera.lookAt(layer.scene.position);\n  /*\n  */\n}",
+			"setupFunction": "var helper = new THREE.AxisHelper(20);\nhelper.name = 'axisHelper';\nlayer.scene.add(helper);\n\nhelper = new THREE.GridHelper(200);\nhelper.name = 'gridHelper';\nlayer.scene.add(helper);\nready();\n",
+			"updateFunction": "var tilt = vol(4) - 127;\nvar scale = frq(12) * 1;\nvar speed = 1000;\nvar dist = 80 + scale;\nvar deg = (frametime % (speed * 360)) / speed;\n\nlayer.camera.position.set(Math.cos(deg) * dist, tilt, Math.sin(deg) * dist);\nlayer.camera.lookAt(layer.scene.position);\n",
 			"parameters": [],
 			"geometries": [
 				{
@@ -12492,31 +12517,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 16:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var toArr = __webpack_require__(307);
-var jsYAML = __webpack_require__(137);
-
-module.exports = function(newStr) {
-  var obj = {};
-  try {
-    obj = jsYAML.safeLoad(newStr);
-    obj.signals = toArr(obj.signals || {});
-    obj.layers = toArr(obj.layers || {});
-    obj.mappings = toArr(obj.mappings || {});
-  }
-  catch(e) {
-    console.warn(e);
-  }
-  return obj;
-};
-
-/***/ }),
-
-/***/ 160:
+/***/ 161:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -12637,8 +12638,8 @@ module.exports = {
 			"type": "threejs",
 			"layerStyles": "",
 			"currentCamera": "defaultperspective",
-			"renderFunction": "function() {\n  // var helper = new THREE.AxisHelper(20);\n  // helper.name = 'axisHelper';\n  // layer.scene.add(helper);\n\n  // helper = new THREE.GridHelper(200);\n  // helper.name = 'gridHelper';\n  // layer.scene.add(helper);\n\n  function makeClones(object, count = 1) {\n    for (var c = 1; c < count; c++) {\n      var clone = object.clone();\n      clone.traverse(function(child) {\n        if (!child.material) return;\n        child.material = child.material.clone();\n        // child.material.wireframe = true; // provokes illegal operation 😢\n      });\n      clone.name = 'clone' + (c + 1);\n      layer.scene.add(clone);\n    }\n  }\n\n  var fatView = layer.loaders.views.filter(v => v.model.name === 'fat')[0];\n  layer.listenToAndRun(fatView, 'change:object', function() {\n    var fatObject = fatView.object;\n    fatObject.traverse(function(child) {\n      if (child.material) child.material.side = THREE.DoubleSide;\n    });\n    makeClones(fatObject, 8);\n  });\n}",
-			"updateFunction": "function() {\n  var screenState = layer.model.screenState;\n  var audio = screenState.audio;\n  var freq = audio.frequency;\n  var vol = audio.timeDomain;\n\n  var scale = freq[12] * 0.1;\n  var speed = 1000;\n  var dist = 200;\n  var deg = (screenState.frametime % (speed * 360) / speed);\n  var tilt = vol[4] - 127;\n\n  layer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);\n  layer.camera.lookAt(layer.scene.position);\n\n  var fat = layer.scene.getObjectByName('fat');\n  fat.scale.set(scale + 1, scale + 1, scale + 1);\n  fat.rotation.set(Math.PI * 0.35, midi2rad(parameter('knob1', 0)), midi2rad(parameter('knob2', 0)));\n\n  function alterMaterials(c) {\n    return function(child) {\n      if (child.material && child.material.color) {\n        child.material.wireframe = true;\n        child.material.color = new THREE.Color('hsl('+ freq[c * 4] +', ' + parameter('slider1', 50) + '%, ' + parameter('slider2', 50) + '%)');\n      }\n    }\n  }\n\n  function applyClones(count = 1) {\n    var cap = midiMinMax(parameter('knob3', 0), 0, count);\n    for (var c = 0; c < count; c++) {\n      var clone = layer.scene.getObjectByName('clone' + (c + 1));\n      if (clone) {\n        if (cap < c) {\n          clone.visible = false;\n          return;\n        }\n\n        clone.visible = true;\n        clone.traverse(alterMaterials(c));\n\n        var s = fat.scale.toArray();\n        clone.scale.set(...s);\n\n        var r = fat.rotation.toArray();\n        clone.rotation.set(...r);\n\n        var p = fat.position.toArray();\n        p[Math.round(midiMinMax(parameter('slider3', 0), 0, 2))] = (c * vol[4] * 0.01 * (tilt * (c % 2 === 0 ? 1 : -1)));\n        clone.position.set(...p);\n      }\n    }\n  }\n  applyClones(8);\n}",
+			"setupFunction": "function makeClones(object, count = 1) {\n  for (var c = 1; c <= count; c++) {\n    var clone = object.clone();\n    clone.traverse(function(child) {\n      if (!child.material) return;\n      child.material = child.material.clone();\n      // child.material.wireframe = true; // provokes illegal operation \\uD83D\\uDE22\n    });\n    clone.name = 'clone' + c;\n    layer.scene.add(clone);\n  }\n}\n\nvar fatView = layer.loaders.views.filter(v => v.model.name === 'fat')[0];\nlayer.listenToAndRun(fatView, 'change:object', function() {\n  var fatObject = fatView.object;\n  if (!fatObject) return;\n\n  fatObject.traverse(function(child) {\n    if (!child.material) return;\n    child.material.wireframe = true;\n    child.material.side = THREE.DoubleSide;\n  });\n\n  makeClones(fatObject, 8);\n\n  ready();\n});\n",
+			"updateFunction": "var scale = frq(12) * 0.1;\nvar tilt = vol(4) - 127;\nvar speed = 1000;\nvar dist = 200;\nvar deg = (frametime % (speed * 360)) / speed;\nvar k1 = param('knob1', 2);\nvar k2 = param('knob2', 2);\nvar k3 = param('knob3', 2);\nvar s1 = param('slider1', 50);\nvar s2 = param('slider2', 50);\nvar s3 = param('slider3', 50);\n\nlayer.camera.position.set(Math.cos(deg) * dist, 15, Math.sin(deg) * dist);\nlayer.camera.lookAt(layer.scene.position);\n\nvar fat = layer.scene.getObjectByName('fat');\nif (!fat) return;\nfat.scale.set(scale + 1, scale + 1, scale + 1);\nfat.rotation.set(Math.PI * 0.35, utils.midi2Rad(k1), utils.midi2Rad(k2));\n\nfunction alterMaterials(c) {\n  return function(child) {\n    if (child.material && child.material.color) {\n      child.material.wireframe = true;\n      child.material.color = new THREE.Color('hsl('+ frq(c * 4) +', ' + s1 + '%, ' + s2 + '%)');\n    }\n  }\n}\n\nvar cap = utils.midiMinMax(k3, 0, 8);\nfunction applyClone(clone, c) {\n  if (!clone) return;\n\n  if (cap < c) {\n    clone.visible = false;\n    return;\n  }\n\n  clone.visible = true;\n  clone.traverse(alterMaterials(c));\n\n  var s = fat.scale.toArray();\n  clone.scale.set(...s);\n\n  var r = fat.rotation.toArray();\n  clone.rotation.set(...r);\n\n  var p = fat.position.toArray();\n  p[Math.round(utils.midiMinMax(s3, 0, 2))] = (c * vol(4) * 0.01 * (tilt * (c % 2 === 0 ? 1 : -1)));\n  clone.position.set(...p);\n}\n\nfunction applyClones(count = 1) {\n  for (var c = 1; c <= count; c++) {\n    var cloneName = 'clone' + c;\n    var clone = layer.scene.getObjectByName(cloneName);\n    applyClone(clone, c);\n  }\n}\napplyClones(8);\n",
 			"parameters": [
 				{
 					"name": "knob1",
@@ -12866,7 +12867,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 161:
+/***/ 162:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -12881,35 +12882,15 @@ module.exports = {
 	"layers": {
 		"canvas": {
 			"type": "canvas",
-			"active": true,
-			"opacity": 100,
-			"zIndex": 0,
-			"layerStyles": "",
 			"clear": 1,
-			"styleProperties": [],
-			"canvasLayers": [
-				{
-					"parameters": [
-						{
-							"name": "active",
-							"type": "boolean",
-							"required": true,
-							"default": true
-						}
-					],
-					"zIndex": 50,
-					"name": "lines",
-					"active": true,
-					"drawFunction": "function () {\n  var l = bufferLength();\n  var f = 0;\n  var k = 3;\n  var p = Math.max(1, k);\n  var d = Math.pow(2, p);\n\n  grid(l, l / d, function(...args) {\n    var ff = Math.round((l * 0.125) + (f * 0.125));\n    strokeStyle('hsl('+frequency(ff)+', 50%, 50%)');\n    var sides = Math.round(frequency(ff) * (1 / 10));\n    sides = Math.min(sides, 10);\n    sides = Math.max(sides, 3);\n    lineWidth(10 - sides);\n    circle(...args, timeDomain(ff) * 0.25);\n    polygone(...args, timeDomain(ff) + 50, sides);\n    f++;\n  });\n}"
-				}
-			]
+			"updateFunction": "var l = bufferLength();\nvar f = 0;\nvar k = 3;\nvar p = Math.max(1, k);\nvar d = Math.pow(2, p);\n\ngrid(l, l / d, function(...args) {\n  var ff = Math.round((l * 0.125) + (f * 0.125));\n  strokeStyle('hsl(' + frq(ff) + ', 50%, 50%)');\n  var sides = Math.round(frq(ff) * (1 / 10));\n  sides = Math.min(sides, 10);\n  sides = Math.max(sides, 3);\n  lineWidth(10 - sides);\n  circle(...args, vol(ff) * 0.25);\n  polygone(...args, vol(ff) + 50, sides);\n  f++;\n});\n"
 		}
 	}
 };
 
 /***/ }),
 
-/***/ 162:
+/***/ 163:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -12923,42 +12904,42 @@ module.exports = {
 	"mappings": {
 		"knob1": {
 			"targets": [
-				"layers.canvas.canvasLayers.mid.knobA"
+				"layers.canvas.knobA"
 			],
 			"transformFunction": "function(val) { return val; }",
 			"source": "midi:nk2.knob1"
 		},
 		"knob2": {
 			"targets": [
-				"layers.canvas.canvasLayers.mid.knobB"
+				"layers.canvas.knobB"
 			],
 			"transformFunction": "function(val) { return val; }",
 			"source": "midi:nk2.knob2"
 		},
 		"knob3": {
 			"targets": [
-				"layers.canvas.canvasLayers.mid.knobC"
+				"layers.canvas.knobC"
 			],
 			"transformFunction": "function(val) { return val; }",
 			"source": "midi:nk2.knob3"
 		},
 		"slider1": {
 			"targets": [
-				"layers.canvas.canvasLayers.mid.sliderA"
+				"layers.canvas.sliderA"
 			],
 			"transformFunction": "function(val) { return val; }",
 			"source": "midi:nk2.slider1"
 		},
 		"slider2": {
 			"targets": [
-				"layers.canvas.canvasLayers.mid.sliderB"
+				"layers.canvas.sliderB"
 			],
 			"transformFunction": "function(val) { return val; }",
 			"source": "midi:nk2.slider2"
 		},
 		"slider3": {
 			"targets": [
-				"layers.canvas.canvasLayers.mid.sliderC"
+				"layers.canvas.sliderC"
 			],
 			"transformFunction": "function(val) { return val; }",
 			"source": "midi:nk2.slider3"
@@ -13158,93 +13139,39 @@ module.exports = {
 			"zIndex": 50,
 			"layerStyles": "",
 			"clear": 1,
-			"parameters": [],
-			"canvasLayers": [
+			"parameters": [
 				{
-					"props": {
-						"active": {
-							"type": "boolean",
-							"required": true,
-							"default": true,
-							"allowNull": false
-						}
-					},
-					"zIndex": 0,
-					"name": "bottom",
-					"active": true,
-					"drawFunction": "function drawLayerCtx() {\n  /*\n    You can access the canvas 2d context with the global ctx\n  */\n}"
+					"name": "knobA",
+					"type": "number",
+					"default": 63
 				},
 				{
-					"props": {
-						"active": {
-							"type": "boolean",
-							"required": true,
-							"default": true,
-							"allowNull": false
-						},
-						"knobA": {
-							"type": "number",
-							"required": true,
-							"default": 0,
-							"allowNull": false
-						},
-						"knobB": {
-							"type": "number",
-							"required": true,
-							"default": 0,
-							"allowNull": false
-						},
-						"knobC": {
-							"type": "number",
-							"required": true,
-							"default": 0,
-							"allowNull": false
-						},
-						"sliderA": {
-							"type": "number",
-							"required": true,
-							"default": 0,
-							"allowNull": false
-						},
-						"sliderB": {
-							"type": "number",
-							"required": true,
-							"default": 0,
-							"allowNull": false
-						},
-						"sliderC": {
-							"type": "number",
-							"required": true,
-							"default": 0,
-							"allowNull": false
-						}
-					},
-					"zIndex": 50,
-					"name": "mid",
-					"active": true,
-					"drawFunction": "function drawLayerCtx() {\n  var count = 128;\n  var rows = 8;\n  var col = 'hsl('+Math.round(layer.knobA * (1 / 127) * 360)+','+Math.round(layer.knobB * (1 / 127) * 100)+'%,'+Math.round(layer.knobC * (1 / 127) * 100)+'%)';\n  //var col = 'rgb('+Math.round(layer.knobA * (1 / 127) * 255)+','+Math.round(layer.knobB * (1 / 127) * 255)+','+Math.round(layer.knobC * (1 / 127) * 255)+')';\n  strokeStyle(col);\n  var i = 0;\n  grid(count, rows, function (x, y) {\n    lineWidth(frequency(i) * 0.025 * between(layer.sliderC * (1 / (127 / 16)),1,16));\n    polygone(x, y, timeDomain(i) * 0.1 * between(layer.sliderA,1,127), between(Math.round(layer.sliderB * (1 / (127 / 9))),3,9));\n    i++;\n  });\n}",
-					"knobA": 22,
-					"knobB": 87,
-					"knobC": 47,
-					"sliderA": 61,
-					"sliderB": 38,
-					"sliderC": 3
+					"name": "knobB",
+					"type": "number",
+					"default": 63
 				},
 				{
-					"props": {
-						"active": {
-							"type": "boolean",
-							"required": true,
-							"default": true,
-							"allowNull": false
-						}
-					},
-					"zIndex": 100,
-					"name": "top",
-					"active": true,
-					"drawFunction": "function drawLayerCtx() {\n  /*\n    You can access the canvas 2d context with the global ctx\n  */\n}"
+					"name": "knobC",
+					"type": "number",
+					"default": 63
+				},
+				{
+					"name": "sliderA",
+					"type": "number",
+					"default": 63
+				},
+				{
+					"name": "sliderB",
+					"type": "number",
+					"default": 63
+				},
+				{
+					"name": "sliderC",
+					"type": "number",
+					"default": 63
 				}
-			]
+			],
+			"updateFunction": "var count = 128;\nvar rows = 8;\nvar i = 0;\n\nvar kA = param('knobA');\nvar kB = param('knobB');\nvar kC = param('knobC');\nvar sA = param('sliderA');\nvar sB = param('sliderB');\nvar sC = param('sliderC');\n\nvar col = 'hsl('+Math.round(kA * (1 / 127) * 360)+','+Math.round(kB * (1 / 127) * 100)+'%,'+Math.round(kC * (1 / 127) * 100)+'%)';\n\ngrid(count, rows, function (x, y) {\n  lineWidth(frq(i) * 0.025 * between(sC * (1 / (127 / 16)),1,16));\n  polygone(x, y, timeDomain(i) * 0.1 * between(sA,1,127), between(Math.round(sB * (1 / (127 / 9))),3,9));\n  i++;\n});"
 		},
 		"front": {
 			"type": "img",
@@ -13299,7 +13226,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 163:
+/***/ 164:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -13317,6 +13244,83 @@ module.exports = {
 /***/ }),
 
 /***/ 165:
+/***/ (function(module, exports) {
+
+module.exports = {
+	"signals": {
+		"func": {
+			"type": "programmable",
+			"updateFunction": "// console.info('beatnum', beatnum);\nreturn beatnum;\n"
+		},
+		"hsla": {
+			"type": "hsla",
+			"parameters": [
+				{
+					"name": "saturation",
+					"value": 50,
+					"default": 50,
+					"type": "number"
+				},
+				{
+					"name": "lightness",
+					"value": 50,
+					"default": 50,
+					"type": "number"
+				}
+			]
+		},
+		"rgba": {
+			"type": "rgba"
+		}
+	},
+	"mappings": {
+		"txtText": {
+			"targets": [
+				"layers.txt.parameters.text.value"
+			],
+			"transformFunction": "function(val){\n  // console.info('txtText', val);\n  return val;\n}\n",
+			"source": "signals.func.result"
+		},
+		"knob1": {
+			"targets": [
+				"layers.txt.parameters.zIndex.value"
+			],
+			"transformFunction": "function(val){\n  // console.info('knob1', val);\n  return val;\n}\n",
+			"source": "midi:nk2.knob1"
+		},
+		"color1": {
+			"targets": [
+				"layers.txt.parameters.color1.value"
+			],
+			"transformFunction": "function(val){\n  // console.info('color1', val);\n  return val;\n}\n",
+			"source": "signals.hsla.result"
+		}
+	},
+	"layers": {
+		"txt": {
+			"type": "txt",
+			"layerStyles": "color: var(--color1);\nfont-size: 30vmax;\n",
+			"parameters": [
+				{
+					"name": "color1",
+					"type": "string",
+					"value": "#fff",
+					"default": "#fff"
+				},
+				{
+					"name": "text",
+					"type": "string",
+					"value": "bla",
+					"default": ""
+				}
+			]
+		}
+	}
+};
+
+/***/ }),
+
+/***/ 167:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var require;var require;/*!
@@ -15632,17 +15636,41 @@ module.exports = localforage_js;
 
 },{"3":3}]},{},[4])(4)
 });
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(77)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(76)))
 
 /***/ }),
 
-/***/ 18:
+/***/ 17:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var toArr = __webpack_require__(307);
+var jsYAML = __webpack_require__(138);
+
+module.exports = function(newStr) {
+  var obj = {};
+  try {
+    obj = jsYAML.safeLoad(newStr);
+    obj.signals = toArr(obj.signals || {});
+    obj.layers = toArr(obj.layers || {});
+    obj.mappings = toArr(obj.mappings || {});
+  }
+  catch(e) {
+    console.warn(e);
+  }
+  return obj;
+};
+
+/***/ }),
+
+/***/ 19:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var YAMLException = __webpack_require__(31);
+var YAMLException = __webpack_require__(32);
 
 var TYPE_CONSTRUCTOR_OPTIONS = [
   'kind',
@@ -15705,7 +15733,7 @@ module.exports = Type;
 
 /***/ }),
 
-/***/ 27:
+/***/ 28:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15772,7 +15800,7 @@ module.exports.extend         = extend;
 
 /***/ }),
 
-/***/ 28:
+/***/ 29:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15780,9 +15808,9 @@ module.exports.extend         = extend;
 
 /*eslint-disable max-len*/
 
-var common        = __webpack_require__(27);
-var YAMLException = __webpack_require__(31);
-var Type          = __webpack_require__(18);
+var common        = __webpack_require__(28);
+var YAMLException = __webpack_require__(32);
+var Type          = __webpack_require__(19);
 
 
 function compileList(schema, name, result) {
@@ -15888,220 +15916,6 @@ module.exports = Schema;
 
 /***/ }),
 
-/***/ 3:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var assign = __webpack_require__(7);
-var Collection = __webpack_require__(6);
-var SignalState = __webpack_require__(54);
-__webpack_require__(301);
-__webpack_require__(302);
-__webpack_require__(303);
-
-var SignalCollection = Collection.extend({
-  mainIndex: 'name',
-  model: function(attrs, opts) {
-    var Constructor = SignalState.types[attrs.type] || SignalState;
-    var state = new Constructor(attrs, opts);
-    return state;
-  },
-
-  toJSON: function () {
-    return this.map(function (model) {
-      if (model.toJSON) {
-        return model.toJSON();
-      }
-      else {
-        var out = {};
-        assign(out, model);
-        delete out.collection;
-        return out;
-      }
-    });
-  }
-});
-module.exports = SignalCollection;
-
-
-/***/ }),
-
-/***/ 301:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var SignalState = __webpack_require__(54);
-
-var BeatState = SignalState.types.beat = SignalState.extend({
-  initialize: function() {
-    SignalState.prototype.initialize.apply(this, arguments);
-    this.listenTo(this.collection, 'frametime', function(frametime) {
-      this.frametime = frametime;
-    });
-  },
-
-  session: {
-    frametime: ['number', true, 0]
-  },
-
-  mappable: {
-    source: ['result', 'beatlength', 'beatnum'],
-    target: ['input']
-  },
-
-  derived: {
-    result: {
-      deps: ['beatlength', 'frametime'],
-      fn: function() {
-        return this.computeSignal();
-      }
-    },
-    beatnum: {
-      deps: ['beatlength', 'frametime'],
-      fn: function() {
-        return this.frametime ? Math.floor(this.frametime / this.beatlength) : 0;
-      }
-    },
-    beatlength: {
-      deps: ['input'],
-      fn: function() {
-        return (60 * 1000) / Math.max(this.input, 1);
-      }
-    }
-  },
-
-  computeSignal: function() {
-    var ft = this.frametime;
-    var tbb = this.beatlength;
-    return !ft ? 0 : (100 - (((ft % tbb) / tbb) * 100));
-  }
-});
-
-module.exports = BeatState;
-
-/***/ }),
-
-/***/ 302:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var SignalState = __webpack_require__(54);
-
-var _360 = {
-  type: 'number',
-  required: true,
-  default: 180,
-  min: 0,
-  max: 360
-};
-var _100 = {
-  type: 'number',
-  required: true,
-  default: 100,
-  min: 0,
-  max: 100
-};
-
-var HSLASignalState = SignalState.types.hsla = SignalState.extend({
-  props: {
-    hue: _360,
-    saturation: _100,
-    lightness: _100,
-    alpha: _100
-  },
-
-  mappable: {
-    source: ['result', 'hue', 'saturation', 'lightness', 'alpha'],
-    target: ['hue', 'saturation', 'lightness', 'alpha']
-  },
-
-  derived: {
-    result: {
-      deps: ['hue', 'saturation', 'lightness', 'alpha'],
-      fn: function() {
-        return this.computeSignal();
-      }
-    }
-  },
-  // parseInput: function() {
-  //   var values = _colorValues(this.input);
-  //   return {
-  //     hue: values[0],
-  //     saturation: values[1],
-  //     lightness: values[2],
-  //     alpha: values[3]
-  //   };
-  // },
-  computeSignal: function() {
-    return 'hsla(' + Math.round(this.hue) + ',' + Math.round(this.saturation) + '%,' + Math.round(this.lightness) + '%,' + (Math.round(this.alpha) / 100) + ')';
-  }
-});
-
-module.exports = HSLASignalState;
-
-/***/ }),
-
-/***/ 303:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var SignalState = __webpack_require__(54);
-var _255 = {
-  type: 'number',
-  required: true,
-  default: 180,
-  min: 0,
-  max: 255
-};
-var _100 = {
-  type: 'number',
-  required: true,
-  default: 100,
-  min: 0,
-  max: 100
-};
-var RGBASignalState = SignalState.types.rgba = SignalState.extend({
-  props: {
-    red: _255,
-    green: _255,
-    blue: _255,
-    alpha: _100
-  },
-
-  mappable: {
-    source: ['result', 'red', 'green', 'blue', 'alpha'],
-    target: ['red', 'green', 'blue', 'alpha']
-  },
-
-  derived: {
-    result: {
-      deps: ['red', 'green', 'blue', 'alpha'],
-      fn: function() {
-        return this.computeSignal();
-      }
-    }
-  },
-  // parseInput: function() {
-  //   var values = _colorValues(this.input);
-  //   return {
-  //     red: values[0],
-  //     green: values[1],
-  //     blue: values[2],
-  //     alpha: values[3]
-  //   };
-  // },
-  computeSignal: function() {
-    return 'rgba(' + Math.round(this.red) + ',' + Math.round(this.green) + ',' + Math.round(this.blue) + ',' + (Math.round(this.alpha) / 100) + ')';
-  }
-});
-module.exports = RGBASignalState;
-
-/***/ }),
-
 /***/ 307:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -16117,7 +15931,7 @@ module.exports = function toArr(obj) {
 
 /***/ }),
 
-/***/ 31:
+/***/ 32:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16168,7 +15982,7 @@ module.exports = YAMLException;
 
 /***/ }),
 
-/***/ 32:
+/***/ 33:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16182,7 +15996,7 @@ module.exports = YAMLException;
 
 
 
-var Schema = __webpack_require__(28);
+var Schema = __webpack_require__(29);
 
 
 module.exports = new Schema({
@@ -16190,21 +16004,21 @@ module.exports = new Schema({
     __webpack_require__(80)
   ],
   implicit: [
-    __webpack_require__(157),
-    __webpack_require__(150)
+    __webpack_require__(158),
+    __webpack_require__(151)
   ],
   explicit: [
-    __webpack_require__(142),
-    __webpack_require__(152),
+    __webpack_require__(143),
     __webpack_require__(153),
-    __webpack_require__(155)
+    __webpack_require__(154),
+    __webpack_require__(156)
   ]
 });
 
 
 /***/ }),
 
-/***/ 35:
+/***/ 36:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16220,17 +16034,17 @@ module.exports = new Schema({
 
 
 
-var Schema = __webpack_require__(28);
+var Schema = __webpack_require__(29);
 
 
 module.exports = Schema.DEFAULT = new Schema({
   include: [
-    __webpack_require__(32)
+    __webpack_require__(33)
   ],
   explicit: [
+    __webpack_require__(149),
     __webpack_require__(148),
-    __webpack_require__(147),
-    __webpack_require__(146)
+    __webpack_require__(147)
   ]
 });
 
@@ -16241,99 +16055,6 @@ module.exports = Schema.DEFAULT = new Schema({
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
-var State = __webpack_require__(4);
-var ParameterCollection = __webpack_require__(53);
-
-var SignalState = State.extend({
-  idAttribute: 'name',
-  typeAttribute: 'type',
-
-  mappable: {
-    source: ['result'],
-    target: ['input']
-  },
-
-  props: {
-    name: ['string', true, null],
-    type: ['string', true, 'default'],
-    defaultValue: ['any', true, function () { return 1; }]
-  },
-
-  initialize: function() {
-    var state = this;
-
-    state.ensureParameters();
-
-    state.listenToAndRun(state.parameters, 'change', function() {
-      state.trigger('change:parameters', state, state.parameters, {parameters: true});
-    });
-
-    state.listenToAndRun(state.parameters, 'sort', state.ensureParameters);
-  },
-
-  collections: {
-    parameters: ParameterCollection
-  },
-
-  baseParameters: [
-    {name: 'input', type: 'any', default: null}
-  ],
-
-  ensureParameters: function(definition = []) {
-    (this.baseParameters || [])
-      .concat(definition)
-      .forEach(function(parameterDef) {
-        var existing = this.parameters.get(parameterDef.name);
-        if (!existing) {
-          var created = this.parameters.add(parameterDef);
-          this.listenTo(created, 'change:value', function(...args) {
-            this.trigger('change:parameters.' + created.name, ...args);
-          });
-          created.value = parameterDef.default;
-        }
-      }, this);
-    return this;
-  },
-
-  derived: {
-    input: {
-      deps: ['parameters.input'],
-      fn: function() {
-        return this.parameters.get('input').value;
-      }
-    },
-    modelPath: {
-      deps: ['name'],
-      fn: function() {
-        return 'signals.' + this.name;
-      }
-    },
-    result: {
-      deps: ['input', 'transformations'],
-      fn: function() {
-        return this.computeSignal();
-      }
-    }
-  },
-
-  computeSignal: function(val) {
-    val = val || this.input;
-    return val;
-  }
-});
-
-SignalState.types = {};
-
-module.exports = SignalState;
-
-
-/***/ }),
-
-/***/ 55:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
 // Standard YAML's Failsafe schema.
 // http://www.yaml.org/spec/1.2/spec.html#id2802346
 
@@ -16341,14 +16062,14 @@ module.exports = SignalState;
 
 
 
-var Schema = __webpack_require__(28);
+var Schema = __webpack_require__(29);
 
 
 module.exports = new Schema({
   explicit: [
-    __webpack_require__(156),
-    __webpack_require__(154),
-    __webpack_require__(149)
+    __webpack_require__(157),
+    __webpack_require__(155),
+    __webpack_require__(150)
   ]
 });
 
@@ -16369,7 +16090,7 @@ module.exports = new Schema({
 
 
 
-var Schema = __webpack_require__(28);
+var Schema = __webpack_require__(29);
 
 
 module.exports = new Schema({
@@ -16396,18 +16117,18 @@ module.exports = new Schema({
 
 
 
-var Schema = __webpack_require__(28);
+var Schema = __webpack_require__(29);
 
 
 module.exports = new Schema({
   include: [
-    __webpack_require__(55)
+    __webpack_require__(54)
   ],
   implicit: [
-    __webpack_require__(151),
-    __webpack_require__(143),
-    __webpack_require__(145),
-    __webpack_require__(144)
+    __webpack_require__(152),
+    __webpack_require__(144),
+    __webpack_require__(146),
+    __webpack_require__(145)
   ]
 });
 

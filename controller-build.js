@@ -9,7 +9,7 @@ webpackJsonp([3],{
 Promise.resolve().then((function() {
 Promise.resolve().then((function() {
 __webpack_require__.e/* require.ensure */(0).then((function() {
-__webpack_require__.e/* require.ensure */(6).then((function() {
+__webpack_require__.e/* require.ensure */(7).then((function() {
 __webpack_require__.e/* require.ensure */(4).then((function() {
 __webpack_require__.e/* require.ensure */(5).then((function(require) {
 // ---------------------------------------------------------------
@@ -33,10 +33,6 @@ var Settings = __webpack_require__(86);
 
 var SignalCollection = __webpack_require__(343);
 
-var signals = new SignalCollection([]);
-
-var VF = window.VF || {};
-VF.setups = VF.setups || {};
 
 // var _executedCommands = [];
 
@@ -46,23 +42,26 @@ var AppRouter = __webpack_require__(53).extend({
   _handleBroadcastMessages: function(evt) {
     var router = this;
     var screen = router.model;
+    var layers = screen.layers;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
 
     switch (command) {
       case 'bootstrap':
-        screen.layers.reset(payload.layers || []);
-        signals.reset(payload.signals || []);
-        router.mappings.import(payload.mappings || [], true);
+        layers.reset(payload.layers || []);
+        break;
+
+      case 'updateLayers':
+        layers.set(payload.layers);
         break;
 
       case 'updateLayer':
-        screen.layers.get(payload.layer.name).set(payload.layer);
+        layers.get(payload.layer.name).set(payload.layer);
         break;
 
       case 'addLayer':
-        screen.layers.add(payload.layer);
-        var model = screen.layers.get(payload.layer.name);
+        layers.add(payload.layer);
+        var model = layers.get(payload.layer.name);
         router.view.showDetails(new DetailsView({
           parent: router.view.layersView,
           model: model
@@ -70,7 +69,7 @@ var AppRouter = __webpack_require__(53).extend({
         break;
 
       case 'updateLayers':
-        screen.layers.set(payload.layers);
+        layers.set(payload.layers);
         break;
 
       case 'heartbeat':
@@ -86,6 +85,9 @@ var AppRouter = __webpack_require__(53).extend({
   _handleWorkerMessages: function(evt) {
     var router = this;
     var screen = router.model;
+    var signals = router.signals;
+    var mappings = router.mappings;
+    var layers = screen.layers;
     var command = evt.data.command;
     var payload = evt.data.payload || {};
 
@@ -95,13 +97,7 @@ var AppRouter = __webpack_require__(53).extend({
         break;
 
       case 'updateLayer':
-        var layerState = screen.layers.get(payload.layer.name);
-        if(layerState) {
-          layerState.set(payload.layer);
-        }
-        else {
-          screen.layers.add(payload.layer);
-        }
+        layers.get(payload.layer.name).set(payload.layer);
         break;
 
       case 'addSignal':
@@ -111,11 +107,11 @@ var AppRouter = __webpack_require__(53).extend({
           model: signals.get(payload.signal.name)
         }));
         break;
+      case 'updateSignalResult':
+        signals.get(payload.name).workerResult = payload.workerResult;
+        break;
       case 'updateSignal':
-        var signalState = signals.get(payload.signal.name);
-        if (signalState) {
-          signalState.set(payload.signal);
-        }
+        signals.get(payload.signal.name).set(payload.signal);
         break;
       case 'updateSignals':
         signals.set(payload.signals);
@@ -125,17 +121,17 @@ var AppRouter = __webpack_require__(53).extend({
         break;
 
       case 'addMapping':
-        router.mappings.add(payload.mapping);
+        mappings.add(payload.mapping);
         break;
       case 'updateMapping':
-        var mappingState = router.mappings.get(payload.mapping.name);
+        var mappingState = mappings.get(payload.mapping.name);
         if (mappingState) {
           mappingState.set(payload.mapping);
           mappingState.trigger('change:targets');
         }
         break;
       case 'removeMapping':
-        router.mappings.remove(payload.name);
+        mappings.remove(payload.name);
         break;
 
       case 'timelineCommands':
@@ -151,10 +147,17 @@ var AppRouter = __webpack_require__(53).extend({
 
       case 'storageSave':
       case 'storageLoad':
+        if (command === 'storageLoad') {
+          mappings.reset(payload.setup.mappings);
+          signals.reset(payload.setup.signals);
+        }
         router.navigate('/setup/' + payload.setupId, {trigger: false, replace: false});
         break;
 
       case 'yamlLoad':
+        mappings.reset(payload.setup.mappings);
+        signals.reset(payload.setup.signals);
+        break;
       case 'storageKeys':
         break;
 
@@ -173,17 +176,22 @@ var AppRouter = __webpack_require__(53).extend({
     var screen = router.model = new ScreenState({}, {
       router: this
     });
+    var signals = router.signals = new SignalCollection([], {
+      clock: screen.clock
+    });
+
+
     router.on('all', function(...args) {
       if (args[0] && args[0].indexOf('app:') === 0) screen.trigger(...args);
     });
 
     var mappingContext = {
       context: {
-        signals: signals,
+        signals: router.signals,
         layers: screen.layers
       }
     };
-    router.mappings = new Mappings([], mappingContext);
+    var mappings = router.mappings = new Mappings([], mappingContext);
 
     router.broadcastChannel = new BroadcastChannel('spike');
 
@@ -202,7 +210,7 @@ var AppRouter = __webpack_require__(53).extend({
     });
 
     router.listenTo(midi, 'change:inputs', function() {
-      var _mappings = router.mappings.length ? router.mappings.export() : options.mappings || [];
+      var _mappings = mappings.length ? mappings.export() : options.mappings || [];
       if (!_mappings.length) return;
       router.sendCommand('resetMappings', {
         mappings: _mappings

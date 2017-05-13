@@ -38,8 +38,8 @@ module.exports = resolve;
 
 
 var resolve = __webpack_require__(0);
-var assign = __webpack_require__(7);
-var State = __webpack_require__(4);
+var assign = __webpack_require__(8);
+var State = __webpack_require__(5);
 var Collection = __webpack_require__(6);
 
 function cleanFnFromExport(item) {
@@ -149,9 +149,8 @@ var Mappings = Collection.extend({
     if (this.readonly) return this;
 
     (mappings || []).forEach(function(mapping) {
-      if (!mapping.sourceState) return;
-      this.listenTo(mapping.sourceState, 'all', function(evtName, source, value) {
-        if (evtName !== 'change:' + mapping.sourceParameter) return;
+      if (!mapping.sourceState || !mapping.sourceParameter) return;
+      this.listenTo(mapping.sourceState, 'change:' + mapping.sourceParameter, function(source, value) {
         this.process([mapping], value);
       });
     }, this);
@@ -163,8 +162,8 @@ var Mappings = Collection.extend({
     if (this.readonly) return this;
 
     (mappings || []).forEach(function(mapping) {
-      if (!mapping.sourceState) return;
-      this.stopListening(mapping.sourceState, 'all');
+      if (!mapping.sourceState || !mapping.sourceParameter) return;
+      this.stopListening(mapping.sourceState, 'change:' + mapping.sourceParameter);
     }, this);
 
     return this;
@@ -222,20 +221,26 @@ var Mappings = Collection.extend({
     return resolve(path, this.context);
   },
 
-  process: function(sources, value) {
-    sources.forEach(function(info) {
-      info.targets.forEach(function(target) {
+  process: function(mappings, value) {
+    mappings.forEach(function(mapping) {
+      mapping.targets.forEach(function(target) {
         var parts = target.split('.');
         var targetParameter = parts.pop();
         var targetStatePath = parts.join('.');
         var state;
         try {
           state = this.resolve(targetStatePath);
-        } catch(e) {}
+        }
+        catch(e) {
+          console.info('mapping process error: %s', e.message);
+        }
         if (!state) return;
 
-        var finalValue = info.fn(value, state.get(targetParameter));
-        if (finalValue instanceof Error) return;
+        var finalValue = mapping.fn(value, state.get(targetParameter));
+        if (finalValue instanceof Error) {
+          console.info('mapping process error: %s', finalValue.message);
+          return;
+        }
 
         if (state.type === 'boolean') finalValue = finalValue === 'false' ? false : !!finalValue;
         if (state.type === 'string') finalValue = (finalValue || '').toString();
@@ -244,7 +249,7 @@ var Mappings = Collection.extend({
           state.set(targetParameter, finalValue);
         }
         catch (e) {
-          console.info(e.message);
+          console.info('mapping process error: %s', e.message);
         }
       }, this);
     }, this);
@@ -260,6 +265,7 @@ var Mappings = Collection.extend({
 });
 
 module.exports = Mappings;
+
 
 /***/ })
 ]);

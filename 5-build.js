@@ -6,7 +6,7 @@ webpackJsonp([5,0],{
 "use strict";
 
 var assign = __webpack_require__(15);
-var DetailsView = __webpack_require__(362);
+var DetailsView = __webpack_require__(360);
 
 var LayerDetailsView = DetailsView.extend({
   template: `
@@ -21,21 +21,7 @@ var LayerDetailsView = DetailsView.extend({
         <h5 data-hook="object-path"></h5>
       </header>
 
-      <div class="rows row param-section">
-        <h5>Parameters</h5>
-        <div class="row columns">
-          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
-          <div class="column"><select name="parameter-type">
-            <option value="string">string</option>
-            <option value="number">number</option>
-            <option value="boolean">boolean</option>
-            <option value="any">any</option>
-          </select></div>
-          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
-          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
-        </div>
-        <div class="row parameters" ></div>
-      </div>
+      <div class="content"></div>
     </section>
   `,
 
@@ -61,25 +47,14 @@ module.exports = LayerDetailsView;
 "use strict";
 
 var View = __webpack_require__(345);
-var SignalDetailsView = __webpack_require__(415);
+var SignalDetailsView = __webpack_require__(416);
 var SignalControlView = View.extend({
-  template: '<section class="rows signal">' +
-    '<header class="row">' +
-      '<h3 class="row name"></h3>' +
-    '</header>' +
-
-    // '<div class="row gutter-horizontal columns model text-center">' +
-    //   '<div class="column input"></div>' +
-    //   '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
-    //   '<div class="column result"></div>' +
-    // '</div>' +
-
-    '<div class="row gutter-horizontal columns test text-center">' +
-      '<input class="column input" placeholder="Input" type="text"/>' +
-      '<div class="column gutter-horizontal no-grow">&raquo;</div>' +
-      '<div class="column result"></div>' +
-    '</div>' +
-  '</section>',
+  template: `<section class="rows signal signal-default">
+    <header class="columns">
+      <h3 class="column signal-name gutter-horizontal" data-hook="name"></h3>
+      <div class="column no-grow text-right"><button class="vfi-trash-empty remove-signal"></button></div>
+    </header>
+  </section>`,
 
   session: {
     input: 'any',
@@ -96,10 +71,8 @@ var SignalControlView = View.extend({
   },
 
   bindings: {
-    'model.name': '.name',
-    // 'model.input': '.model .input',
-    // 'model.result': '.model .result',
-    result: '.test .result'
+    'model.name': '[data-hook=name]',
+    'model.type': '[data-hook=type]'
   },
 
   events: {
@@ -107,8 +80,20 @@ var SignalControlView = View.extend({
     'click header h3': '_showDetails'
   },
 
+  commands: {
+    'click .remove-signal': 'removeSignal _removeSignal'
+  },
+
+  _removeSignal: function() {
+    return {
+      signalName: this.model.name
+    };
+  },
+
   _showDetails: function () {
-    this.rootView.showDetails(new SignalDetailsView({
+    var DetailsViewConstructor = SignalDetailsView.types ? SignalDetailsView.types[this.model.getType()] : false;
+    DetailsViewConstructor = DetailsViewConstructor || SignalDetailsView;
+    this.rootView.showDetails(new DetailsViewConstructor({
       parent: this,
       model: this.model
     }));
@@ -142,34 +127,21 @@ module.exports = SignalControlView;
 var assign = __webpack_require__(15);
 var SignalControlView = __webpack_require__(152);
 var HSLASignalControlView = SignalControlView.types.hsla = SignalControlView.extend({
-  template: [
-    '<section class="rows signal signal-color">',
-    '<header class="row">',
-    '<h3 class="name"></h3>',
-    '</header>',
-
-    '<div class="row columns gutter-horizontal gutter-bottom">',
-    '<div class="column result-color no-grow"></div>',
-    '<div class="column result gutter-left"></div>',
-    '</div>',
-
-    '<div class="row mappings props"></div>',
-    '</section>'
-  ].join(''),
+  template: `<section class="rows signal signal-color">
+    <header class="columns">
+      <h3 class="column signal-name gutter-horizontal" data-hook="name"></h3>
+      <div class="column result-color no-grow"></div>
+      <div class="column no-grow text-right"><button class="vfi-trash-empty remove-signal"></button></div>
+    </header>
+  </section>`,
 
   bindings: assign({}, SignalControlView.prototype.bindings, {
-    'model.result': [
-      {
-        selector: '.result-color',
-        type: function(el, val) {
-          el.style.backgroundColor = val;
-        }
-      },
-      {
-        selector: '.result',
-        type: 'text'
+    'model.result': {
+      selector: '.result-color',
+      type: function(el, val) {
+        el.style.backgroundColor = val;
       }
-    ]
+    }
   })
 });
 module.exports = HSLASignalControlView;
@@ -252,7 +224,7 @@ module.exports = RGBASignalControlView;
 
 "use strict";
 
-var toArr = __webpack_require__(421);
+var toArr = __webpack_require__(427);
 var jsYAML = __webpack_require__(89);
 
 module.exports = function(newStr) {
@@ -661,19 +633,19 @@ module.exports = function(controllerView) {
 
 var View = __webpack_require__(345);
 var MIDIAccessView = __webpack_require__(162);
-var SignalsView = __webpack_require__(418);
-var LayersView = __webpack_require__(394);
-var SuggestionView = __webpack_require__(377);
-var AudioSource = __webpack_require__(370);
-var AceEditor = __webpack_require__(368);
-var ClockView = __webpack_require__(371);
-var RegionView = __webpack_require__(376);
-var MappingsControlView = __webpack_require__(407);
-var MenuView = __webpack_require__(375);
-var objectPath = __webpack_require__(347);
+var SignalsView = __webpack_require__(421);
+var LayersView = __webpack_require__(395);
+var SuggestionView = __webpack_require__(379);
+var AudioSource = __webpack_require__(372);
+var AceEditor = __webpack_require__(370);
+var ClockView = __webpack_require__(373);
+var RegionView = __webpack_require__(378);
+var MappingsControlView = __webpack_require__(408);
+var MenuView = __webpack_require__(377);
+var objectPath = __webpack_require__(349);
 var fromYaml = __webpack_require__(164);
-var toYaml = __webpack_require__(365);
-var ControlScreenControls = __webpack_require__(372);
+var toYaml = __webpack_require__(367);
+var ControlScreenControls = __webpack_require__(374);
 // var Timeline = require('./timeline-view');
 
 
@@ -1121,7 +1093,7 @@ var ControllerView = View.extend({
   toJSON: function() {
     return {
       signals: this.signals.toJSON(),
-      mappings: this.mappings.toJSON(),
+      mappings: this.mappings.export(),
       layers: this.model.layers.toJSON()
     };
   },
@@ -1241,10 +1213,10 @@ module.exports = ControllerView;
 
 
 module.exports = {
-  lines: __webpack_require__(382),
-  loaders: __webpack_require__(384),
-  text: __webpack_require__(385),
-  utils: __webpack_require__(389)
+  lines: __webpack_require__(383),
+  loaders: __webpack_require__(385),
+  text: __webpack_require__(386),
+  utils: __webpack_require__(390)
 };
 
 if (typeof window !== 'undefined') {
@@ -1369,19 +1341,30 @@ module.exports = BeatSignalControlView;
 
 "use strict";
 
-var assign = __webpack_require__(15);
 var Collection = __webpack_require__(16);
-var SignalState = __webpack_require__(351);
-__webpack_require__(414);
-__webpack_require__(416);
+var SignalState = __webpack_require__(355);
+__webpack_require__(419);
 __webpack_require__(417);
+__webpack_require__(420);
 
 var SignalCollection = Collection.extend({
   mainIndex: 'name',
+
+  clock: null,
+  audio: null,
+  worker: null,
+
   model: function(attrs, opts) {
     var Constructor = SignalState.types[attrs.type] || SignalState;
     var state = new Constructor(attrs, opts);
     return state;
+  },
+
+  initialize: function(models, options) {
+    this.location = typeof DedicatedWorkerGlobalScope !== 'undefined' ? 'worker' : 'controller';
+    this.clock = options.clock;
+    this.audio = options.audio;
+    this.emitCommand = options.emitCommand;
   },
 
   toJSON: function () {
@@ -1390,10 +1373,7 @@ var SignalCollection = Collection.extend({
         return model.toJSON();
       }
       else {
-        var out = {};
-        assign(out, model);
-        delete out.collection;
-        return out;
+        return model;
       }
     });
   }
@@ -1572,7 +1552,7 @@ module.exports = ControlView;
 
 var View = __webpack_require__(345);
 var LayerDetailsView = __webpack_require__(151);
-var objectPath = __webpack_require__(347);
+var objectPath = __webpack_require__(349);
 
 var LayerControlView = View.extend({
   template: `
@@ -1584,10 +1564,6 @@ var LayerControlView = View.extend({
         <h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>
         <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
       </header>
-
-      <div class="preview gutter-horizontal"></div>
-
-      <div class="mappings props"></div>
     </section>
   `,
 
@@ -1696,21 +1672,20 @@ module.exports = LayerControlView;
 
 /***/ }),
 
-/***/ 351:
+/***/ 355:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var State = __webpack_require__(11);
-var ParameterCollection = __webpack_require__(349);
 
-var SignalState = State.extend({
+var parameterizedState = __webpack_require__(348);
+var SignalState = parameterizedState([]).extend({
   idAttribute: 'name',
   typeAttribute: 'type',
 
   mappable: {
     source: ['result'],
-    target: ['input']
+    target: ['parameters']
   },
 
   props: {
@@ -1719,60 +1694,59 @@ var SignalState = State.extend({
     defaultValue: ['any', true, function () { return 1; }]
   },
 
-  initialize: function() {
-    var state = this;
-
-    state.ensureParameters();
-
-    state.listenToAndRun(state.parameters, 'change', function() {
-      state.trigger('change:parameters', state, state.parameters, {parameters: true});
-    });
-
-    state.listenToAndRun(state.parameters, 'sort', state.ensureParameters);
-  },
-
-  collections: {
-    parameters: ParameterCollection
-  },
-
-  baseParameters: [
-    {name: 'input', type: 'any', default: null}
-  ],
-
-  ensureParameters: function(definition = []) {
-    (this.baseParameters || [])
-      .concat(definition)
-      .forEach(function(parameterDef) {
-        var existing = this.parameters.get(parameterDef.name);
-        if (!existing) {
-          var created = this.parameters.add(parameterDef);
-          this.listenTo(created, 'change:value', function(...args) {
-            this.trigger('change:parameters.' + created.name, ...args);
-          });
-          created.value = parameterDef.default;
-        }
-      }, this);
-    return this;
+  session: {
+    workerResult: ['any', false, null]
   },
 
   derived: {
-    input: {
-      deps: ['parameters.input'],
-      fn: function() {
-        return this.parameters.get('input').value;
-      }
-    },
     modelPath: {
       deps: ['name'],
       fn: function() {
         return 'signals.' + this.name;
       }
     },
-    result: {
-      deps: ['input', 'transformations'],
+    location: {
+      deps: [],
       fn: function() {
-        return this.computeSignal();
+        return this.collection.location;
       }
+    },
+    result: {
+      deps: ['input', 'workerResult'],
+      fn: function() {
+        return this.location !== 'worker' ?
+          (this.workerResult || this.defaultValue) :
+          this.computeSignal();
+      }
+    }
+  },
+
+
+  initialize: function() {
+    var signal = this;
+    var id = signal.getId();
+    var signals = signal.collection;
+    if (!signal.collection) throw new Error('Missing collection for ' + signal.name);
+
+    signal._ensureBaseParameters();
+
+    signal.listenTo(signal.parameters, 'change', function() {
+      signal.trigger('change:parameters', signal, signal.parameters, {parameters: true});
+    });
+
+    if (signal.location === 'worker') {
+      signal.on('change:result', function() {
+        if (signals !== signal.collection) return; // may happen when bootstraping a new setup
+        signals.emitCommand('updateSignalResult', {
+          name: id,
+          workerResult: signal.result
+        });
+      });
+    }
+    else {
+      signal.on('change:workerResult', function() {
+        signal.trigger('change:result', signal, signal.result);
+      });
     }
   },
 
@@ -1789,26 +1763,36 @@ module.exports = SignalState;
 
 /***/ }),
 
-/***/ 360:
+/***/ 358:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-module.exports = function propNamesExtractor(state, excluded = []) {
-  var def = state.constructor.prototype._definition;
+/**
+ * compileFunction(name, prologue, [arg1, arg2, ...] body)
+ */
+module.exports = function compileFunction(...args) {
+  var name = args.shift();
+  var prologue = args.shift();
+  var body = args.pop();
+  var fn;
 
-  if (state.idAttribute) excluded.push(state.idAttribute);
-  if (state.typeAttribute) excluded.push(state.typeAttribute);
-
-  return Object.keys(def)
-    .filter(function(key) {
-      return excluded.indexOf(key) < 0;
-    });
+  console.time('compileFunction ' + name);
+  try {
+    fn = new Function(...args, prologue + body);// jshint ignore:line
+    if (typeof fn !== 'function') throw new Error('Function compilation error, returned not function');
+  }
+  catch (e) {
+    console.log('%c compilation error: %s', 'color:red', e.message);
+    fn = e;
+  }
+  console.timeEnd('compileFunction ' + name);
+  return fn;
 };
 
 /***/ }),
 
-/***/ 361:
+/***/ 359:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1841,16 +1825,15 @@ module.exports = resolve;
 
 /***/ }),
 
-/***/ 362:
+/***/ 360:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(15);
 var View = __webpack_require__(345);
-var objectPath = __webpack_require__(347);
-var propNamesExtractor = __webpack_require__(360);
-var ParamView = __webpack_require__(412);
+var objectPath = __webpack_require__(349);
+var ParameterListView = __webpack_require__(413);
 
 
 var DetailsView = View.extend({
@@ -1863,21 +1846,7 @@ var DetailsView = View.extend({
         <h5 data-hook="object-path"></h5>
       </header>
 
-      <div class="rows row param-section">
-        <h5>Parameters</h5>
-        <div class="row columns">
-          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
-          <div class="column"><select name="parameter-type">
-            <option value="string">string</option>
-            <option value="number">number</option>
-            <option value="boolean">boolean</option>
-            <option value="any">any</option>
-          </select></div>
-          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
-          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
-        </div>
-        <div class="row parameters" ></div>
-      </div>
+      <div class="content"></div>
     </section>
   `,
 
@@ -1893,23 +1862,7 @@ var DetailsView = View.extend({
   },
 
   derived: {
-    propNames: {
-      deps: ['model'],
-      fn: function() {
-        return propNamesExtractor(this.model, ['layerStyles']);
-      }
-    },
 
-    definition: {
-      deps: ['propNames'],
-      fn: function() {
-        var def = this.model.constructor.prototype._definition;
-        return this.propNames
-          .map(function(name) {
-            return assign({name: name}, def[name]);
-          });
-      }
-    },
 
     modelPath: {
       deps: ['model'],
@@ -1919,30 +1872,11 @@ var DetailsView = View.extend({
     }
   },
 
-  events: {
-    'click [name=parameter-add]': 'addParameter'
-  },
-
-  addParameter: function() {
-    if (!this.model.parameters) return;
-    var val = this.query('[name=parameter-default]').value;
-    var parameter = {
-      name: this.query('[name=parameter-name]').value,
-      type: this.query('[name=parameter-type]').value,
-      default: val,
-      value: val
-    };
-    this.rootView.sendCommand('addParameter', {
-      path: this.modelPath,
-      parameter: parameter
-    });
-  },
-
-  editFunction: function(propName) {
+  editFunction: function(propName, options = {}) {
     var rootView = this.rootView;
     var path = objectPath(this.model);
-    var script = this.model.get(propName) || ('function ' + propName + '() {\n}');
-    rootView.getEditor({
+    var script = this.model.get(propName) || '';
+    rootView.getEditor(assign({}, {
       tabName: this.model.getId() + ' ' + propName,
       script: script,
       language: 'javascript',
@@ -1958,7 +1892,15 @@ var DetailsView = View.extend({
           value: str
         });
       }
-    });
+    }, options));
+  },
+
+  subviews: {
+    parameterList: {
+      waitFor: ['el'],
+      selector: '.content',
+      constructor: ParameterListView
+    }
   },
 
   render: function() {
@@ -1967,12 +1909,6 @@ var DetailsView = View.extend({
     if (this.parameters) {
       this.parameters.remove();
     }
-
-    this.parameters = this.renderCollection(this.model.parameters, function (opts) {
-      var Constructor = (ParamView.names[opts.model.name] || ParamView.types[opts.model.type] || ParamView);
-      // console.info('property name: %s (%s), type: %s (%s)', opts.model.name, !!ParamView.names[opts.model.name], opts.model.type, !!ParamView.types[opts.model.type]);
-      return new Constructor(opts);
-    }, '.parameters');
 
     this.trigger('change:model');
     this.trigger('change:model.name');
@@ -2013,7 +1949,131 @@ module.exports = DetailsView;
 
 /***/ }),
 
-/***/ 364:
+/***/ 362:
+/***/ (function(module, exports) {
+
+module.exports = `
+<ul>
+  <li>
+    <label>ctx.</label>
+    (for more look at <a href="https://simon.html5.org/dump/html5-canvas-cheat-sheet.html" target="_blank">Canvas Cheat Sheet</a>)
+    <ul>
+      <li class="ctx color fillStyle">
+        <span class="property">fillStyle</span> [= 'hsla(175, 50, 60, 0.1)']
+      </li>
+      <li class="ctx color strokeStyle">
+        <span class="property">strokeStyle</span> [= 'hsla(175, 50, 60, 0.1)']
+      </li>
+      <li class="ctx line path lineWidth">
+        <span class="property">lineWidth</span> (= 1)
+      </li>
+      <li class="ctx line path shape position moveTo">
+        <span class="function">moveTo</span>(x, y)
+      </li>
+      <li class="ctx line path shape beginPath">
+        <span class="function">beginPath</span>()
+      </li>
+      <li class="ctx line path shape position lineTo">
+        <span class="function">lineTo</span>(x, y)
+      </li>
+      <li class="ctx line path shape closePath">
+        <span class="function">closePath</span>()
+      </li>
+      <li class="ctx line path shpe stroke">
+        <span class="function">stroke</span>()
+      </li>
+      <li class="ctx line path shpe fill">
+        <span class="function">fill</span>()
+      </li>
+      <li class="ctx line path arc">
+        <span class="function">arc</span>(x, y, radius[, startAngle[, endAngle[, anticlockwise]]])
+      </li>
+      <li class="ctx line path rect">
+        <span class="function">rect</span>(x, y, width, height)
+      </li>
+      <li class="ctx text rect fillRect">
+        <span class="function">fillRect</span>(x, y, width, height)
+      </li>
+      <li class="ctx text rect line path strokeRect">
+        <span class="function">strokeRect</span>(x, y, width, height)
+      </li>
+      <li class="ctx text fillText">
+        <span class="function">fillText</span>(text, x, y[, maxWidth])
+      </li>
+      <li class="ctx text line path strokeText">
+        <span class="function">strokeText</span>(text, x, y[, maxWidth])
+      </li>
+    </ul>
+  </li>
+  <li>
+    <label>Global</label>
+    <ul>
+      <li class="utils txt text">
+        <span class="function">txt</span>(text = '', x = width / 2, h = width / 2)
+      </li>
+      <li class="utils dot text">
+        <span class="function">dot</span>(x = width / 2, h = width / 2, r = 10, start = 0, end = Math.PI * 2)
+      </li>
+      <li class="utils shape circle text">
+        <span class="function">circle</span>(x = width / 2, h = width / 2, r = 10, start = 0, end = Math.PI * 2)
+      </li>
+      <li class="utils line text">
+        <span class="function">line</span>([x, y])
+      </li>
+      <li class="utils shape polygone text">
+        <span class="function">polygone</span>(x = width / 2, h = width / 2, size = 30, sides = 3)
+      </li>
+      <li class="utils position grid">
+        <span class="function">grid</span>(width, height, itemsCount, rows, process = function(x,y))
+      </li>
+      <li class="utils position distribute">
+        <span class="function">distribute</span>(x, y, itemsCount, r, tilt = 0, process = function(x,y))
+      </li>
+      <li class="utils math random">
+        <span class="function">random</span>(multi = 100)
+      </li>
+      <li class="utils math between">
+        <span class="function">between</span>(val, min, max)
+      </li>
+      <li class="utils math midiMinMax midi">
+        <span class="function">midiMinMax</span>(val, min, max)
+      </li>
+      <li class="utils math midi2Rad angle midi">
+        <span class="function">midi2Rad</span>(val)
+      </li>
+      <li class="utils midi2Prct percent midi">
+        <span class="function">midi2Prct</span>(val)
+      </li>
+    </ul>
+  </li>
+</ul>
+`;
+
+/***/ }),
+
+/***/ 363:
+/***/ (function(module, exports) {
+
+module.exports = `snippet distribute
+trigger
+	distribute(\${1:width / 2}, \${2:height / 2}, \${3:10}, \${4:Math.min(width, height) / 2}, \${5:0}, function(pX, pY) {
+		\${0:// code}
+	});
+
+snippet rep
+	repeat(\${1:10}, function(index) {
+		\${0:// code}
+	});
+
+snippet gri
+	grid(\${1:24}, \${2:6}, function(x, y) {
+		\${0:// code}
+	});
+`;
+
+/***/ }),
+
+/***/ 366:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2026,12 +2086,12 @@ module.exports = function pad(n, z) {
 
 /***/ }),
 
-/***/ 365:
+/***/ 367:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var toObj = __webpack_require__(419);
+var toObj = __webpack_require__(422);
 var jsYAML = __webpack_require__(89);
 module.exports = function(setup) {
   setup.signals = toObj(setup.signals || []);
@@ -2042,13 +2102,15 @@ module.exports = function(setup) {
 
 /***/ }),
 
-/***/ 368:
+/***/ 370:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+var ace = window.ace;
 var View = __webpack_require__(17);
-var canvasCompleter = __webpack_require__(378);
+// var canvasCompleter = require('./../layer/canvas/canvas-completer');
+var getEditorKeybordShortcuts = ace.require('ace/ext/menu_tools/get_editor_keyboard_shortcuts').getEditorKeybordShortcuts;
 
 var AceEditor = View.extend({
   editCode: function(options) {
@@ -2064,11 +2126,33 @@ var AceEditor = View.extend({
       <header>
         <div class="columns">
           <h3 class="column"><span data-hook="editor-title"></span> <small data-hook="editor-language"></small></h3>
+          <div class="column no-grow show-origin"><button class="vfi-info-circled" name="show-info"></button></div>
           <div class="column no-grow show-origin"><button class="vfi-eye" name="show-origin"></button></div>
         </div>
+        <div class="important-note gutter text-center"></div>
       </header>
 
-      <div class="ace-editor row grow-xl"></div>
+      <div class="row columns editor-holder">
+        <div class="ace-editor column grow-xl"></div>
+
+        <div class="column rows editor-info">
+          <div class="gutter row reference-holder">
+            <div>
+              <input type="search" placeholder="search reference" name="search-reference" />
+            </div>
+
+            <div class="reference"></div>
+          </div>
+
+          <div class="gutter row shortcuts-holder">
+            <div>
+              <input type="search" placeholder="search shortcuts" name="search-shortcuts" />
+            </div>
+
+            <div class="shortcuts"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="ace-controls row no-grow gutter columns">
         <div class="column"></div>
@@ -2081,6 +2165,11 @@ var AceEditor = View.extend({
   `,
 
   session: {
+    showInfo: 'boolean',
+    importantNote: 'string',
+    reference: 'string',
+    shortcuts: 'string',
+    snippets: 'any',
     title: 'string',
     language: {
       type: 'string',
@@ -2100,6 +2189,35 @@ var AceEditor = View.extend({
   },
 
   derived: {
+    styleEl: {
+      deps: [],
+      fn: function() {
+        var id = 'editor-search-' + this.cid;
+        var el = document.getElementById('style-' + id);
+        if (!el) {
+          el = document.createElement('style');
+          el.id = 'style-' + id;
+          el.appendChild(document.createTextNode(''));
+          document.head.appendChild(el);
+        }
+        return el;
+      }
+    },
+    sheet: {
+      deps: ['styleEl'],
+      fn: function() {
+        var sheet = this.styleEl.sheet;
+        return sheet;
+      }
+    },
+
+    hasInfo: {
+      deps: ['reference', 'shortcuts'],
+      fn: function() {
+        return this.showInfo && (this.reference || this.shortcuts);
+      }
+    },
+
     pristine: {
       deps: ['script', 'original'],
       fn: function() {
@@ -2109,6 +2227,49 @@ var AceEditor = View.extend({
   },
 
   bindings: {
+    hasInfo: {
+      selector: '.editor-info',
+      type: 'toggle'
+    },
+
+    importantNote: [
+      {
+        selector: '.important-note',
+        type: 'toggle'
+      },
+      {
+        selector: '.important-note',
+        type: 'innerHTML'
+      }
+    ],
+
+    reference: [
+      {
+        selector: '.reference-holder',
+        type: 'toggle'
+      },
+      {
+        selector: '.reference',
+        type: 'innerHTML'
+      }
+    ],
+
+    shortcuts: [
+      {
+        selector: '.shortcuts-holder',
+        type: 'toggle'
+      },
+      {
+        selector: '.shortcuts',
+        type: 'innerHTML'
+      }
+    ],
+
+    showInfo: {
+      selector: '.editor-info',
+      type: 'toggle'
+    },
+
     script: {
       type: function() {
         if (!this.editor) return;
@@ -2140,7 +2301,7 @@ var AceEditor = View.extend({
 
     onshoworigin: {
       type: 'toggle',
-      selector: '.show-origin'
+      selector: '[name="show-origin"]'
     },
 
     title: '[data-hook=editor-title]',
@@ -2148,9 +2309,30 @@ var AceEditor = View.extend({
   },
 
   events: {
+    'change [name="search-reference"],[name="search-shortcuts"]': '_search',
+    'keyup [name="search-reference"],[name="search-shortcuts"]': '_search',
+    'click [name=show-info]': '_showInfo',
     'click [name=show-origin]': '_showOrigin',
     'click [name="cancel"]': '_cancel',
-    'click [name="apply"]': '_apply'
+    'click [name="apply"]': '_apply',
+  },
+
+  _search: function(evt) {
+    var searched = evt.target.name.split('-').pop();
+    var sheet = this.sheet;
+    var index = sheet.cssRules.length;
+    for (var i = index - 1; i >= 0; i--) {
+      if (sheet.cssRules[i].selectorText.indexOf('.' + searched + ' li[class]:not') === 0) {
+        sheet.deleteRule(i);
+      }
+    }
+    if (!evt.target.value) return;
+    sheet.insertRule('.' + searched + ' li[class]:not([class*="' + evt.target.value + '"]) { display: none; }', sheet.cssRules.length);
+  },
+
+  _showInfo: function() {
+    this.toggle('showInfo');
+    this.editor.resize();
   },
 
   _showOrigin: function() {
@@ -2210,7 +2392,6 @@ var AceEditor = View.extend({
 
   _makeEditor: function() {
     var view = this;
-    var ace = window.ace;
     if (view.editor) view.editor.destroy();
 
     var hasAnnotations = ['javascript', 'css'].indexOf(view.language) > -1;
@@ -2237,13 +2418,22 @@ var AceEditor = View.extend({
     editor.setFontSize(16);
 
     if (view.language === 'javascript') {
-      var languageTools = ace.require('ace/ext/language_tools');
       editor.setOptions({
         enableBasicAutocompletion: true,
         enableSnippets: true,
         enableLiveAutocompletion: false
       });
-      languageTools.addCompleter(canvasCompleter);
+
+      // var languageTools = ace.require('ace/ext/language_tools');
+      // languageTools.addCompleter(canvasCompleter);
+
+      console.info('view.snippets', view.snippets);
+      if (view.snippets) {
+        var snippetManager = ace.require('ace/snippets').snippetManager;
+        var snippets = snippetManager.parseSnippetFile(view.snippets);
+        console.info('snippetManager', snippets);
+        snippetManager.register(snippets, 'javascript');
+      }
     }
 
     var session = editor.getSession();
@@ -2260,6 +2450,28 @@ var AceEditor = View.extend({
     }
 
     editor.setValue(view.script || view.original || '');
+
+    var shortcuts = getEditorKeybordShortcuts(editor);
+    view.shortcuts = '<ul>' + shortcuts.map(sc => `<li class="${ sc.command }">
+      <label>${ sc.command }</label>
+      <div>
+        <span class="keys">${ sc.key.split('|').join('</span> or <span class="keys">') }</span>
+      </div>
+    </li>`).join('') + '</ul>';
+
+
+    var toggleBlockComment = editor.commands.commands.toggleBlockComment;
+    if (toggleBlockComment) {
+      toggleBlockComment.bindKey.mac = toggleBlockComment.bindKey.mac + '|Command-Alt-7';
+      toggleBlockComment.bindKey.win = toggleBlockComment.bindKey.win + '|Ctrl-Alt-7';
+      editor.commands.addCommand(toggleBlockComment);
+    }
+    var toggleComment = editor.commands.commands.togglecomment;
+    if (toggleComment) {
+      toggleComment.bindKey.mac = toggleComment.bindKey.mac + '|Command-Shift-7';
+      toggleComment.bindKey.win = toggleComment.bindKey.win + '|Ctrl-Shift-7';
+      editor.commands.addCommand(toggleComment);
+    }
 
     return view;
   },
@@ -2281,12 +2493,12 @@ module.exports = AceEditor;
 
 /***/ }),
 
-/***/ 369:
+/***/ 371:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var pad = __webpack_require__(364);
+var pad = __webpack_require__(366);
 module.exports = __webpack_require__(17).extend({
   autoRender: true,
   template: '<canvas width="200" height="200"></canvas>',
@@ -2405,7 +2617,7 @@ module.exports = __webpack_require__(17).extend({
 
 
     var i, a, f, td, lx, ly, val, min = 0, max = 0, avg = 0;
-    ctx.strokeStyle = ctx.fillStyle = '#A581FF';
+    ctx.strokeStyle = ctx.fillStyle = '#e6db74';
     ctx.beginPath();
     for (i = 0; i < bufferLength; i++) {
       val = freqArray[i];
@@ -2453,13 +2665,13 @@ module.exports = __webpack_require__(17).extend({
 
 /***/ }),
 
-/***/ 370:
+/***/ 372:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(345);
-var AudioMonitor = __webpack_require__(369);
+var AudioMonitor = __webpack_require__(371);
 var AudioSource = View.extend({
   autoRender: true,
 
@@ -2580,13 +2792,13 @@ module.exports = AudioSource;
 
 /***/ }),
 
-/***/ 371:
+/***/ 373:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(15);
-var msToTime = __webpack_require__(420);
+var msToTime = __webpack_require__(426);
 var ControlView = __webpack_require__(345);
 var ClockView = ControlView.extend({
   template: `<div class="column columns no-grow">
@@ -2688,7 +2900,7 @@ module.exports = ClockView;
 
 /***/ }),
 
-/***/ 372:
+/***/ 374:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2749,7 +2961,7 @@ module.exports = ControlScreenControls;
 
 /***/ }),
 
-/***/ 373:
+/***/ 375:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2761,7 +2973,7 @@ function resToJSON(res) {
   return res.json();
 }
 
-var toYaml = __webpack_require__(365);
+var toYaml = __webpack_require__(367);
 
 
 var GistView = View.extend({
@@ -2869,7 +3081,7 @@ module.exports = GistView;
 
 /***/ }),
 
-/***/ 374:
+/***/ 376:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2935,14 +3147,14 @@ module.exports = LocalforageView;
 
 /***/ }),
 
-/***/ 375:
+/***/ 377:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(17);
-var GistView = __webpack_require__(373);
-var LocalforageView = __webpack_require__(374);
+var GistView = __webpack_require__(375);
+var LocalforageView = __webpack_require__(376);
 
 var MenuView = View.extend({
   template: `
@@ -3013,7 +3225,7 @@ module.exports = MenuView;
 
 /***/ }),
 
-/***/ 376:
+/***/ 378:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3166,7 +3378,7 @@ module.exports = RegionView;
 
 /***/ }),
 
-/***/ 377:
+/***/ 379:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3559,246 +3771,55 @@ module.exports = SuggestionView;
 
 /***/ }),
 
-/***/ 378:
+/***/ 380:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-// http://plnkr.co/edit/6MVntVmXYUbjR0DI82Cr
-
-var mockedCtx = __webpack_require__(350);
-
-var entries = [].concat(mockedCtx._.properties, mockedCtx._.methods);
-
-
-// https://gist.github.com/andrei-m/982927#gistcomment-1931258
-function levenshteinDistance(a, b) {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-  let tmp, i, j, prev, val, row;
-  // swap to save some memory O(min(a,b)) instead of O(a)
-  if (a.length > b.length) {
-    tmp = a;
-    a = b;
-    b = tmp;
-  }
-
-  row = Array(a.length + 1);
-  // init the row
-  for (i = 0; i <= a.length; i++) {
-    row[i] = i;
-  }
-
-  // fill in the rest
-  for (i = 1; i <= b.length; i++) {
-    prev = i;
-    for (j = 1; j <= a.length; j++) {
-      if (b[i-1] === a[j-1]) {
-        val = row[j-1]; // match
-      } else {
-        val = Math.min(row[j-1] + 1, // substitution
-              Math.min(prev + 1,     // insertion
-                       row[j] + 1));  // deletion
-      }
-      row[j - 1] = prev;
-      prev = val;
-    }
-    row[a.length] = prev;
-  }
-  return row[a.length];
-}
-
-var canvasCompleter = {
-  getCompletions: function(editor, session, pos, prefix, callback) {
-    // if (!prefix.length) { return callback(null, []); }
-    // console.info('canvasCompleter', editor, session, prefix);
-
-    var filtered = entries
-      .filter(function(entry) {
-        // console.info('distance', prefix, entry, levenshteinDistance(prefix, entry));
-        return !prefix || entry.indexOf(prefix) > -1;
-      })
-      .map(function(entry) {
-        return {
-          name: entry,
-          value: entry + '()',
-          score: 1,
-          meta: 'livecode'
-        };
-      });
-
-    callback(null, filtered);
-  }
-};
-module.exports = canvasCompleter;
-
-
-/***/ }),
-
-/***/ 379:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var LayerControlView = __webpack_require__(346);
 var assign = __webpack_require__(15);
-var objectPath = __webpack_require__(347);
-
-var CanvasLayerDetailsView = __webpack_require__(380);
-
-var CanvasControlLayerView = LayerControlView.extend({
-  template: `
-    <section class="canvas-layer">
-      <header class="columns">
-        <div class="column no-grow"><button name="active"></button></div>
-        <h3 class="column canvas-layer-name gutter-horizontal" data-hook="name"></h3>
-        <div class="column no-grow"><button class="edit-draw-function vfi-cog-alt"></button></div>
-        <div class="column no-grow"><button class="vfi-trash-empty" name="remove-canvas-layer"></button></div>
-      </header>
-    </section>
-  `,
-
-  events: {
-    'click .edit-draw-function': '_editDrawFunction',
-    'click .canvas-layer-name': '_showDetails'
-  },
-
-  commands: {
-    'click [name=remove-canvas-layer]': 'removeLayer _layerName',
-    'click [name="active"]': 'propChange _toggleActive',
-  },
-
-  _editDrawFunction: function () {
-    var rootView = this.rootView;
-    var path = objectPath(this.model);
-    rootView.getEditor({
-      tabName: this.model.getId() + ' drawFunction',
-      script: this.model.drawFunction || '',
-      language: 'javascript',
-      title: path + '.drawFunction',
-      onshoworigin: function() {
-        rootView.trigger('blink', path);
-      },
-      autoApply: true,
-      onvalidchange: function doneEditingCanvasDrawFunction(str) {
-        rootView.sendCommand('propChange', {
-          path: path,
-          property: 'drawFunction',
-          value: str
-        });
-      }
-    });
-  },
-
-  _showDetails: function () {
-    this.rootView.showDetails(new CanvasLayerDetailsView({
-      parent: this,
-      model: this.model
-    }));
-  },
-
-  bindings: {
-    'model.active': [
-      {
-        type: 'booleanClass',
-        name: 'disabled',
-        invert: true
-      },
-
-      {
-        type: 'booleanClass',
-        selector: '[name="active"]',
-        yes: 'vfi-toggle-on',
-        no: 'vfi-toggle-off'
-      }
-    ],
-
-    drawFunction: '[data-hook=drawFunction]',
-    'model.name': '[data-hook=name]',
-    'model.duration': '[data-hook=duration]',
-    'model.fps': '[data-hook=fps]',
-    'model.frametime': '[data-hook=frametime]'
-  }
-});
+var LayerControlView = __webpack_require__(346);
+var CanvasDetailsView = __webpack_require__(381);
+var reference = __webpack_require__(362);
+var snippets = __webpack_require__(363);
 
 module.exports = LayerControlView.types.canvas = LayerControlView.extend({
   template: `
     <section class="row canvas-control">
-      <header class="rows">
-        <div class="row columns">
-          <div class="column no-grow"><button class="active prop-toggle"></button></div>
-          <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
-          <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
-          <h3 class="column layer-name" data-hook="name"></h3>
+      <header class="columns">
+        <div class="column no-grow"><button class="active prop-toggle"></button></div>
+        <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
+        <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
+        <h3 class="column layer-name" data-hook="name"></h3>
+        <div class="column columns no-grow">
+          <div class="column no-grow text-right"><button name="edit-update-function">update</button></div>
           <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
         </div>
-
-        <div class="row columns new-layer">
-          <div class="column no-grow gutter"><label>New sub-layer</label></div>
-          <div class="column"><input type="text" placeholder="new-layer-name" data-hook="new-layer-name" /></div>
-          <div class="column no-grow">
-            <button name="add-layer" class="vfi-plus"></button>
-          </div>
-        </div>
       </header>
-
-      <div class="layers">
-        <div class="items"></div>
-      </div>
     </section>
   `,
 
-  events: assign({
-    'change [data-hook=new-layer-name]': '_inputLayerName',
-    'click [name=add-layer]': '_addLayer'
-  }, LayerControlView.prototype.events),
+  events: assign(LayerControlView.prototype.events, {
+    'click [name=edit-update-function]': '_editUpdateFunction'
+  }),
 
-  _inputLayerName: function() {
-    this.query('[name=add-layer]').disabled = !this.queryByHook('new-layer-name').value.trim();
-  },
-
-  _addLayer: function(evt) {
-    evt.preventDefault();
-    var nameEl = this.queryByHook('new-layer-name');
-    var name = nameEl.value.trim();
-
-    var res = this.model.canvasLayers.add({
-      name: name,
-      drawFunction: 'function(ctx) {\n  // ' + name + ' drawFunction\n}'
-    });
-
-    if (!res) {
-      return;
-    }
-    nameEl.value = '';
-
-    this.rootView.sendCommand('propChange', {
-      path: objectPath(this.model),
-      property: 'canvasLayers',
-      value: this.model.canvasLayers.serialize()
+  _editUpdateFunction: function() {
+    this.editFunction('updateFunction', {
+      reference: reference,
+      snippets: snippets
     });
   },
 
-  initialize: function () {
-    LayerControlView.prototype.initialize.apply(this, arguments);
-    this.once('change:rendered', this._inputLayerName);
-  },
-
-
-  subviews: {
-    canvasLayersView: {
-      waitFor: 'el',
-      selector: '.layers .items',
-      prepareView: function (el) {
-        return this.renderCollection(this.model.canvasLayers, CanvasControlLayerView, el);
-      }
-    }
+  _showDetails: function () {
+    this.rootView.showDetails(new CanvasDetailsView({
+      parent: this,
+      model: this.model
+    }));
   }
 });
 
 /***/ }),
 
-/***/ 380:
+/***/ 381:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3806,45 +3827,36 @@ module.exports = LayerControlView.types.canvas = LayerControlView.extend({
 
 var assign = __webpack_require__(15);
 var LayerDetailsView = __webpack_require__(151);
+var reference = __webpack_require__(362);
+var snippets = __webpack_require__(363);
 
 var CanvasLayerDetailsView = LayerDetailsView.extend({
   template: `
     <section>
       <header>
         <div class="columns">
-          <h3 class="column">Details for <span data-hook="name"></span> <small>sublayer</small></h3>
-          <div class="columns no-grow column">
-            <div class="column no-grow"><button name="edit-draw-function">Draw</button></div>
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+          <div class="column no-grow columns">
+            <div class="column no-grow"><button class="yes" title="Edit update function" name="edit-update-function">Update</button></div>
             <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
           </div>
         </div>
         <h5 data-hook="object-path"></h5>
       </header>
 
-      <div class="rows row param-section">
-        <h5>Canvas layer parameters</h5>
-        <div class="row columns">
-          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
-          <div class="column"><select name="parameter-type">
-            <option value="string">string</option>
-            <option value="number">number</option>
-            <option value="boolean">boolean</option>
-            <option value="any">any</option>
-          </select></div>
-          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
-          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
-        </div>
-        <div class="row parameters" ></div>
-      </div>
+      <div class="content"></div>
     </section>
   `,
 
-  events: assign({
-    'click [name=edit-draw-function]': '_editDrawFunction'
-  }, LayerDetailsView.prototype.bindings),
+  events: assign(LayerDetailsView.prototype.events, {
+    'click [name=edit-update-function]': '_editUpdateFunction'
+  }),
 
-  _editDrawFunction: function() {
-    this.editFunction('drawFunction');
+  _editUpdateFunction: function() {
+    this.editFunction('updateFunction', {
+      reference: reference,
+      snippets: snippets
+    });
   }
 });
 
@@ -3852,7 +3864,7 @@ module.exports = CanvasLayerDetailsView;
 
 /***/ }),
 
-/***/ 381:
+/***/ 382:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3937,20 +3949,20 @@ module.exports = function lineGrid(ctx) {
 
 /***/ }),
 
-/***/ 382:
+/***/ 383:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  grid: __webpack_require__(381),
-  roundFrequencies: __webpack_require__(383)
+  grid: __webpack_require__(382),
+  roundFrequencies: __webpack_require__(384)
 };
 
 /***/ }),
 
-/***/ 383:
+/***/ 384:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4018,7 +4030,7 @@ module.exports = function roundFrequencies(ctx) {
 
 /***/ }),
 
-/***/ 384:
+/***/ 385:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4081,19 +4093,19 @@ module.exports = {
 
 /***/ }),
 
-/***/ 385:
+/***/ 386:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  wrap: __webpack_require__(386)
+  wrap: __webpack_require__(387)
 };
 
 /***/ }),
 
-/***/ 386:
+/***/ 387:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4122,7 +4134,7 @@ module.exports = function wrapText(context, text, x, y, maxWidth, lineHeight) {
 
 /***/ }),
 
-/***/ 387:
+/***/ 388:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4150,7 +4162,7 @@ module.exports = function fps(ctx) {
 
 /***/ }),
 
-/***/ 388:
+/***/ 389:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4171,20 +4183,20 @@ module.exports = function frametime(ctx) {
 
 /***/ }),
 
-/***/ 389:
+/***/ 390:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*global module, require*/
 module.exports = {
-  fps: __webpack_require__(387),
-  frametime: __webpack_require__(388)
+  fps: __webpack_require__(388),
+  frametime: __webpack_require__(389)
 };
 
 /***/ }),
 
-/***/ 392:
+/***/ 393:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4196,7 +4208,7 @@ module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.exten
 
 /***/ }),
 
-/***/ 394:
+/***/ 395:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4204,13 +4216,13 @@ module.exports = ScreenLayerControlView.types.img = ScreenLayerControlView.exten
 var View = __webpack_require__(346);
 
 var LayerControlView = __webpack_require__(346);
-__webpack_require__(379);
-__webpack_require__(398);
-__webpack_require__(392);
-__webpack_require__(405);
-__webpack_require__(403);
-__webpack_require__(395);
-__webpack_require__(401);
+__webpack_require__(380);
+__webpack_require__(399);
+__webpack_require__(393);
+__webpack_require__(406);
+__webpack_require__(404);
+__webpack_require__(396);
+__webpack_require__(402);
 
 var LayersView = View.extend({
   commands: {
@@ -4247,7 +4259,7 @@ var LayersView = View.extend({
   },
 
   render: function() {
-    View.prototype.render.apply(this, arguments);
+    LayerControlView.prototype.render.apply(this, arguments);
     this.items = this.renderCollection(this.collection, function (opts) {
       var type = opts.model.getType();
       var Constructor = LayerControlView.types[type] || LayerControlView;
@@ -4280,13 +4292,13 @@ module.exports = LayersView;
 
 /***/ }),
 
-/***/ 395:
+/***/ 396:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var LayerControlView = __webpack_require__(346);
-var P5DetailsView = __webpack_require__(396);
+var P5DetailsView = __webpack_require__(397);
 var assign = __webpack_require__(15);
 
 var P5LayerControlView = LayerControlView.types.p5 = LayerControlView.extend({
@@ -4298,8 +4310,8 @@ var P5LayerControlView = LayerControlView.types.p5 = LayerControlView.extend({
         <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
         <h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>
         <div class="column columns no-grow">
-          <div class="column no-grow text-right"><button name="edit-setup-function">setup</button></div>
-          <div class="column no-grow text-right"><button name="edit-draw-function">draw</button></div>
+          <div class="column no-grow text-right"><button name="edit-setup-function">Setup</button></div>
+          <div class="column no-grow text-right"><button name="edit-draw-function">Update</button></div>
           <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
         </div>
       </header>
@@ -4316,7 +4328,9 @@ var P5LayerControlView = LayerControlView.types.p5 = LayerControlView.extend({
   }),
 
   _editSetupFunction: function() {
-    this.editFunction('setupFunction');
+    this.editFunction('setupFunction', {
+      importantNote: 'Do not forget to call <code>ready()</code>'
+    });
   },
   _editDrawFunction: function() {
     this.editFunction('drawFunction');
@@ -4333,7 +4347,7 @@ module.exports = P5LayerControlView;
 
 /***/ }),
 
-/***/ 396:
+/***/ 397:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4348,28 +4362,15 @@ module.exports = DetailsView.types.p5 = DetailsView.extend({
         <div class="columns">
           <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
           <div class="column no-grow columns">
-            <div class="column no-grow"><button class="yes" title="Edit setup function" name="edit-setup-function">setup</button></div>
-            <div class="column no-grow"><button class="yes" title="Edit draw function" name="edit-draw-function">draw</button></div>
+            <div class="column no-grow"><button class="yes" title="Edit setup function" name="edit-setup-function">Setup</button></div>
+            <div class="column no-grow"><button class="yes" title="Edit draw function" name="edit-draw-function">Update</button></div>
             <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
           </div>
         </div>
         <h5 data-hook="object-path"></h5>
       </header>
 
-      <div class="rows row param-section">
-        <h5>CSS variables</h5>
-        <div class="row columns">
-          <div class="columns"><input type="text" name="style-prop-name" placeholder="--css-var-name" /></div>
-          <div class="columns"><input type="text" name="style-prop-default" placeholder="2px, 100%, " /></div>
-          <div class="columns no-grow"><button name="style-prop-add" class="vfi-plus"></button></div>
-        </div>
-        <div class="row style-props" ></div>
-      </div>
-
-      <div class="rows row param-section">
-        <h5>Layer properties</h5>
-        <div class="row mappings props"></div>
-      </div>
+      <div class="content"></div>
     </section>
   `,
 
@@ -4379,7 +4380,9 @@ module.exports = DetailsView.types.p5 = DetailsView.extend({
   }),
 
   _editSetupFunction: function() {
-    this.editFunction('setupFunction');
+    this.editFunction('setupFunction', {
+      importantNote: 'Do not forget to call <code>ready()</code>'
+    });
   },
 
   _editDrawFunction: function() {
@@ -4389,14 +4392,14 @@ module.exports = DetailsView.types.p5 = DetailsView.extend({
 
 /***/ }),
 
-/***/ 398:
+/***/ 399:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(15);
 var ScreenLayerControlView = __webpack_require__(346);
-var SVGDetailsView = __webpack_require__(399);
+var SVGDetailsView = __webpack_require__(400);
 
 module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.extend({
   template: `
@@ -4438,13 +4441,12 @@ module.exports = ScreenLayerControlView.types.SVG = ScreenLayerControlView.exten
 
 /***/ }),
 
-/***/ 399:
+/***/ 400:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var DetailsView = __webpack_require__(151);
-var propNamesExtractor = __webpack_require__(360);
 var assign = __webpack_require__(15);
 
 var SVGDetailsView = DetailsView.extend({
@@ -4461,21 +4463,7 @@ var SVGDetailsView = DetailsView.extend({
         <h5 data-hook="object-path"></h5>
       </header>
 
-      <div class="rows row param-section">
-        <h5>Parameters</h5>
-        <div class="row columns">
-          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
-          <div class="column"><select name="parameter-type">
-            <option value="string">string</option>
-            <option value="number">number</option>
-            <option value="boolean">boolean</option>
-            <option value="any">any</option>
-          </select></div>
-          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
-          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
-        </div>
-        <div class="row parameters" ></div>
-      </div>
+      <div class="content"></div>
     </section>
   `,
 
@@ -4523,19 +4511,7 @@ var SVGDetailsView = DetailsView.extend({
         });
       }
     });
-  },
 
-  derived: {
-    propNames: {
-      deps: ['model'],
-      fn: function() {
-        return propNamesExtractor(this.model, [
-          'content',
-          'svgStyles',
-          'layerStyles'
-        ]);
-      }
-    }
   }
 });
 
@@ -4543,26 +4519,26 @@ module.exports = SVGDetailsView;
 
 /***/ }),
 
-/***/ 401:
+/***/ 402:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ThreeJSDetailsView = __webpack_require__(402);
+var ThreeJSDetailsView = __webpack_require__(403);
 var assign = __webpack_require__(15);
 
 var ScreenLayerControlView = __webpack_require__(346);
 module.exports = ScreenLayerControlView.types.threejs = ScreenLayerControlView.extend({
   template: `
-    <section class="default-layer-control">
+    <section class="threejs-control">
       <header class="columns">
         <div class="column no-grow"><button class="active prop-toggle"></button></div>
         <div class="column no-grow"><button class="edit-css vfi-code"></button></div>
         <h5 class="column no-grow layer-type"><span data-hook="type"></span></h5>
         <h3 class="column layer-name gutter-horizontal" data-hook="name"></h3>
         <div class="column columns no-grow">
-          <div class="column no-grow text-right"><button name="edit-render-function">render</button></div>
-          <div class="column no-grow text-right"><button name="edit-update-function">update</button></div>
+          <div class="column no-grow text-right"><button name="edit-setup-function">Setup</button></div>
+          <div class="column no-grow text-right"><button name="edit-update-function">Update</button></div>
           <div class="column no-grow text-right"><button class="vfi-trash-empty remove-layer"></button></div>
         </div>
       </header>
@@ -4574,12 +4550,14 @@ module.exports = ScreenLayerControlView.types.threejs = ScreenLayerControlView.e
   `,
 
   events: assign(ScreenLayerControlView.prototype.events, {
-    'click [name=edit-render-function]': '_editRenderFunction',
+    'click [name=edit-setup-function]': '_editSetupFunction',
     'click [name=edit-update-function]': '_editUpdateFunction'
   }),
 
-  _editRenderFunction: function() {
-    this.editFunction('renderFunction');
+  _editSetupFunction: function() {
+    this.editFunction('setupFunction', {
+      importantNote: 'Do not forget to call <code>ready()</code>'
+    });
   },
   _editUpdateFunction: function() {
     this.editFunction('updateFunction');
@@ -4595,23 +4573,23 @@ module.exports = ScreenLayerControlView.types.threejs = ScreenLayerControlView.e
 
 /***/ }),
 
-/***/ 402:
+/***/ 403:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var DetailsView = __webpack_require__(151);
+var LayerDetailsView = __webpack_require__(151);
 var assign = __webpack_require__(15);
-var propNamesExtractor = __webpack_require__(360);
+// var propNamesExtractor = require('./../../utils/prop-names');
 
-var ThreeJSDetailsView = DetailsView.extend({
+var ThreeJSDetailsView = LayerDetailsView.extend({
   template: `
     <section>
       <header>
         <div class="columns">
           <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
           <div class="column no-grow columns">
-            <div class="column no-grow"><button class="yes" title="Edit render function" name="edit-render-function">Render</button></div>
+            <div class="column no-grow"><button class="yes" title="Edit render function" name="edit-setup-function">Setup</button></div>
             <div class="column no-grow"><button class="yes" title="Edit update function" name="edit-update-function">Update</button></div>
             <div class="column no-grow"><button class="vfi-eye" name="show-origin"></button></div>
           </div>
@@ -4619,47 +4597,23 @@ var ThreeJSDetailsView = DetailsView.extend({
         <h5 data-hook="object-path"></h5>
       </header>
 
-      <div class="rows row param-section">
-        <h5>Parameters</h5>
-        <div class="row columns">
-          <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
-          <div class="column"><select name="parameter-type">
-            <option value="string">string</option>
-            <option value="number">number</option>
-            <option value="boolean">boolean</option>
-            <option value="any">any</option>
-          </select></div>
-          <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
-          <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
-        </div>
-        <div class="row parameters" ></div>
-      </div>
+      <div class="content"></div>
     </section>
   `,
 
-  events: assign(DetailsView.prototype.events, {
-    'click [name=edit-render-function]': '_editRenderFunction',
+  events: assign(LayerDetailsView.prototype.events, {
+    'click [name=edit-setup-function]': '_editSetupFunction',
     'click [name=edit-update-function]': '_editUpdateFunction'
   }),
 
-  _editRenderFunction: function() {
-    this.editFunction('renderFunction');
+  _editSetupFunction: function() {
+    this.editFunction('setupFunction', {
+      importantNote: 'Do not forget to call <code>ready()</code>'
+    });
   },
   _editUpdateFunction: function() {
     this.editFunction('updateFunction');
-  },
 
-  derived: {
-    propNames: {
-      deps: ['model'],
-      fn: function() {
-        return propNamesExtractor(this.model, [
-          'renderFunction',
-          'updateFunction',
-          'layerStyles'
-        ]);
-      }
-    }
   }
 });
 
@@ -4667,7 +4621,7 @@ module.exports = ThreeJSDetailsView;
 
 /***/ }),
 
-/***/ 403:
+/***/ 404:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4679,7 +4633,7 @@ module.exports = TxtLayerControlView;
 
 /***/ }),
 
-/***/ 405:
+/***/ 406:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4691,7 +4645,7 @@ module.exports = ScreenLayerControlView.types.video = ScreenLayerControlView.ext
 
 /***/ }),
 
-/***/ 407:
+/***/ 408:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4835,14 +4789,14 @@ function targetSuggestions(origin) {
 \**********************************************************************************/
 var EmitterTargetView = View.extend({
   template: `<div class="mapping-emitter-target-view columns">
-  <div class="column"><input type="text" name="target-path" /></div>
+  <div class="column gutter target-path"></div>
   <div class="column no-grow"><button name="remove-target" class="vfi-trash-empty"></button></div>
 </div>`,
 
   bindings: {
     'model.path': {
-      type: 'value',
-      selector: '[name="target-path"]'
+      type: 'text',
+      selector: '.target-path'
     }
   },
 
@@ -4902,9 +4856,9 @@ var EmitterView = View.extend({
 
   template: `<section class="mapping-emitter-view">
   <header class="columns">
-    <div class="column emitter-name gutter"></div>
+    <div class="column gutter emitter-name"></div>
     <div class="column no-grow"><button name="edit-transform-function" class="vfi-code"></button></div>
-    <div class="column"><input type="text" name="emitter-source" /></div>
+    <div class="column gutter emitter-source"></div>
     <div class="column no-grow"><button name="remove-emitter" class="vfi-trash-empty"></button></div>
   </header>
   <div class="columns">
@@ -4916,10 +4870,7 @@ var EmitterView = View.extend({
 
   bindings: {
     'model.name': '.emitter-name',
-    'model.source': {
-      type: 'value',
-      selector: '[name="emitter-source"]'
-    }
+    'model.source': '.emitter-source'
   },
 
   events: {
@@ -5041,8 +4992,7 @@ var MappingsControlView = View.extend({
         return 'signals.' + id + '.' + name;
       }));
     });
-
-    results = midiSources.concat(results);
+    results = sourceSuggestions(rootView.model).concat(midiSources, results);
 
     helper.attach(evt.target, function(selected) {
       evt.target.value = selected;
@@ -5084,7 +5034,7 @@ module.exports = MappingsControlView;
 
 /***/ }),
 
-/***/ 408:
+/***/ 409:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5163,7 +5113,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 409:
+/***/ 410:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5345,7 +5295,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 410:
+/***/ 411:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5464,7 +5414,7 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 411:
+/***/ 412:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5600,7 +5550,71 @@ module.exports.prefix = mappings.prefix;
 
 /***/ }),
 
-/***/ 412:
+/***/ 413:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var ParamView = __webpack_require__(414);
+var ControlView = __webpack_require__(345);
+var ParameterListView = ControlView.extend({
+  template: `<div class="row param-section">
+    <h5>Parameters</h5>
+    <div class="columns">
+      <div class="column"><input type="text" name="parameter-name" placeholder="param-a" /></div>
+      <div class="column"><select name="parameter-type">
+        <option value="string">string</option>
+        <option value="number">number</option>
+        <option value="boolean">boolean</option>
+        <option value="any">any</option>
+      </select></div>
+      <div class="column"><input type="text" name="parameter-default" placeholder="2px, 100%, ..." /></div>
+      <div class="column no-grow"><button name="parameter-add" class="vfi-plus"></button></div>
+    </div>
+    <div class="parameters" ></div>
+  </div>`,
+
+  initialize: function() {
+    ControlView.prototype.initialize.apply(this, arguments);
+    this.model = this.model || this.parent.model;
+    if (!this.model.parameters) throw new Error('Missing parameters collection');
+  },
+
+  events: {
+    'click [name=parameter-add]': 'addParameter'
+  },
+
+  addParameter: function() {
+    if (!this.model.parameters) return;
+    var val = this.query('[name=parameter-default]').value;
+    var parameter = {
+      name: this.query('[name=parameter-name]').value,
+      type: this.query('[name=parameter-type]').value,
+      default: val,
+      value: val
+    };
+    this.rootView.sendCommand('addParameter', {
+      path: this.model.modelPath,
+      parameter: parameter
+    });
+  },
+
+  render: function() {
+    ControlView.prototype.render.apply(this, arguments);
+
+    this.parameters = this.parameters || this.renderCollection(this.model.parameters, function (opts) {
+      var Constructor = (ParamView.names[opts.model.name] || ParamView.types[opts.model.type] || ParamView);
+      return new Constructor(opts);
+    }, '.parameters');
+
+    return this;
+  }
+});
+module.exports = ParameterListView;
+
+/***/ }),
+
+/***/ 414:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5633,8 +5647,8 @@ var ParamView = View.extend({
 
   initialize: function() {
     View.prototype.initialize.apply(this, arguments);
-    this.listenTo(this.rootView.mappings, 'change', function mappingsChange(...args) {
-      this.trigger('change:rootView.mappings', ...args);
+    this.listenTo(this.rootView, 'app:worker:addMapping app:worker:updateMapping app:worker:removeMapping', function() {
+      this.trigger('change:mappings');
     });
   },
 
@@ -5672,7 +5686,7 @@ var ParamView = View.extend({
 
     mapping: {
       deps: [
-        'rootView.mappings',
+        'mappings',
         'parameterPath'
       ],
       fn: function() {
@@ -6045,123 +6059,110 @@ module.exports = ParamView;
 
 /***/ }),
 
-/***/ 414:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var SignalState = __webpack_require__(351);
-
-var BeatState = SignalState.types.beat = SignalState.extend({
-  initialize: function() {
-    SignalState.prototype.initialize.apply(this, arguments);
-    this.listenTo(this.collection, 'frametime', function(frametime) {
-      this.frametime = frametime;
-    });
-  },
-
-  session: {
-    frametime: ['number', true, 0]
-  },
-
-  mappable: {
-    source: ['result', 'beatlength', 'beatnum'],
-    target: ['input']
-  },
-
-  derived: {
-    result: {
-      deps: ['beatlength', 'frametime'],
-      fn: function() {
-        return this.computeSignal();
-      }
-    },
-    beatnum: {
-      deps: ['beatlength', 'frametime'],
-      fn: function() {
-        return this.frametime ? Math.floor(this.frametime / this.beatlength) : 0;
-      }
-    },
-    beatlength: {
-      deps: ['input'],
-      fn: function() {
-        return (60 * 1000) / Math.max(this.input, 1);
-      }
-    }
-  },
-
-  computeSignal: function() {
-    var ft = this.frametime;
-    var tbb = this.beatlength;
-    return !ft ? 0 : (100 - (((ft % tbb) / tbb) * 100));
-  }
-});
-
-module.exports = BeatState;
-
-/***/ }),
-
-/***/ 415:
+/***/ 416:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var assign = __webpack_require__(15);
-var DetailsView = __webpack_require__(362);
+var DetailsView = __webpack_require__(360);
 var SignalDetailsView = DetailsView.extend({
+  template: `
+    <section class="row rows">
+      <header class="row no-grow">
+        <div class="columns">
+          <h3 class="column">Details for <span data-hook="name"></span> <small data-hook="type"></small></h3>
+        </div>
+        <h5 data-hook="object-path"></h5>
+      </header>
+
+      <div class="inspector ">
+        <div>Result: <span data-hook="result"></span></div>
+      </div>
+
+      <div class="content"></div>
+    </section>
+  `,
+
   derived: {
     modelPath: {
-      deps: [],
+      deps: ['model'],
       fn: function() {
-        return 'signals.' + this.model.getId();
+        return this.model.modelPath;
       }
     }
   },
 
   bindings: assign({
-    'model.name': '[data-hook=name]'
+    'model.name': '[data-hook=name]',
+    'model.result': '[data-hook=result]'
   }, DetailsView.prototype.bindings)
 });
 module.exports = SignalDetailsView;
 
 /***/ }),
 
-/***/ 416:
+/***/ 417:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(351);
+var SignalState = __webpack_require__(355);
 
-var _360 = {
-  type: 'number',
-  required: true,
-  default: 180,
-  min: 0,
-  max: 360
-};
-var _100 = {
-  type: 'number',
-  required: true,
-  default: 100,
-  min: 0,
-  max: 100
-};
+function _360(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 180,
+    min: 0,
+    max: 360
+  };
+}
+function _100(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 100,
+    min: 0,
+    max: 100
+  };
+}
+function _1(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 1,
+    min: 0,
+    max: 1
+  };
+}
+function derivedParameter(name) {
+  return {
+    deps: ['parameters.' + name],
+    fn: function() {
+      return this.parameters.getValue(name);
+    }
+  };
+}
 
 var HSLASignalState = SignalState.types.hsla = SignalState.extend({
-  props: {
-    hue: _360,
-    saturation: _100,
-    lightness: _100,
-    alpha: _100
-  },
+  baseParameters: [
+    _360('hue'),
+    _100('saturation'),
+    _100('lightness'),
+    _1('alpha')
+  ],
 
   mappable: {
     source: ['result', 'hue', 'saturation', 'lightness', 'alpha'],
-    target: ['hue', 'saturation', 'lightness', 'alpha']
+    target: ['parameters']
   },
 
   derived: {
+    hue: derivedParameter('hue'),
+    saturation: derivedParameter('saturation'),
+    lightness: derivedParameter('lightness'),
+    alpha: derivedParameter('alpha'),
     result: {
       deps: ['hue', 'saturation', 'lightness', 'alpha'],
       fn: function() {
@@ -6179,7 +6180,7 @@ var HSLASignalState = SignalState.types.hsla = SignalState.extend({
   //   };
   // },
   computeSignal: function() {
-    return 'hsla(' + Math.round(this.hue) + ',' + Math.round(this.saturation) + '%,' + Math.round(this.lightness) + '%,' + (Math.round(this.alpha) / 100) + ')';
+    return 'hsla(' + Math.round(this.hue) + ',' + Math.round(this.saturation) + '%,' + Math.round(this.lightness) + '%,' + (Math.round(100 * this.alpha) / 100) + ')';
   }
 });
 
@@ -6187,40 +6188,184 @@ module.exports = HSLASignalState;
 
 /***/ }),
 
-/***/ 417:
+/***/ 418:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var SignalState = __webpack_require__(351);
-var _255 = {
-  type: 'number',
-  required: true,
-  default: 180,
-  min: 0,
-  max: 255
-};
-var _100 = {
-  type: 'number',
-  required: true,
-  default: 100,
-  min: 0,
-  max: 100
-};
-var RGBASignalState = SignalState.types.rgba = SignalState.extend({
-  props: {
-    red: _255,
-    green: _255,
-    blue: _255,
-    alpha: _100
+var SignalControlView = __webpack_require__(152);
+
+var ProgrammableSignalControlView = SignalControlView.types.programmable = SignalControlView.extend({
+  template: `<section class="rows signal signal-programmable">
+    <header class="columns">
+      <h3 class="column signal-name gutter-horizontal" data-hook="name"></h3>
+      <div class="column no-grow"><button class="edit-update-function vfi-cog-alt"></button></div>
+      <div class="column no-grow text-right"><button class="vfi-trash-empty remove-signal"></button></div>
+    </header>
+  </section>`,
+
+  events: {
+    'click .edit-update-function': '_editUpdateFunction',
+    'click header h3': '_showDetails'
   },
 
-  mappable: {
-    source: ['result', 'red', 'green', 'blue', 'alpha'],
-    target: ['red', 'green', 'blue', 'alpha']
+  _editUpdateFunction: function () {
+    var id = this.model.getId();
+    var rootView = this.rootView;
+    var path = 'signals.' + id;
+
+    rootView.getEditor({
+      tabName: id + ' updateFunction',
+      script: this.model.updateFunction || '',
+      language: 'javascript',
+      title: path + '.updateFunction',
+      onshoworigin: function() {
+        rootView.trigger('blink', path);
+      },
+      autoApply: true,
+      onvalidchange: function doneEditingSignalFunction(str) {
+        rootView.sendCommand('propChange', {
+          path: path,
+          property: 'updateFunction',
+          value: str
+        });
+      }
+    });
+  },
+});
+
+module.exports = ProgrammableSignalControlView;
+
+/***/ }),
+
+/***/ 419:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var compileFunction = __webpack_require__(358);
+var SignalState = __webpack_require__(355);
+
+var updatePrologue = ``;
+
+module.exports = SignalState.types.programmable = SignalState.extend({
+  initialize: function() {
+    SignalState.prototype.initialize.apply(this, arguments);
+
+    // this forces the refresh of 'result' derived on worker everytime the clock is ticking
+    if (this.location !== 'worker') return;
+    this.listenTo(this.collection.clock, 'change:frametime', function() {
+      delete this._cache.result;
+      this.trigger('change:input');
+    });
+  },
+
+  props: {
+    updateFunction: ['string', true, 'console.info("frametime %s, bpm %s, beatnum %s, beatprct %s", frametime, bpm, beatnum, beatprct.toFixed(2));\nreturn 0;']
   },
 
   derived: {
+    result: {
+      deps: ['input', 'workerResult'],
+      fn: function() {
+        if (this.location !== 'worker') return this.workerResult || this.defaultValue;
+        return this.computeSignal();
+      }
+    },
+    updateFn: {
+      deps: ['updateFunction'],
+      fn: function() {
+        return compileFunction(
+          'update',
+          updatePrologue,
+          'frametime',
+          'bpm',
+          'beatnum',
+          'beatprct',
+          this.updateFunction
+        );
+      }
+    }
+  },
+
+  computeSignal: function(clock) {
+    clock = clock || (this.collection ? this.collection.clock : {
+      frametime: 0,
+      bpm: 120,
+      beatnum: 0,
+      beatprct: 0,
+    });
+
+    var fn = this.updateFn;
+    var result = 0;
+    try {
+      result = fn(
+        clock.frametime,
+        clock.bpm,
+        clock.beatnum,
+        clock.beatprct
+      );
+    }
+    catch (err) {
+      console.warn('Error', err.message);
+    }
+    return result;
+  }
+});
+
+/***/ }),
+
+/***/ 420:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var SignalState = __webpack_require__(355);
+function _255(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 180,
+    min: 0,
+    max: 255
+  };
+}
+function _1(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 1,
+    min: 0,
+    max: 1
+  };
+}
+function derivedParameter(name) {
+  return {
+    deps: ['parameters.' + name],
+    fn: function() {
+      return this.parameters.getValue(name);
+    }
+  };
+}
+
+var RGBASignalState = SignalState.types.rgba = SignalState.extend({
+  baseParameters: [
+    _255('red'),
+    _255('green'),
+    _255('blue'),
+    _1('alpha')
+  ],
+
+  mappable: {
+    source: ['result', 'red', 'green', 'blue', 'alpha'],
+    target: ['parameters']
+  },
+
+  derived: {
+    red: derivedParameter('red'),
+    green: derivedParameter('green'),
+    blue: derivedParameter('blue'),
+    alpha: derivedParameter('alpha'),
     result: {
       deps: ['red', 'green', 'blue', 'alpha'],
       fn: function() {
@@ -6238,21 +6383,21 @@ var RGBASignalState = SignalState.types.rgba = SignalState.extend({
   //   };
   // },
   computeSignal: function() {
-    return 'rgba(' + Math.round(this.red) + ',' + Math.round(this.green) + ',' + Math.round(this.blue) + ',' + (Math.round(this.alpha) / 100) + ')';
+    return 'rgba(' + Math.round(this.red) + ',' + Math.round(this.green) + ',' + Math.round(this.blue) + ',' + (Math.round(100 * this.alpha) / 100) + ')';
   }
 });
 module.exports = RGBASignalState;
 
 /***/ }),
 
-/***/ 418:
+/***/ 421:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var View = __webpack_require__(345);
-
 var SignalControlView = __webpack_require__(152);
+__webpack_require__(418);
 __webpack_require__(161);
 __webpack_require__(163);
 
@@ -6286,19 +6431,17 @@ var SignalsView = View.extend({
     };
   },
 
-  subviews: {
-    items: {
-      selector: '.items',
-      waitFor: 'el',
-      prepareView: function(el) {
-        return this.renderCollection(this.collection, function (opts) {
-          var type = opts.model.getType();
-          var Constructor = SignalControlView.types[type] || SignalControlView;
-          return new Constructor(opts);
-        }, el);
-      }
-    }
+
+  render: function() {
+    SignalControlView.prototype.render.apply(this, arguments);
+    this.items = this.renderCollection(this.collection, function (opts) {
+      var type = opts.model.getType();
+      var Constructor = SignalControlView.types[type] || SignalControlView;
+      return new Constructor(opts);
+    }, '.items');
+    return this;
   },
+
 
   template: `
     <section class="row signals">
@@ -6321,7 +6464,7 @@ module.exports = SignalsView;
 
 /***/ }),
 
-/***/ 419:
+/***/ 422:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6337,13 +6480,13 @@ module.exports = function toObj(arr) {
 
 /***/ }),
 
-/***/ 420:
+/***/ 426:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 // http://stackoverflow.com/a/9763769/662964
 
-var pad = __webpack_require__(364);
+var pad = __webpack_require__(366);
 module.exports = function msToTime(s) {
   var ms = s % 1000;
   s = (s - ms) / 1000;
@@ -6357,7 +6500,7 @@ module.exports = function msToTime(s) {
 
 /***/ }),
 
-/***/ 421:
+/***/ 427:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6378,7 +6521,7 @@ module.exports = function toArr(obj) {
 "use strict";
 
 
-var resolve = __webpack_require__(361);
+var resolve = __webpack_require__(359);
 var assign = __webpack_require__(15);
 var State = __webpack_require__(11);
 var Collection = __webpack_require__(16);
@@ -6490,9 +6633,8 @@ var Mappings = Collection.extend({
     if (this.readonly) return this;
 
     (mappings || []).forEach(function(mapping) {
-      if (!mapping.sourceState) return;
-      this.listenTo(mapping.sourceState, 'all', function(evtName, source, value) {
-        if (evtName !== 'change:' + mapping.sourceParameter) return;
+      if (!mapping.sourceState || !mapping.sourceParameter) return;
+      this.listenTo(mapping.sourceState, 'change:' + mapping.sourceParameter, function(source, value) {
         this.process([mapping], value);
       });
     }, this);
@@ -6504,8 +6646,8 @@ var Mappings = Collection.extend({
     if (this.readonly) return this;
 
     (mappings || []).forEach(function(mapping) {
-      if (!mapping.sourceState) return;
-      this.stopListening(mapping.sourceState, 'all');
+      if (!mapping.sourceState || !mapping.sourceParameter) return;
+      this.stopListening(mapping.sourceState, 'change:' + mapping.sourceParameter);
     }, this);
 
     return this;
@@ -6563,20 +6705,26 @@ var Mappings = Collection.extend({
     return resolve(path, this.context);
   },
 
-  process: function(sources, value) {
-    sources.forEach(function(info) {
-      info.targets.forEach(function(target) {
+  process: function(mappings, value) {
+    mappings.forEach(function(mapping) {
+      mapping.targets.forEach(function(target) {
         var parts = target.split('.');
         var targetParameter = parts.pop();
         var targetStatePath = parts.join('.');
         var state;
         try {
           state = this.resolve(targetStatePath);
-        } catch(e) {}
+        }
+        catch(e) {
+          console.info('mapping process error: %s', e.message);
+        }
         if (!state) return;
 
-        var finalValue = info.fn(value, state.get(targetParameter));
-        if (finalValue instanceof Error) return;
+        var finalValue = mapping.fn(value, state.get(targetParameter));
+        if (finalValue instanceof Error) {
+          console.info('mapping process error: %s', finalValue.message);
+          return;
+        }
 
         if (state.type === 'boolean') finalValue = finalValue === 'false' ? false : !!finalValue;
         if (state.type === 'string') finalValue = (finalValue || '').toString();
@@ -6585,7 +6733,7 @@ var Mappings = Collection.extend({
           state.set(targetParameter, finalValue);
         }
         catch (e) {
-          console.info(e.message);
+          console.info('mapping process error: %s', e.message);
         }
       }, this);
     }, this);
@@ -6601,6 +6749,7 @@ var Mappings = Collection.extend({
 });
 
 module.exports = Mappings;
+
 
 /***/ }),
 
@@ -6655,14 +6804,14 @@ var Collection = __webpack_require__(16);
 
 var midiMappings = {
   'KORG INC.': {
-    'KP3 MIDI 1': __webpack_require__(409),
-    'nanoKONTROL2 MIDI 1': __webpack_require__(410)
+    'KP3 MIDI 1': __webpack_require__(410),
+    'nanoKONTROL2 MIDI 1': __webpack_require__(411)
   },
   'AKAI professional LLC': {
-    'LPD8 MIDI 1': __webpack_require__(408)
+    'LPD8 MIDI 1': __webpack_require__(409)
   },
   'Focusrite A.E. Ltd': {
-    'Launchpad Mini MIDI 1': __webpack_require__(411)
+    'Launchpad Mini MIDI 1': __webpack_require__(412)
   }
 };
 

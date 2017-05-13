@@ -1,111 +1,34 @@
 webpackChunk([3],{
 
-/***/ 2:
+/***/ 3:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-/* global Uint8Array*/
-
-var State = __webpack_require__(4);
-var ScreenState = State.extend({
-  initialize: function(attributes, options = {}) {
-    this._isControllerState = !!options.router;
-  },
-
-  mappable: {
-    source: ['midi', 'frametime', 'clock', 'signals'],
-    target: ['layers', 'signals', 'clock']
-  },
-
-  session: {
-    audio: ['object', true, function() { return {
-      bufferLength: 128,
-      frequency: new Uint8Array(128),
-      timeDomain: new Uint8Array(128)
-    }; }],
-    latency: ['number', true, 0]
-  },
-
-  children: {
-    clock: __webpack_require__(300)
-  },
-
-  collections: {
-    layers: __webpack_require__(297)
-  },
-
-  derived: {
-    frametime: {
-      deps: ['clock.frametime'],
-      fn: function() {
-        return this.clock.frametime;
-      }
-    },
-    hasDOM: {
-      deps: [],
-      fn: function() {
-        return typeof DedicatedWorkerGlobalScope === 'undefined';
-      }
-    },
-    isControllerState: {
-      deps: [],
-      fn: function() {
-        return this._isControllerState;
-      }
-    },
-    location: {
-      deps: ['hasDOM', 'isControllerState'],
-      fn: function() {
-        return this.isControllerState ? 'control' : (this.hasDOM ? 'screen' : 'worker');
-      }
-    }
-  },
-
-  _log: function(...args) {
-    var color = this.location === 'screen' ? 'lightblue' : (this.location === 'control' ? 'lightgreen' : 'pink');
-    var txt = args.shift();
-    console.log('%c'+ this.location[0].toUpperCase() + ': ' + txt, 'color:' + color, ...args);
-  },
-
-  toJSON: function() {
-    var obj = State.prototype.toJSON.apply(this, arguments);
-    delete obj.audio;
-    return obj;
-  }
-});
-
-module.exports = ScreenState;
-
-
-/***/ }),
-
-/***/ 297:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var assign = __webpack_require__(7);
 var Collection = __webpack_require__(6);
-var LayerState = __webpack_require__(5);
-__webpack_require__(8);
-__webpack_require__(14);
-__webpack_require__(11);
-__webpack_require__(9);
-__webpack_require__(13);
-__webpack_require__(10);
-__webpack_require__(12);
+var SignalState = __webpack_require__(7);
+__webpack_require__(304);
+__webpack_require__(303);
+__webpack_require__(305);
 
-module.exports = Collection.extend({
-  comparator: 'zIndex',
+var SignalCollection = Collection.extend({
   mainIndex: 'name',
+
+  clock: null,
+  audio: null,
+  worker: null,
+
   model: function(attrs, opts) {
-    var Constructor = LayerState.types[attrs.type] || LayerState;
+    var Constructor = SignalState.types[attrs.type] || SignalState;
     var state = new Constructor(attrs, opts);
-    // state.on('change', function() {
-    //   opts.collection.trigger('change:layer', state);
-    // });
     return state;
+  },
+
+  initialize: function(models, options) {
+    this.location = typeof DedicatedWorkerGlobalScope !== 'undefined' ? 'worker' : 'controller';
+    this.clock = options.clock;
+    this.audio = options.audio;
+    this.emitCommand = options.emitCommand;
   },
 
   toJSON: function () {
@@ -114,113 +37,371 @@ module.exports = Collection.extend({
         return model.toJSON();
       }
       else {
-        var out = {};
-        assign(out, model);
-        delete out.collection;
-        return out;
+        return model;
       }
     });
+  }
+});
+module.exports = SignalCollection;
+
+
+/***/ }),
+
+/***/ 303:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var SignalState = __webpack_require__(7);
+
+function _360(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 180,
+    min: 0,
+    max: 360
+  };
+}
+function _100(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 100,
+    min: 0,
+    max: 100
+  };
+}
+function _1(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 1,
+    min: 0,
+    max: 1
+  };
+}
+function derivedParameter(name) {
+  return {
+    deps: ['parameters.' + name],
+    fn: function() {
+      return this.parameters.getValue(name);
+    }
+  };
+}
+
+var HSLASignalState = SignalState.types.hsla = SignalState.extend({
+  baseParameters: [
+    _360('hue'),
+    _100('saturation'),
+    _100('lightness'),
+    _1('alpha')
+  ],
+
+  mappable: {
+    source: ['result', 'hue', 'saturation', 'lightness', 'alpha'],
+    target: ['parameters']
+  },
+
+  derived: {
+    hue: derivedParameter('hue'),
+    saturation: derivedParameter('saturation'),
+    lightness: derivedParameter('lightness'),
+    alpha: derivedParameter('alpha'),
+    result: {
+      deps: ['hue', 'saturation', 'lightness', 'alpha'],
+      fn: function() {
+        return this.computeSignal();
+      }
+    }
+  },
+  // parseInput: function() {
+  //   var values = _colorValues(this.input);
+  //   return {
+  //     hue: values[0],
+  //     saturation: values[1],
+  //     lightness: values[2],
+  //     alpha: values[3]
+  //   };
+  // },
+  computeSignal: function() {
+    return 'hsla(' + Math.round(this.hue) + ',' + Math.round(this.saturation) + '%,' + Math.round(this.lightness) + '%,' + (Math.round(100 * this.alpha) / 100) + ')';
+  }
+});
+
+module.exports = HSLASignalState;
+
+/***/ }),
+
+/***/ 304:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var compileFunction = __webpack_require__(306);
+var SignalState = __webpack_require__(7);
+
+var updatePrologue = ``;
+
+module.exports = SignalState.types.programmable = SignalState.extend({
+  initialize: function() {
+    SignalState.prototype.initialize.apply(this, arguments);
+
+    // this forces the refresh of 'result' derived on worker everytime the clock is ticking
+    if (this.location !== 'worker') return;
+    this.listenTo(this.collection.clock, 'change:frametime', function() {
+      delete this._cache.result;
+      this.trigger('change:input');
+    });
+  },
+
+  props: {
+    updateFunction: ['string', true, 'console.info("frametime %s, bpm %s, beatnum %s, beatprct %s", frametime, bpm, beatnum, beatprct.toFixed(2));\nreturn 0;']
+  },
+
+  derived: {
+    result: {
+      deps: ['input', 'workerResult'],
+      fn: function() {
+        if (this.location !== 'worker') return this.workerResult || this.defaultValue;
+        return this.computeSignal();
+      }
+    },
+    updateFn: {
+      deps: ['updateFunction'],
+      fn: function() {
+        return compileFunction(
+          'update',
+          updatePrologue,
+          'frametime',
+          'bpm',
+          'beatnum',
+          'beatprct',
+          this.updateFunction
+        );
+      }
+    }
+  },
+
+  computeSignal: function(clock) {
+    clock = clock || (this.collection ? this.collection.clock : {
+      frametime: 0,
+      bpm: 120,
+      beatnum: 0,
+      beatprct: 0,
+    });
+
+    var fn = this.updateFn;
+    var result = 0;
+    try {
+      result = fn(
+        clock.frametime,
+        clock.bpm,
+        clock.beatnum,
+        clock.beatprct
+      );
+    }
+    catch (err) {
+      console.warn('Error', err.message);
+    }
+    return result;
   }
 });
 
 /***/ }),
 
-/***/ 300:
+/***/ 305:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var State = __webpack_require__(4);
+var SignalState = __webpack_require__(7);
+function _255(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 180,
+    min: 0,
+    max: 255
+  };
+}
+function _1(name) {
+  return {
+    name: name,
+    type: 'number',
+    default: 1,
+    min: 0,
+    max: 1
+  };
+}
+function derivedParameter(name) {
+  return {
+    deps: ['parameters.' + name],
+    fn: function() {
+      return this.parameters.getValue(name);
+    }
+  };
+}
 
-var Clock = State.extend({
+var RGBASignalState = SignalState.types.rgba = SignalState.extend({
+  baseParameters: [
+    _255('red'),
+    _255('green'),
+    _255('blue'),
+    _1('alpha')
+  ],
+
   mappable: {
-    source: ['frametime', 'pausetime', 'starttime', 'bpm', 'beatprct', 'beatnum', 'beatlength'],
-    target: ['beatdelay', 'bpm']
+    source: ['result', 'red', 'green', 'blue', 'alpha'],
+    target: ['parameters']
   },
 
-  play: function() {
-    var now = Date.now();
-    this.starttime = this.pausetime ? this.starttime + (now - this.pausetime) : now;
-    this.pausetime = 0;
-    return this.refresh();
+  derived: {
+    red: derivedParameter('red'),
+    green: derivedParameter('green'),
+    blue: derivedParameter('blue'),
+    alpha: derivedParameter('alpha'),
+    result: {
+      deps: ['red', 'green', 'blue', 'alpha'],
+      fn: function() {
+        return this.computeSignal();
+      }
+    }
+  },
+  // parseInput: function() {
+  //   var values = _colorValues(this.input);
+  //   return {
+  //     red: values[0],
+  //     green: values[1],
+  //     blue: values[2],
+  //     alpha: values[3]
+  //   };
+  // },
+  computeSignal: function() {
+    return 'rgba(' + Math.round(this.red) + ',' + Math.round(this.green) + ',' + Math.round(this.blue) + ',' + (Math.round(100 * this.alpha) / 100) + ')';
+  }
+});
+module.exports = RGBASignalState;
+
+/***/ }),
+
+/***/ 306:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * compileFunction(name, prologue, [arg1, arg2, ...] body)
+ */
+module.exports = function compileFunction(...args) {
+  var name = args.shift();
+  var prologue = args.shift();
+  var body = args.pop();
+  var fn;
+
+  console.time('compileFunction ' + name);
+  try {
+    fn = new Function(...args, prologue + body);// jshint ignore:line
+    if (typeof fn !== 'function') throw new Error('Function compilation error, returned not function');
+  }
+  catch (e) {
+    console.log('%c compilation error: %s', 'color:red', e.message);
+    fn = e;
+  }
+  console.timeEnd('compileFunction ' + name);
+  return fn;
+};
+
+/***/ }),
+
+/***/ 7:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var parameterizedState = __webpack_require__(78);
+var SignalState = parameterizedState([]).extend({
+  idAttribute: 'name',
+  typeAttribute: 'type',
+
+  mappable: {
+    source: ['result'],
+    target: ['parameters']
   },
 
-  pause: function() {
-    this.pausetime = Date.now();
-    return this.refresh();
+  props: {
+    name: ['string', true, null],
+    type: ['string', true, 'default'],
+    defaultValue: ['any', true, function () { return 1; }]
   },
 
-  stop: function() {
-    var now = Date.now();
-    this.pausetime = now;
-    this.starttime = now;
-    this.frametime = 0;
-    return this;
-  },
-
-  refresh: function() {
-    if (this.playing) this.frametime = Date.now() - this.starttime;
-    return this;
+  session: {
+    workerResult: ['any', false, null]
   },
 
   derived: {
     modelPath: {
+      deps: ['name'],
+      fn: function() {
+        return 'signals.' + this.name;
+      }
+    },
+    location: {
       deps: [],
       fn: function() {
-        return 'clock';
+        return this.collection.location;
       }
     },
-    playing: {
-      deps: ['pausetime'],
+    result: {
+      deps: ['input', 'workerResult'],
       fn: function() {
-        return !this.pausetime;
-      }
-    },
-    paused: {
-      deps: ['pausetime', 'starttime'],
-      fn: function() {
-        return this.pausetime > this.starttime;
-      }
-    },
-    stopped: {
-      deps: ['pausetime', 'starttime'],
-      fn: function() {
-        return this.pausetime === this.starttime;
-      }
-    },
-    beatprct: {
-      deps: ['beatlength', 'frametime'],
-      fn: function() {
-        var ft = this.frametime;
-        var bl = this.beatlength;
-        return !ft ? 0 : (100 - (((ft % bl) / bl) * 100));
-      }
-    },
-    beatnum: {
-      deps: ['beatlength', 'beatdelay', 'frametime'],
-      fn: function() {
-        var ft = this.frametime + this.beatdelay;
-        return ft ? Math.floor(ft / this.beatlength) : 0;
-      }
-    },
-    beatlength: {
-      deps: ['bpm'],
-      fn: function() {
-        return (60 * 1000) / Math.max(this.bpm, 1);
+        return this.location !== 'worker' ?
+          (this.workerResult || this.defaultValue) :
+          this.computeSignal();
       }
     }
   },
 
-  props: {
-    pausetime: ['number', true, 0],
-    starttime: ['number', true, Date.now],
-    frametime: ['number', true, 0],
-    beatdelay: ['number', true, 0],
-    bpm: ['number', true, 120]
+
+  initialize: function() {
+    var signal = this;
+    var id = signal.getId();
+    var signals = signal.collection;
+    if (!signal.collection) throw new Error('Missing collection for ' + signal.name);
+
+    signal._ensureBaseParameters();
+
+    signal.listenTo(signal.parameters, 'change', function() {
+      signal.trigger('change:parameters', signal, signal.parameters, {parameters: true});
+    });
+
+    if (signal.location === 'worker') {
+      signal.on('change:result', function() {
+        if (signals !== signal.collection) return; // may happen when bootstraping a new setup
+        signals.emitCommand('updateSignalResult', {
+          name: id,
+          workerResult: signal.result
+        });
+      });
+    }
+    else {
+      signal.on('change:workerResult', function() {
+        signal.trigger('change:result', signal, signal.result);
+      });
+    }
+  },
+
+  computeSignal: function(val) {
+    val = val || this.input;
+    return val;
   }
 });
 
-module.exports = Clock;
+SignalState.types = {};
+
+module.exports = SignalState;
+
 
 /***/ })
 
