@@ -1,0 +1,10 @@
+{
+  "mocha": true,
+  "browser": true,
+  "strict": true,
+  "globals": {
+    "console": false,
+    "R": false,
+    "require": false
+  }
+}
