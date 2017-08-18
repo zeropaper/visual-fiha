@@ -53,7 +53,7 @@
     "npm-run-all": "^4.0.0",
     "p5": "^0.5.9",
     "rimraf": "^2.5.4",
-    "three": "^0.85.1",
+    "three": "^0.86.0",
     "webpack": "^2.7.0",
     "worker-loader": "^0.8.1",
     "yaml-loader": "^0.4.0"
