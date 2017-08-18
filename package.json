@@ -37,7 +37,7 @@
     "ace-builds": "^1.2.5",
     "ampersand-collection": "^2.0.1",
     "ampersand-events": "^2.0.2",
-    "ampersand-router": "^4.0.0",
+    "ampersand-router": "^5.0.0",
     "ampersand-state": "^5.0.2",
     "ampersand-view": "^10.0.2",
     "ampersand-view-switcher": "^2.1.0",
