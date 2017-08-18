@@ -31,19 +31,19 @@
   "license": "MIT",
   "devDependencies": {
     "marked": "^0.3.6",
-    "webpack-dev-server": "^2.2.0"
+    "webpack-dev-server": "^2.7.1"
   },
   "dependencies": {
     "ace-builds": "^1.2.5",
-    "ampersand-collection": "^2.0.0",
+    "ampersand-collection": "^2.0.1",
     "ampersand-events": "^2.0.2",
-    "ampersand-router": "^4.0.0",
+    "ampersand-router": "^5.0.0",
     "ampersand-state": "^5.0.2",
-    "ampersand-view": "^10.0.1",
     "ampersand-view-switcher": "^3.0.0",
+    "ampersand-view": "^10.0.2",
     "copy-webpack-plugin": "^4.0.1",
     "glitch-canvas": "^1.0.2",
-    "js-yaml": "^3.8.4",
+    "js-yaml": "^3.9.1",
     "localforage": "^1.4.3",
     "lodash.assign": "^4.2.0",
     "lodash.debounce": "^4.0.8",
@@ -53,9 +53,9 @@
     "npm-run-all": "^4.0.0",
     "p5": "^0.5.9",
     "rimraf": "^2.5.4",
-    "three": "^0.85.1",
-    "webpack": "^2.5.1",
-    "worker-loader": "^0.8.0",
+    "three": "^0.86.0",
+    "webpack": "^2.7.0",
+    "worker-loader": "^0.8.1",
     "yaml-loader": "^0.4.0"
   }
 }
