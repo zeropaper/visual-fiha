@@ -55,7 +55,7 @@
     "rimraf": "^2.5.4",
     "three": "^0.86.0",
     "webpack": "^2.7.0",
-    "worker-loader": "^0.8.1",
+    "worker-loader": "^1.0.0",
     "yaml-loader": "^0.5.0"
   }
 }
