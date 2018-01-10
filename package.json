@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "ace-builds": "^1.2.5",
-    "ampersand-collection": "^2.0.1",
+    "ampersand-collection": "^2.0.2",
     "ampersand-events": "^2.0.2",
     "ampersand-router": "^5.0.0",
     "ampersand-state": "^5.0.2",
