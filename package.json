@@ -30,7 +30,7 @@
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",
   "devDependencies": {
-    "marked": "^0.3.6",
+    "marked": "^0.4.0",
     "webpack-dev-server": "^2.7.1"
   },
   "dependencies": {
