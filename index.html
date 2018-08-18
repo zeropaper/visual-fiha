@@ -1,160 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <title>Visual Fiha</title>
-  <link rel="shortcut icon" href="assets/favicon.ico">
-  <link rel="stylesheet" type="text/css" href="assets/styles.css">
+  <meta charset="utf-8">
+  <meta content="ie=edge" http-equiv="x-ua-compatible">
+  <title>A VJing tool with MIDI support based on HTML5.</title>
+  <meta http-equiv="refresh" content="3;url=https://zeropaper.gitlab.io/fiha">
+  <meta content="user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width,height=device-height" name="viewport">
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background-color: hsl(70, 8%, 15%);
+      color: hsl(60, 30%, 96%);
+      font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, source-code-pro, monospace;
+      overflow: auto;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .col {
+      margin: auto;
+      max-width: 1290px;
+      text-align: center;
+    }
+
+    @keyframes vf {
+      0% {
+          transform: rotate3d(0, 0, 0, 360deg);
+      }
+      100% {
+          transform: rotate3d(0, 1, 0, 360deg);
+      }
+    }
+
+    svg {
+      max-width: 18vmin;
+      max-height: 18vmin;
+    }
+
+    svg #fiha-line {
+      fill: hsl(60, 30%, 96%);
+
+      transform-origin: center;
+      animation-timing-function: linear;
+      animation-name: vf;
+      animation-duration: 5s;
+      animation-iteration-count: infinite;
+      stroke: none;
+      stroke-width: 0;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    a,
+    a:link,
+    a:hover,
+    a:focus,
+    a:visited {
+      color: hsl(190, 81%, 67%);
+      display: block;
+    }
+  </style>
 </head>
-<body class="index-page">
-<!--
-<div class="columns">
-  <div class="column"></div>
-<pre class="column no-grow">
-__________________________________
-\================================/  ··
- \==============================/   ··
-  \============================/    ··   _   _ _                 _
-   \======\                         ··  | | | (_)               | |
-    \======\                        ··  | | | |_ ___ _   _  __ _| |
-     \======\_______________        ··  | | | | / __| | | |/ _` | |
-      \====================/        ··  \ \_/ / \__ \ |_| | (_| | |
-       \==================/         ··   \___/|_|___/\__,_|\__,_|_|
-        \================/          ··
-         \======\                   ··  ______ _ _
-          \======\                  ··  |  ___(_) |
-           \======\___              ··  | |_   _| |__   __ _
-            \========/              ··  |  _| | | '_ \ / _` |
-             \======/               ··  | |   | | | | | (_| |
-              \====/                ··  \_|   |_|_| |_|\__,_|
-               \==/                 ··
-                \/                  ··
-</pre>
-  <div class="column"></div>
-</div>
--->
-<div class="page-content">
-  <ul class="list-inline">
-    <li><a href="controller.html">Controller</a></li>
-    <!-- <li><a href="report/">Code quality report</a></li> -->
-    <li><a href="https://github.com/zeropaper/visual-fiha">GitHub</a></li>
-    <li><a href="https://facebook.com/visualfiha">Facebook</a></li>
-  </ul>
-  <div class="browser-support"></div>
 
-  <!--
-  <hr/>
-  <iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fvisualfiha%2Fposts%2F1821319684759622&width=500" width="500" height="626" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true"></iframe>
-  -->
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <a href="https://zeropaper.gitlab.io/fiha">
+          <svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1000 1000" height="1000" width="1000">
+              <path id="fiha-line" d="m 42.144772,100.70423 460.738378,798.02231 137.92084,-238.11891 -100.83949,0 -83.42113,-144.48961 267.68175,0 78.38889,-135.77355 -424.45952,0 -83.42215,-144.49139 591.30382,0 78.02825,-135.14885 z" />
+          </svg>
+        </a>
+      </div>
+    </div>
 
-  <hr/>
+    <div class="row">
+      <div class="col">
+        <h1>Visual Fiha as moved</h1>
+      </div>
+    </div>
 
-  <div class="readme">
-  <!-- marked-start ./../README.md -->
-<pre><code>__________________________________
-\================================/
- \==============================/
-  \============================/
-   \======\
-    \======\
-     \======\_______________
-      \====================/
-       \==================/
-        \================/
-         \======\
-          \======\
-           \======\___
-            \========/
-             \======/
-              \====/
-               \==/
-                \/
-
-      _   _ _                 _
-     | | | (_)               | |
-     | | | |_ ___ _   _  __ _| |
-     | | | | / __| | | |/ _` | |
-     \ \_/ / \__ \ |_| | (_| | |
-      \___/|_|___/\__,_|\__,_|_|
-        ______ _ _
-        |  ___(_) |
-        | |_   _| |__   __ _
-        |  _| | | &#39;_ \ / _` |
-        | |   | | | | | (_| |
-        \_|   |_|_| |_|\__,_|
-</code></pre><p>An open source browser based VJing tool with MIDI support.</p>
-<h1 id="installation">Installation</h1>
-<p><a href="https://zeropaper.github.io/visual-fiha">No need to install, open Google Chrome and enjoy.</a></p>
-<h2 id="seriously-">Seriously?</h2>
-<p>Well, if you do more than playing around with the <a href="https://zeropaper.github.io/visual-fiha">demo site</a> and need to have your own assets (videos, images, 3d models or vetcor designs), you may have a look at the <a href="https://github.com/zeropaper/visual-fiha/wiki/Development">developement wiki</a>.</p>
-<h1 id="usage">Usage</h1>
-<p>See the <a href="https://github.com/zeropaper/visual-fiha/wiki/Usage">usage guide in the wiki</a>.</p>
-<h1 id="browser-support">Browser support</h1>
-<p>For now, development is focused on the latest version Google Chrome.<br>Firefox is a decent browser but behaves too slowly and does not support the WebMIDI API. 🤷<br>Browsers from Mircosoft or Apple, even the latest versions, do not deserve attention.  </p>
-<h1 id="development">Development</h1>
-<p>See the <a href="https://github.com/zeropaper/visual-fiha/wiki/Development">development guide in the wiki</a>.</p>
-<h1 id="supporting-the-project">Supporting the project</h1>
-<p>You can book the author or a contributor for a live act or a workshop.</p>
-<h1 id="getting-in-touch">Getting in touch</h1>
-<p><a href="https://gitter.im/visual-fiha/Lobby">Visual Fiha is on Gitter</a></p>
-<h1 id="author">Author</h1>
-<p>Valentin <code>zeropaper</code> Vago</p>
-<h1 id="license">License</h1>
-<p>MIT</p>
-
-<!-- marked-end -->
+    <div class="row">
+      <div class="col">
+        <a href="https://zeropaper.gitlab.io/fiha">
+          https://zeropaper.gitlab.io/fiha
+        </a>
+        <small>You should be automatically redirected</small>
+      </div>
+    </div>
   </div>
-
-</div>
-
-<footer>
-</footer>
-<script>
-(function() {
-  'use strict';
-
-  function list(array) {
-    var li;
-    var frag = document.createDocumentFragment();
-    var ul = document.createElement('ul');
-    array.forEach(function(txt) {
-      li = document.createElement('li');
-      li.textContent = txt;
-      ul.appendChild(li);
-    });
-    frag.appendChild(ul);
-    return frag;
-  }
-
-
-  window.addEventListener('DOMContentLoaded', function() {
-    var el = document.querySelector('.browser-support');
-    var errors = [];
-    var warnings = [];
-
-    if (!window.BroadcastChannel) {
-      errors.push('Sorry, your browser does not support BroadcastChannel');
-    }
-
-    if (!navigator.requestMIDIAccess) {
-      warnings.push('Too bad your browser does not support WebMIDI API. The MIDI features will not be available.');
-    }
-
-    var frag;
-    if (errors.length) {
-      frag = list(errors);
-      el.appendChild(frag);
-      el.classList.add('no');
-    }
-    if (warnings.length) {
-      frag = list(warnings);
-      el.appendChild(frag);
-    }
-    if (errors.length || warnings.length) {
-      var div = document.createElement('div');
-      div.textContent = 'The development of this software is done with the latest official releases from Google Chrome.';
-      el.appendChild(div);
-    }
-  });
-})();</script>
 </body>
 </html>
