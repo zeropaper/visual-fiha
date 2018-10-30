@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="ie=edge" http-equiv="x-ua-compatible">
+  <title>A VJing tool with MIDI support based on HTML5.</title>
+  <meta http-equiv="refresh" content="3;url=https://visual-fiha.gitlab.io/controller/">
+  <meta content="user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width,height=device-height" name="viewport">
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background-color: hsl(70, 8%, 15%);
+      color: hsl(60, 30%, 96%);
+      font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, source-code-pro, monospace;
+      overflow: auto;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .col {
+      margin: auto;
+      max-width: 1290px;
+      text-align: center;
+    }
+
+    @keyframes vf {
+      0% {
+          transform: rotate3d(0, 0, 0, 360deg);
+      }
+      100% {
+          transform: rotate3d(0, 1, 0, 360deg);
+      }
+    }
+
+    svg {
+      max-width: 18vmin;
+      max-height: 18vmin;
+    }
+
+    svg #fiha-line {
+      fill: hsl(60, 30%, 96%);
+
+      transform-origin: center;
+      animation-timing-function: linear;
+      animation-name: vf;
+      animation-duration: 5s;
+      animation-iteration-count: infinite;
+      stroke: none;
+      stroke-width: 0;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    a,
+    a:link,
+    a:hover,
+    a:focus,
+    a:visited {
+      color: hsl(190, 81%, 67%);
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <a href="https://visual-fiha.gitlab.io/controller/">
+          <svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1000 1000" height="1000" width="1000">
+              <path id="fiha-line" d="m 42.144772,100.70423 460.738378,798.02231 137.92084,-238.11891 -100.83949,0 -83.42113,-144.48961 267.68175,0 78.38889,-135.77355 -424.45952,0 -83.42215,-144.49139 591.30382,0 78.02825,-135.14885 z" />
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <h1>Visual Fiha as moved</h1>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <a href="https://visual-fiha.gitlab.io/controller/">
+          https://visual-fiha.gitlab.io/controller/
+        </a>
+        <small>You should be automatically redirected</small>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
