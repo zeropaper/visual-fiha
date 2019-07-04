@@ -25,7 +25,9 @@
     "postclone-gh-pages": "rimraf ./gh-pages/{\\!.git,*} && npm run copy-assets",
     "pregh-pages": "npm run clone-gh-pages && webpack --env.prod",
     "gh-pages": "cd ./gh-pages/ && git add . && git commit --allow-empty -m \"update gh-pages\"",
-    "postgh-pages": "echo \"You can now 'cd ./gh-pages/ && push origin gh-pages'\""
+    "postgh-pages": "echo \"You can now 'cd ./gh-pages/ && push origin gh-pages'\"",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "author": "Valentin Vago <zeropaper@irata.ch>",
   "license": "MIT",
@@ -56,6 +58,8 @@
     "three": "^0.87.1",
     "webpack": "^2.7.0",
     "worker-loader": "^1.0.0",
-    "yaml-loader": "^0.5.0"
-  }
+    "yaml-loader": "^0.5.0",
+    "snyk": "^1.189.0"
+  },
+  "snyk": true
 }
