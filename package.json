@@ -41,7 +41,7 @@
     "ampersand-state": "^5.0.2",
     "ampersand-view-switcher": "^3.0.0",
     "ampersand-view": "^10.0.2",
-    "copy-webpack-plugin": "^4.0.1",
+    "copy-webpack-plugin": "^5.0.5",
     "glitch-canvas": "^1.0.2",
     "js-yaml": "^3.9.1",
     "localforage": "^1.4.3",
