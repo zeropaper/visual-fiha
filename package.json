@@ -18,7 +18,7 @@
     "onCommand:catCoding.doRefactor",
     "onWebviewPanel:catCoding"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/extension/index.js",
   "contributes": {
     "commands": [
       {
@@ -34,12 +34,11 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "vscode:prepublish": "npm run compile:extension",
+    "compile:extension": "tsc -p ./tsconfig.extension.json",
     "lint": "eslint . --ext .ts,.tsx",
-    "watch": "tsc -w -p ./"
+    "watch:extension": "tsc -w -p ./tsconfig.extension.json"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^12.12.0",
     "@types/vscode": "^1.47.0",
