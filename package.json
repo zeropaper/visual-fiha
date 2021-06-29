@@ -1,0 +1,28 @@
+{
+  "private": true,
+  "name": "fiha",
+  "version": "3.0.0",
+  "description": "VJing extension for VS Code",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": "^16.4.0",
+    "npm": "^7.19.0"
+  },
+  "workspaces": [
+    "packages/controller",
+    "packages/display",
+    "packages/vscode"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeropaper/visual-fiha.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zeropaper/visual-fiha/issues"
+  },
+  "homepage": "https://github.com/zeropaper/visual-fiha#readme"
+}
