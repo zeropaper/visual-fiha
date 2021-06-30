@@ -7,7 +7,7 @@ import WebServer from './WebServer';
 const webServer = new WebServer();
 
 export function activate(context: vscode.ExtensionContext) {
-  webServer.activate(context);
+  context.subscriptions.push(webServer.activate(context));
 
   context.subscriptions.push(
     vscode.commands.registerCommand('visualFiha.start', () => {

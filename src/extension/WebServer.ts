@@ -82,9 +82,15 @@ export default class VFServer {
     return this.#port;
   }
 
-  activate = (context: vscode.ExtensionContext) => {
+  activate = (context: vscode.ExtensionContext): vscode.Disposable => {
     this.#context = context;
     this.#server.listen(this.#port);
+    return {
+      dispose: () => {
+        console.info('dispose of VF WebServer');
+        this.deactivate();
+      },
+    };
   };
 
   deactivate = (cb?: (err?: Error) => void) => {
