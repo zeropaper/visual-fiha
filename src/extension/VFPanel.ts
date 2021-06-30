@@ -136,7 +136,7 @@ export default class VFPanel {
 
   private _getHtmlForWebview(webview: vscode.Webview, catGifPath: string) {
     // Local path to main script run in the webview
-    const scriptPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'media', 'main.js');
+    const scriptPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'out', 'webviews', 'index.js');
 
     // And the uri we use to load this script in the webview
     const scriptUri = webview.asWebviewUri(scriptPathOnDisk);

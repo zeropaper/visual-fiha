@@ -5,11 +5,28 @@
   "tasks": [
     {
       "type": "typescript",
-      "tsconfig": "tsconfig.extension.json",
+      "tsconfig": "src/extension/tsconfig.json",
       "option": "watch",
       "problemMatcher": ["$tsc-watch"],
       "group": "build",
-      "label": "extension: watch"
+      "label": "extension: watch",
+      "dependsOn": ["webviews: watch", "display: watch"]
+    },
+    {
+      "type": "shell",
+      "command": "npm run watch:webviews",
+      "problemMatcher": "$esbuild-watch",
+      "isBackground": true,
+      "group": "build",
+      "label": "webviews: watch"
+    },
+    {
+      "type": "shell",
+      "command": "npm run watch:display",
+      "problemMatcher": "$esbuild-watch",
+      "isBackground": true,
+      "group": "build",
+      "label": "display: watch"
     }
   ]
 }

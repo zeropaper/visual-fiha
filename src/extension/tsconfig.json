@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "rootDir": "..",
+    "outDir": "../../out"
+  },
+  "extends": "../../tsconfig.base.json",
+  "files": ["./index.ts"]
+}

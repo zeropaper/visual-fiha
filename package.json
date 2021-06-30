@@ -34,10 +34,14 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile:extension",
-    "compile:extension": "tsc -p ./tsconfig.extension.json",
+    "vscode:prepublish": "run-p compile:*",
+    "compile:extension": "tsc -p ./src/extension/tsconfig.json",
+    "compile:webviews": "esbuild ./src/webviews/index.ts --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
+    "compile:display": "esbuild ./src/display/index.ts --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
     "lint": "eslint . --ext .ts,.tsx",
-    "watch:extension": "tsc -w -p ./tsconfig.extension.json",
+    "watch:extension": "tsc -w -p ./src/extension/tsconfig.json",
+    "watch:webviews": "esbuild ./src/webviews/index.ts --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
+    "watch:display": "esbuild ./src/display/index.ts --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
     "prepare": "husky install"
   },
   "devDependencies": {
@@ -46,6 +50,7 @@
     "@types/vscode-webview": "^1.57.0",
     "@typescript-eslint/eslint-plugin": "^4.28.1",
     "@typescript-eslint/parser": "^4.16.0",
+    "esbuild": "^0.12.12",
     "eslint": "^7.21.0",
     "eslint-config-airbnb-typescript": "^12.3.1",
     "eslint-plugin-import": "^2.23.4",
@@ -74,6 +79,7 @@
     "*.{ts,tsx}": "eslint --cache --fix"
   },
   "dependencies": {
-    "socket.io": "^4.1.2"
+    "socket.io": "^4.1.2",
+    "socket.io-client": "^4.1.2"
   }
 }
