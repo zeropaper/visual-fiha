@@ -14,22 +14,22 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:catCoding.start",
-    "onCommand:catCoding.doRefactor",
-    "onWebviewPanel:catCoding"
+    "onCommand:visualFiha.start",
+    "onCommand:visualFiha.doRefactor",
+    "onWebviewPanel:visualFiha"
   ],
   "main": "./out/extension/index.js",
   "contributes": {
     "commands": [
       {
-        "command": "catCoding.start",
+        "command": "visualFiha.start",
         "title": "Start cat coding session",
-        "category": "Cat Coding"
+        "category": "Visual Fiha"
       },
       {
-        "command": "catCoding.doRefactor",
+        "command": "visualFiha.doRefactor",
         "title": "Do some refactoring",
-        "category": "Cat Coding"
+        "category": "Visual Fiha"
       }
     ]
   },

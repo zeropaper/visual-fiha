@@ -1,4 +1,4 @@
-# Cat Coding — A Webview API Sample
+# Visual Fiha — A Webview API Sample
 
 Demonstrates VS Code's [webview API](https://code.visualstudio.com/api/extension-guides/webview). This includes:
 
@@ -31,4 +31,4 @@ Demonstrates VS Code's [webview API](https://code.visualstudio.com/api/extension
 - `npm run watch` or `npm run compile`
 - `F5` to start debugging
 
-Run the `Cat Coding: Start cat coding session` to create the webview.
+Run the `Visual Fiha: Start cat coding session` to create the webview.

@@ -4,13 +4,13 @@ import VFPanel from './VFPanel';
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
-    vscode.commands.registerCommand('catCoding.start', () => {
+    vscode.commands.registerCommand('visualFiha.start', () => {
       VFPanel.createOrShow(context.extensionUri);
     }),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('catCoding.doRefactor', () => {
+    vscode.commands.registerCommand('visualFiha.doRefactor', () => {
       if (VFPanel.currentPanel) {
         VFPanel.currentPanel.doRefactor();
       }

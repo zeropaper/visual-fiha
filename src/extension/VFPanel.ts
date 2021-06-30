@@ -18,7 +18,7 @@ export default class VFPanel {
    */
   public static currentPanel: VFPanel | undefined;
 
-  public static readonly viewType = 'catCoding';
+  public static readonly viewType = 'visualFiha';
 
   private readonly _panel: vscode.WebviewPanel;
 
@@ -40,7 +40,7 @@ export default class VFPanel {
     // Otherwise, create a new panel.
     const panel = vscode.window.createWebviewPanel(
       VFPanel.viewType,
-      'Cat Coding',
+      'Visual Fiha',
       column || vscode.ViewColumn.One,
       getWebviewOptions(extensionUri),
     );
@@ -168,7 +168,7 @@ export default class VFPanel {
         <link href="${stylesResetUri}" rel="stylesheet">
         <link href="${stylesMainUri}" rel="stylesheet">
 
-        <title>Cat Coding</title>
+        <title>Visual Fiha</title>
       </head>
       <body>
         <img src="${catGifPath}" width="300" />
