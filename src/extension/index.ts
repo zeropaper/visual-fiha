@@ -1,8 +1,14 @@
 import * as vscode from 'vscode';
+
 import getWebviewOptions from './getWebviewOptions';
 import VFPanel from './VFPanel';
+import WebServer from './WebServer';
+
+const webServer = new WebServer();
 
 export function activate(context: vscode.ExtensionContext) {
+  webServer.activate();
+
   context.subscriptions.push(
     vscode.commands.registerCommand('visualFiha.start', () => {
       VFPanel.createOrShow(context.extensionUri);
@@ -31,4 +37,6 @@ export function activate(context: vscode.ExtensionContext) {
   }
 }
 
-export function deactivate() {}
+export function deactivate() {
+  webServer.deactivate();
+}
