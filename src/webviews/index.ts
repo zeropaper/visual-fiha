@@ -18,6 +18,19 @@ import type { AppState } from '../types';
 
   console.info('[main] oldState', oldState);
 
+  const renderDisplays = (displays: { id: string, width?: number; height?: number; }[]) => {
+    const root = document.getElementById('displays');
+    if (!root) return;
+    console.info('[main] render displays', displays);
+
+    root.innerHTML = displays.map(({ id, width, height }) => `<div
+      class="display"
+      style="width: ${Math.round((width || 1280) * 0.1)}px; height: ${Math.round((height || 980) * 0.1)}px;"
+    >
+      ${id} ${width}x${height}
+    </div>`).join('');
+  };
+
   const counter = document.getElementById('lines-of-code-counter');
   console.log('Initial state', oldState);
 
@@ -47,6 +60,11 @@ import type { AppState } from '../types';
       case 'refactor':
         currentCount = Math.ceil(currentCount * 0.5);
         if (counter) counter.textContent = `${currentCount}`;
+        break;
+
+      case 'updatedisplays':
+        console.info('[main] update displays', message);
+        renderDisplays(message.displays);
         break;
 
       default:

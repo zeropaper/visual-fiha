@@ -1,10 +1,15 @@
 import * as vscode from 'vscode';
 import { readFile } from 'fs';
-
 import {
   createServer, Server, IncomingMessage, ServerResponse,
 } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
+
+export type ServerDisplay = {
+  width?: number;
+  height?: number;
+  socket: Socket;
+};
 
 export const indexTemplate = ({ port }: { port: number }) => `<html>
   <head>
@@ -21,6 +26,7 @@ export default class VFServer {
   constructor(port?: number) {
     this.#port = port || this.#port;
     this.#server = createServer(this.#handleHTTPRequest);
+
     this.#io = new SocketIOServer(this.#server);
     this.#io.on('connection', this.#handleIOConnection);
   }
@@ -32,6 +38,10 @@ export default class VFServer {
   #server: Server;
 
   #io: SocketIOServer;
+
+  #displays: { [id: string]: ServerDisplay } = {};
+
+  #displaysChange = new vscode.EventEmitter<object[]>();
 
   #serveFile = (reqUrl: string, res: ServerResponse) => {
     if (!this.#context) throw new Error('WebServer is missing extension context');
@@ -47,7 +57,7 @@ export default class VFServer {
 
   #handleHTTPRequest = (req: IncomingMessage, res: ServerResponse) => {
     try {
-      console.info('%s %s', req.method, req.url);
+      // console.info('%s %s', req.method, req.url);
 
       if (req.method === 'GET') {
         if (req.url === '/') {
@@ -75,25 +85,65 @@ export default class VFServer {
   };
 
   #handleIOConnection = (socket: Socket) => {
-    console.info('IOConnection', this, socket);
+    console.info('[webServer] io connection', socket.id);
+
+    socket.emit('getdisplay', ({ id, width, height }: { id: string; width?: number; height?: number; }) => {
+      console.info('[webServer] getdisplay', id, width, height);
+      this.#displays[id] = { width, height, socket };
+      this.#displaysChange.fire(this.displays);
+    });
+
+    socket.on('resizedisplay', ({ id, width, height }) => {
+      const display = this.#displays[id];
+      console.info('[webServer] resize', id, display);
+      if (!display) return;
+
+      display.width = width;
+      display.height = height;
+      this.#displaysChange.fire(this.displays);
+    });
   };
 
   get port() {
     return this.#port;
   }
 
+  get displays() {
+    return Object.keys(this.#displays).map((id) => {
+      const { socket, ...display } = this.#displays[id];
+      return { ...display, id };
+    });
+  }
+
   activate = (context: vscode.ExtensionContext): vscode.Disposable => {
+    console.info('[webServer] activation');
+
     this.#context = context;
     this.#server.listen(this.#port);
+
     return {
       dispose: () => {
-        console.info('dispose of VF WebServer');
+        console.info('[webServer] dispose');
         this.deactivate();
       },
     };
   };
 
+  get onDisplaysChange() {
+    return this.#displaysChange.event;
+  }
+
+  // onDisplaysChange = (listener: (displays: Omit<ServerDisplay, 'socket'>[]) => void) => ;
+
+  broadcast = (command: string, payload?: any) => this.#io.send(command, payload);
+
+  broadcastScript = (id: string, script: string) => {
+    console.info('[webServer] sendScript', id, script.length);
+    this.broadcast('scriptchange', { id, script });
+  };
+
   deactivate = (cb?: (err?: Error) => void) => {
+    console.info('[webServer] deactivation');
     // TODO: disconnect IO clients
     this.#server.close(cb);
   };

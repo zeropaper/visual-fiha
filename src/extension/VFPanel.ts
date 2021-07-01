@@ -90,6 +90,10 @@ export default class VFPanel {
     );
   }
 
+  public updateDisplays(displays: object) {
+    this._panel.webview.postMessage({ command: 'updatedisplays', displays });
+  }
+
   public doRefactor() {
     // Send a message to the webview webview.
     // You can send any JSON serializable data.
@@ -143,10 +147,12 @@ export default class VFPanel {
 
     // Local path to css styles
     const styleResetPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'reset.css');
-    const stylesPathMainPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'vscode.css');
+    const stylesPathVSCPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'vscode.css');
+    const stylesPathMainPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'main.css');
 
     // Uri to load styles into webview
     const stylesResetUri = webview.asWebviewUri(styleResetPath);
+    const stylesVSCUri = webview.asWebviewUri(stylesPathVSCPath);
     const stylesMainUri = webview.asWebviewUri(stylesPathMainPath);
 
     // Use a nonce to only allow specific scripts to be run
@@ -161,19 +167,22 @@ export default class VFPanel {
           Use a content security policy to only allow loading images from https or from our extension directory,
           and only allow scripts that have a specific nonce.
         -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <link href="${stylesResetUri}" rel="stylesheet">
+        <link href="${stylesVSCUri}" rel="stylesheet">
         <link href="${stylesMainUri}" rel="stylesheet">
 
         <title>Visual Fiha</title>
       </head>
       <body>
+        <div id="displays"></div>
+        <!--
         <img src="${catGifPath}" width="300" />
         <h1 id="lines-of-code-counter">0</h1>
-
+        -->
         <div>
           <code>code example</code>
         </div>

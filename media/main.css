@@ -1,0 +1,7 @@
+#displays {
+  background-color: grey;
+}
+
+.display {
+  border: 1px solid currentColor;
+}

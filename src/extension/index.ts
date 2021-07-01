@@ -9,6 +9,13 @@ const webServer = new WebServer();
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(webServer.activate(context));
 
+  webServer.onDisplaysChange((evt) => {
+    console.info('[ext] webServer.onDisplaysChange', evt);
+    if (VFPanel.currentPanel) {
+      VFPanel.currentPanel.updateDisplays(evt);
+    }
+  });
+
   context.subscriptions.push(
     vscode.commands.registerCommand('visualFiha.start', () => {
       VFPanel.createOrShow(context.extensionUri);
@@ -27,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Make sure we register a serializer in activation event
     vscode.window.registerWebviewPanelSerializer(VFPanel.viewType, {
       async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-        console.log(`Got state: ${state}`);
+        console.log('Got state:', state);
         // Reset the webview options so we use latest uri for `localResourceRoots`.
         // eslint-disable-next-line no-param-reassign
         webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
@@ -35,6 +42,11 @@ export function activate(context: vscode.ExtensionContext) {
       },
     });
   }
+
+  context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
+    const { document: doc } = event;
+    webServer.broadcastScript(doc.fileName, doc.getText());
+  }));
 }
 
 export function deactivate() {
