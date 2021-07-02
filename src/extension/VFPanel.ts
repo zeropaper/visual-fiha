@@ -1,13 +1,14 @@
 /* eslint-disable no-underscore-dangle */
 import * as vscode from 'vscode';
+import { AppState } from '../types';
 import getNonce from './getNonce';
 import getWebviewOptions from './getWebviewOptions';
 
-const cats = {
-  'Coding Cat': 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
-  'Compiling Cat': 'https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif',
-  'Testing Cat': 'https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif',
-};
+// const cats = {
+//   'Coding Cat': 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
+//   'Compiling Cat': 'https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif',
+//   'Testing Cat': 'https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif',
+// };
 
 /**
  * Manages cat coding webview panels
@@ -22,15 +23,18 @@ export default class VFPanel {
 
   private readonly _panel: vscode.WebviewPanel;
 
+  private readonly _context: vscode.ExtensionContext;
+
   private readonly _extensionUri: vscode.Uri;
 
   private _disposables: vscode.Disposable[] = [];
 
-  public static createOrShow(extensionUri: vscode.Uri) {
+  public static createOrShow(context: vscode.ExtensionContext) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
+    console.info('[ext] createOrShow');
     // If we already have a panel, show it.
     if (VFPanel.currentPanel) {
       VFPanel.currentPanel._panel.reveal(column);
@@ -42,19 +46,21 @@ export default class VFPanel {
       VFPanel.viewType,
       'Visual Fiha',
       column || vscode.ViewColumn.One,
-      getWebviewOptions(extensionUri),
+      getWebviewOptions(context.extensionUri),
     );
 
-    VFPanel.currentPanel = new VFPanel(panel, extensionUri);
+    VFPanel.currentPanel = new VFPanel(panel, context);
   }
 
-  public static revive(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
-    VFPanel.currentPanel = new VFPanel(panel, extensionUri);
+  public static revive(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
+    console.info('[ext] revive');
+    VFPanel.currentPanel = new VFPanel(panel, context);
   }
 
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+  private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
+    this._context = context;
     this._panel = panel;
-    this._extensionUri = extensionUri;
+    this._extensionUri = context.extensionUri;
 
     // Set the webview's initial html content
     this._update();
@@ -91,13 +97,12 @@ export default class VFPanel {
   }
 
   public updateDisplays(displays: object) {
+    console.info('[ext] updateDisplays');
     this._panel.webview.postMessage({ command: 'updatedisplays', displays });
   }
 
-  public doRefactor() {
-    // Send a message to the webview webview.
-    // You can send any JSON serializable data.
-    this._panel.webview.postMessage({ command: 'refactor' });
+  public updateState(update = {} as Partial<AppState>) {
+    this._panel.webview.postMessage({ command: 'updatestate', update });
   }
 
   public dispose() {
@@ -116,29 +121,11 @@ export default class VFPanel {
 
   private _update() {
     const { webview } = this._panel;
-
-    // Vary the webview's content based on where it is located in the editor.
-    switch (this._panel.viewColumn) {
-      case vscode.ViewColumn.Two:
-        this._updateForCat(webview, 'Compiling Cat');
-        return;
-
-      case vscode.ViewColumn.Three:
-        this._updateForCat(webview, 'Testing Cat');
-        return;
-
-      case vscode.ViewColumn.One:
-      default:
-        this._updateForCat(webview, 'Coding Cat');
-    }
+    this._panel.webview.html = this._getHtmlForWebview(webview);
   }
 
-  private _updateForCat(webview: vscode.Webview, catName: keyof typeof cats) {
-    this._panel.title = catName;
-    this._panel.webview.html = this._getHtmlForWebview(webview, cats[catName]);
-  }
-
-  private _getHtmlForWebview(webview: vscode.Webview, catGifPath: string) {
+  // private _getHtmlForWebview(webview: vscode.Webview, catGifPath: string) {
+  private _getHtmlForWebview(webview: vscode.Webview) {
     // Local path to main script run in the webview
     const scriptPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'out', 'webviews', 'index.js');
 
@@ -149,11 +136,13 @@ export default class VFPanel {
     const styleResetPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'reset.css');
     const stylesPathVSCPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'vscode.css');
     const stylesPathMainPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'main.css');
+    const iconPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'favicon.png');
 
     // Uri to load styles into webview
     const stylesResetUri = webview.asWebviewUri(styleResetPath);
     const stylesVSCUri = webview.asWebviewUri(stylesPathVSCPath);
     const stylesMainUri = webview.asWebviewUri(stylesPathMainPath);
+    const iconUri = webview.asWebviewUri(iconPath);
 
     // Use a nonce to only allow specific scripts to be run
     const nonce = getNonce();
@@ -162,6 +151,8 @@ export default class VFPanel {
       <html lang="en">
       <head>
         <meta charset="UTF-8">
+
+        <link rel="icon" type="image/png" href="${iconUri}" />
 
         <!--
           Use a content security policy to only allow loading images from https or from our extension directory,
@@ -179,10 +170,10 @@ export default class VFPanel {
       </head>
       <body>
         <div id="displays"></div>
+        <code><pre id="state-dump" /></code>
         <!--
-        <img src="${catGifPath}" width="300" />
         <h1 id="lines-of-code-counter">0</h1>
-        -->
+
         <div>
           <code>code example</code>
         </div>
@@ -205,6 +196,7 @@ export default class VFPanel {
             <button class="secondary" type="button">secondary</button>
           </div>
         </form>
+        -->
 
         <script nonce="${nonce}" src="${scriptUri}"></script>
       </body>

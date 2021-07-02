@@ -5,15 +5,16 @@ import {
 } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 
-export type ServerDisplay = {
-  width?: number;
-  height?: number;
+import { DisplayBase } from '../types';
+
+export type ServerDisplay = Omit<DisplayBase, 'id'> & {
   socket: Socket;
 };
 
 export const indexTemplate = ({ port }: { port: number }) => `<html>
   <head>
     <title>Visual Fiha</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
   </head>
   <body>
     ${port}
@@ -41,7 +42,7 @@ export default class VFServer {
 
   #displays: { [id: string]: ServerDisplay } = {};
 
-  #displaysChange = new vscode.EventEmitter<object[]>();
+  #displaysChange = new vscode.EventEmitter<DisplayBase[]>();
 
   #serveFile = (reqUrl: string, res: ServerResponse) => {
     if (!this.#context) throw new Error('WebServer is missing extension context');
@@ -50,15 +51,18 @@ export default class VFServer {
 
     readFile(filepath, (err, content) => {
       if (err) throw err;
-      res.writeHead(200, { 'Content-Type': 'application/javascript' });
+      let mime = 'text/plain';
+      if (filepath.endsWith('.js')) mime = 'application/javascript';
+      if (filepath.endsWith('.png')) mime = 'image/png';
+      if (filepath.endsWith('.jpg')) mime = 'image/jpeg';
+      if (filepath.endsWith('.svg')) mime = 'image/xml+svg';
+      res.writeHead(200, { 'Content-Type': mime });
       res.end(content);
     });
   };
 
   #handleHTTPRequest = (req: IncomingMessage, res: ServerResponse) => {
     try {
-      // console.info('%s %s', req.method, req.url);
-
       if (req.method === 'GET') {
         if (req.url === '/') {
           res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -68,6 +72,11 @@ export default class VFServer {
 
         if (req.url?.startsWith('/index.js')) {
           this.#serveFile(`out/display/${req.url}`, res);
+          return;
+        }
+
+        if (req.url === '/favicon.png') {
+          this.#serveFile('media/favicon.png', res);
           return;
         }
       }
@@ -87,9 +96,28 @@ export default class VFServer {
   #handleIOConnection = (socket: Socket) => {
     console.info('[webServer] io connection', socket.id);
 
-    socket.emit('getdisplay', ({ id, width, height }: { id: string; width?: number; height?: number; }) => {
-      console.info('[webServer] getdisplay', id, width, height);
-      this.#displays[id] = { width, height, socket };
+    socket.emit('getdisplay', ({ id, ...display }: DisplayBase) => {
+      console.info('[webServer] getdisplay', id, display);
+      this.#displays[id] = { ...display, socket };
+      this.#displaysChange.fire(this.displays);
+    });
+
+    socket.on('disconnect', () => {
+      const id = Object.keys(this.#displays).find((key) => {
+        const { socket: displaySocket } = this.#displays[key];
+        return displaySocket.id === socket.id;
+      });
+      console.info('[webServer] disconnect', id);
+      if (!id) return;
+      const { [id]: dropped, ...displays } = this.#displays;
+      this.#displays = displays;
+      this.#displaysChange.fire(this.displays);
+    });
+
+    socket.on('unregisterdisplay', ({ id }) => {
+      console.info('[webServer] unregisterdisplay', id);
+      const { [id]: dropped, ...displays } = this.#displays;
+      this.#displays = displays;
       this.#displaysChange.fire(this.displays);
     });
 
@@ -108,7 +136,7 @@ export default class VFServer {
     return this.#port;
   }
 
-  get displays() {
+  get displays(): DisplayBase[] {
     return Object.keys(this.#displays).map((id) => {
       const { socket, ...display } = this.#displays[id];
       return { ...display, id };
@@ -132,8 +160,6 @@ export default class VFServer {
   get onDisplaysChange() {
     return this.#displaysChange.event;
   }
-
-  // onDisplaysChange = (listener: (displays: Omit<ServerDisplay, 'socket'>[]) => void) => ;
 
   broadcast = (command: string, payload?: any) => this.#io.send(command, payload);
 
