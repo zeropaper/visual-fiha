@@ -35,3 +35,13 @@ export type FihaRC = {
   bpm?: number;
   assets?: { name: string }[];
 };
+
+export type ScriptableAPIReference = {
+  [key: string]: {
+    category?: string;
+    type?: string;
+    description?: string;
+    snippet?: string;
+    link?: string;
+  };
+};
