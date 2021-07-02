@@ -1,7 +1,26 @@
+/* https://code.visualstudio.com/api/references/theme-color */
+
 #displays {
-  background-color: grey;
+  background-color: rgba(122, 122, 122, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 20vh;
+  flex-direction: column;
+}
+
+.displays-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
 }
 
 .display {
   border: 1px solid currentColor;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 1vmin;
 }
