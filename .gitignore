@@ -1,6 +1,4 @@
 node_modules
 out
 .eslintcache
-media/**/*.js
-media/**/*.js.map
-!media/require.js
+coverage
