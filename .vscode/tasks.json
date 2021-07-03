@@ -10,7 +10,11 @@
       "problemMatcher": ["$tsc-watch"],
       "group": "build",
       "label": "extension: watch",
-      "dependsOn": ["webviews: watch", "display: watch"]
+      "dependsOn": [
+        "webviews: watch",
+        "display worker: watch",
+        "display: watch"
+      ]
     },
     {
       "type": "shell",
@@ -27,6 +31,14 @@
       "isBackground": true,
       "group": "build",
       "label": "display: watch"
+    },
+    {
+      "type": "shell",
+      "command": "npm run watch:display:worker",
+      "problemMatcher": "$esbuild-watch",
+      "isBackground": true,
+      "group": "build",
+      "label": "display worker: watch"
     }
   ]
 }

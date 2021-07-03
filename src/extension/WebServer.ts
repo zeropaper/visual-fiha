@@ -3,6 +3,7 @@ import { readFile } from 'fs';
 import {
   createServer, Server, IncomingMessage, ServerResponse,
 } from 'http';
+import * as mime from 'mime';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 
 import { DisplayBase } from '../types';
@@ -11,20 +12,21 @@ export type ServerDisplay = Omit<DisplayBase, 'id'> & {
   socket: Socket;
 };
 
-export const indexTemplate = ({ port }: { port: number }) => `<html>
+export const indexTemplate = ({ host, port }: { host: string; port: number }) => `<html>
   <head>
     <title>Visual Fiha</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="http://${host}:${port}/reset.css" />
   </head>
-  <body>
-    ${port}
-
+  <body style="position: relative; margin: 0; padding: 0;">
+    <canvas id="canvas" style="z-index: 10; width: auto; height: auto; position: absolute; top: 0; right: 0; bottom: 0; left: 0;" />
     <script src="/index.js"></script>
   </body>
 </html>`;
 
 export default class VFServer {
-  constructor(port?: number) {
+  constructor(host?: string, port?: number) {
+    this.#host = host || this.#host;
     this.#port = port || this.#port;
     this.#server = createServer(this.#handleHTTPRequest);
 
@@ -33,6 +35,8 @@ export default class VFServer {
   }
 
   #context: vscode.ExtensionContext | null = null;
+
+  #host = 'localhost';
 
   #port = 9999;
 
@@ -44,19 +48,34 @@ export default class VFServer {
 
   #displaysChange = new vscode.EventEmitter<DisplayBase[]>();
 
-  #serveFile = (reqUrl: string, res: ServerResponse) => {
+  #serveExtensionFile = (reqUrl: string, res: ServerResponse) => {
     if (!this.#context) throw new Error('WebServer is missing extension context');
 
     const filepath = vscode.Uri.joinPath(this.#context.extensionUri, reqUrl).fsPath;
 
     readFile(filepath, (err, content) => {
       if (err) throw err;
-      let mime = 'text/plain';
-      if (filepath.endsWith('.js')) mime = 'application/javascript';
-      if (filepath.endsWith('.png')) mime = 'image/png';
-      if (filepath.endsWith('.jpg')) mime = 'image/jpeg';
-      if (filepath.endsWith('.svg')) mime = 'image/xml+svg';
-      res.writeHead(200, { 'Content-Type': mime });
+      let type = mime.getType(filepath.split('.').pop() || '') || 'text/plain';
+      if (filepath.endsWith('.gltf')) type = 'model/gltf+json';
+      res.writeHead(200, { 'Content-Type': type });
+      res.end(content);
+    });
+  };
+
+  #serveAsset = (reqUrl: string, res: ServerResponse) => {
+    if (!this.#context) throw new Error('WebServer is missing extension context');
+
+    if (!vscode.workspace.workspaceFolders) return;
+    if (!vscode.workspace.workspaceFolders?.length) return;
+
+    const folder = vscode.workspace.workspaceFolders[0];
+    const filepath = vscode.Uri.joinPath(folder.uri, 'assets', reqUrl.replace('/assets/', '')).fsPath;
+
+    readFile(filepath, (err, content) => {
+      if (err) throw err;
+      let type = mime.getType(filepath.split('.').pop() || '') || 'text/plain';
+      if (filepath.endsWith('.gltf')) type = 'model/gltf+json';
+      res.writeHead(200, { 'Content-Type': type });
       res.end(content);
     });
   };
@@ -66,17 +85,32 @@ export default class VFServer {
       if (req.method === 'GET') {
         if (req.url === '/') {
           res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(indexTemplate({ port: this.port }));
+          res.end(indexTemplate({ host: this.host, port: this.port }));
           return;
         }
 
-        if (req.url?.startsWith('/index.js')) {
-          this.#serveFile(`out/display/${req.url}`, res);
+        if (req.url === '/index.js') {
+          this.#serveExtensionFile(`out/display/${req.url}`, res);
+          return;
+        }
+
+        if (req.url === '/DisplayWorker.js') {
+          this.#serveExtensionFile(`out/display/${req.url}`, res);
           return;
         }
 
         if (req.url === '/favicon.png') {
-          this.#serveFile('media/favicon.png', res);
+          this.#serveExtensionFile('media/favicon.png', res);
+          return;
+        }
+
+        if (req.url === '/reset.css') {
+          this.#serveExtensionFile('media/reset.css', res);
+          return;
+        }
+
+        if (req.url?.startsWith('/assets/')) {
+          this.#serveAsset(req.url, res);
           return;
         }
       }
@@ -131,6 +165,10 @@ export default class VFServer {
       this.#displaysChange.fire(this.displays);
     });
   };
+
+  get host() {
+    return this.#host;
+  }
 
   get port() {
     return this.#port;
