@@ -20,6 +20,7 @@ export default class Display {
       document.body.appendChild(el);
       document.body.style.margin = '0';
       document.body.style.padding = '0';
+      document.body.style.overflow = 'hidden';
     }
 
     const { style: parentStyle } = el.parentElement as HTMLElement;
