@@ -45,3 +45,19 @@ export type ScriptableAPIReference = {
     link?: string;
   };
 };
+
+export interface ComEventDataMeta {
+  operationId?: string;
+  sent?: number;
+  received?: number;
+  processed?: number;
+  answered?: number;
+  source?: string;
+  error?: string;
+  [custom: string]: any;
+}
+export interface ComEventData {
+  action: string;
+  payload?: any;
+  meta?: ComEventDataMeta;
+}
