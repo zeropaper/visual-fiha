@@ -6,7 +6,7 @@ import {
 import * as mime from 'mime';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 
-import { DisplayBase } from '../types';
+import { ComEventData, DisplayBase } from '../types';
 
 export type ServerDisplay = Omit<DisplayBase, 'id'> & {
   socket: Socket;
@@ -127,11 +127,17 @@ export default class VFServer {
     }
   };
 
-  #handleIOConnection = (socket: Socket) => {
-    console.info('[webServer] io connection', socket.id);
+  #resizeDisplay = ({ id, width, height }: DisplayBase) => {
+    const display = this.#displays[id];
+    if (!display) return;
 
+    display.width = width;
+    display.height = height;
+    this.#displaysChange.fire(this.displays);
+  };
+
+  #handleIOConnection = (socket: Socket) => {
     socket.emit('getdisplay', ({ id, ...display }: DisplayBase) => {
-      console.info('[webServer] getdisplay', id, display);
       this.#displays[id] = { ...display, socket };
       this.#displaysChange.fire(this.displays);
     });
@@ -141,7 +147,6 @@ export default class VFServer {
         const { socket: displaySocket } = this.#displays[key];
         return displaySocket.id === socket.id;
       });
-      console.info('[webServer] disconnect', id);
       if (!id) return;
       const { [id]: dropped, ...displays } = this.#displays;
       this.#displays = displays;
@@ -149,20 +154,19 @@ export default class VFServer {
     });
 
     socket.on('unregisterdisplay', ({ id }) => {
-      console.info('[webServer] unregisterdisplay', id);
       const { [id]: dropped, ...displays } = this.#displays;
       this.#displays = displays;
       this.#displaysChange.fire(this.displays);
     });
 
-    socket.on('resizedisplay', ({ id, width, height }) => {
-      const display = this.#displays[id];
-      console.info('[webServer] resize', id, display);
-      if (!display) return;
-
-      display.width = width;
-      display.height = height;
-      this.#displaysChange.fire(this.displays);
+    socket.on('message', ({
+      action,
+      payload,
+      // meta,
+    }: ComEventData) => {
+      if (action === 'resizedisplay') {
+        this.#resizeDisplay(payload);
+      }
     });
   };
 

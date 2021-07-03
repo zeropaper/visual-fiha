@@ -1,6 +1,7 @@
-import type { AppState } from '../types';
+import type { AppState, DisplayBase } from '../types';
 import renderDisplays from './renderDisplays';
 import renderStateDump from './renderStateDump';
+import { autoBind, ComMessageChannel } from '../utils/com';
 
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
@@ -19,29 +20,29 @@ const getState = (): AppState => ({
   ...(vscode.getState() || {}),
 });
 
-// Handle messages sent from the extension to the webview
-window.addEventListener('message', (event) => {
-  const currentState = getState();
-  const message = event.data; // The json data that the extension sent
-  switch (message.command) {
-    case 'updatestate':
-      console.info('[main] webview update', message.update, currentState);
-      break;
-
-    case 'updatedisplays':
-      console.info('[main] update displays', message);
-      vscode.setState({
-        ...currentState,
-        displays: message.displays,
-      });
-      renderDisplays(message.displays, currentState);
-      break;
-
-    default:
-      throw new Error(`Unknown command ${message.command}`);
-  }
+const updatestate = () => {
   renderStateDump(getState());
-});
+};
+
+const updatedisplays = (displays: DisplayBase[]) => {
+  const currentState = getState();
+  vscode.setState({
+    ...currentState,
+    displays,
+  });
+  renderDisplays(displays, currentState);
+};
+
+const handlers = {
+  updatestate,
+  updatedisplays,
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { post, listener } = autoBind(window as unknown as ComMessageChannel, 'webview', handlers);
+
+window.addEventListener('message', listener);
 
 const firstRunState = getState();
 renderDisplays(firstRunState.displays, firstRunState);
+renderStateDump(firstRunState);

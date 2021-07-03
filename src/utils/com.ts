@@ -20,16 +20,20 @@ export interface Poster {
   (message: ComEventData): any;
 }
 
-export interface MessengerPoster {
+export interface ChannelPost {
   (action: string, payload?: any, originalMeta?: ComEventDataMeta | true): Promise<any>
 }
 
 export interface ChannelPostMaker {
-  (poster: Poster, source: string): MessengerPoster;
+  (poster: Poster, source: string): ChannelPost;
+}
+
+export interface ComMessageEvent {
+  data: ComEventData
 }
 
 export interface ComMessageEventListener {
-  (event: MessageEvent<ComEventData>): void
+  (event: ComMessageEvent): void
 }
 
 export interface ChannelListenerMaker {
@@ -151,6 +155,11 @@ export interface ComMessageChannel {
 }
 
 export type ComChannel = ComMessageChannel;
+
+export interface ChannelBindings {
+  post: ChannelPost;
+  listener: (event: ComMessageEvent) => void;
+}
 
 export const autoBind = (obj: ComChannel, source: string, handlers: ComActionHandlers) => {
   const originalPost = obj.postMessage.bind(obj) as Poster;

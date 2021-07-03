@@ -2,11 +2,11 @@
 
 import { io } from 'socket.io-client';
 
-// import type { ComEventData, ComEventDataMeta } from '../types';
+import type { ComEventData } from '../types';
 
 import type { DisplayState } from './Display';
 
-import { channelListener, ComActionHandler } from '../utils/com';
+import { autoBind, ComActionHandlers } from '../utils/com';
 
 interface WebWorker extends Worker {
   location: Location;
@@ -23,9 +23,28 @@ let state: DisplayState = {
   height: 300,
 };
 
+socket.on('getdisplay', (akg: (dis: DisplayState) => void) => {
+  // console.info('[worker] getdisplay callback', state);
+  akg(state);
+});
+
 let data: { [k: string]: any } = {};
 
-const handlers: { [action: string]: ComActionHandler } = {
+const {
+  post: socketEmit,
+  listener: socketListener,
+} = autoBind({
+  postMessage: (message: any) => {
+    socket.emit('message', message);
+  },
+  // addEventListener: (eventName, lstnr) => {
+  //   socket.on(eventName, lstnr);
+  // },
+}, `display-${state.id}-worker-socket`, {});
+
+socket.on('message', (message: ComEventData) => socketListener({ data: message } as MessageEvent<ComEventData>));
+
+const handlers: ComActionHandlers = {
   updatedata: (payload: any) => { data = payload || data; },
   resize: ({
     width,
@@ -36,56 +55,10 @@ const handlers: { [action: string]: ComActionHandler } = {
       width: width || state.width,
       height: height || state.height,
     };
+    socketEmit('resizedisplay', state);
   },
 };
 
-const listener = channelListener(worker.postMessage, handlers);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { post, listener } = autoBind(worker, `display-${state.id}-worker`, handlers);
 worker.addEventListener('message', listener);
-
-// worker.addEventListener('message', (event: MessageEvent<ComEventData>) => {
-//   console.info('[worker] worker got message', event.data);
-
-//   const { action, payload, meta } = event.data;
-
-//   if (handlers[action]) handlers[action](payload, {
-//     ...meta,
-//   });
-
-//   // if (action === 'updatedata') {
-//   //   data = payload || data;
-//   //   return;
-//   // }
-
-//   // if (event.data.action === 'resize') {
-//   //   state = {
-//   //     ...state,
-//   //     width: event.data.payload?.width || state.width,
-//   //     height: event.data.payload?.height || state.height,
-//   //   };
-//   // }
-// });
-
-// socket.on('connect', () => {
-//   console.info('[display] WS connect', display.state.id, socket.id);
-// });
-
-// socket.on('connect_error', () => {
-//   console.info('[display] WS connect_error', socket.id);
-// });
-
-// socket.on('disconnect', () => {
-//   console.info('[display] WS disconnect', socket.id);
-// });
-
-// socket.on('scriptchange', ({ id, script }) => {
-//   console.info('scriptchange', id, script);
-// });
-
-socket.on('getdisplay', (akg: (dis: DisplayState) => void) => {
-  // console.info('[display] getdisplay callback', display);
-  akg(state);
-});
-
-// socket.on('message', display.handleMessage)
-
-// console.info('[worker]', worker.location);

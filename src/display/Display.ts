@@ -1,4 +1,9 @@
-import { ComEventData } from '../types';
+import {
+  autoBind,
+  ComActionHandlers,
+  ComMessageEventListener,
+  MessengerPoster,
+} from '../utils/com';
 
 export interface DisplayOptions {
   id?: string;
@@ -10,6 +15,8 @@ export interface DisplayState {
   width: number;
   height: number;
 }
+
+const handlers: ComActionHandlers = {};
 
 export default class Display {
   static ensureCanvas = (id: string = 'canvas'): HTMLCanvasElement => {
@@ -47,16 +54,25 @@ export default class Display {
     } = options || {};
     this.#id = id;
     this.#canvas = canvas;
-    this.resize();
+
     this.#worker = new Worker(`/DisplayWorker.js#${id}`);
-    this.#worker.addEventListener('message', this.#handleWorkerMessage);
+    const { post, listener } = autoBind(this.#worker, `display-${id}-browser`, handlers);
+    this.#post = post;
+    this.#listener = listener;
+    this.#worker.addEventListener('message', this.#listener);
+
+    this.resize();
   }
 
   #worker: Worker;
 
+  #post: MessengerPoster;
+
   #id: string;
 
   #canvas: HTMLCanvasElement;
+
+  #listener: ComMessageEventListener;
 
   get canvas() {
     return this.#canvas;
@@ -70,26 +86,20 @@ export default class Display {
     };
   }
 
-  #handleWorkerMessage = (event: MessageEvent<ComEventData>) => {
-    console.info('[display] message from worker', event);
-  };
+  get post(): MessengerPoster {
+    return this.#post;
+  }
 
-  post = (message: ComEventData) => {
-    this.#worker.postMessage(message);
-  };
-
-  resize = () => {
+  resize = () => requestAnimationFrame(() => {
     const { canvas } = this;
     const rect = canvas.parentElement?.getBoundingClientRect().toJSON();
     if (!rect) return;
     canvas.width = rect.width;
     canvas.height = rect.height;
-    this.post({
-      action: 'resize',
-      payload: {
-        width: canvas.width,
-        height: canvas.height,
-      },
+
+    this.post('resize', {
+      width: canvas.width,
+      height: canvas.height,
     });
-  };
+  });
 }

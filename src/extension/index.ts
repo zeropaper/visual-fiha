@@ -58,9 +58,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     webServer.activate(context),
-    webServer.onDisplaysChange((evt) => {
+    webServer.onDisplaysChange((displays) => {
       if (!VFPanel.currentPanel) return;
-      VFPanel.currentPanel.updateDisplays(evt);
+      VFPanel.currentPanel.updateDisplays(displays);
     }),
   );
 

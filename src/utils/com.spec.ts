@@ -100,7 +100,7 @@ describe('com.messenger', () => {
 
 describe('com.autoBind', () => {
   it('creates the post and listener', async () => {
-    let post: com.MessengerPoster;
+    let post: com.ChannelPost;
     let listener: com.ComMessageEventListener;
     const obj = {
       postMessage: jest.fn(),
