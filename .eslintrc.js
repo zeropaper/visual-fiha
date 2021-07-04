@@ -9,11 +9,13 @@ module.exports = {
   env: {
     'jest/globals': true,
   },
-  // rules: {
-  //   'jest/no-disabled-tests': 'warn',
-  //   'jest/no-focused-tests': 'error',
-  //   'jest/no-identical-title': 'error',
-  //   'jest/prefer-to-have-length': 'warn',
-  //   'jest/valid-expect': 'error',u
-  // },
+  rules: {
+    'jest/no-disabled-tests': 'warn',
+    'jest/no-focused-tests': 'error',
+    'jest/no-identical-title': 'error',
+    'jest/prefer-to-have-length': 'warn',
+    'jest/valid-expect': 'error',
+
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
+  },
 };
