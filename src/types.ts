@@ -24,7 +24,6 @@ export interface AppState {
 
   displayServer: { host: string, port: number };
 
-  data: any;
   displays: DisplayBase[];
   layers: Layer[];
 }

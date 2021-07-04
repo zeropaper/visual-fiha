@@ -6,9 +6,14 @@ import { autoBind, ComMessageChannel } from '../utils/com';
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
 
+// let data: any = {};
+
+// const updateData = (newData: any) => {
+//   data = newData;
+// };
+
 const defaultState: AppState = {
   displayServer: { host: 'localhost', port: 9999 },
-  data: {},
   displays: [],
   layers: [],
 };
@@ -34,6 +39,7 @@ const updatedisplays = (displays: DisplayBase[]) => {
 };
 
 const handlers = {
+  // updateData,
   updatestate,
   updatedisplays,
 };

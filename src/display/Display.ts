@@ -1,3 +1,4 @@
+import { ScriptingData } from '../types';
 import {
   autoBind,
   ComActionHandlers,
@@ -16,7 +17,12 @@ export interface DisplayState {
   height: number;
 }
 
-const handlers: ComActionHandlers = {};
+let data: ScriptingData = {
+  iterationCount: 0,
+  now: 0,
+  deltaNow: 0,
+};
+
 
 export default class Display {
   static ensureCanvas = (id: string = 'canvas'): HTMLCanvasElement => {

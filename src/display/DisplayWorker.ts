@@ -2,7 +2,7 @@
 
 import { io } from 'socket.io-client';
 
-import type { ComEventData } from '../types';
+import type { ComEventData, ScriptingData } from '../types';
 
 import type { DisplayState } from './Display';
 
@@ -28,7 +28,11 @@ socket.on('getdisplay', (akg: (dis: DisplayState) => void) => {
   akg(state);
 });
 
-let data: { [k: string]: any } = {};
+let data: ScriptingData = {
+  iterationCount: 0,
+  now: 0,
+  deltaNow: 0,
+};
 
 const {
   post: socketEmit,
