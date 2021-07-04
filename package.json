@@ -20,7 +20,7 @@
     "onCommand:visualFiha.doRefactor",
     "onWebviewPanel:visualFiha"
   ],
-  "main": "./out/extension/index.js",
+  "main": "./out/extension/extension.js",
   "contributes": {
     "commands": [
       {

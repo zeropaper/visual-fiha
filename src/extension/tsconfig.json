@@ -4,5 +4,5 @@
     "outDir": "../../out"
   },
   "extends": "../../tsconfig.base.json",
-  "files": ["./index.ts"]
+  "files": ["extension.ts"]
 }
