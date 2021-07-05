@@ -3,7 +3,7 @@ import type { ScriptableAPIReference } from '../types';
 import MathTools from '../utils/mathTools';
 import MiscTools from '../utils/miscTools';
 
-const fetchCache = {};
+const fetchCache: { [url: string]:Promise<any> } = {};
 
 const {
   PI2,
@@ -26,7 +26,10 @@ type ImageCopyCoordinates = {
   dh?: number;
 };
 
-export default function canvasTools(ctx) {
+export type CTX = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
+export default function canvasTools(ctx: CTX) {
+  if (!ctx) throw new Error('Missing context for canvasTools');
   const { canvas } = ctx;
 
   const width = (div = 1) => canvas.width * (1 / div);
@@ -65,14 +68,14 @@ export default function canvasTools(ctx) {
   vmax.description = 'Get longest side of the canvas or percents of it.';
   vmax.snippet = 'const val = vmax(10);';
 
-  const textLines = (lines = [], opts = {} as {
+  const textLines = (lines: string[] = [], opts:{
     x?: number;
     y?: number;
     lineHeight?: number;
     position?: string;
     fill?: string | false;
     stroke?: string | false;
-  }) => {
+  } = {}) => {
     const {
       x = width(2),
       y = height(2),
@@ -224,12 +227,12 @@ mirror();
 mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
 `;
 
-  const mediaType = (url) => (/\.(mp4|webm)$/.test(url) ? 'video' : 'image');
+  const mediaType = (url: string) => (/\.(mp4|webm)$/.test(url) ? 'video' : 'image');
   mediaType.category = 'media';
   mediaType.type = 'function';
   mediaType.description = 'Attempts to quickly determine the type of an URL.';
 
-  const tools = {
+  const tools: { [k: string]: any } = {
     ...MathTools,
     width,
     height,
@@ -258,26 +261,30 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       const el = document.createElement('canvas');
       el.width = canvas.width;
       el.height = canvas.height;
-      el.getContext('2d')
-        .drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
+      el.getContext('2d')?.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
       return el;
     },
 
-    copyLayer: (layerName) => {
+    copyLayer: (layerName: string) => {
+      throw new Error('Unsupported');
       const el = document.getElementById(layerName) as HTMLCanvasElement;
       if (!el) throw new Error(`layer ${layerName} not found`);
       const copied = document.createElement('canvas');
       copied.width = canvas.width;
       copied.height = canvas.height;
       copied
-        .getContext('2d')
-        .drawImage(el, 0, 0, el.width, el.height, 0, 0, canvas.width, canvas.height);
+        .getContext('2d')?.drawImage(el, 0, 0, el.width, el.height, 0, 0, canvas.width, canvas.height);
       return copied;
     },
 
-    pasteImage: (src, opts = {} as ImageCopyCoordinates) => {
-      const w = src.width || src.videoWidth;
-      const h = src.height || src.videoHeight;
+    pasteImage: (
+      src: CanvasImageSource & {
+        videoWidth?: number;
+        videoHeight?: number;
+      }, opts = {} as ImageCopyCoordinates,
+    ) => {
+      const w = (src.width || src.videoWidth || canvas.width || 0) as number;
+      const h = (src.height || src.videoHeight || canvas.height || 0) as number;
       const {
         sx = 0,
         sy = 0,
@@ -291,9 +298,14 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       ctx.drawImage(src, sx, sy, sw, sh, dx, dy, dw, dh);
     },
 
-    pasteContain: (src, opts = {} as ImageCopyCoordinates) => {
-      const w = src.width || src.videoWidth;
-      const h = src.height || src.videoHeight;
+    pasteContain: (
+      src: CanvasImageSource & {
+        videoWidth?: number;
+        videoHeight?: number;
+      }, opts = {} as ImageCopyCoordinates,
+    ) => {
+      const w = (src.width || src.videoWidth || canvas.width || 0) as number;
+      const h = (src.height || src.videoHeight || canvas.height || 0) as number;
       const wp = canvas.width / w;
       const hp = canvas.height / h;
       const p = Math.abs(wp) < Math.abs(hp) ? wp : hp;
@@ -312,9 +324,14 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       ctx.drawImage(src, sx, sy, sw, sh, dx, dy, dw, dh);
     },
 
-    pasteCover: (src, opts = {} as ImageCopyCoordinates) => {
-      const w = src.width || src.videoWidth;
-      const h = src.height || src.videoHeight;
+    pasteCover: (
+      src: CanvasImageSource & {
+        videoWidth?: number;
+        videoHeight?: number;
+      }, opts = {} as ImageCopyCoordinates,
+    ) => {
+      const w = (src.width || src.videoWidth || canvas.width || 0) as number;
+      const h = (src.height || src.videoHeight || canvas.height || 0) as number;
       const wp = canvas.width / w;
       const hp = canvas.height / h;
       const p = Math.abs(wp) > Math.abs(hp) ? wp : hp;
@@ -333,7 +350,7 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       ctx.drawImage(src, sx, sy, sw, sh, dx, dy, dw, dh);
     },
 
-    fontSize: (size, unit = vmin) => {
+    fontSize: (size: number, unit = vmin) => {
       const parts = ctx.font.split(' ');
       if (parts.length === 2) {
         ctx.font = `normal ${unit(size)}px ${parts[1]}`;
@@ -363,7 +380,7 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
     // fontLoad: (val) => {
     // },
 
-    fetch: (url) => {
+    fetch: (url: string) => {
       if (typeof fetchCache[url] !== 'undefined') return fetchCache[url];
 
       fetchCache[url] = new Promise((resolve, reject) => {
@@ -390,13 +407,13 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       return fetchCache[url];
     },
 
-    makeImage: (url) => {
+    makeImage: (url: string) => {
       const obj = new Image();
       obj.src = url;
       return obj;
     },
 
-    makeVideo: (url, opts = {} as {
+    makeVideo: (url: string, opts = {} as {
       muted?: boolean;
       loop?: boolean;
     }) => {
@@ -423,7 +440,7 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       left = 0,
       right = canvas.width,
       legend = 'top-left',
-      color = null,
+      color = '',
       fontSize: fs = vmin(3),
       flipped = false,
     }: {
@@ -549,8 +566,14 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       x,
       y,
       radius = 10,
-      stroke = null,
-      fill = null,
+      stroke = '',
+      fill = '',
+    }: {
+      x: number;
+      y: number;
+      radius?: number;
+      stroke?: string;
+      fill?: string;
     }) => {
       if (stroke) ctx.strokeStyle = stroke;
       if (fill) ctx.fillStyle = fill;
@@ -569,8 +592,16 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       sides = 3,
       radius = 10,
       tilt = 0,
-      stroke = null,
-      fill = null,
+      stroke = '',
+      fill = '',
+    }: {
+      x: number;
+      y: number;
+      tilt?: number;
+      sides?: number;
+      radius?: number;
+      stroke?: string;
+      fill?: string;
     }) => {
       let px;
       let py;
@@ -626,10 +657,10 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       const xs = (width() - ((cols - 1) * d)) * 0.5;
       const ys = (height() - ((rows - 1) * d)) * 0.5;
       let n = 0;
-      const data = [];
+      const data: any[] = [];
 
       repeat(rows, (r) => {
-        const row = [];
+        const row: any[] = [];
 
         repeat(cols, (c) => {
           const args = {
@@ -868,16 +899,18 @@ fetch('https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Golden_tabby_an
       if (key === 'canvas') return;
       reference[key] = {};
 
-      if (typeof ctx[key] === 'function') {
-        tools[key] = ctx[key].bind(ctx);
+      const prop: any = (ctx as any)[key as string];
+      if (typeof prop === 'function') {
+        tools[key] = prop.bind(ctx);
 
         reference[key].category = 'canvas';
         reference[key].type = 'function';
         reference[key].description = `Utility function for CanvasRenderingContext2D.${key}()`;
       } else if (!tools[key]) {
-        tools[key] = (value = ctx[key]) => {
-          if (ctx[key] !== value) ctx[key] = value;
-          return ctx[key];
+        tools[key] = (value = prop) => {
+          // @ts-ignore
+          if (prop !== value) ctx[key] = value;
+          return prop;
         };
 
         reference[key].category = 'canvas';
