@@ -40,13 +40,13 @@
     "watch:test": "jest --watch",
     "vscode:prepublish": "run-p compile:*",
     "compile:extension": "tsc -p ./src/extension/tsconfig.json",
-    "compile:webviews": "esbuild ./src/webviews/index.ts --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
-    "compile:display": "esbuild ./src/display/index.ts --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
+    "compile:webviews": "esbuild ./src/webviews/index.ts --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
+    "compile:display": "esbuild ./src/display/index.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
     "lint": "eslint . --ext .ts,.tsx",
     "watch:extension": "tsc -w -p ./src/extension/tsconfig.json",
-    "watch:webviews": "esbuild ./src/webviews/index.ts --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
-    "watch:display": "esbuild ./src/display/index.ts --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
-    "watch:display:worker": "esbuild ./src/display/DisplayWorker.ts --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/DisplayWorker.js",
+    "watch:webviews": "esbuild ./src/webviews/index.ts --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
+    "watch:display": "esbuild ./src/display/index.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
+    "watch:display:worker": "esbuild ./src/display/DisplayWorker.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/DisplayWorker.js",
     "prepare": "husky install"
   },
   "devDependencies": {
