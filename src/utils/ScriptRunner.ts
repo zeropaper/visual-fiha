@@ -53,7 +53,7 @@ class ScriptRunnerLintingError extends Error {
   details: object[] = [];
 }
 
-type PlainObject = { [k: string]: any };
+type API = { [scriptGlobalName: string]: any };
 
 class ScriptRunner {
   constructor(scope: any = null, name = `sr${Date.now()}`) {
@@ -87,7 +87,7 @@ class ScriptRunner {
     this.#logs.push(whtvr);
   };
 
-  #api: PlainObject = {};
+  #api: API = {};
 
   get version() {
     return this.#version;
@@ -101,19 +101,19 @@ class ScriptRunner {
     this.#scope = newScope;
   }
 
-  get api() {
+  get api(): API & { scriptLog: (...args: any[]) => void } {
     return {
       ...this.#api,
       scriptLog: this.#log,
     };
   }
 
-  set api({ scriptLog, ...api }: PlainObject) {
+  set api({ scriptLog, ...api }: API) {
     this.#api = api;
     this.code = this.#code;
   }
 
-  get scriptLog() { return this.#logs; }
+  get log() { return this.#logs; }
 
   get isAsync() { return this.#code.includes('await'); }
 
@@ -209,13 +209,14 @@ class ScriptRunner {
     return !event.defaultPrevented;
   }
 
-  exec(data?: { [x: string]: any }) {
+  exec(api: API = {}) {
     this.#logs = [];
     try {
       this.#errors.execution = null;
 
-      const args = Object.values({ ...this.api, ...(data || {}) });
-      // console.info('args', args.length);
+      const args = Object.values({ ...this.api, ...api });
+      // eslint-disable-next-line max-len
+      // if (this.#name.includes('ayer')) console.info('args', Object.keys(this.api), Object.keys(this.api).includes('read'), Object.keys(api), Object.keys(api).includes('read'));
       const result = this.#fn.call(this.#scope, ...args);
       if (this.#logs.length) {
         this.dispatchEvent({

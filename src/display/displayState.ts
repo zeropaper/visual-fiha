@@ -1,4 +1,4 @@
-import type { Scriptable, Layer } from '../types';
+import type { Layer } from '../types';
 
 export type DisplayState = {
   meta: {
@@ -7,19 +7,22 @@ export type DisplayState = {
     socketId?: string;
   };
   data: object;
-  worker: Scriptable;
+  worker: {
+    setup: string;
+    animate: string;
+  };
   layers: Layer[];
 };
 
 const defaultState: DisplayState = {
   meta: {
-    displayId: (Math.random() * 10000).toFixed(),
+    displayId: `display${(Math.random() * 10000).toFixed()}`,
     connected: false,
   },
   data: {},
   worker: {
     setup: '',
-    runtime: '',
+    animate: '',
   },
   layers: [],
 };

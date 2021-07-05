@@ -1,3 +1,4 @@
+/* eslint-disable no-debugger */
 import type { ReadInterface } from '../types';
 
 import ScriptRunner, { ScriptRunnerEventListener } from './ScriptRunner';
@@ -23,13 +24,20 @@ export default class Scriptable {
 
     this.read = options.read || this.read;
     const { id = `scriptable${Date.now()}` } = options;
+    this.#id = id;
     this.#runners = {
-      setup: new ScriptRunner(options.scope, `${`${id}`}Setup`),
-      animation: new ScriptRunner(options.scope, `${`${id}`}Animation`),
+      setup: new ScriptRunner(options.scope, `${this.#id}_S`),
+      animation: new ScriptRunner(options.scope, `${this.#id}_A`),
     };
-    this.api = options.api || {};
     this.initialize(options);
+    this.api = {
+      read: this.read,
+      cache: this.cache,
+      ...(options.api || {}),
+    };
   }
+
+  #id: string;
 
   #runners: {
     setup: ScriptRunner;
@@ -38,17 +46,19 @@ export default class Scriptable {
 
   cache: Cache;
 
-  read: ReadInterface = (value, defaultValue) => (typeof this.cache[value] === 'undefined' ? defaultValue : this.cache[value]);
+  read: ReadInterface = (key, fb) => (/* Scriptable read */ typeof this.cache[key] === 'undefined' ? fb : this.cache[key]);
 
-  get api(): API & { read: ReadInterface, cache: Cache } {
+  get api(): API & { cache: Cache } {
+    // console.info('get Scriptable api', this.#id, this.read);
     return {
-      ...this.#runners.animation.api,
       read: this.read,
       cache: this.cache,
+      ...this.#runners.animation.api,
     };
   }
 
-  set api({ read: dropped, cache, ...api }: API) {
+  set api(api: API) {
+    // this.api = api;
     this.#runners.setup.api = api;
     this.#runners.animation.api = api;
   }
@@ -70,9 +80,8 @@ export default class Scriptable {
   }
 
   initialize = ({
-    setup, animation, onCompilationError, onExecutionError, api,
+    setup, animation, onCompilationError, onExecutionError,
   }: ScriptableOptions) => {
-    this.api = api || {};
     if (onCompilationError) {
       this.#runners.setup.addEventListener('compilationerror', onCompilationError);
       this.#runners.animation.addEventListener('compilationerror', onCompilationError);
@@ -82,16 +91,15 @@ export default class Scriptable {
       this.#runners.animation.addEventListener('executionerror', onExecutionError);
     }
     this.#runners.setup.code = setup || '';
-    this.execSetup();
     this.#runners.animation.code = animation || '';
+    this.execSetup();
   };
 
   execSetup = async () => {
-    console.info('Scriptable', this.read, this.api.read, this.#runners.setup.api);
-    this.cache = (await this.setup.exec()) || this.cache;
+    this.cache = (await this.setup.exec(this.api)) || this.cache;
   };
 
   execAnimation = () => {
-    this.cache = this.animation.exec() || this.cache;
+    this.cache = this.animation.exec(this.api) || this.cache;
   };
 }

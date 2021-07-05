@@ -15,7 +15,7 @@ import {
   ChannelBindings,
   ComActionHandlers,
 } from '../utils/com';
-import Scriptable from '../utils/Scriptable';
+import Scriptable, { ScriptableOptions } from '../utils/Scriptable';
 import mathTools from '../utils/mathTools';
 import Canvas2DLayer from './Canvas2DLayer';
 
@@ -33,10 +33,11 @@ let data: ScriptingData = {
 
 // eslint-disable-next-line no-restricted-globals
 const worker: WebWorker = self as any;
-const read = (key: string, defaultVal?: any) => (typeof data[key] !== 'undefined' ? data[key] : defaultVal);
+const read = (/* Worker read */ key: string, defaultVal?: any) => (typeof data[key] !== 'undefined' ? data[key] : defaultVal);
 const makeErrorHandler = (type: string) => (event: any) => console.warn('[worker]', type, event);
-const scriptableOptions = {
-  api: mathTools,
+const scriptableOptions: ScriptableOptions = {
+  id: 'worker',
+  api: { ...mathTools, read },
   read,
   onCompilationError: makeErrorHandler('compilation'),
   onExecutionError: makeErrorHandler('execution'),
@@ -44,7 +45,11 @@ const scriptableOptions = {
 
 const defaultAnimation = `
 clear();
-textLines(['test', width(), height(), typeof read === 'function' && read('now')], {
+textLines([
+  width(),
+  height(),
+  typeof read === 'function' && read('now'),
+], {
   x: width(2),
   y: height(2),
   fill: 'lime',
@@ -113,7 +118,7 @@ render();
 
 const socket = io();
 
-socket.on('getdisplay', (akg: (dis: DisplayState) => void) => akg(state));
+socket.on('getdisplay', (akg: (dis: DisplayState) => void) => akg({ ...state, layers: undefined }));
 
 let socketCom: ChannelBindings;
 let workerCom: ChannelBindings;

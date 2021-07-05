@@ -17,6 +17,7 @@ export default class Canvas2DLayer extends Scriptable {
       ...mathTools,
       ...miscTools,
       ...canvasTools(this.#ctx),
+      read: this.read,
     };
   }
 

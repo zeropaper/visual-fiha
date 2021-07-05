@@ -134,13 +134,13 @@ describe('object ScriptRunner', () => {
       });
     });
 
-    describe('log()', () => {
+    describe('scriptLog()', () => {
       it('logs', () => {
         expect.assertions(9);
 
         const runner = new ScriptRunner(scope);
         runner.code = `
-        log("log", this, self, window, param1, param2);
+        scriptLog("script logged", this, self, window, param1, param2);
         return this.stuff
         `;
 
@@ -150,7 +150,7 @@ describe('object ScriptRunner', () => {
 
         expect(runner.log).toHaveLength(1);
         expect(runner.log[0]).toHaveLength(6);
-        expect(runner.log[0][0]).toBe('log');
+        expect(runner.log[0][0]).toBe('script logged');
         expect(runner.log[0][1]).toStrictEqual(scope);
         expect(runner.log[0][2]).toBeUndefined();
         expect(runner.log[0][3]).toBeUndefined();

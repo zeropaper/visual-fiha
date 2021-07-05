@@ -53,7 +53,7 @@ export default class Display {
 
   constructor(options?: DisplayOptions) {
     const {
-      id = (Math.random() * 1000).toFixed(),
+      id = `display${(Math.random() * 10000).toFixed()}`,
       canvas = Display.ensureCanvas(),
     } = options || {};
     this.#id = id;
