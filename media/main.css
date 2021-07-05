@@ -25,3 +25,7 @@
   justify-content: center;
   margin: 1vmin;
 }
+
+.control-display-iframe {
+  border: 1px solid currentColor;
+}
