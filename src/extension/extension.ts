@@ -1,7 +1,15 @@
 import * as vscode from 'vscode';
 import { readFile } from 'fs';
 
-import { AppState, FihaRC, ScriptingData } from '../types';
+import {
+  AppState,
+  FihaRC,
+  ScriptingData,
+  ScriptInfo,
+  ScriptType,
+  ScriptRole,
+  DirectoryTypes,
+} from '../types';
 import getWebviewOptions from './getWebviewOptions';
 import VFPanel from './VFPanel';
 import WebServer from './WebServer';
@@ -16,8 +24,27 @@ let data: ScriptingData = {
   deltaNow: 0,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let refreshInterval: any;
+
+const textDocumentScriptInfo = (doc: vscode.TextDocument): ScriptInfo => {
+  const workspacePath: string = (vscode.workspace.workspaceFolders
+    && vscode.workspace.workspaceFolders.length
+    && vscode.workspace.workspaceFolders[0].uri.path) || '';
+
+  const relativePath = doc.uri.path.replace(workspacePath, '');
+  const [, directory, id, role] = (
+    relativePath.match(/\/([^/]+)\/(.+)-(setup|animation)\./) || []
+  ) as [any, keyof typeof DirectoryTypes, string, ScriptRole];
+
+  if (!directory || !id || !role) throw new Error(`Cannot determine script info for ${doc.uri.path}`);
+  return {
+    id: directory === 'worker' ? 'worker' : id,
+    relativePath,
+    path: doc.uri.path,
+    type: DirectoryTypes[directory] as ScriptType,
+    role,
+  };
+};
 
 const readWorkspaceRC = (folderIndex = 0) => new Promise<FihaRC>((res, rej) => {
   const {
@@ -79,8 +106,12 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
+    // if (!event.contentChanges.length) return;
+
     const { document: doc } = event;
-    webServer.broadcastScript(doc.fileName, doc.getText());
+    if (doc.isUntitled || doc.isClosed || doc.languageId !== 'javascript') return;
+
+    webServer.broadcastScript(textDocumentScriptInfo(doc), doc.getText());
   }));
 
   function refreshData() {
@@ -92,8 +123,9 @@ export function activate(context: vscode.ExtensionContext) {
       now,
       deltaNow: data.now ? now - data.now : 0,
     };
-    if (data.iterationCount % 1000 === 0) console.info('[ext] refreshed data', data.iterationCount, data.deltaNow);
-    VFPanel.currentPanel?.updateData(data);
+    // eslint-disable-next-line max-len
+    // if (data.iterationCount % 1000 === 0) console.info('[ext] refreshed data', data.iterationCount, data.deltaNow);
+    webServer.broadcastData(data);
   }
   refreshInterval = setInterval(refreshData, 4);
 }

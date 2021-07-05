@@ -1,4 +1,6 @@
-import { Socket } from 'socket.io';
+import type { Socket } from 'socket.io';
+
+import type Scriptable from './utils/Scriptable';
 
 export interface DisplayBase {
   id: string;
@@ -9,11 +11,6 @@ export interface DisplayBase {
 export interface ServerDisplay extends Omit<DisplayBase, 'id'> {
   socket: Socket;
 }
-
-export type Scriptable = {
-  setup: string;
-  runtime: string;
-};
 
 export type Layer = Scriptable & {
   id: string;
@@ -59,4 +56,29 @@ export interface ComEventData {
   action: string;
   payload?: any;
   meta?: ComEventDataMeta;
+}
+
+export type ScriptingData = {
+  iterationCount: number;
+  now: number;
+  deltaNow: number;
+  [k: string]: any
+};
+
+export type ScriptRole = 'setup' | 'animation';
+export type ScriptType = 'layer' | 'signal' | 'worker' | 'server';
+export type ScriptInfo = {
+  relativePath: string;
+  path: string;
+  id: string;
+  type: ScriptType;
+  role: ScriptRole;
+};
+export enum DirectoryTypes {
+  layers = 'layer',
+  signals = 'signal',
+  worker = 'worker',
+}
+export interface ReadInterface {
+  (name: string, defaultValue?: any): any
 }

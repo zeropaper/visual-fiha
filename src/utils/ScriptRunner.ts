@@ -3,6 +3,8 @@ const asyncNoop = async () => { };
 
 // import { JSHINT } from 'jshint';
 
+export type ScriptRunnerEventTypes = 'compilationerror' | 'executionerror' | 'log';
+
 export interface ScriptRunnerCodeError extends Error {
   lineNumber?: number;
   columnNumber?: number;
@@ -11,18 +13,16 @@ export interface ScriptRunnerCodeError extends Error {
 
 export interface ScriptRunnerEvent {
   defaultPrevented?: boolean;
-  readonly type: 'compilationerror' | 'executionerror' | 'log';
+  readonly type: ScriptRunnerEventTypes;
 }
 
 export interface ScriptRunnerErrorEvent extends ScriptRunnerEvent {
   error: ScriptRunnerCodeError | ScriptRunnerLintingError;
-  defaultPrevented?: boolean;
   readonly type: 'compilationerror' | 'executionerror';
 }
 
 export interface ScriptRunnerLogEvent extends ScriptRunnerEvent {
   data: any;
-  defaultPrevented?: boolean;
   readonly type: 'log';
 }
 
@@ -34,11 +34,13 @@ class EmptyScope { }
 
 /* eslint-disable */
 const forbidden = [
+  // @ts-ignore
   ...Object.keys(typeof window !== 'undefined' ? window : {}),
   // @ts-ignore
   ...Object.keys(typeof global !== 'undefined' ? global : {}),
-  ...Object.keys(typeof globalThis !== 'undefined' ? globalThis : {}),
+  // @ts-ignore
   ...Object.keys(typeof self !== 'undefined' ? self : {}),
+  ...Object.keys(typeof globalThis !== 'undefined' ? globalThis : {}),
 ];
 /* eslint-enable */
 
@@ -51,13 +53,17 @@ class ScriptRunnerLintingError extends Error {
   details: object[] = [];
 }
 
+type PlainObject = { [k: string]: any };
+
 class ScriptRunner {
-  constructor(paramNames: string[] = [], scope: any = null) {
-    this.#params = paramNames;
+  constructor(scope: any = null, name = `sr${Date.now()}`) {
     this.#scope = scope;
+    this.#name = name;
   }
 
-  #listeners: { [type: string]: ((event: ScriptRunnerEvent) => any)[] } = {};
+  #name: string;
+
+  #listeners: { [type: string]: ScriptRunnerEventListener[] } = {};
 
   #errors: {
     compilation?: Error | null,
@@ -67,11 +73,11 @@ class ScriptRunner {
     execution: null,
   };
 
+  #version = 0;
+
   #code = '';
 
-  #scope = new EmptyScope();
-
-  #params: string[] = [];
+  #scope: any = new EmptyScope();
 
   #fn: Function = asyncNoop;
 
@@ -81,47 +87,45 @@ class ScriptRunner {
     this.#logs.push(whtvr);
   };
 
-  get log() { return this.#logs; }
+  #api: PlainObject = {};
+
+  get version() {
+    return this.#version;
+  }
+
+  get scope() {
+    return this.#scope;
+  }
+
+  set scope(newScope: any) {
+    this.#scope = newScope;
+  }
+
+  get api() {
+    return {
+      ...this.#api,
+      scriptLog: this.#log,
+    };
+  }
+
+  set api({ scriptLog, ...api }: PlainObject) {
+    this.#api = api;
+    this.code = this.#code;
+  }
+
+  get scriptLog() { return this.#logs; }
 
   get isAsync() { return this.#code.includes('await'); }
 
-  addEventListener(type: string, callback: ScriptRunnerEventListener) {
-    /* istanbul ignore next */
-    if (!this.#listeners[type]) this.#listeners[type] = [];
-
-    this.#listeners[type].push(callback);
-  }
-
-  removeEventListener(type: string, callback: ScriptRunnerEventListener) {
-    /* istanbul ignore next */
-    if (!this.#listeners[type]) return;
-
-    const stack = this.#listeners[type];
-    for (let i = 0, l = stack.length; i < l; i += 1) {
-      if (stack[i] === callback) {
-        stack.splice(i, 1);
-        return;
-      }
-    }
-  }
-
-  dispatchEvent(event: ScriptRunnerEvent) {
-    if (!this.#listeners[event.type]) return undefined;
-
-    const stack = this.#listeners[event.type].slice();
-
-    for (let i = 0, l = stack.length; i < l; i += 1) {
-      stack[i].call(this, event);
-    }
-
-    return !event.defaultPrevented;
+  get code() {
+    return this.#code;
   }
 
   set code(code: string) {
     this.#errors.compilation = null;
     this.#errors.execution = null;
 
-    const paramsStr = this.#params.join(', ');
+    const paramsStr = Object.keys(this.api).join(', ');
 
     const forbiddenStr = [
       ...forbidden,
@@ -136,7 +140,7 @@ class ScriptRunner {
 
     const sync = this.isAsync ? 'async' : '';
 
-    // const jshintReadOnly = this.#params
+    // const jshintReadOnly = Object.keys(this.api)
     //   .reduce((obj, name) => ({ ...obj, [name]: false }), {});
 
     // JSHINT(code, {
@@ -155,14 +159,13 @@ class ScriptRunner {
     try {
       // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
       const builder = new Function(`
-      return ${sync} function (log, ${paramsStr}) {
-        let ${forbiddenStr};
-        // ---------
-        ${code}
+      return ${sync} function ${this.#name}_${this.#version + 1}(${paramsStr}) { let ${forbiddenStr};
+        ${code || '// empty'}
       };`);
       this.#fn = builder();
 
       this.#code = code;
+      this.#version += 1;
     } catch (error) {
       this.#errors.compilation = error;
       this.dispatchEvent({
@@ -174,12 +177,46 @@ class ScriptRunner {
     }
   }
 
+  addEventListener(type: ScriptRunnerEventTypes, callback: ScriptRunnerEventListener) {
+    /* istanbul ignore next */
+    if (!this.#listeners[type]) this.#listeners[type] = [];
+
+    this.#listeners[type].push(callback);
+  }
+
+  removeEventListener(type: ScriptRunnerEventTypes, callback: ScriptRunnerEventListener) {
+    /* istanbul ignore next */
+    if (!this.#listeners[type]) return;
+
+    const stack = this.#listeners[type];
+    for (let i = 0, l = stack.length; i < l; i += 1) {
+      if (stack[i] === callback) {
+        stack.splice(i, 1);
+        return;
+      }
+    }
+  }
+
+  dispatchEvent(event: ScriptRunnerErrorEvent | ScriptRunnerLogEvent) {
+    if (!this.#listeners[event.type]) return undefined;
+
+    const stack = this.#listeners[event.type].slice();
+
+    for (let i = 0, l = stack.length; i < l; i += 1) {
+      stack[i].call(this, event);
+    }
+
+    return !event.defaultPrevented;
+  }
+
   exec(data?: { [x: string]: any }) {
     this.#logs = [];
     try {
       this.#errors.execution = null;
 
-      const result = this.#fn.call(this.#scope, this.#log, ...Object.values(data || {}));
+      const args = Object.values({ ...this.api, ...(data || {}) });
+      // console.info('args', args.length);
+      const result = this.#fn.call(this.#scope, ...args);
       if (this.#logs.length) {
         this.dispatchEvent({
           type: 'log',

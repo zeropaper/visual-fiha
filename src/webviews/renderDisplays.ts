@@ -4,7 +4,6 @@ export default function renderDisplays(displays: DisplayBase[], state: AppState)
   const root = document.getElementById('displays');
   if (!root) return;
   const url = `http://${state.displayServer.host}:${state.displayServer.port}`;
-  console.info('[main] render displays', displays);
   const newDisplayLink = `<a href="${url}">${url}</a>`;
 
   if (!displays.length) {

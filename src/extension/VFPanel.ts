@@ -104,6 +104,10 @@ export default class VFPanel {
     this._panel.webview.postMessage({ action: 'updatestate', payload: update });
   }
 
+  public updateData(update = {}) {
+    this._panel.webview.postMessage({ action: 'updatedata', payload: update });
+  }
+
   public dispose() {
     VFPanel.currentPanel = undefined;
 
@@ -157,7 +161,7 @@ export default class VFPanel {
           Use a content security policy to only allow loading images from https or from our extension directory,
           and only allow scripts that have a specific nonce.
         -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src http://localhost:9999; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -168,8 +172,12 @@ export default class VFPanel {
         <title>Visual Fiha</title>
       </head>
       <body>
+        <iframe id="control-display" class="control-display-iframe" src="http://localhost:9999/"></iframe>
+        
         <div id="displays"></div>
-        <code><pre id="state-dump" /></code>
+        
+        <code><pre id="state-dump"></pre></code>
+        
         <!--
         <h1 id="lines-of-code-counter">0</h1>
 

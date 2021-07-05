@@ -1,15 +1,20 @@
 import * as vscode from 'vscode';
 import { readFile } from 'fs';
 import {
-  createServer, Server, IncomingMessage, ServerResponse,
+  createServer,
+  Server,
+  IncomingMessage,
+  ServerResponse,
 } from 'http';
 import * as mime from 'mime';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 
 import { ComEventData, DisplayBase } from '../types';
+// import { ChannelPost } from '../utils/com';
 
 export type ServerDisplay = Omit<DisplayBase, 'id'> & {
   socket: Socket;
+  // post: ChannelPost;
 };
 
 export const indexTemplate = ({ host, port }: { host: string; port: number }) => `<html>
@@ -168,6 +173,10 @@ export default class VFServer {
         this.#resizeDisplay(payload);
       }
     });
+
+    // socket.on('message', (data: ComEventData) => {
+    //   this.#socketChannel.listener({ data }: ComMessageEvent);
+    // });
   };
 
   get host() {
@@ -207,9 +216,12 @@ export default class VFServer {
     this.#io.emit('message', { action, payload });
   };
 
-  broadcastScript = (id: string, script: string) => {
-    console.info('[webServer] sendScript', id, script.length);
-    this.broadcast('scriptchange', { id, script });
+  broadcastScript = (info: { [k: string]: any }, script: string) => {
+    this.broadcast('scriptchange', { ...info, script });
+  };
+
+  broadcastData = (data: any) => {
+    this.broadcast('updatedata', data);
   };
 
   deactivate = (cb?: (err?: Error) => void) => {

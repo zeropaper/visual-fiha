@@ -3,8 +3,9 @@ import {
   autoBind,
   ComActionHandlers,
   ComMessageEventListener,
-  MessengerPoster,
+  ChannelPost,
 } from '../utils/com';
+import type Canvas2DLayer from './Canvas2DLayer';
 
 export interface DisplayOptions {
   id?: string;
@@ -15,6 +16,7 @@ export interface DisplayState {
   id: string;
   width: number;
   height: number;
+  layers?: Canvas2DLayer[];
 }
 
 let data: ScriptingData = {
@@ -23,6 +25,11 @@ let data: ScriptingData = {
   deltaNow: 0,
 };
 
+const handlers: ComActionHandlers = {
+  updatedata: (payload: typeof data) => {
+    data = payload;
+  },
+};
 
 export default class Display {
   static ensureCanvas = (id: string = 'canvas'): HTMLCanvasElement => {
@@ -41,15 +48,6 @@ export default class Display {
 
     const { style: canvasStyle } = el;
     canvasStyle.background = 'black';
-    // canvasStyle.position = 'absolute';
-    // canvasStyle.zIndex = '10';
-    // canvasStyle.top = '0';
-    // canvasStyle.right = '0';
-    // canvasStyle.bottom = '0';
-    // canvasStyle.left = '0';
-    // canvasStyle.background = 'black';
-    // canvasStyle.width = 'auto';
-    // canvasStyle.height = 'auto';
     return el;
   };
 
@@ -68,11 +66,18 @@ export default class Display {
     this.#worker.addEventListener('message', this.#listener);
 
     this.resize();
+    this.#offscreen = canvas.transferControlToOffscreen();
+    this.#worker.postMessage({
+      action: 'offscreencanvas',
+      payload: { canvas: this.#offscreen },
+    }, [this.#offscreen]);
   }
+
+  #offscreen: OffscreenCanvas;
 
   #worker: Worker;
 
-  #post: MessengerPoster;
+  #post: ChannelPost;
 
   #id: string;
 
@@ -92,20 +97,18 @@ export default class Display {
     };
   }
 
-  get post(): MessengerPoster {
+  get post(): ChannelPost {
     return this.#post;
   }
 
   resize = () => requestAnimationFrame(() => {
     const { canvas } = this;
     const rect = canvas.parentElement?.getBoundingClientRect().toJSON();
-    if (!rect) return;
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-
-    this.post('resize', {
-      width: canvas.width,
-      height: canvas.height,
-    });
+    if (rect) {
+      this.post('resize', {
+        width: rect.width,
+        height: rect.height,
+      });
+    }
   });
 }

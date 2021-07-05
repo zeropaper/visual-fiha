@@ -2,31 +2,28 @@
 
 import { io } from 'socket.io-client';
 
-import type { ComEventData, ScriptingData } from '../types';
+import type {
+  ComEventData,
+  ScriptingData,
+  ScriptInfo,
+} from '../types';
 
 import type { DisplayState } from './Display';
 
-import { autoBind, ComActionHandlers } from '../utils/com';
+import {
+  autoBind,
+  ChannelBindings,
+  ComActionHandlers,
+} from '../utils/com';
+import Scriptable from '../utils/Scriptable';
+import mathTools from '../utils/mathTools';
+import Canvas2DLayer from './Canvas2DLayer';
 
 interface WebWorker extends Worker {
   location: Location;
 }
 
-// eslint-disable-next-line no-restricted-globals
-const worker: WebWorker = self as any;
-
-const socket = io();
-
-let state: DisplayState = {
-  id: worker.location.hash.replace('#', ''),
-  width: 400,
-  height: 300,
-};
-
-socket.on('getdisplay', (akg: (dis: DisplayState) => void) => {
-  // console.info('[worker] getdisplay callback', state);
-  akg(state);
-});
+// scripting
 
 let data: ScriptingData = {
   iterationCount: 0,
@@ -34,22 +31,129 @@ let data: ScriptingData = {
   deltaNow: 0,
 };
 
-const {
-  post: socketEmit,
-  listener: socketListener,
-} = autoBind({
+// eslint-disable-next-line no-restricted-globals
+const worker: WebWorker = self as any;
+const read = (key: string, defaultVal?: any) => (typeof data[key] !== 'undefined' ? data[key] : defaultVal);
+const makeErrorHandler = (type: string) => (event: any) => console.warn('[worker]', type, event);
+const scriptableOptions = {
+  api: mathTools,
+  read,
+  onCompilationError: makeErrorHandler('compilation'),
+  onExecutionError: makeErrorHandler('execution'),
+};
+
+const defaultAnimation = `
+clear();
+textLines(['test', width(), height(), typeof read === 'function' && read('now')], {
+  x: width(2),
+  y: height(2),
+  fill: 'lime',
+});
+`;
+
+let state: DisplayState = {
+  id: worker.location.hash.replace('#', ''),
+  width: 300,
+  height: 150,
+  layers: [
+    new Canvas2DLayer({
+      id: 'testlayer',
+      read,
+      setup: 'scriptLog("test log")',
+      animation: defaultAnimation,
+    }),
+  ],
+};
+
+const scriptable = new Scriptable(scriptableOptions);
+
+const canvas = new OffscreenCanvas(state.width, state.height);
+const context = canvas.getContext('2d');
+
+const renderLayers = () => {
+  if (!context) return;
+  state.layers?.forEach((layer) => {
+    layer.execAnimation();
+    const { imageData } = layer;
+    if (imageData) {
+      context.putImageData(imageData, 0, 0, 0, 0, layer.width, layer.height);
+    }
+  });
+};
+
+let onScreenCanvas: OffscreenCanvas;
+function render() {
+  // updates the data
+  scriptable.execAnimation();
+
+  // if (data.iterationCount % 1000 === 0) {
+  //   console.info('[worker] render', canvas.width, canvas.height, data.iterationCount);
+  // }
+
+  if (context && onScreenCanvas) {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    renderLayers();
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    if (imageData) {
+      onScreenCanvas.height = canvas.height;
+      onScreenCanvas.width = canvas.width;
+
+      const ctx = onScreenCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+      ctx.putImageData(imageData, 0, 0, 0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  requestAnimationFrame(render);
+}
+render();
+
+// com
+
+const socket = io();
+
+socket.on('getdisplay', (akg: (dis: DisplayState) => void) => akg(state));
+
+let socketCom: ChannelBindings;
+let workerCom: ChannelBindings;
+
+const socketHandlers: ComActionHandlers = {
+  scriptchange: (payload: ScriptInfo & {
+    script: string;
+  }) => {
+    const {
+      type,
+      role,
+      script,
+    } = payload;
+
+    if (type === 'worker') {
+      scriptable[role].code = script;
+      if (role === 'setup') scriptable.execSetup();
+    } else {
+      workerCom.post('scriptchange', payload);
+    }
+  },
+  updatelayers: () => { },
+  updatedata: (payload: typeof data) => {
+    data = payload;
+    workerCom.post('updatedata', data);
+  },
+};
+// eslint-disable-next-line prefer-const
+socketCom = autoBind({
   postMessage: (message: any) => {
     socket.emit('message', message);
   },
-  // addEventListener: (eventName, lstnr) => {
-  //   socket.on(eventName, lstnr);
-  // },
-}, `display-${state.id}-worker-socket`, {});
+}, `display-${state.id}-socket`, socketHandlers);
 
-socket.on('message', (message: ComEventData) => socketListener({ data: message } as MessageEvent<ComEventData>));
+socket.on('message', (message: ComEventData) => socketCom.listener({ data: message }));
 
-const handlers: ComActionHandlers = {
-  updatedata: (payload: any) => { data = payload || data; },
+const workerHandler: ComActionHandlers = {
+  offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
+    onScreenCanvas = onscreen;
+  },
   resize: ({
     width,
     height,
@@ -59,10 +163,17 @@ const handlers: ComActionHandlers = {
       width: width || state.width,
       height: height || state.height,
     };
-    socketEmit('resizedisplay', state);
+    canvas.width = state.width;
+    canvas.height = state.height;
+    state.layers?.forEach((layer) => {
+      // eslint-disable-next-line no-param-reassign
+      layer.width = state.width;
+      // eslint-disable-next-line no-param-reassign
+      layer.height = state.height;
+    });
+    socketCom.post('resizedisplay', state);
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { post, listener } = autoBind(worker, `display-${state.id}-worker`, handlers);
-worker.addEventListener('message', listener);
+workerCom = autoBind(worker, `display-${state.id}-worker`, workerHandler);
+worker.addEventListener('message', workerCom.listener);

@@ -36,7 +36,7 @@ describe('object ScriptRunner', () => {
         expect.assertions(3);
 
         expect(() => {
-          runner = new ScriptRunner(Object.keys(data));
+          runner = new ScriptRunner();
           runner.code = syncCode;
         }).not.toThrow();
         expect(runner).toBeInstanceOf(ScriptRunner);
@@ -51,7 +51,7 @@ describe('object ScriptRunner', () => {
         expect.assertions(3);
 
         expect(() => {
-          runner = new ScriptRunner(Object.keys(data));
+          runner = new ScriptRunner();
           runner.code = asyncCode;
         }).not.toThrow();
 
@@ -81,7 +81,7 @@ describe('object ScriptRunner', () => {
       it('does not return a promise when executed', async () => {
         expect.assertions(3);
 
-        const runner = new ScriptRunner(Object.keys(data));
+        const runner = new ScriptRunner();
         runner.code = syncCode;
 
         let result;
@@ -98,7 +98,7 @@ describe('object ScriptRunner', () => {
       it('does not return a promise when executed', async () => {
         expect.assertions(2);
 
-        const runner = new ScriptRunner(Object.keys(data));
+        const runner = new ScriptRunner();
         runner.code = asyncCode;
         const result = runner.exec(data);
 
@@ -123,7 +123,7 @@ describe('object ScriptRunner', () => {
       it('can be set', () => {
         expect.assertions(1);
 
-        const runner = new ScriptRunner([], scope);
+        const runner = new ScriptRunner(scope);
         runner.code = `
         return this.stuff
         `;
@@ -138,7 +138,7 @@ describe('object ScriptRunner', () => {
       it('logs', () => {
         expect.assertions(9);
 
-        const runner = new ScriptRunner(Object.keys(data), scope);
+        const runner = new ScriptRunner(scope);
         runner.code = `
         log("log", this, self, window, param1, param2);
         return this.stuff
