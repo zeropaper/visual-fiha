@@ -6,6 +6,7 @@ import type {
   ComEventData,
   ScriptingData,
   ScriptInfo,
+  AppState,
 } from '../types';
 
 import type { DisplayState } from './Display';
@@ -118,8 +119,6 @@ render();
 
 const socket = io();
 
-socket.on('getdisplay', (akg: (dis: DisplayState) => void) => akg({ ...state, layers: undefined }));
-
 let socketCom: ChannelBindings;
 let workerCom: ChannelBindings;
 
@@ -128,6 +127,7 @@ const socketHandlers: ComActionHandlers = {
     script: string;
   }) => {
     const {
+      id,
       type,
       role,
       script,
@@ -138,14 +138,35 @@ const socketHandlers: ComActionHandlers = {
       if (role === 'setup') scriptable.execSetup();
     } else {
       workerCom.post('scriptchange', payload);
+      if (type === 'layer') {
+        const found = state.layers?.find((layer) => layer.id === id);
+        console.info('found layer', id, found, state.layers);
+        if (found) {
+          found[role].code = script;
+        }
+      }
     }
   },
-  updatelayers: () => { },
+  // updatelayers: () => { },
+  updatestate: (update: Partial<AppState>) => {
+    state = {
+      ...state,
+      layers: update.layers?.map((options) => new Canvas2DLayer(options))
+        || state.layers,
+    };
+    // workerCom.post('updatestate', state);
+  },
   updatedata: (payload: typeof data) => {
     data = payload;
     workerCom.post('updatedata', data);
   },
 };
+
+socket.on('getdisplay', ({ id: displayId, ...stuff }: any, akg: (dis: DisplayState) => void) => {
+  socketHandlers.updatestate(stuff);
+  return akg({ ...state, layers: undefined });
+});
+
 // eslint-disable-next-line prefer-const
 socketCom = autoBind({
   postMessage: (message: any) => {

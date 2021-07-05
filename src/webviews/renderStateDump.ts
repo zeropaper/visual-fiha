@@ -1,6 +1,10 @@
 import { AppState } from '../types';
 
-export default function renderStateDump(state: AppState) {
+export default function renderStateDump({
+  displays,
+  displayServer,
+  ...state
+}: AppState) {
   const root = document.getElementById('state-dump');
   if (!root) return;
   try {

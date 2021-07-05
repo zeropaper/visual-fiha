@@ -9,11 +9,28 @@ import {
   ScriptType,
   ScriptRole,
   DirectoryTypes,
+  Layer,
+  TypeDirectory,
 } from '../types';
 import getWebviewOptions from './getWebviewOptions';
 import VFPanel from './VFPanel';
 import WebServer from './WebServer';
 import commands from './commands';
+
+const asyncReadFile = (fsPath: string): Promise<string> => new Promise((res, rej) => {
+  try {
+    readFile(fsPath, 'utf8', (err, content) => {
+      if (err) {
+        rej(err);
+        return;
+      }
+
+      res(content);
+    });
+  } catch (err) {
+    rej(err);
+  }
+});
 
 const webServer = new WebServer();
 
@@ -46,43 +63,95 @@ const textDocumentScriptInfo = (doc: vscode.TextDocument): ScriptInfo => {
   };
 };
 
-const readWorkspaceRC = (folderIndex = 0) => new Promise<FihaRC>((res, rej) => {
+export function getWorkspaceFolder(folderIndex = 0): vscode.WorkspaceFolder {
   const {
     workspaceFolders: folders,
   } = vscode.workspace;
+
   if (!folders?.length) {
-    rej(new Error('Workspace has no folder'));
-    return;
-  }
-  if (!folders[folderIndex]) {
-    rej(new Error(`Workspace has no folder with index ${folderIndex} (${folders.length})`));
-    return;
+    throw new Error('Workspace has no folder');
   }
 
-  const filepath = vscode.Uri.joinPath(folders[folderIndex].uri, 'fiha.json').fsPath;
-  readFile(filepath, 'utf8', (err, content) => {
+  if (!folders[folderIndex]) {
+    throw new Error(`Workspace has no folder with index ${folderIndex} (${folders.length})`);
+  }
+
+  return folders[folderIndex];
+}
+
+async function readWorkspaceRC(folderIndex = 0): Promise<FihaRC> {
+  const folder = getWorkspaceFolder(folderIndex);
+  const filepath = vscode.Uri.joinPath(folder.uri, 'fiha.json').fsPath;
+  const content = await asyncReadFile(filepath);
+  return JSON.parse(content);
+}
+
+let runtimeState: AppState = {
+  displayServer: {
+    host: 'localhost',
+    port: 9999,
+  },
+  displays: [],
+  layers: [],
+  bpm: 120,
+  id: 'vf-default',
+};
+
+export function scriptUri(type: keyof typeof TypeDirectory, id: string, role: ScriptRole) {
+  const folder = getWorkspaceFolder();
+  return vscode.Uri.joinPath(folder.uri, TypeDirectory[type], `${id}-${role}.js`);
+}
+
+export function getScriptContent(type: keyof typeof TypeDirectory) {
+  return async (info: Layer): Promise<Layer> => {
+    const setupFSPath = scriptUri(type, info.id, 'setup').path;
+    const animationFSPath = scriptUri(type, info.id, 'animation').path;
+
+    let setup = `// cannot find file ${setupFSPath}`;
+    let animation = `// cannot find file ${animationFSPath}`;
+
     try {
-      if (err) throw err;
-      res(JSON.parse(content));
-    } catch (error) {
-      rej(error);
-    }
-  });
-});
+      setup = await asyncReadFile(setupFSPath);
+    } catch (e) { /* */ }
+    try {
+      animation = await asyncReadFile(animationFSPath);
+    } catch (e) { /* */ }
+
+    return {
+      ...info,
+      setup,
+      animation,
+    };
+  };
+}
+
+export async function propagateRC() {
+  try {
+    const fiharc = await readWorkspaceRC();
+    runtimeState = {
+      ...fiharc,
+      ...runtimeState,
+      layers: await Promise.all(fiharc.layers.map(getScriptContent('layer'))),
+    };
+
+    VFPanel.currentPanel?.updateState(runtimeState);
+
+    const { displays, ...passed } = runtimeState;
+    webServer.broadcast('updatestate', passed);
+  } catch (err) {
+    console.error('[ext] fiharc', err.message);
+  }
+}
 
 export function activate(context: vscode.ExtensionContext) {
-  readWorkspaceRC()
-    .then((fiharc) => {
-      console.info('[ext] fiharc', fiharc);
-      VFPanel.currentPanel?.updateState();
-    })
-    .catch((err) => console.error('[ext] fiharc', err.message));
-
   context.subscriptions.push(
     webServer.activate(context),
     webServer.onDisplaysChange((displays) => {
       if (!VFPanel.currentPanel) return;
       VFPanel.currentPanel.updateDisplays(displays);
+    }),
+    webServer.onSocketConnection((socket) => {
+      socket.emit('message', { action: 'updatestate', payload: runtimeState });
     }),
   );
 
@@ -105,13 +174,31 @@ export function activate(context: vscode.ExtensionContext) {
     });
   }
 
+  propagateRC();
+  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((event) => {
+    if (!event.fileName.endsWith('fiha.json')) return;
+    propagateRC();
+  }));
+
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
     // if (!event.contentChanges.length) return;
 
     const { document: doc } = event;
     if (doc.isUntitled || doc.isClosed || doc.languageId !== 'javascript') return;
 
-    webServer.broadcastScript(textDocumentScriptInfo(doc), doc.getText());
+    const info = textDocumentScriptInfo(doc);
+    const script = doc.getText();
+    webServer.broadcastScript(info, script);
+    const layerIndex = runtimeState.layers.findIndex((layer) => layer.id === info.id);
+    if (layerIndex < 0) {
+      console.info('[ext] WTF', runtimeState.layers);
+      return;
+    }
+
+    runtimeState.layers[layerIndex][info.role] = script;
+    VFPanel.currentPanel?.updateState({
+      layers: runtimeState.layers,
+    });
   }));
 
   function refreshData() {

@@ -30,6 +30,8 @@ export interface ScriptRunnerEventListener {
   (event: ScriptRunnerErrorEvent | ScriptRunnerLogEvent): boolean | void;
 }
 
+export type API = { [scriptGlobalName: string]: any };
+
 class EmptyScope { }
 
 /* eslint-disable */
@@ -52,8 +54,6 @@ class ScriptRunnerLintingError extends Error {
 
   details: object[] = [];
 }
-
-type API = { [scriptGlobalName: string]: any };
 
 class ScriptRunner {
   constructor(scope: any = null, name = `sr${Date.now()}`) {

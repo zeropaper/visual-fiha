@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io';
 
-import type Scriptable from './utils/Scriptable';
+import type { ScriptableOptions } from './utils/Scriptable';
 
 export interface DisplayBase {
   id: string;
@@ -12,23 +12,27 @@ export interface ServerDisplay extends Omit<DisplayBase, 'id'> {
   socket: Socket;
 }
 
-export type Layer = Scriptable & {
+export type Layer = Omit<ScriptableOptions, 'api'> & {
+  type: 'canvas' | 'threejs' | 'canvas2d' | 'webgl' | 'webgl2';
   id: string;
+  weight?: number;
+  active?: boolean;
+  setup?: string;
+  animation?: string;
 };
 
 export interface AppState {
-  count?: number;
-
+  id: string;
+  bpm: number;
   displayServer: { host: string, port: number };
-
   displays: DisplayBase[];
   layers: Layer[];
 }
 
 export type FihaRC = {
   id: string;
-  layers: DisplayBase[];
   bpm?: number;
+  layers: Layer[];
   assets?: { name: string }[];
 };
 
@@ -79,6 +83,8 @@ export enum DirectoryTypes {
   signals = 'signal',
   worker = 'worker',
 }
-export interface ReadInterface {
-  (name: string, defaultValue?: any): any
+export enum TypeDirectory {
+  layer = 'layers',
+  signal = 'signals',
+  worker = 'worker',
 }

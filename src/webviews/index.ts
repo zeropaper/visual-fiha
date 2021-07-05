@@ -1,31 +1,29 @@
-import type { AppState, DisplayBase } from '../types';
+import type { AppState, DisplayBase, Layer } from '../types';
 import renderDisplays from './renderDisplays';
 import renderStateDump from './renderStateDump';
 import { autoBind, ComMessageChannel } from '../utils/com';
 
-// This script will be run within the webview itself
-// It cannot access the main VS Code APIs directly.
-
-// let data: any = {};
-
-// const updateData = (newData: any) => {
-//   data = newData;
-// };
+const vscode = acquireVsCodeApi<AppState>();
 
 const defaultState: AppState = {
   displayServer: { host: 'localhost', port: 9999 },
   displays: [],
   layers: [],
+  bpm: 120,
+  id: 'vf-default',
 };
-
-const vscode = acquireVsCodeApi<AppState>();
 
 const getState = (): AppState => ({
   ...defaultState,
   ...(vscode.getState() || {}),
 });
 
-const updatestate = () => {
+const updatestate = (newState: AppState) => {
+  const currentState = getState();
+  vscode.setState({
+    ...currentState,
+    ...newState,
+  });
   renderStateDump(getState());
 };
 
@@ -35,13 +33,17 @@ const updatedisplays = (displays: DisplayBase[]) => {
     ...currentState,
     displays,
   });
-  renderDisplays(displays, currentState);
+  renderDisplays(displays, getState());
+};
+
+const scriptchange = (info: Layer & { script: string; }) => {
+  console.info('[main] scriptchange', info);
 };
 
 const handlers = {
-  // updateData,
   updatestate,
   updatedisplays,
+  scriptchange,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

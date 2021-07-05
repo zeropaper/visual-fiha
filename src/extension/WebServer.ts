@@ -53,6 +53,8 @@ export default class VFServer {
 
   #displaysChange = new vscode.EventEmitter<DisplayBase[]>();
 
+  #socketConnection = new vscode.EventEmitter<Socket>();
+
   #serveExtensionFile = (reqUrl: string, res: ServerResponse) => {
     if (!this.#context) throw new Error('WebServer is missing extension context');
 
@@ -142,7 +144,9 @@ export default class VFServer {
   };
 
   #handleIOConnection = (socket: Socket) => {
-    socket.emit('getdisplay', ({ id, ...display }: DisplayBase) => {
+    socket.emit('getdisplay', {
+      layers: [],
+    }, ({ id, ...display }: DisplayBase) => {
       this.#displays[id] = { ...display, socket };
       this.#displaysChange.fire(this.displays);
     });
@@ -174,9 +178,7 @@ export default class VFServer {
       }
     });
 
-    // socket.on('message', (data: ComEventData) => {
-    //   this.#socketChannel.listener({ data }: ComMessageEvent);
-    // });
+    this.#socketConnection.fire(socket);
   };
 
   get host() {
@@ -210,6 +212,10 @@ export default class VFServer {
 
   get onDisplaysChange() {
     return this.#displaysChange.event;
+  }
+
+  get onSocketConnection() {
+    return this.#socketConnection.event;
   }
 
   broadcast = (action: string, payload?: any) => {

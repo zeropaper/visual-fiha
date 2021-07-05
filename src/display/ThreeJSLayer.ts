@@ -3,13 +3,13 @@ import mathTools from '../utils/mathTools';
 import miscTools from '../utils/miscTools';
 import canvasTools, { CTX } from '../layers/canvasTools';
 
-export interface Canvas2DLayerOptions extends Omit<ScriptableOptions, 'type, api, id'> {
+export interface ThreeJSLayerOptions extends Omit<ScriptableOptions, 'api, id'> {
   id: string;
   canvas?: HTMLCanvasElement | OffscreenCanvas;
 }
 
-export default class Canvas2DLayer extends Scriptable {
-  constructor(options: Canvas2DLayerOptions) {
+export default class ThreeJSLayer extends Scriptable {
+  constructor(options: ThreeJSLayerOptions) {
     super(options);
     this.#canvas = (options.canvas || new OffscreenCanvas(300, 150)) as OffscreenCanvas;
     this.#ctx = this.#canvas.getContext('2d') as CTX;

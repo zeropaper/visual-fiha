@@ -1,11 +1,10 @@
 /* eslint-disable no-debugger */
-import type { ReadInterface } from '../types';
+import ScriptRunner, { ScriptRunnerEventListener, API } from './ScriptRunner';
 
-import ScriptRunner, { ScriptRunnerEventListener } from './ScriptRunner';
-
-type API = { [scriptGlobalName: string]: any };
-
-type Cache = { [k: string]: any };
+export type Cache = { [k: string]: any };
+export interface ReadInterface {
+  (name: string, defaultValue?: any): any
+}
 
 export type ScriptableOptions = {
   onCompilationError?: ScriptRunnerEventListener;
@@ -47,6 +46,10 @@ export default class Scriptable {
   cache: Cache;
 
   read: ReadInterface = (key, fb) => (/* Scriptable read */ typeof this.cache[key] === 'undefined' ? fb : this.cache[key]);
+
+  get id() {
+    return this.#id;
+  }
 
   get api(): API & { cache: Cache } {
     // console.info('get Scriptable api', this.#id, this.read);
