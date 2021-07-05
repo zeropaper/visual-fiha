@@ -18,7 +18,7 @@ import {
 } from '../utils/com';
 import Scriptable, { ScriptableOptions } from '../utils/Scriptable';
 import mathTools from '../utils/mathTools';
-import Canvas2DLayer from './Canvas2DLayer';
+import Canvas2DLayer from '../layers/Canvas2DLayer';
 
 interface WebWorker extends Worker {
   location: Location;

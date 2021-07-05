@@ -5,7 +5,7 @@ import {
   ComMessageEventListener,
   ChannelPost,
 } from '../utils/com';
-import type Canvas2DLayer from './Canvas2DLayer';
+import type Canvas2DLayer from '../layers/Canvas2DLayer';
 
 export interface DisplayOptions {
   id?: string;

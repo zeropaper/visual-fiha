@@ -1,7 +1,7 @@
 import Scriptable, { ScriptableOptions } from '../utils/Scriptable';
 import mathTools from '../utils/mathTools';
 import miscTools from '../utils/miscTools';
-import canvasTools, { CTX } from '../layers/canvasTools';
+import canvasTools, { CTX } from './canvasTools';
 
 export interface ThreeJSLayerOptions extends Omit<ScriptableOptions, 'api, id'> {
   id: string;
