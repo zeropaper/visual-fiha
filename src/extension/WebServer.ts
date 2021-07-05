@@ -17,13 +17,13 @@ export type ServerDisplay = Omit<DisplayBase, 'id'> & {
   // post: ChannelPost;
 };
 
-export const indexTemplate = ({ host, port }: { host: string; port: number }) => `<html>
+export const indexTemplate = ({ host, port }: { host: string; port: number }) => `<html style="background: black;">
   <head>
     <title>Visual Fiha</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="http://${host}:${port}/reset.css" />
   </head>
-  <body style="position: relative; margin: 0; padding: 0; overflow: hidden; height: 100%; display: flex; justify-content: center; align-items: center">
+  <body style="background: black; position: relative; margin: 0; padding: 0; overflow: hidden; height: 100%; display: flex; justify-content: center; align-items: center">
     <canvas id="canvas" style="z-index: 10; width: auto; height: auto;"></canvas>
     <script src="/index.js"></script>
   </body>
