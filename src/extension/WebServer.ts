@@ -89,12 +89,12 @@ export default class VFServer {
           return;
         }
 
-        if (req.url === '/index.js') {
+        if (['/index.js', '/index.js.map'].includes(req.url || '')) {
           this.#serveExtensionFile(`out/display/${req.url}`, res);
           return;
         }
 
-        if (req.url === '/DisplayWorker.js') {
+        if (['/DisplayWorker.js', '/DisplayWorker.js.map'].includes(req.url || '')) {
           this.#serveExtensionFile(`out/display/${req.url}`, res);
           return;
         }
@@ -203,7 +203,9 @@ export default class VFServer {
     return this.#displaysChange.event;
   }
 
-  broadcast = (command: string, payload?: any) => this.#io.send(command, payload);
+  broadcast = (action: string, payload?: any) => {
+    this.#io.emit('message', { action, payload });
+  };
 
   broadcastScript = (id: string, script: string) => {
     console.info('[webServer] sendScript', id, script.length);
