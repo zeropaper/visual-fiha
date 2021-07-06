@@ -46,4 +46,27 @@ export default class Canvas2DLayer extends Scriptable {
     const canvas = this.#canvas;
     canvas.height = val;
   }
+
+  drawOn = (dest: HTMLCanvasElement | OffscreenCanvas, measurments: {
+    sx?: number;
+    sy?: number;
+    sw?: number;
+    sh?: number;
+    dx?: number;
+    dy?: number;
+    dw?: number;
+    dh?: number;
+  } = {}) => {
+    const {
+      sx = 0,
+      sy = 0,
+      sw = dest.width,
+      sh = dest.height,
+      dx = 0,
+      dy = 0,
+      dw = this.width,
+      dh = this.height,
+    } = measurments;
+    dest.getContext('2d')?.drawImage(this.#canvas, dx, dy, dw, dh, sx, sy, sw, sh);
+  };
 }

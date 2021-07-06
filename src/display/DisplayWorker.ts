@@ -80,10 +80,7 @@ const renderLayers = () => {
   if (!context) return;
   state.layers?.forEach((layer) => {
     layer.execAnimation();
-    const { imageData } = layer;
-    if (imageData) {
-      context.putImageData(imageData, 0, 0, 0, 0, layer.width, layer.height);
-    }
+    layer.drawOn(canvas);
   });
 };
 
