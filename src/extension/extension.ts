@@ -137,6 +137,8 @@ export async function propagateRC() {
       ...fiharc,
       ...runtimeState,
       layers: await Promise.all(fiharc.layers.map(getScriptContent('layer'))),
+      id: fiharc.id,
+      bpm: fiharc.bpm || runtimeState.bpm,
     };
 
     webServer.broadcastState(runtimeState);

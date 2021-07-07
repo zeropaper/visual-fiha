@@ -172,40 +172,41 @@ export default class VFPanel {
         <title>Visual Fiha</title>
       </head>
       <body>
-        <iframe style="aspect-ratio: auto 600 / 400; margin: auto; width: 600px; margin: auto; display: block;" id="control-display" class="control-display-iframe" src="http://localhost:9999/#control"></iframe>
-        <a id="control-display-reload" href="#">reload</a>
-        
-        <div id="displays"></div>
-        
-        <code><pre id="state-dump"></pre></code>
-        
-        <!--
-        <h1 id="lines-of-code-counter">0</h1>
+        <div id="app">
+          <iframe style="aspect-ratio: auto 600 / 400; margin: auto; width: 600px; margin: auto; display: block;" id="control-display" class="control-display-iframe" src="http://localhost:9999/#control"></iframe>
+          <a id="control-display-reload" href="#">reload</a>
+          
+          <div id="displays"></div>
+          
+          <code><pre id="state-dump"></pre></code>
+          
+          <!--
+          <h1 id="lines-of-code-counter">0</h1>
 
-        <div>
-          <code>code example</code>
+          <div>
+            <code>code example</code>
+          </div>
+
+          <div>
+            <a href="#top">link example</a>
+          </div>
+
+          <form>
+            <div>
+              <input type="text" placeholder="placeholder" />
+            </div>
+            <div>
+              <input type="text" value="value" />
+            </div>
+            <div>
+              <button type="button">button</button>
+            </div>
+            <div>
+              <button class="secondary" type="button">secondary</button>
+            </div>
+          </form>
+          -->
         </div>
-
-        <div>
-          <a href="#top">link example</a>
-        </div>
-
-        <form>
-          <div>
-            <input type="text" placeholder="placeholder" />
-          </div>
-          <div>
-            <input type="text" value="value" />
-          </div>
-          <div>
-            <button type="button">button</button>
-          </div>
-          <div>
-            <button class="secondary" type="button">secondary</button>
-          </div>
-        </form>
-        -->
-
         <script nonce="${nonce}" src="${scriptUri}"></script>
       </body>
       </html>`;

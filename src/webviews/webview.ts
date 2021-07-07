@@ -3,7 +3,7 @@ import renderDisplays from './renderDisplays';
 import renderStateDump from './renderStateDump';
 import { autoBind, ComMessageChannel } from '../utils/com';
 
-const vscode = acquireVsCodeApi<AppState>();
+import vscode from './vscode';
 
 const defaultState: AppState = {
   displayServer: { host: 'localhost', port: 9999 },

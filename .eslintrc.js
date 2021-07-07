@@ -17,5 +17,12 @@ module.exports = {
     'jest/valid-expect': 'error',
 
     'no-console': ['warn', { allow: ['warn', 'error'] }],
+
+    'import/no-extraneous-dependencies': ['error', { devDependencies: true, optionalDependencies: false, peerDependencies: false }],
   },
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx'],
+    },
+  ],
 };

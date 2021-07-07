@@ -14,11 +14,15 @@ export interface DisplayBase {
   height?: number;
   resolution?: number;
   readonly control: boolean;
+}
+
+export interface AppDisplay extends DisplayBase {
   app: {
     id: string;
     stage: StageInfo;
   };
 }
+
 export interface ServerDisplay extends Omit<DisplayBase, 'id'> {
   socket: Socket;
 }
@@ -32,10 +36,15 @@ export type Layer = Omit<ScriptableOptions, 'api'> & {
   animation?: string;
 };
 
+export interface DisplayServerInfo {
+  host: string;
+  port: number;
+}
+
 export interface AppState {
   id: string;
   bpm: number;
-  displayServer: { host: string, port: number };
+  displayServer: DisplayServerInfo;
   displays: DisplayBase[];
   layers: Layer[];
   stage: StageInfo;
