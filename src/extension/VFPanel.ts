@@ -172,7 +172,7 @@ export default class VFPanel {
         <title>Visual Fiha</title>
       </head>
       <body>
-        <iframe id="control-display" class="control-display-iframe" src="http://localhost:9999/"></iframe>
+        <a id="control-display-reload" href="#">reload</a>
         
         <div id="displays"></div>
         
