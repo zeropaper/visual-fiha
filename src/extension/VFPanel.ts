@@ -172,6 +172,7 @@ export default class VFPanel {
         <title>Visual Fiha</title>
       </head>
       <body>
+        <iframe style="aspect-ratio: auto 600 / 400; margin: auto; width: 600px; margin: auto; display: block;" id="control-display" class="control-display-iframe" src="http://localhost:9999/#control"></iframe>
         <a id="control-display-reload" href="#">reload</a>
         
         <div id="displays"></div>
