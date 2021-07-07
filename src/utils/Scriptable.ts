@@ -52,7 +52,6 @@ export default class Scriptable {
   }
 
   get api(): API & { cache: Cache } {
-    // console.info('get Scriptable api', this.#id, this.read);
     return {
       read: this.read,
       cache: this.cache,
@@ -61,7 +60,6 @@ export default class Scriptable {
   }
 
   set api(api: API) {
-    // this.api = api;
     this.#runners.setup.api = api;
     this.#runners.animation.api = api;
   }
