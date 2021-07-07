@@ -21,7 +21,7 @@ describe('com.messenger', () => {
 
     const [args] = post.mock.calls;
     expect(args).toHaveLength(1);
-    expect(args[0]).toHaveProperty('action', 'actionA');
+    expect(args[0]).toHaveProperty('type', 'actionA');
     expect(args[0]).toHaveProperty('payload');
     expect(args[0]).toHaveProperty('meta.source', 'side-1');
     expect(args[0]).toHaveProperty('meta.sent');
@@ -39,7 +39,7 @@ describe('com.messenger', () => {
     const [args] = post.mock.calls;
 
     expect(args).toHaveLength(1);
-    expect(args[0]).toHaveProperty('action', 'actionB');
+    expect(args[0]).toHaveProperty('type', 'actionB');
     expect(args[0]).toHaveProperty('payload');
     expect(args[0]).toHaveProperty('meta.source', 'side-1');
     expect(args[0]).toHaveProperty('meta.sent');

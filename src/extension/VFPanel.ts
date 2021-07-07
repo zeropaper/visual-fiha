@@ -97,15 +97,15 @@ export default class VFPanel {
   }
 
   public updateDisplays(displays: object) {
-    this._panel.webview.postMessage({ action: 'updatedisplays', payload: displays });
+    this._panel.webview.postMessage({ type: 'updatedisplays', payload: displays });
   }
 
   public updateState(update = {} as Partial<AppState>) {
-    this._panel.webview.postMessage({ action: 'updatestate', payload: update });
+    this._panel.webview.postMessage({ type: 'updatestate', payload: update });
   }
 
   public updateData(update = {}) {
-    this._panel.webview.postMessage({ action: 'updatedata', payload: update });
+    this._panel.webview.postMessage({ type: 'updatedata', payload: update });
   }
 
   public dispose() {

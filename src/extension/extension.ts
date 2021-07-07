@@ -173,7 +173,7 @@ export function activate(context: vscode.ExtensionContext) {
       VFPanel.currentPanel?.updateDisplays(displays);
     }),
     webServer.onSocketConnection((socket) => {
-      socket.emit('message', { action: 'updatestate', payload: runtimeState });
+      socket.emit('message', { type: 'updatestate', payload: runtimeState });
     }),
   );
 

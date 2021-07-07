@@ -5,11 +5,11 @@ export interface ComActionHandler {
 }
 
 export type ComActionHandlers = {
-  [action: string]: ComActionHandler;
+  [type: string]: ComActionHandler;
 };
 
 export interface ComAnswerer {
-  (action: ComEventData): any;
+  (type: ComEventData): any;
 }
 
 const promises: {
@@ -21,7 +21,7 @@ export interface Poster {
 }
 
 export interface ChannelPost {
-  (action: string, payload?: any, originalMeta?: ComEventDataMeta | true): Promise<any>
+  (type: string, payload?: any, originalMeta?: ComEventDataMeta | true): Promise<any>
 }
 
 export interface ChannelPostMaker {
@@ -41,7 +41,7 @@ export interface ChannelListenerMaker {
 }
 
 // eslint-disable-next-line max-len
-export const makeChannelPost: ChannelPostMaker = (poster, source) => (action, payload, originalMeta) => {
+export const makeChannelPost: ChannelPostMaker = (poster, source) => (type, payload, originalMeta) => {
   const meta: ComEventDataMeta = {
     ...(originalMeta === true ? {
       operationId: `${Date.now()}-${source}-${(Math.random() * 1000000).toFixed()}`,
@@ -61,13 +61,13 @@ export const makeChannelPost: ChannelPostMaker = (poster, source) => (action, pa
         }
         res(result);
       };
-      poster({ action, payload, meta });
+      poster({ type, payload, meta });
     });
     return promise;
   }
 
   poster({
-    action,
+    type,
     payload,
     meta,
   });
@@ -92,13 +92,13 @@ const handleComReply = (payload: any, meta: ComEventDataMeta) => {
 };
 
 // eslint-disable-next-line max-len
-const replyError = (postBack: ComAnswerer, err: Error | string, action: string, meta: ComEventDataMeta) => {
+const replyError = (postBack: ComAnswerer, err: Error | string, type: string, meta: ComEventDataMeta) => {
   const error = typeof err === 'string' ? err : err.message || 'Unexpected error';
   postBack({
-    action: 'com/reply',
+    type: 'com/reply',
     meta: {
       ...meta,
-      originalAction: action,
+      originalType: type,
       processed: Date.now(),
       error,
     },
@@ -107,7 +107,7 @@ const replyError = (postBack: ComAnswerer, err: Error | string, action: string, 
 
 export const makeChannelListener: ChannelListenerMaker = (postBack, handlers) => (event) => {
   const {
-    action,
+    type,
     payload,
     meta: originalMeta,
   } = event.data;
@@ -116,18 +116,18 @@ export const makeChannelListener: ChannelListenerMaker = (postBack, handlers) =>
     received: Date.now(),
   };
 
-  if (action === 'com/reply' && meta.operationId) {
+  if (type === 'com/reply' && meta.operationId) {
     handleComReply(payload, meta);
     return;
   }
 
-  const { [event.data.action]: handler } = handlers;
+  const { [event.data.type]: handler } = handlers;
   if (!handler) {
-    const err = `Unexepected ${action} action`;
+    const err = `Unexepected ${type} action type`;
 
     if (!meta.operationId) return;
 
-    replyError(postBack, err, action, meta);
+    replyError(postBack, err, type, meta);
     return;
   }
 
@@ -138,15 +138,15 @@ export const makeChannelListener: ChannelListenerMaker = (postBack, handlers) =>
 
   handler(payload, meta)
     .then((result: any) => postBack({
-      action: 'com/reply',
+      type: 'com/reply',
       payload: result,
       meta: {
         ...meta,
-        originalAction: action,
+        originalType: type,
         processed: Date.now(),
       },
     }))
-    .catch((err: Error) => replyError(postBack, err, action, meta));
+    .catch((err: Error) => replyError(postBack, err, type, meta));
 };
 
 export interface ComMessageChannel {

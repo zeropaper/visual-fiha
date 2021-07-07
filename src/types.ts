@@ -78,7 +78,7 @@ export interface ComEventDataMeta {
   [custom: string]: any;
 }
 export interface ComEventData {
-  action: string;
+  type: string;
   payload?: any;
   meta?: ComEventDataMeta;
 }

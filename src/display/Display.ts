@@ -67,7 +67,7 @@ export default class Display {
     this.resize();
     this.#offscreen = canvas.transferControlToOffscreen();
     this.#worker.postMessage({
-      action: 'offscreencanvas',
+      type: 'offscreencanvas',
       payload: { canvas: this.#offscreen },
     }, [this.#offscreen]);
   }

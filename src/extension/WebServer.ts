@@ -175,11 +175,11 @@ export default class VFServer {
     });
 
     socket.on('message', ({
-      action,
+      type,
       payload,
       // meta,
     }: ComEventData) => {
-      if (action === 'resizedisplay') {
+      if (type === 'resizedisplay') {
         this.#resizeDisplay(payload);
       }
     });
@@ -241,8 +241,8 @@ export default class VFServer {
     return this.#socketConnection.event;
   }
 
-  broadcast = (action: string, payload?: any) => {
-    this.#io.emit('message', { action, payload });
+  broadcast = (type: string, payload?: any) => {
+    this.#io.emit('message', { type, payload });
   };
 
   broadcastScript = (info: { [k: string]: any }, script: string) => {
