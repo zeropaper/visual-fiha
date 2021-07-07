@@ -2,11 +2,22 @@ import type { Socket } from 'socket.io';
 
 import type { ScriptableOptions } from './utils/Scriptable';
 
+export interface StageInfo {
+  width: number;
+  height: number;
+  autoScale: boolean;
+}
+
 export interface DisplayBase {
   id: string;
   width?: number;
   height?: number;
   resolution?: number;
+  readonly control: boolean;
+  app: {
+    id: string;
+    stage: StageInfo;
+  };
 }
 export interface ServerDisplay extends Omit<DisplayBase, 'id'> {
   socket: Socket;
@@ -27,6 +38,7 @@ export interface AppState {
   displayServer: { host: string, port: number };
   displays: DisplayBase[];
   layers: Layer[];
+  stage: StageInfo;
 }
 
 export type FihaRC = {

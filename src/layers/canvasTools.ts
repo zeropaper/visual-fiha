@@ -15,7 +15,7 @@ const {
 
 const { noop, repeat } = MiscTools;
 
-type ImageCopyCoordinates = {
+export type ImageCopyCoordinates = {
   sx?: number;
   sy?: number;
   sw?: number;

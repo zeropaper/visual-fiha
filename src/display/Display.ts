@@ -1,4 +1,4 @@
-import { ScriptingData } from '../types';
+import { AppState, ScriptingData } from '../types';
 import {
   autoBind,
   ComActionHandlers,
@@ -12,8 +12,9 @@ export interface DisplayOptions {
   canvas?: HTMLCanvasElement;
 }
 
-export interface DisplayState {
+export interface DisplayState extends Omit<Omit<AppState, 'layers'>, 'displays'> {
   id: string;
+  readonly control: boolean;
   width: number;
   height: number;
   layers?: Canvas2DLayer[];
@@ -45,9 +46,7 @@ export default class Display {
 
     const { style: parentStyle } = el.parentElement as HTMLElement;
     parentStyle.position = 'relative';
-
-    const { style: canvasStyle } = el;
-    canvasStyle.background = 'black';
+    parentStyle.background = 'black';
     return el;
   };
 
@@ -89,7 +88,7 @@ export default class Display {
     return this.#canvas;
   }
 
-  get state(): DisplayState {
+  get state(): Partial<DisplayState> {
     return {
       id: this.#id,
       width: this.#canvas.width,
@@ -103,12 +102,9 @@ export default class Display {
 
   resize = () => requestAnimationFrame(() => {
     const { canvas } = this;
-    const rect = canvas.parentElement?.getBoundingClientRect().toJSON();
-    if (rect) {
-      this.post('resize', {
-        width: rect.width,
-        height: rect.height,
-      });
-    }
+    this.post('resize', {
+      width: canvas.parentElement?.clientWidth || this.#canvas.width,
+      height: canvas.parentElement?.clientHeight || this.#canvas.height,
+    });
   });
 }

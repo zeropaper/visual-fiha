@@ -32,7 +32,23 @@ const asyncReadFile = (fsPath: string): Promise<string> => new Promise((res, rej
   }
 });
 
-const webServer = new WebServer();
+let runtimeState: AppState = {
+  displayServer: {
+    host: 'localhost',
+    port: 9999,
+  },
+  stage: {
+    width: 600,
+    height: 400,
+    autoScale: true,
+  },
+  displays: [],
+  layers: [],
+  bpm: 120,
+  id: 'vf-default',
+};
+
+const webServer = new WebServer(() => ({ ...runtimeState }));
 
 let data: ScriptingData = {
   started: 0,
@@ -86,17 +102,6 @@ async function readWorkspaceRC(folderIndex = 0): Promise<FihaRC> {
   return JSON.parse(content);
 }
 
-let runtimeState: AppState = {
-  displayServer: {
-    host: 'localhost',
-    port: 9999,
-  },
-  displays: [],
-  layers: [],
-  bpm: 120,
-  id: 'vf-default',
-};
-
 export function scriptUri(type: keyof typeof TypeDirectory, id: string, role: ScriptRole) {
   const folder = getWorkspaceFolder();
   return vscode.Uri.joinPath(folder.uri, TypeDirectory[type], `${id}-${role}.js`);
@@ -134,10 +139,8 @@ export async function propagateRC() {
       layers: await Promise.all(fiharc.layers.map(getScriptContent('layer'))),
     };
 
+    webServer.broadcastState(runtimeState);
     VFPanel.currentPanel?.updateState(runtimeState);
-
-    const { displays, ...passed } = runtimeState;
-    webServer.broadcast('updatestate', passed);
   } catch (err) {
     console.error('[ext] fiharc', err.message);
   }
@@ -147,8 +150,25 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     webServer.activate(context),
     webServer.onDisplaysChange((displays) => {
-      if (!VFPanel.currentPanel) return;
-      VFPanel.currentPanel.updateDisplays(displays);
+      // const initialWidth = runtimeState.stage.width;
+      // const initialHeight = runtimeState.stage.height;
+
+      runtimeState = {
+        ...runtimeState,
+        stage: {
+          ...runtimeState.stage,
+          ...webServer.displaysMaxSize,
+        },
+      };
+
+      // const stateSizeChanged = (
+      //   initialWidth !== runtimeState.stage.width
+      //     || initialHeight !== runtimeState.stage.height
+      // );
+      // console.info('[ext] stageSizeChanged', stateSizeChanged);
+
+      webServer.broadcastState(runtimeState);
+      VFPanel.currentPanel?.updateDisplays(displays);
     }),
     webServer.onSocketConnection((socket) => {
       socket.emit('message', { action: 'updatestate', payload: runtimeState });
@@ -214,7 +234,7 @@ export function activate(context: vscode.ExtensionContext) {
     // if (data.iterationCount % 1000 === 0) console.info('[ext] refreshed data', data.iterationCount, data.deltaNow);
     webServer.broadcastData(data);
   }
-  refreshInterval = setInterval(refreshData, 4);
+  refreshInterval = setInterval(refreshData, 8);
 }
 
 export function deactivate() {

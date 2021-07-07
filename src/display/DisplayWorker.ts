@@ -19,12 +19,19 @@ import {
 import Scriptable, { ScriptableOptions } from '../utils/Scriptable';
 import mathTools from '../utils/mathTools';
 import Canvas2DLayer from '../layers/Canvas2DLayer';
+import canvasTools from '../layers/canvasTools';
 
 interface WebWorker extends Worker {
   location: Location;
 }
 
 // scripting
+
+const defaultStage = {
+  width: 600,
+  height: 400,
+  autoScale: true,
+};
 
 let data: ScriptingData = {
   iterationCount: 0,
@@ -44,59 +51,54 @@ const scriptableOptions: ScriptableOptions = {
   onExecutionError: makeErrorHandler('execution'),
 };
 
-const defaultAnimation = `
-clear();
-textLines([
-  width(),
-  height(),
-  typeof read === 'function' && read('now'),
-], {
-  x: width(2),
-  y: height(2),
-  fill: 'lime',
-});
-`;
-
 let state: DisplayState = {
+  bpm: 120,
+  displayServer: { host: 'localhost', port: 9999 },
+  control: !!worker.location.hash?.startsWith('#control'),
   id: worker.location.hash.replace('#', ''),
-  width: 300,
-  height: 150,
-  layers: [
-    new Canvas2DLayer({
-      id: 'testlayer',
-      read,
-      setup: 'scriptLog("test log")',
-      animation: defaultAnimation,
-    }),
-  ],
+  width: defaultStage.width,
+  height: defaultStage.height,
+  layers: [],
+  stage: { ...defaultStage },
 };
 
 const scriptable = new Scriptable(scriptableOptions);
 
 const canvas = new OffscreenCanvas(state.width, state.height);
-const context = canvas.getContext('2d');
+const context = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+
+const tools = canvasTools(context);
 
 const renderLayers = () => {
   if (!context) return;
+  context.clearRect(0, 0, canvas.width, canvas.height);
   state.layers?.forEach((layer) => {
+    // eslint-disable-next-line no-param-reassign
+    layer.width = state.width || layer.width;
+    // eslint-disable-next-line no-param-reassign
+    layer.height = state.height || layer.height;
     layer.execAnimation();
-    layer.drawOn(canvas);
+    tools.pasteContain(layer.canvas);
   });
 };
 
 let onScreenCanvas: OffscreenCanvas;
 function render() {
-  // updates the data
   scriptable.execAnimation();
 
-  // if (data.iterationCount % 1000 === 0) {
-  //   console.info('[worker] render', canvas.width, canvas.height, data.iterationCount);
-  // }
-
   if (context && onScreenCanvas) {
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
     renderLayers();
+
+    if (data.iterationCount && data.iterationCount % 1000 === 0) {
+      console.info(
+        '[worker] display state',
+        state.id,
+        state.stage.width,
+        state.width,
+        state.stage.height,
+        state.height,
+      );
+    }
 
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     if (imageData) {
@@ -137,21 +139,48 @@ const socketHandlers: ComActionHandlers = {
       workerCom.post('scriptchange', payload);
       if (type === 'layer') {
         const found = state.layers?.find((layer) => layer.id === id);
-        console.info('found layer', id, found, state.layers);
         if (found) {
           found[role].code = script;
         }
       }
     }
   },
-  // updatelayers: () => { },
   updatestate: (update: Partial<AppState>) => {
+    const initialWidth = state.stage?.width;
+    const initialHeight = state.stage?.width;
+    const stateSizeChanged = update.stage
+      && (
+        initialWidth !== update.stage.width
+        || initialHeight !== update.stage.height
+      );
+
+    if (stateSizeChanged) {
+      state = {
+        ...state,
+        stage: {
+          ...(state.stage || defaultStage),
+          ...update.stage,
+        },
+      };
+      console.info('[worker] stage size changed', state.stage);
+      canvas.width = state.stage?.width || defaultStage.width;
+      canvas.height = state.stage?.height || defaultStage.height;
+    }
+
     state = {
       ...state,
-      layers: update.layers?.map((options) => new Canvas2DLayer(options))
+      layers: update.layers?.map((options) => new Canvas2DLayer({
+        ...options,
+        read,
+        display: {
+          ...state,
+          canvas,
+        },
+      }))
         || state.layers,
     };
-    // workerCom.post('updatestate', state);
+
+    // console.info('[worker] state update', stateSizeChanged, state);
   },
   updatedata: (payload: typeof data) => {
     data = payload;
@@ -160,8 +189,10 @@ const socketHandlers: ComActionHandlers = {
 };
 
 socket.on('getdisplay', ({ id: displayId, ...stuff }: any, akg: (dis: DisplayState) => void) => {
+  console.info('[worker] getdisplay info', stuff);
   socketHandlers.updatestate(stuff);
-  return akg({ ...state, layers: undefined });
+  const { layers, ...reply } = state;
+  return akg(reply);
 });
 
 // eslint-disable-next-line prefer-const
@@ -194,7 +225,8 @@ const workerHandler: ComActionHandlers = {
       // eslint-disable-next-line no-param-reassign
       layer.height = state.height;
     });
-    socketCom.post('resizedisplay', state);
+
+    if (!state.control) socketCom.post('resizedisplay', state);
   },
 };
 

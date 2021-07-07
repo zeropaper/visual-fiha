@@ -9,12 +9,11 @@ import {
 import * as mime from 'mime';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 
-import { ComEventData, DisplayBase } from '../types';
+import { AppState, ComEventData, DisplayBase } from '../types';
 // import { ChannelPost } from '../utils/com';
 
 export type ServerDisplay = Omit<DisplayBase, 'id'> & {
   socket: Socket;
-  // post: ChannelPost;
 };
 
 export const indexTemplate = ({ host, port }: { host: string; port: number }) => `<html style="background: black;">
@@ -24,13 +23,20 @@ export const indexTemplate = ({ host, port }: { host: string; port: number }) =>
     <link rel="stylesheet" href="http://${host}:${port}/reset.css" />
   </head>
   <body style="background: black; position: relative; margin: 0; padding: 0; overflow: hidden; height: 100%; display: flex; justify-content: center; align-items: center">
-    <canvas id="canvas" style="z-index: 10; width: auto; height: auto;"></canvas>
+    <canvas id="canvas" width="600" height="400" style="z-index: 10; width: auto; height: auto;"></canvas>
     <script src="/index.js"></script>
   </body>
 </html>`;
 
 export default class VFServer {
-  constructor(host?: string, port?: number) {
+  constructor(stateGetter: () => AppState, {
+    host = 'localhost',
+    port = 9999,
+  }: {
+    host?: string;
+    port?: number;
+  } = {}) {
+    this.#stateGetter = stateGetter;
     this.#host = host || this.#host;
     this.#port = port || this.#port;
     this.#server = createServer(this.#handleHTTPRequest);
@@ -38,6 +44,8 @@ export default class VFServer {
     this.#io = new SocketIOServer(this.#server);
     this.#io.on('connection', this.#handleIOConnection);
   }
+
+  #stateGetter: () => AppState;
 
   #context: vscode.ExtensionContext | null = null;
 
@@ -144,9 +152,7 @@ export default class VFServer {
   };
 
   #handleIOConnection = (socket: Socket) => {
-    socket.emit('getdisplay', {
-      layers: [],
-    }, ({ id, ...display }: DisplayBase) => {
+    socket.emit('getdisplay', this.state, ({ id, ...display }: DisplayBase) => {
       this.#displays[id] = { ...display, socket };
       this.#displaysChange.fire(this.displays);
     });
@@ -181,6 +187,10 @@ export default class VFServer {
     this.#socketConnection.fire(socket);
   };
 
+  get state(): AppState {
+    return this.#stateGetter();
+  }
+
   get host() {
     return this.#host;
   }
@@ -194,6 +204,19 @@ export default class VFServer {
       const { socket, ...display } = this.#displays[id];
       return { ...display, id };
     });
+  }
+
+  get displaysMaxSize(): { width: number; height: number; } {
+    const size = {
+      width: 600,
+      height: 400,
+    };
+    this.displays.forEach((display) => {
+      if (display.control) return;
+      size.width = Math.max(display.width || 0, size.width);
+      size.height = Math.max(display.height || 0, size.height);
+    });
+    return size;
   }
 
   activate = (context: vscode.ExtensionContext): vscode.Disposable => {
@@ -228,6 +251,11 @@ export default class VFServer {
 
   broadcastData = (data: any) => {
     this.broadcast('updatedata', data);
+  };
+
+  broadcastState = ({ displays, ...data }: Partial<AppState>) => {
+    console.info('[webServer] broadcasting updatestate to sockets', data.stage?.width, data.stage?.height);
+    this.broadcast('updatestate', data);
   };
 
   deactivate = (cb?: (err?: Error) => void) => {
