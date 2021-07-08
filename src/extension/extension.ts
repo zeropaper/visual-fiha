@@ -17,6 +17,8 @@ import VFPanel from './VFPanel';
 import WebServer from './WebServer';
 import commands from './commands';
 
+import store from './store';
+
 const asyncReadFile = (fsPath: string): Promise<string> => new Promise((res, rej) => {
   try {
     readFile(fsPath, 'utf8', (err, content) => {
@@ -48,7 +50,7 @@ let runtimeState: AppState = {
   id: 'vf-default',
 };
 
-const webServer = new WebServer(() => ({ ...runtimeState }));
+const webServer = new WebServer(() => store.getState());
 
 let data: ScriptingData = {
   started: 0,
@@ -133,6 +135,9 @@ export function getScriptContent(type: keyof typeof TypeDirectory) {
 export async function propagateRC() {
   try {
     const fiharc = await readWorkspaceRC();
+    // store.dispatch({ type: 'setId', payload: fiharc.id });
+    // store.dispatch({ type: 'setBpm', payload: fiharc.bpm });
+    // store.dispatch({ type: 'setDisplayServer', payload: runtimeState.displayServer });
     runtimeState = {
       ...fiharc,
       ...runtimeState,
@@ -148,13 +153,21 @@ export async function propagateRC() {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function makeDisposableStoreListener(context: vscode.ExtensionContext): vscode.Disposable {
+  const unsubscribe = store.subscribe(() => {
+    console.info('[ext] store chaned', store.getState());
+  });
+  return {
+    dispose: unsubscribe,
+  };
+}
+
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     webServer.activate(context),
+    makeDisposableStoreListener(context),
     webServer.onDisplaysChange((displays) => {
-      // const initialWidth = runtimeState.stage.width;
-      // const initialHeight = runtimeState.stage.height;
-
       runtimeState = {
         ...runtimeState,
         stage: {
@@ -162,13 +175,6 @@ export function activate(context: vscode.ExtensionContext) {
           ...webServer.displaysMaxSize,
         },
       };
-
-      // const stateSizeChanged = (
-      //   initialWidth !== runtimeState.stage.width
-      //     || initialHeight !== runtimeState.stage.height
-      // );
-      // console.info('[ext] stageSizeChanged', stateSizeChanged);
-
       webServer.broadcastState(runtimeState);
       VFPanel.currentPanel?.updateDisplays(displays);
     }),
@@ -229,7 +235,7 @@ export function activate(context: vscode.ExtensionContext) {
       ...data,
       started: data.started || now,
       iterationCount: data.iterationCount + 1,
-      now,
+      now: now - (data.started || now),
       deltaNow: data.now ? now - data.now : 0,
     };
     // eslint-disable-next-line max-len

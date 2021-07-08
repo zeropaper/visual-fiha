@@ -7,6 +7,7 @@ import type {
   ScriptingData,
   ScriptInfo,
   AppState,
+  DisplayBase,
 } from '../types';
 
 import type { DisplayState } from './Display';
@@ -188,12 +189,11 @@ const socketHandlers: ComActionHandlers = {
   },
 };
 
-socket.on('getdisplay', ({ id: displayId, ...stuff }: any, akg: (dis: DisplayState) => void) => {
-  console.info('[worker] getdisplay info', stuff);
-  socketHandlers.updatestate(stuff);
-  const { layers, ...reply } = state;
-  return akg(reply);
-});
+socket.on('registerdisplay', (appState: AppState, akg: (dis: Omit<DisplayBase, 'control'>) => void) => akg({
+  id: state.id,
+  width: canvas.width,
+  height: canvas.height,
+}));
 
 // eslint-disable-next-line prefer-const
 socketCom = autoBind({
@@ -204,7 +204,7 @@ socketCom = autoBind({
 
 socket.on('message', (message: ComEventData) => socketCom.listener({ data: message }));
 
-const workerHandler: ComActionHandlers = {
+const messageHandlers: ComActionHandlers = {
   offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
     onScreenCanvas = onscreen;
   },
@@ -230,5 +230,5 @@ const workerHandler: ComActionHandlers = {
   },
 };
 
-workerCom = autoBind(worker, `display-${state.id}-worker`, workerHandler);
+workerCom = autoBind(worker, `display-${state.id}-worker`, messageHandlers);
 worker.addEventListener('message', workerCom.listener);

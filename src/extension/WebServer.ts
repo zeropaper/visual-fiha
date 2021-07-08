@@ -152,7 +152,7 @@ export default class VFServer {
   };
 
   #handleIOConnection = (socket: Socket) => {
-    socket.emit('getdisplay', this.state, ({ id, ...display }: DisplayBase) => {
+    socket.emit('registerdisplay', this.state, ({ id, ...display }: DisplayBase) => {
       this.#displays[id] = { ...display, socket };
       this.#displaysChange.fire(this.displays);
     });

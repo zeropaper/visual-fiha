@@ -64,12 +64,13 @@ export default class Display {
     this.#listener = listener;
     this.#worker.addEventListener('message', this.#listener);
 
-    this.resize();
+    this.resize(); // TODO: really?
     this.#offscreen = canvas.transferControlToOffscreen();
     this.#worker.postMessage({
       type: 'offscreencanvas',
       payload: { canvas: this.#offscreen },
     }, [this.#offscreen]);
+    requestAnimationFrame(() => this.resize());
   }
 
   #offscreen: OffscreenCanvas;
