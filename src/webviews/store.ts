@@ -1,11 +1,12 @@
 import { AnyAction, configureStore } from '@reduxjs/toolkit';
 import type {
   AppState,
-  DisplayServerInfo,
   Layer,
   StageInfo,
   DisplayBase,
 } from '../types';
+
+import { reducers } from '../extension/store';
 
 import vscode from './vscode';
 
@@ -38,7 +39,7 @@ export const appStateToWebviewState = (appState: AppState): Partial<WebviewAppSt
 });
 
 export const webviewStateToAppState = ({
-  controlDisplay: display,
+  controlDisplay,
   ...webviewState
 }: WebviewAppState): AppState => ({
   ...webviewState,
@@ -54,37 +55,18 @@ export const writeWebviewState = (newState: WebviewAppState) => appStateToWebvie
 
 const store = configureStore({
   reducer: {
-    id: (state: string = '', action: AnyAction) => {
-      if (action.type !== 'setId') return state;
-      return action.payload || state;
-    },
-    bpm: (state: number = 120, action: AnyAction) => {
-      if (action.type !== 'setBpm') return state;
-      return action.payload || state;
-    },
-    stage: (state: StageInfo = { width: 600, height: 400, autoScale: true }, action: AnyAction) => {
-      if (action.type !== 'setStage') return state;
-      return { ...(state || {}) };
-    },
-    displayServer: (state: DisplayServerInfo = { host: 'localhost', port: 9999 }, action: AnyAction) => {
-      if (action.type !== 'setDisplayServer') return state;
-      return {
-        ...state,
-        ...action.payload,
-      };
-    },
+    ...reducers,
     controlDisplay: (state: {
       width: number;
       height: number;
       stage: StageInfo,
-    } = {
-      width: 600,
-      height: 400,
-      stage: { width: 600, height: 400, autoScale: true },
-    }, action: AnyAction) => ({
-      ...state,
-      ...action.payload,
-    }),
+    }, action: AnyAction) => {
+      if (action.type !== 'updatecontroldisplay') return state || {};
+      return ({
+        ...(state || {}),
+        ...action.payload,
+      });
+    },
     layers: (state: Layer[] = [], action: AnyAction) => {
       if (action.type !== 'setLayers') return state;
       return [...(state || [])];
@@ -112,11 +94,5 @@ export const messageHandlers = {
     }
   },
 };
-
-// export type RootState = ReturnType<typeof store.getState>
-
-// export type AppDispatch = typeof store.dispatch;
-
-// export const appDispatch = store.dispatch;
 
 export default store;

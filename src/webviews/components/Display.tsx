@@ -12,7 +12,9 @@ const Display = ({ id }: DisplayProps) => {
   if (!display) return null;
 
   return (
-    <div>{display.id}</div>
+    <div>
+      {display.id}
+    </div>
   );
 };
 
