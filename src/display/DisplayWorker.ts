@@ -54,7 +54,7 @@ const scriptableOptions: ScriptableOptions = {
 
 let state: DisplayState = {
   bpm: 120,
-  displayServer: { host: 'localhost', port: 9999 },
+  server: { host: 'localhost', port: 9999 },
   control: !!worker.location.hash?.startsWith('#control'),
   id: worker.location.hash.replace('#', ''),
   width: defaultStage.width,

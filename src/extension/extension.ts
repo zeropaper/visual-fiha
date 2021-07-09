@@ -35,7 +35,7 @@ const asyncReadFile = (fsPath: string): Promise<string> => new Promise((res, rej
 });
 
 let runtimeState: AppState = {
-  displayServer: {
+  server: {
     host: 'localhost',
     port: 9999,
   },

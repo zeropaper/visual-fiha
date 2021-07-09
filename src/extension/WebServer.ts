@@ -16,7 +16,8 @@ export type ServerDisplay = Omit<DisplayBase, 'id'> & {
   socket: Socket;
 };
 
-export const indexTemplate = ({ host, port }: { host: string; port: number }) => `<html style="background: black;">
+export const indexTemplate = ({ host, port, path }: { host: string; port: number; path: string; }) => `
+<html style="background: black;">
   <head>
     <title>Visual Fiha</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -24,9 +25,9 @@ export const indexTemplate = ({ host, port }: { host: string; port: number }) =>
   </head>
   <body style="background: black; position: relative; margin: 0; padding: 0; overflow: hidden; height: 100%; display: flex; justify-content: center; align-items: center">
     <canvas id="canvas" width="600" height="400" style="z-index: 10; width: auto; height: auto;"></canvas>
-    <script src="/index.js"></script>
+    <script src="${path}index.js"></script>
   </body>
-</html>`;
+</html>`.trim();
 
 export default class VFServer {
   constructor(stateGetter: () => AppState, {
@@ -98,14 +99,28 @@ export default class VFServer {
   #handleHTTPRequest = (req: IncomingMessage, res: ServerResponse) => {
     try {
       if (req.method === 'GET') {
-        if (req.url === '/') {
+        if ([
+          '/display',
+          '/display/',
+          '/capture',
+          '/capture/',
+        ].includes(req.url || '')) {
           res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(indexTemplate({ host: this.host, port: this.port }));
+          res.end(indexTemplate({
+            host: this.host,
+            port: this.port,
+            path: req.url || '',
+          }));
           return;
         }
 
-        if (['/index.js', '/index.js.map'].includes(req.url || '')) {
-          this.#serveExtensionFile(`out/display/${req.url}`, res);
+        if ([
+          '/display/index.js',
+          '/display/index.js.map',
+          '/capture/index.js',
+          '/capture/index.js.map',
+        ].includes(req.url || '')) {
+          this.#serveExtensionFile(`out/${req.url}`, res);
           return;
         }
 

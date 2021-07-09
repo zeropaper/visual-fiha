@@ -20,7 +20,7 @@ const stage = (state: StageInfo = { width: 600, height: 400, autoScale: true }, 
   return { ...(state || {}) };
 };
 
-export const displayServer = (state: DisplayServerInfo = { host: 'localhost', port: 9999 }, action: AnyAction) => {
+export const server = (state: DisplayServerInfo = { host: 'localhost', port: 9999 }, action: AnyAction) => {
   if (action.type !== 'setDisplayServer') return state;
   return {
     ...state,
@@ -32,7 +32,7 @@ export const reducers = {
   id,
   bpm,
   stage,
-  displayServer,
+  server,
 };
 
 const store = createStore(combineReducers({
@@ -57,8 +57,8 @@ export const messageHandlers = {
     if (localState.id !== newState.id) {
       store.dispatch({ type: 'setId', payload: newState.id });
     }
-    if (localState.displayServer !== newState.displayServer) {
-      store.dispatch({ type: 'setDisplayServer', payload: newState.displayServer });
+    if (localState.server !== newState.server) {
+      store.dispatch({ type: 'setDisplayServer', payload: newState.server });
     }
   },
 };

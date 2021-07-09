@@ -13,6 +13,7 @@
       "dependsOn": [
         "webviews: watch",
         "display worker: watch",
+        "capture: watch",
         "display: watch"
       ]
     },
@@ -31,6 +32,14 @@
       "isBackground": true,
       "group": "build",
       "label": "display: watch"
+    },
+    {
+      "type": "shell",
+      "command": "npm run watch:capture",
+      "problemMatcher": "$esbuild-watch",
+      "isBackground": true,
+      "group": "build",
+      "label": "capture: watch"
     },
     {
       "type": "shell",

@@ -2,7 +2,7 @@ import { AppState } from '../types';
 
 export default function renderStateDump({
   displays,
-  displayServer,
+  server,
   ...state
 }: AppState) {
   const root = document.getElementById('state-dump');

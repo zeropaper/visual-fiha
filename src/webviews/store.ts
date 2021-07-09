@@ -21,7 +21,7 @@ export interface WebviewAppState extends AppState {
 }
 
 export const defaultState: WebviewAppState = {
-  displayServer: { host: 'localhost', port: 9999 },
+  server: { host: 'localhost', port: 9999 },
   displays: [],
   layers: [],
   bpm: 120,
@@ -89,8 +89,8 @@ export const messageHandlers = {
     if (localState.id !== newState.id) {
       store.dispatch({ type: 'setId', payload: newState.id });
     }
-    if (localState.displayServer !== newState.displayServer) {
-      store.dispatch({ type: 'setDisplayServer', payload: newState.displayServer });
+    if (localState.server !== newState.server) {
+      store.dispatch({ type: 'setDisplayServer', payload: newState.server });
     }
   },
 };

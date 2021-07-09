@@ -44,7 +44,7 @@ export interface DisplayServerInfo {
 export interface AppState {
   id: string;
   bpm: number;
-  displayServer: DisplayServerInfo;
+  server: DisplayServerInfo;
   displays: DisplayBase[];
   layers: Layer[];
   stage: StageInfo;
