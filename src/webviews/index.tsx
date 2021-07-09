@@ -12,7 +12,7 @@ import vscode from './vscode';
 
 import StoreControl from './components/StoreControl';
 import DisplaysList from './components/DisplaysList';
-import AppInfo from './AppInfo';
+import AppInfo from './components/AppInfo';
 import { ComEventData } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

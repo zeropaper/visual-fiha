@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
-import { WebviewAppState } from './store';
+import { WebviewAppState } from '../store';
 
 const AppInfo = () => {
   const {
-    id, stage, bpm, displayServer,
+    id, stage, bpm, server,
   } = useSelector((state: WebviewAppState) => state);
-  const displayServerURL = `http://${displayServer.host}:${displayServer.port}/`;
+  const serverURL = `http://${server.host}:${server.port}/`;
   return (
     <section>
       <header>
@@ -27,7 +27,7 @@ const AppInfo = () => {
         </div>
 
         <div>
-          <a href={displayServerURL}>{displayServerURL}</a>
+          <a href={serverURL}>{serverURL}</a>
         </div>
       </header>
     </section>
