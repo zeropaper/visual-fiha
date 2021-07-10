@@ -85,7 +85,6 @@ export const messageHandlers = {
   },
   updatestate: (newState: AppState) => {
     const localState = store.getState();
-    console.info('[webview] updatestate', newState);
     if (localState.bpm !== newState.bpm) {
       store.dispatch({ type: 'setBpm', payload: newState.bpm });
     }
@@ -95,6 +94,7 @@ export const messageHandlers = {
     if (localState.server !== newState.server) {
       store.dispatch({ type: 'setDisplayServer', payload: newState.server });
     }
+    store.dispatch({ type: 'setLayers', payload: newState.layers });
   },
 };
 
