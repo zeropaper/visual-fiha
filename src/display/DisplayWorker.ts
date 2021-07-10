@@ -149,26 +149,26 @@ const socketHandlers: ComActionHandlers = {
     }
   },
   updatestate: (update: Partial<AppState>) => {
-    const initialWidth = state.stage?.width;
-    const initialHeight = state.stage?.width;
-    const stateSizeChanged = update.stage
-      && (
-        initialWidth !== update.stage.width
-        || initialHeight !== update.stage.height
-      );
+    // const initialWidth = state.stage?.width;
+    // const initialHeight = state.stage?.width;
+    // const stateSizeChanged = update.stage
+    //   && (
+    //     initialWidth !== update.stage.width
+    //     || initialHeight !== update.stage.height
+    //   );
 
-    if (stateSizeChanged) {
-      state = {
-        ...state,
-        stage: {
-          ...(state.stage || defaultStage),
-          ...update.stage,
-        },
-      };
-      console.info('[worker] stage size changed', state.stage);
-      canvas.width = state.stage?.width || defaultStage.width;
-      canvas.height = state.stage?.height || defaultStage.height;
-    }
+    // if (stateSizeChanged) {
+    //   state = {
+    //     ...state,
+    //     stage: {
+    //       ...(state.stage || defaultStage),
+    //       ...update.stage,
+    //     },
+    //   };
+    //   console.info('[worker] stage size changed', state.stage);
+    //   // canvas.width = state.stage?.width || defaultStage.width;
+    //   // canvas.height = state.stage?.height || defaultStage.height;
+    // }
 
     state = {
       ...state,

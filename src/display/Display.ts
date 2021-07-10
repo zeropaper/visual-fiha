@@ -56,6 +56,9 @@ export default class Display {
       canvas = Display.ensureCanvas(),
     } = options || {};
     this.#id = id || `display${(Math.random() * 10000).toFixed()}`;
+
+    canvas.width = canvas.parentElement?.clientWidth || canvas.width;
+    canvas.height = canvas.parentElement?.clientHeight || canvas.height;
     this.#canvas = canvas;
 
     this.#worker = new Worker(`/DisplayWorker.js#${this.#id}`);
@@ -64,7 +67,6 @@ export default class Display {
     this.#listener = listener;
     this.#worker.addEventListener('message', this.#listener);
 
-    this.resize(); // TODO: really?
     this.#offscreen = canvas.transferControlToOffscreen();
     this.#worker.postMessage({
       type: 'offscreencanvas',
