@@ -52,13 +52,13 @@ export default class Display {
 
   constructor(options?: DisplayOptions) {
     const {
-      id = `display${(Math.random() * 10000).toFixed()}`,
+      id,
       canvas = Display.ensureCanvas(),
     } = options || {};
-    this.#id = id;
+    this.#id = id || `display${(Math.random() * 10000).toFixed()}`;
     this.#canvas = canvas;
 
-    this.#worker = new Worker(`/DisplayWorker.js#${id}`);
+    this.#worker = new Worker(`/DisplayWorker.js#${this.#id}`);
     const { post, listener } = autoBind(this.#worker, `display-${id}-browser`, handlers);
     this.#post = post;
     this.#listener = listener;

@@ -52,11 +52,14 @@ const scriptableOptions: ScriptableOptions = {
   onExecutionError: makeErrorHandler('execution'),
 };
 
+const idFromWorkerHash = worker.location.hash.replace('#', '');
+if (!idFromWorkerHash) throw new Error('[worker] worker is not ready');
+
 let state: DisplayState = {
   bpm: 120,
   server: { host: 'localhost', port: 9999 },
   control: !!worker.location.hash?.startsWith('#control'),
-  id: worker.location.hash.replace('#', ''),
+  id: idFromWorkerHash,
   width: defaultStage.width,
   height: defaultStage.height,
   layers: [],
