@@ -191,13 +191,6 @@ const socketHandlers: ComActionHandlers = {
   },
 };
 
-// TODO: use autoBind
-socket.emit('registerdisplay', {
-  id: state.id,
-  width: canvas.width,
-  height: canvas.height,
-});
-
 // eslint-disable-next-line prefer-const
 socketCom = autoBind({
   postMessage: (message: any) => {
@@ -210,6 +203,13 @@ socket.on('message', (message: ComEventData) => socketCom.listener({ data: messa
 const messageHandlers: ComActionHandlers = {
   offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
     onScreenCanvas = onscreen;
+
+    // TODO: use autoBind
+    socket.emit('registerdisplay', {
+      id: state.id,
+      width: onscreen.width,
+      height: onscreen.height,
+    });
   },
   resize: ({
     width,
@@ -229,7 +229,7 @@ const messageHandlers: ComActionHandlers = {
       layer.height = state.height;
     });
 
-    if (!state.control) socketCom.post('resizedisplay', state);
+    if (!state.control) socketCom.post('resizedisplay', { id: state.id, width: state.width, height: state.height });
   },
 };
 

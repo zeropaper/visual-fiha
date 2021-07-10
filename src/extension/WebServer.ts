@@ -157,19 +157,33 @@ export default class VFServer {
     }
   };
 
-  #resizeDisplay = ({ id, width, height }: DisplayBase) => {
+  #resizeDisplay = ({
+    id,
+    width,
+    height,
+    // stage: displayStage,
+  }: DisplayBase) => {
     const display = this.#displays[id];
     if (!display) return;
 
     display.width = width;
     display.height = height;
+    // display.stage = displayStage;
     this.#displaysChange.fire(this.displays);
   };
 
   #registerDisplay = (socket: Socket, display: DisplayBase) => {
-    console.info('[webServer] registerdisplay');
-
     this.#displays[display.id] = { ...display, socket };
+
+    this.#displaysChange.fire(this.displays);
+  };
+
+  #handleIOConnection = (socket: Socket) => {
+    // TODO: register socket, use autoBind
+
+    socket.on('registerdisplay', (display: DisplayBase) => {
+      this.#registerDisplay(socket, display);
+    });
 
     socket.on('disconnect', () => {
       const id = Object.keys(this.#displays).find((key) => {
@@ -188,6 +202,7 @@ export default class VFServer {
       this.#displaysChange.fire(this.displays);
     });
 
+    // TODO: use autoBind
     socket.on('message', ({
       type,
       payload,
@@ -198,28 +213,8 @@ export default class VFServer {
       }
     });
 
-    this.#displaysChange.fire(this.displays);
-  };
-
-  #registerCapture = (socket: Socket) => {
-    console.info('[webServer] registercapture');
-
     socket.on('audioupdate', () => {
       console.info('[webServer] audioupdate');
-    });
-  };
-
-  #handleIOConnection = (socket: Socket) => {
-    console.info('[webServer] socket connection', socket);
-
-    // TODO: register socket, use autoBind
-
-    socket.on('registerdisplay', (display: DisplayBase) => {
-      this.#registerDisplay(socket, display);
-    });
-
-    socket.on('registercapture', () => {
-      this.#registerCapture(socket);
     });
 
     this.#socketConnection.fire(socket);

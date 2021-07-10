@@ -69,17 +69,20 @@ const store = configureStore({
     },
     layers: (state: Layer[] = [], action: AnyAction) => {
       if (action.type !== 'setLayers') return state;
-      return [...(state || [])];
+      return action.payload;
     },
     displays: (state: any[] = [], action: AnyAction) => {
       if (action.type !== 'setDisplays') return state;
-      return [...(state || [])];
+      return action.payload;
     },
   },
   preloadedState: appStateToWebviewState(readWebviewState()),
 });
 
 export const messageHandlers = {
+  updatedisplays: (displays: DisplayBase[]) => {
+    store.dispatch({ type: 'setDisplays', payload: displays });
+  },
   updatestate: (newState: AppState) => {
     const localState = store.getState();
     console.info('[webview] updatestate', newState);
