@@ -1,3 +1,5 @@
+type Box = { width: number, height: number };
+
 const PI2 = Math.PI * 2;
 
 const GR = 1.6180339887498948482;
@@ -46,6 +48,28 @@ const beat = (now:number, bpm = 120) => {
   // eslint-disable-next-line no-console
   console.log('[DERECATED]: beat(), use beatPrct() instead');
   return beatPrct(now, bpm);
+};
+
+const orientation = (width: number, height: number) => (width >= height ? 'landscape' : 'portrait');
+
+const objOrientation = (obj: Box) => orientation(obj.width, obj.height);
+
+const containBox = (box1: Box, box2: Box) => {
+  const { width, height } = box1;
+  const { width: box2Width, height: box2Height } = box2;
+  const { width: box1Width, height: box1Height } = box1;
+  const x = (box2Width / box1Width) * width;
+  const y = (box2Height / box1Height) * height;
+  return { width: x, height: y };
+};
+
+const coverBox = (box1: Box, box2: Box) => {
+  const { width, height } = box1;
+  const { width: box2Width, height: box2Height } = box2;
+  const { width: box1Width, height: box1Height } = box1;
+  const x = (box1Width / box2Width) * width;
+  const y = (box1Height / box2Height) * height;
+  return { width: x, height: y };
 };
 
 const reference: {
@@ -159,6 +183,26 @@ const reference: {
     // ...reference.beatPrct,
     category: 'deprecated',
   },
+  orientation: {
+    type: 'function',
+    category: 'math',
+    description: 'Returns "landscape" or "portrait" based on the width and height arguments.',
+  },
+  objOrientation: {
+    type: 'function',
+    category: 'math',
+    description: 'Returns "landscape" or "portrait" based on the width and height properties of an object.',
+  },
+  containBox: {
+    type: 'function',
+    category: 'math',
+    description: 'Returns a box with the width and height of the first box that fits inside the second box.',
+  },
+  coverBox: {
+    type: 'function',
+    category: 'math',
+    description: 'Returns a box with the width and height of the first box that covers the second box.',
+  },
 };
 
 const tools: { [k: string]: any } = {
@@ -179,6 +223,10 @@ const tools: { [k: string]: any } = {
   between,
   beat,
   beatPrct,
+  orientation,
+  objOrientation,
+  containBox,
+  coverBox,
 };
 
 Object.getOwnPropertyNames(Math)
