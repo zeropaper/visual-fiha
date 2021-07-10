@@ -16,6 +16,7 @@ module.exports = {
     'jest/prefer-to-have-length': 'warn',
     'jest/valid-expect': 'error',
 
+    'max-len': 'warn',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
 
     'import/no-extraneous-dependencies': ['error', { devDependencies: true, optionalDependencies: false, peerDependencies: false }],
