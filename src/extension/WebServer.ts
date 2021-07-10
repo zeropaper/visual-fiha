@@ -25,7 +25,7 @@ export const indexTemplate = ({ host, port, path }: { host: string; port: number
   </head>
   <body style="background: black; position: relative; margin: 0; padding: 0; overflow: hidden; height: 100%; display: flex; justify-content: center; align-items: center">
     <canvas id="canvas" width="600" height="400" style="z-index: 10; width: auto; height: auto;"></canvas>
-    <script src="${path}index.js"></script>
+    <script src="http://${host}:${port}${path}index.js"></script>
   </body>
 </html>`.trim();
 
@@ -109,7 +109,7 @@ export default class VFServer {
           res.end(indexTemplate({
             host: this.host,
             port: this.port,
-            path: req.url || '',
+            path: (req.url || '').endsWith('/') ? (req.url || '') : `${req.url}/`,
           }));
           return;
         }
@@ -166,11 +166,10 @@ export default class VFServer {
     this.#displaysChange.fire(this.displays);
   };
 
-  #handleIOConnection = (socket: Socket) => {
-    socket.emit('registerdisplay', this.state, ({ id, ...display }: DisplayBase) => {
-      this.#displays[id] = { ...display, socket };
-      this.#displaysChange.fire(this.displays);
-    });
+  #registerDisplay = (socket: Socket, display: DisplayBase) => {
+    console.info('[webServer] registerdisplay');
+
+    this.#displays[display.id] = { ...display, socket };
 
     socket.on('disconnect', () => {
       const id = Object.keys(this.#displays).find((key) => {
@@ -197,6 +196,30 @@ export default class VFServer {
       if (type === 'resizedisplay') {
         this.#resizeDisplay(payload);
       }
+    });
+
+    this.#displaysChange.fire(this.displays);
+  };
+
+  #registerCapture = (socket: Socket) => {
+    console.info('[webServer] registercapture');
+
+    socket.on('audioupdate', () => {
+      console.info('[webServer] audioupdate');
+    });
+  };
+
+  #handleIOConnection = (socket: Socket) => {
+    console.info('[webServer] socket connection', socket);
+
+    // TODO: register socket, use autoBind
+
+    socket.on('registerdisplay', (display: DisplayBase) => {
+      this.#registerDisplay(socket, display);
+    });
+
+    socket.on('registercapture', () => {
+      this.#registerCapture(socket);
     });
 
     this.#socketConnection.fire(socket);

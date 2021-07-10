@@ -16,6 +16,7 @@ import getWebviewOptions from './getWebviewOptions';
 import VFPanel from './VFPanel';
 import WebServer from './WebServer';
 import commands from './commands';
+import { ComMessageEvent } from '../utils/com';
 
 import store from './store';
 
@@ -135,9 +136,6 @@ export function getScriptContent(type: keyof typeof TypeDirectory) {
 export async function propagateRC() {
   try {
     const fiharc = await readWorkspaceRC();
-    // store.dispatch({ type: 'setId', payload: fiharc.id });
-    // store.dispatch({ type: 'setBpm', payload: fiharc.bpm });
-    // store.dispatch({ type: 'setDisplayServer', payload: runtimeState.displayServer });
     runtimeState = {
       ...fiharc,
       ...runtimeState,
@@ -180,6 +178,18 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     webServer.onSocketConnection((socket) => {
       socket.emit('message', { type: 'updatestate', payload: runtimeState });
+
+      // TODO: use autoBind
+      socket.on('message', ({ data: message }: ComMessageEvent) => {
+        console.info('[ext] socket message', message.type);
+        if (message.type === 'audioupdate') {
+          console.info(message.payload);
+          data = {
+            ...data,
+            ...message.payload,
+          };
+        }
+      });
     }),
   );
 

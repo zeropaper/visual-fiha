@@ -7,7 +7,6 @@ import type {
   ScriptingData,
   ScriptInfo,
   AppState,
-  DisplayBase,
 } from '../types';
 
 import type { DisplayState } from './Display';
@@ -192,11 +191,12 @@ const socketHandlers: ComActionHandlers = {
   },
 };
 
-socket.on('registerdisplay', (appState: AppState, akg: (dis: Omit<DisplayBase, 'control'>) => void) => akg({
+// TODO: use autoBind
+socket.emit('registerdisplay', {
   id: state.id,
   width: canvas.width,
   height: canvas.height,
-}));
+});
 
 // eslint-disable-next-line prefer-const
 socketCom = autoBind({
