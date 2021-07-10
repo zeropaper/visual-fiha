@@ -37,6 +37,8 @@ let data: ScriptingData = {
   iterationCount: 0,
   now: 0,
   deltaNow: 0,
+  frequency: [],
+  volume: [],
 };
 
 // eslint-disable-next-line no-restricted-globals

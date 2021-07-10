@@ -87,6 +87,8 @@ export type ScriptingData = {
   iterationCount: number;
   now: number;
   deltaNow: number;
+  frequency: number[];
+  volume: number[];
   [k: string]: any
 };
 

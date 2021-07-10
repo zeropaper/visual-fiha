@@ -16,7 +16,6 @@ import getWebviewOptions from './getWebviewOptions';
 import VFPanel from './VFPanel';
 import WebServer from './WebServer';
 import commands from './commands';
-import { ComMessageEvent } from '../utils/com';
 
 import store from './store';
 
@@ -58,6 +57,8 @@ let data: ScriptingData = {
   iterationCount: 0,
   now: 0,
   deltaNow: 0,
+  frequency: [],
+  volume: [],
 };
 
 let refreshInterval: any;
@@ -179,16 +180,11 @@ export function activate(context: vscode.ExtensionContext) {
     webServer.onSocketConnection((socket) => {
       socket.emit('message', { type: 'updatestate', payload: runtimeState });
 
-      // TODO: use autoBind
-      socket.on('message', ({ data: message }: ComMessageEvent) => {
-        console.info('[ext] socket message', message.type);
-        if (message.type === 'audioupdate') {
-          console.info(message.payload);
-          data = {
-            ...data,
-            ...message.payload,
-          };
-        }
+      socket.on('audioupdate', (audio: { frequency: number[]; volume: number[]; }) => {
+        data = {
+          ...data,
+          ...audio,
+        };
       });
     }),
   );

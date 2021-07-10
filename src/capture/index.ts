@@ -60,8 +60,8 @@ function render() {
 
     // post('audioupdate', {
     socket.emit('audioupdate', {
-      frequency: freqArray,
-      timeDomain: timeDomainArray,
+      frequency: Array.from(freqArray),
+      volume: Array.from(timeDomainArray),
     });
 
     const { canvas: { width: w, height: h } } = canvasCtx;
@@ -74,6 +74,7 @@ function render() {
 
   counter += 1;
   if (counter % 100 === 0) console.info('audio', audio);
+  // setTimeout(render, 1000 / 60);
   requestAnimationFrame(render);
 }
 

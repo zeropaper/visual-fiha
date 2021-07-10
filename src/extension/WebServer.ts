@@ -213,10 +213,6 @@ export default class VFServer {
       }
     });
 
-    socket.on('audioupdate', () => {
-      console.info('[webServer] audioupdate');
-    });
-
     this.#socketConnection.fire(socket);
   };
 
