@@ -151,7 +151,7 @@ export const makeChannelListener: ChannelListenerMaker = (postBack, handlers) =>
 
 export interface ComMessageChannel {
   postMessage: Poster;
-  addEventListener?: (eventName: string, listener: EventListener) => void;
+  addEventListener?: (eventName: string, listener: (event: any) => void) => void;
 }
 
 export type ComChannel = ComMessageChannel;
