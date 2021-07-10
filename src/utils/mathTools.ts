@@ -2,53 +2,62 @@ const PI2 = Math.PI * 2;
 
 const GR = 1.6180339887498948482;
 
-const sDiv = (val, div) => val * (1 / div);
+const sDiv = (val: number, div: number): number => val * (1 / div);
 
-const arrayMax = (arr) => arr.reduce((val, prev) => Math.max(val, prev), 0);
+const arrayMax = (arr: number[]) => arr.reduce((val, prev) => Math.max(val, prev), 0);
 
-const arrayMin = (arr) => arr.reduce((val, prev) => Math.min(val, prev), Infinity);
+const arrayMin = (arr: number[]) => arr.reduce((val, prev) => Math.min(val, prev), Infinity);
 
-const arraySum = (arr) => arr.reduce((val, prev) => val + prev, 0);
+const arraySum = (arr: number[]) => arr.reduce((val, prev) => val + prev, 0);
 
-const arrayDiff = (arr) => (Math.abs(arrayMax(arr) - arrayMin(arr)));
+const arrayDiff = (arr: number[]) => (Math.abs(arrayMax(arr) - arrayMin(arr)));
 
-const arrayAvg = (arr) => sDiv(arraySum(arr), arr.length);
+const arrayAvg = (arr: number[]) => sDiv(arraySum(arr), arr.length);
 
-const arrayMirror = (arr) => [...arr, ...arr.reverse()];
+const arrayMirror = (arr: number[]) => [...arr, ...arr.reverse()];
 
-const arrayDownsample = (arr, samples = 2) => {
-  const result = [];
+const arrayDownsample = (arr: number[], samples = 2) => {
+  const result: number[] = [];
   arr.forEach((item, i) => {
     if ((i % samples) === 0) result.push(item);
   });
   return result;
 };
 
-const arraySmooth = (arr, factor = 2) => arr.reduce((acc, val, index) => {
+const arraySmooth = (arr: number[], factor = 2) => arr.reduce((acc: number[], val: number, index: number) => {
   acc.push(arrayAvg(arr.slice(index, index + factor)));
   return acc;
 }, []);
 
-const deg2rad = (deg) => (PI2 / 360) * deg;
+const deg2rad = (deg:number) => (PI2 / 360) * deg;
 
-const rad2deg = (rad) => (360 / PI2) * rad;
+const rad2deg = (rad:number) => (360 / PI2) * rad;
 
-const cap = (val, min = 0, max = 127) => Math.min(Math.max(val, min), max);
+const cap = (val:number, min = 0, max = 127) => Math.min(Math.max(val, min), max);
 
-const between = (val, min = 0, max = 127) => val < max && val > min;
+const between = (val:number, min = 0, max = 127) => val < max && val > min;
 
-const beatPrct = (now, bpm = 120) => {
+const beatPrct = (now:number, bpm = 120) => {
   const timeBetweenBeats = sDiv(60, bpm) * 1000;
   return cap(sDiv(now % timeBetweenBeats, timeBetweenBeats), 0, 1);
 };
 
-const beat = (now, bpm = 120) => {
+const beat = (now:number, bpm = 120) => {
   // eslint-disable-next-line no-console
   console.log('[DERECATED]: beat(), use beatPrct() instead');
   return beatPrct(now, bpm);
 };
 
-const reference = {
+const reference: {
+  [key: string]: {
+    type?: string;
+    category: string;
+    description?: string;
+    link?: string;
+    usage?: string;
+    snippet?: string;
+  }
+} = {
   PI2: {
     type: 'number',
     category: 'math',
@@ -152,7 +161,7 @@ const reference = {
   },
 };
 
-const tools = {
+const tools: { [k: string]: any } = {
   PI2,
   GR,
   arrayMax,
@@ -173,9 +182,9 @@ const tools = {
 };
 
 Object.getOwnPropertyNames(Math)
-  .forEach((key) => {
-    tools[key] = Math[key];
-    const type = typeof Math[key];
+  .forEach((key: string) => {
+    tools[key] = Math[key as keyof Math];
+    const type = typeof Math[key as keyof Math];
     reference[key] = {
       type,
       category: 'math',
