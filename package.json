@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@mantine/core": "2.0.2",
-    "@mantine/hooks": "2.0.2",
+    "@mantine/hooks": "2.0.4",
     "@reduxjs/toolkit": "1.6.0",
     "@types/jest": "26.0.23",
     "@types/mime": "2.0.3",
