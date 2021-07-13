@@ -11,6 +11,7 @@ import store, {
 import vscode from './vscode';
 
 import StoreControl from './components/StoreControl';
+import ControlDisplay from './components/ControlDisplay';
 import DisplaysList from './components/DisplaysList';
 import AppInfo from './components/AppInfo';
 import { ComEventData } from '../types';
@@ -43,6 +44,7 @@ const WebviewComponent = () => {
   return (
     <Provider store={store}>
       <>
+        <ControlDisplay />
         <AppInfo />
         <DisplaysList />
         <StoreControl />
