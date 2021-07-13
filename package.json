@@ -65,6 +65,7 @@
     "@types/vscode-webview": "^1.57.0",
     "@typescript-eslint/eslint-plugin": "^4.28.1",
     "@typescript-eslint/parser": "^4.16.0",
+    "canvas": "^2.8.0",
     "esbuild": "^0.12.12",
     "eslint": "^7.21.0",
     "eslint-config-airbnb-typescript": "^12.3.1",
