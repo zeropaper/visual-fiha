@@ -19,6 +19,8 @@ export interface ScriptRunnerEvent {
 export interface ScriptRunnerErrorEvent extends ScriptRunnerEvent {
   error: ScriptRunnerCodeError | ScriptRunnerLintingError;
   readonly type: 'compilationerror' | 'executionerror';
+  builderStr?: string;
+  code?: string;
 }
 
 export interface ScriptRunnerLogEvent extends ScriptRunnerEvent {
@@ -132,13 +134,13 @@ class ScriptRunner {
       ...Object.keys(this),
     ]
       .reduce((acc: string[], val: string) => (
-        acc.includes(val)
+        (acc.includes(val) || paramsStr.includes(val))
           ? acc
           : [...acc, val]
       ), [])
       .join(', ');
 
-    const sync = this.isAsync ? 'async' : '';
+    const sync = code.includes('await') ? 'async' : '';
 
     // const jshintReadOnly = Object.keys(this.api)
     //   .reduce((obj, name) => ({ ...obj, [name]: false }), {});
@@ -156,16 +158,22 @@ class ScriptRunner {
     //   return;
     // }
 
+    const builderStr = `
+    return ${sync} function ${this.#name}_${this.#version + 1}(${paramsStr}) {
+      ${forbiddenStr ? `let ${forbiddenStr};` : ''}
+      ${code || '// empty'}
+    };`.trim();
+
     try {
       // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
-      const builder = new Function(`
-      return ${sync} function ${this.#name}_${this.#version + 1}(${paramsStr}) { let ${forbiddenStr};
-        ${code || '// empty'}
-      };`);
-      this.#fn = builder();
+      const builder = new Function(builderStr);
 
-      this.#code = code;
-      this.#version += 1;
+      const fn = builder();
+      if (fn.toString() !== this.#fn.toString()) {
+        this.#fn = fn;
+        this.#code = code;
+        this.#version += 1;
+      }
     } catch (error) {
       this.#errors.compilation = error;
       this.dispatchEvent({
@@ -173,6 +181,8 @@ class ScriptRunner {
         error,
         lineNumber: error.lineNumber || 0,
         columnNumber: error.columnNumber || 0,
+        code,
+        builderStr,
       } as ScriptRunnerErrorEvent);
     }
   }
@@ -209,14 +219,12 @@ class ScriptRunner {
     return !event.defaultPrevented;
   }
 
-  exec(api: API = {}) {
+  exec() {
     this.#logs = [];
     try {
       this.#errors.execution = null;
 
-      const args = Object.values({ ...this.api, ...api });
-      // eslint-disable-next-line max-len
-      // if (this.#name.includes('ayer')) console.info('args', Object.keys(this.api), Object.keys(this.api).includes('read'), Object.keys(api), Object.keys(api).includes('read'));
+      const args = Object.values(this.api);
       const result = this.#fn.call(this.#scope, ...args);
       if (this.#logs.length) {
         this.dispatchEvent({

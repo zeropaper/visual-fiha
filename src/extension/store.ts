@@ -28,11 +28,22 @@ export const server = (state: DisplayServerInfo = { host: 'localhost', port: 999
   };
 };
 
+export const worker = (state: {
+  setup: string; animation: string;
+} = { setup: '', animation: '' }, action: AnyAction) => {
+  if (action.type !== 'setWorkerScript') return state;
+  return {
+    ...state,
+    ...action.payload,
+  };
+};
+
 export const reducers = {
   id,
   bpm,
   stage,
   server,
+  worker,
 };
 
 const store = createStore(combineReducers({

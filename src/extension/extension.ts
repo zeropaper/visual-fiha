@@ -46,6 +46,10 @@ let runtimeState: AppState = {
   },
   displays: [],
   layers: [],
+  worker: {
+    setup: '',
+    animation: '',
+  },
   bpm: 120,
   id: 'vf-default',
 };
@@ -111,27 +115,31 @@ export function scriptUri(type: keyof typeof TypeDirectory, id: string, role: Sc
   return vscode.Uri.joinPath(folder.uri, TypeDirectory[type], `${id}-${role}.js`);
 }
 
-export function getScriptContent(type: keyof typeof TypeDirectory) {
-  return async (info: Layer): Promise<Layer> => {
-    const setupFSPath = scriptUri(type, info.id, 'setup').path;
-    const animationFSPath = scriptUri(type, info.id, 'animation').path;
+export async function readScripts(type: keyof typeof TypeDirectory, id: string) {
+  const setupFSPath = scriptUri(type, id, 'setup').path;
+  const animationFSPath = scriptUri(type, id, 'animation').path;
 
-    let setup = `// cannot find file ${setupFSPath}`;
-    let animation = `// cannot find file ${animationFSPath}`;
+  let setup = `// cannot find file ${setupFSPath}`;
+  let animation = `// cannot find file ${animationFSPath}`;
 
-    try {
-      setup = await asyncReadFile(setupFSPath);
-    } catch (e) { /* */ }
-    try {
-      animation = await asyncReadFile(animationFSPath);
-    } catch (e) { /* */ }
+  try {
+    setup = await asyncReadFile(setupFSPath);
+  } catch (e) { /* */ }
+  try {
+    animation = await asyncReadFile(animationFSPath);
+  } catch (e) { /* */ }
 
-    return {
-      ...info,
-      setup,
-      animation,
-    };
+  return {
+    setup,
+    animation,
   };
+}
+
+export function readLayerScripts(type: keyof typeof TypeDirectory) {
+  return async (info: Layer): Promise<Layer> => ({
+    ...info,
+    ...(await readScripts(type, info.id)),
+  });
 }
 
 export async function propagateRC() {
@@ -140,9 +148,10 @@ export async function propagateRC() {
     runtimeState = {
       ...fiharc,
       ...runtimeState,
-      layers: await Promise.all(fiharc.layers.map(getScriptContent('layer'))),
+      layers: await Promise.all(fiharc.layers.map(readLayerScripts('layer'))),
       id: fiharc.id,
       bpm: fiharc.bpm || runtimeState.bpm,
+      worker: await readScripts('worker', 'worker'),
     };
 
     webServer.broadcastState(runtimeState);
@@ -223,9 +232,11 @@ export function activate(context: vscode.ExtensionContext) {
     const info = textDocumentScriptInfo(doc);
     const script = doc.getText();
     webServer.broadcastScript(info, script);
+
     const layerIndex = runtimeState.layers.findIndex((layer) => layer.id === info.id);
     if (layerIndex < 0) {
-      console.info('[ext] WTF', runtimeState.layers);
+      // TODO: check info.type
+      runtimeState.worker[info.role] = script;
       return;
     }
 
@@ -244,8 +255,7 @@ export function activate(context: vscode.ExtensionContext) {
       now: now - (data.started || now),
       deltaNow: data.now ? now - data.now : 0,
     };
-    // eslint-disable-next-line max-len
-    // if (data.iterationCount % 1000 === 0) console.info('[ext] refreshed data', data.iterationCount, data.deltaNow);
+
     webServer.broadcastData(data);
   }
   refreshInterval = setInterval(refreshData, 8);

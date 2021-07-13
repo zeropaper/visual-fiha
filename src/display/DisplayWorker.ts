@@ -33,7 +33,7 @@ const defaultStage = {
   autoScale: true,
 };
 
-let data: ScriptingData = {
+const data: ScriptingData = {
   iterationCount: 0,
   now: 0,
   deltaNow: 0,
@@ -65,6 +65,10 @@ let state: DisplayState = {
   height: defaultStage.height,
   layers: [],
   stage: { ...defaultStage },
+  worker: {
+    setup: '',
+    animation: '',
+  },
 };
 
 const scriptable = new Scriptable(scriptableOptions);
@@ -78,10 +82,7 @@ const renderLayers = () => {
   if (!context) return;
   context.clearRect(0, 0, canvas.width, canvas.height);
   state.layers?.forEach((layer) => {
-    // eslint-disable-next-line no-param-reassign
-    layer.width = state.width || layer.width;
-    // eslint-disable-next-line no-param-reassign
-    layer.height = state.height || layer.height;
+    // TODO: implement and use layer.active
     layer.execAnimation();
     tools.pasteContain(layer.canvas);
   });
@@ -89,21 +90,10 @@ const renderLayers = () => {
 
 let onScreenCanvas: OffscreenCanvas;
 function render() {
-  scriptable.execAnimation();
+  Object.assign(data, scriptable.execAnimation() || {});
 
   if (context && onScreenCanvas) {
     renderLayers();
-
-    if (data.iterationCount && data.iterationCount % 1000 === 0) {
-      console.info(
-        '[worker] display state',
-        state.id,
-        state.stage.width,
-        state.width,
-        state.stage.height,
-        state.height,
-      );
-    }
 
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     if (imageData) {
@@ -117,7 +107,14 @@ function render() {
 
   requestAnimationFrame(render);
 }
-render();
+
+try {
+  scriptable.execSetup()
+    .then(render)
+    .catch(() => console.error('Cannot run worker initial setup'));
+} catch (e) {
+  console.error(e);
+}
 
 // com
 
@@ -127,7 +124,7 @@ let socketCom: ChannelBindings;
 let workerCom: ChannelBindings;
 
 const socketHandlers: ComActionHandlers = {
-  scriptchange: (payload: ScriptInfo & {
+  scriptchange: async (payload: ScriptInfo & {
     script: string;
   }) => {
     const {
@@ -139,56 +136,45 @@ const socketHandlers: ComActionHandlers = {
 
     if (type === 'worker') {
       scriptable[role].code = script;
-      if (role === 'setup') scriptable.execSetup();
+      if (role === 'setup') {
+        // data = { ...data, ...((await scriptable.execSetup()) || {}) };
+        Object.assign(data, (await scriptable.execSetup() || {}));
+      }
     } else {
       workerCom.post('scriptchange', payload);
       if (type === 'layer') {
         const found = state.layers?.find((layer) => layer.id === id);
         if (found) {
           found[role].code = script;
+
+          if (role === 'setup') {
+            found.execSetup();
+          }
         }
       }
     }
   },
   updatestate: (update: Partial<AppState>) => {
-    // const initialWidth = state.stage?.width;
-    // const initialHeight = state.stage?.width;
-    // const stateSizeChanged = update.stage
-    //   && (
-    //     initialWidth !== update.stage.width
-    //     || initialHeight !== update.stage.height
-    //   );
-
-    // if (stateSizeChanged) {
-    //   state = {
-    //     ...state,
-    //     stage: {
-    //       ...(state.stage || defaultStage),
-    //       ...update.stage,
-    //     },
-    //   };
-    //   console.info('[worker] stage size changed', state.stage);
-    //   // canvas.width = state.stage?.width || defaultStage.width;
-    //   // canvas.height = state.stage?.height || defaultStage.height;
-    // }
-
     state = {
       ...state,
       layers: update.layers?.map((options) => new Canvas2DLayer({
         ...options,
         read,
-        display: {
-          ...state,
-          canvas,
-        },
       }))
         || state.layers,
     };
-
-    // console.info('[worker] state update', stateSizeChanged, state);
+    if (typeof update.worker?.setup !== 'undefined' && update.worker.setup !== scriptable.setup.code) {
+      scriptable.setup.code = update.worker.setup || scriptable.setup.code;
+      state.worker.setup = scriptable.setup.code;
+      scriptable.execSetup();
+    }
+    if (typeof update.worker?.animation !== 'undefined' && update.worker.animation !== scriptable.animation.code) {
+      scriptable.animation.code = update.worker.animation || scriptable.animation.code;
+      state.worker.animation = scriptable.animation.code;
+    }
   },
   updatedata: (payload: typeof data) => {
-    data = payload;
+    Object.assign(data, payload);
     workerCom.post('updatedata', data);
   },
 };

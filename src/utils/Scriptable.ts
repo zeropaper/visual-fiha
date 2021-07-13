@@ -6,6 +6,10 @@ export interface ReadInterface {
   (name: string, defaultValue?: any): any
 }
 
+export interface WriteInterface {
+  (data: { [k: string]: any }): void;
+}
+
 export type ScriptableOptions = {
   onCompilationError?: ScriptRunnerEventListener;
   onExecutionError?: ScriptRunnerEventListener;
@@ -19,8 +23,6 @@ export type ScriptableOptions = {
 
 export default class Scriptable {
   constructor(options: ScriptableOptions = {}) {
-    this.cache = {};
-
     this.read = options.read || this.read;
     const { id = `scriptable${Date.now()}` } = options;
     this.#id = id;
@@ -28,12 +30,12 @@ export default class Scriptable {
       setup: new ScriptRunner(options.scope, `${this.#id}_S`),
       animation: new ScriptRunner(options.scope, `${this.#id}_A`),
     };
-    this.initialize(options);
     this.api = {
       read: this.read,
       cache: this.cache,
       ...(options.api || {}),
     };
+    this.initialize(options);
   }
 
   #id: string;
@@ -43,7 +45,8 @@ export default class Scriptable {
     animation: ScriptRunner;
   };
 
-  cache: Cache;
+  // TODO: make it private?
+  cache: Cache = {};
 
   read: ReadInterface = (key, fb) => (/* Scriptable read */ typeof this.cache[key] === 'undefined' ? fb : this.cache[key]);
 
@@ -81,26 +84,28 @@ export default class Scriptable {
   }
 
   initialize = ({
-    setup, animation, onCompilationError, onExecutionError,
+    setup,
+    animation,
+    onCompilationError,
+    onExecutionError,
   }: ScriptableOptions) => {
     if (onCompilationError) {
-      this.#runners.setup.addEventListener('compilationerror', onCompilationError);
-      this.#runners.animation.addEventListener('compilationerror', onCompilationError);
+      this.setup.addEventListener('compilationerror', onCompilationError);
+      this.animation.addEventListener('compilationerror', onCompilationError);
     }
     if (onExecutionError) {
-      this.#runners.setup.addEventListener('executionerror', onExecutionError);
-      this.#runners.animation.addEventListener('executionerror', onExecutionError);
+      this.setup.addEventListener('executionerror', onExecutionError);
+      this.animation.addEventListener('executionerror', onExecutionError);
     }
-    this.#runners.setup.code = setup || '';
-    this.#runners.animation.code = animation || '';
-    this.execSetup();
+    if (this.setup.code !== setup && setup) this.setup.code = setup;
+    if (this.animation.code !== animation && animation) this.animation.code = animation;
   };
 
   execSetup = async () => {
-    this.cache = (await this.setup.exec(this.api)) || this.cache;
+    const result = await this.setup.exec();
+    Object.assign(this.cache, result || {});
+    return result;
   };
 
-  execAnimation = () => {
-    this.cache = this.animation.exec(this.api) || this.cache;
-  };
+  execAnimation = () => this.animation.exec();
 }

@@ -44,6 +44,10 @@ export interface DisplayServerInfo {
 export interface AppState {
   id: string;
   bpm: number;
+  worker: {
+    setup: string;
+    animation: string;
+  };
   server: DisplayServerInfo;
   displays: DisplayBase[];
   layers: Layer[];
