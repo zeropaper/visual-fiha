@@ -52,7 +52,7 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@mantine/core": "2.0.2",
+    "@mantine/core": "2.0.4",
     "@mantine/hooks": "2.0.2",
     "@reduxjs/toolkit": "1.6.0",
     "@types/jest": "26.0.23",
