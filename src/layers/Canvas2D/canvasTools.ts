@@ -1,7 +1,7 @@
-import type { ScriptableAPIReference } from '../types';
+import type { ScriptableAPIReference } from '../../types';
 
-import MathTools from '../utils/mathTools';
-import MiscTools from '../utils/miscTools';
+import MathTools from '../../utils/mathTools';
+import MiscTools from '../../utils/miscTools';
 
 const fetchCache: { [url: string]:Promise<any> } = {};
 

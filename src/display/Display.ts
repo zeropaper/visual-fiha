@@ -6,7 +6,6 @@ import {
   ChannelPost,
 } from '../utils/com';
 import type Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer';
-import type ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer';
 
 export interface DisplayOptions {
   id?: string;

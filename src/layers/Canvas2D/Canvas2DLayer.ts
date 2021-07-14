@@ -3,7 +3,7 @@ import mathTools from '../../utils/mathTools';
 import miscTools from '../../utils/miscTools';
 import canvasTools, {
   CTX,
-} from '../canvasTools';
+} from './canvasTools';
 
 export interface Canvas2DLayerOptions extends LayerOptions { }
 
