@@ -55,7 +55,7 @@
     "@mantine/core": "2.0.2",
     "@mantine/hooks": "2.0.2",
     "@reduxjs/toolkit": "1.6.0",
-    "@types/jest": "26.0.23",
+    "@types/jest": "26.0.24",
     "@types/mime": "2.0.3",
     "@types/node": "12.20.15",
     "@types/react": "17.0.13",
