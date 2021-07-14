@@ -18,14 +18,13 @@ export type ScriptableOptions = {
   read?: ReadInterface;
   api?: API;
   scope?: any;
-  id?: string;
+  id: string;
 };
 
 export default class Scriptable {
-  constructor(options: ScriptableOptions = {}) {
+  constructor(options: ScriptableOptions = { id: `scriptable${Date.now()}` }) {
     this.read = options.read || this.read;
-    const { id = `scriptable${Date.now()}` } = options;
-    this.#id = id;
+    this.#id = options.id;
     this.#runners = {
       setup: new ScriptRunner(options.scope, `${this.#id}_S`),
       animation: new ScriptRunner(options.scope, `${this.#id}_A`),

@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
+    "lib": ["DOM", "ES2019"],
     "rootDir": "..",
     "outDir": "../../out"
   },
   "extends": "../../tsconfig.base.json",
-  "files": ["extension.ts"]
+  "files": ["extension.ts"],
+  "exclude": ["node_modules", "layers"]
 }

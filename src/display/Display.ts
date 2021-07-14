@@ -5,7 +5,8 @@ import {
   ComMessageEventListener,
   ChannelPost,
 } from '../utils/com';
-import type Canvas2DLayer from '../layers/Canvas2DLayer';
+import type Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer';
+import type ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer';
 
 export interface DisplayOptions {
   id?: string;
@@ -17,13 +18,15 @@ export interface DisplayState extends Omit<Omit<AppState, 'layers'>, 'displays'>
   readonly control: boolean;
   width: number;
   height: number;
-  layers?: Canvas2DLayer[];
+  layers?: Array<Canvas2DLayer | ThreeJSLayer>;
 }
 
 let data: ScriptingData = {
   iterationCount: 0,
   now: 0,
   deltaNow: 0,
+  frequency: [],
+  volume: [],
 };
 
 const handlers: ComActionHandlers = {
