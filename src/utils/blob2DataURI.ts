@@ -1,8 +1,8 @@
-export default function blob2DataURI(blob) {
+export default function blob2DataURI(blob: Blob) {
   const fileReader = new FileReader();
   return new Promise((resolve, reject) => {
     fileReader.onerror = () => reject(new Error('FileReader error'));
-    fileReader.onload = (evt) => resolve(evt.target.result);
+    fileReader.onload = (evt: ProgressEvent<FileReader>) => resolve(evt.target?.result);
     fileReader.readAsDataURL(blob);
   });
 }
