@@ -19,6 +19,7 @@ import {
 import Scriptable, { ScriptableOptions } from '../utils/Scriptable';
 import mathTools from '../utils/mathTools';
 import Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer';
+import ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer';
 import canvasTools from '../layers/Canvas2D/canvasTools';
 
 interface WebWorker extends Worker {
@@ -161,11 +162,13 @@ const socketHandlers: ComActionHandlers = {
         switch (options.type) {
           case 'canvas2d':
           case 'canvas':
-            return new Canvas2DLayer(options);
+            return new Canvas2DLayer({ ...options, read });
+          case 'threejs':
+            return new ThreeJSLayer({ ...options, read });
           default:
             return null;
         }
-      }).filter(Boolean) as Array<Canvas2DLayer>
+      }).filter(Boolean) as Array<Canvas2DLayer | ThreeJSLayer>
         || state.layers,
     };
     if (typeof update.worker?.setup !== 'undefined' && update.worker.setup !== scriptable.setup.code) {
