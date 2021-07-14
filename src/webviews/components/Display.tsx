@@ -1,21 +1,20 @@
 import * as React from 'react';
-import { useSelector } from 'react-redux';
-import { AppState } from '../../types';
+import { DisplayBase } from '../../types';
 
-export interface DisplayProps {
-  id: string;
+export interface DisplayProps extends DisplayBase {
 }
 
-const Display = ({ id }: DisplayProps) => {
-  const display = useSelector(({ displays }: AppState) => displays.find((dis) => dis.id === id));
-
-  if (!display) return null;
-
-  return (
+const Display = ({
+  id,
+  width = 1,
+  height = 1,
+}: DisplayProps) => (
+  <div className="display" style={{ aspectRatio: (width / height).toFixed(2), maxWidth: '10%' }}>
+    {id}
     <div>
-      {display.id}
+      {`${width} x ${height}`}
     </div>
-  );
-};
+  </div>
+);
 
 export default Display;

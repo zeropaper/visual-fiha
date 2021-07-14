@@ -11,9 +11,10 @@ const DisplaysList = () => {
     <section>
       <header>Displays</header>
 
-      <main>
-        {items.map(({ id }) => (
-          <Display key={id} id={id} />
+      <main className="displays-wrapper">
+        {items.map((item) => (
+          // eslint-disable-next-line react/jsx-props-no-spreading
+          <Display key={item.id} {...item} />
         ))}
       </main>
     </section>
