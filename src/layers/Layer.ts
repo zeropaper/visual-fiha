@@ -9,10 +9,13 @@ export interface LayerOptions extends Omit<ScriptableOptions, 'type, api, id'> {
 export default class Layer extends Scriptable {
   constructor(options: LayerOptions) {
     super(options);
+    this.active = typeof options.active !== 'undefined' ? options.active : true;
     if (!options.id) throw new Error('Missing id option');
     this.#canvas = (options.canvas || new OffscreenCanvas(600, 400)) as OffscreenCanvas;
     this.execSetup();
   }
+
+  active: boolean = true;
 
   #canvas: HTMLCanvasElement | OffscreenCanvas;
 
@@ -37,4 +40,9 @@ export default class Layer extends Scriptable {
     const canvas = this.#canvas;
     canvas.height = val;
   }
+
+  execAnimation = () => {
+    if (!this.active) return;
+    this.animation.exec();
+  };
 }
