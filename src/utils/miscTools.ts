@@ -1,5 +1,9 @@
 import blobURI2DataURI from './blobURI2DataURI';
 
+interface ReadInterface {
+  (name: string, defaultValue?: any): any
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const noop = (...args: any[]): any => {};
 
@@ -13,16 +17,16 @@ const repeat = (times = 1, func = noop) => {
   }
 };
 
-const assetDataURI = async (asset) => {
+const assetDataURI = async (asset: any) => {
   const uri = await blobURI2DataURI(asset.src);
   return uri;
 };
 
-const isFunction = (what) => typeof what === 'function';
+const isFunction = (what: any) => typeof what === 'function';
 
-const toggled = {};
-const prevToggle = {};
-const toggle = (read, name) => (on, off) => {
+const toggled: { [key: string]: boolean } = {};
+const prevToggle: { [key: string]: any } = {};
+const toggle = (read: ReadInterface, name: string) => (on: any, off: any) => {
   const val = read(name);
   if (prevToggle[name] !== val && val) toggled[name] = !toggled[name];
   if (toggled[name] && isFunction(on)) on();
@@ -31,16 +35,16 @@ const toggle = (read, name) => (on, off) => {
   return toggled[name];
 };
 
-const inOut = (read, name) => (on, off) => {
+const inOut = (read:ReadInterface, name:string) => (on: any, off: any) => {
   const val = read(name);
   if (val && isFunction(on)) on();
   if (!val && isFunction(off)) off();
   return val;
 };
 
-const steps = {};
-const prevStepVals = {};
-const stepper = (read, name, distance = 1) => {
+const steps: { [key: string]: number } = {};
+const prevStepVals: { [key: string]: any } = {};
+const stepper = (read:ReadInterface, name:string, distance = 1) => {
   const val = read(name, 0);
   steps[name] = steps[name] || 0;
   if (!prevStepVals[name] && val) steps[name] += distance;
@@ -48,8 +52,8 @@ const stepper = (read, name, distance = 1) => {
   return steps[name];
 };
 
-const merge = (...objs) => {
-  const result = {};
+const merge = (...objs: { [k: string]: any }[]) => {
+  const result: { [k: string]: any } = {};
   objs.forEach((obj) => {
     Object.keys(obj).forEach((key) => {
       result[key] = obj[key];
