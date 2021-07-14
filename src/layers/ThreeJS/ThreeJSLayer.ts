@@ -46,4 +46,14 @@ export default class ThreeJSLayer extends Layer {
   camera: THREE.PerspectiveCamera;
 
   scene: THREE.Scene;
+
+  set width(width: number) {
+    super.width = width;
+    this.renderer.setSize(width, this.canvas.height, false);
+  }
+
+  set height(height: number) {
+    super.height = height;
+    this.renderer.setSize(this.canvas.width, height, false);
+  }
 }

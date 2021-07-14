@@ -156,21 +156,52 @@ const socketHandlers: ComActionHandlers = {
     }
   },
   updatestate: (update: Partial<AppState>) => {
+    const prevStage = state.stage;
     state = {
       ...state,
-      layers: update.layers?.map((options) => {
-        switch (options.type) {
-          case 'canvas2d':
-          case 'canvas':
-            return new Canvas2DLayer({ ...options, read });
-          case 'threejs':
-            return new ThreeJSLayer({ ...options, read });
-          default:
-            return null;
-        }
-      }).filter(Boolean) as Array<Canvas2DLayer | ThreeJSLayer>
+      ...update,
+      layers: update
+        .layers?.map((options) => {
+          switch (options.type) {
+            case 'canvas2d':
+            case 'canvas':
+              return new Canvas2DLayer({ ...options, read });
+            case 'threejs':
+              return new ThreeJSLayer({ ...options, read });
+            default:
+              return null;
+          }
+        })
+        .map((layer) => {
+          if (!layer) return null;
+          // eslint-disable-next-line no-param-reassign
+          layer.width = state.stage.width;
+          // eslint-disable-next-line no-param-reassign
+          layer.height = state.stage.height;
+          return layer;
+        }) as Array<Canvas2DLayer | ThreeJSLayer>
         || state.layers,
     };
+    const stageChanged = prevStage.width !== state.stage.width
+      || prevStage.height !== state.stage.height;
+    if (stageChanged) {
+      const canvasAspectRatio = canvas.width / canvas.height;
+      const stageAspectRatio = state.stage.width / state.stage.height;
+      const canvasStageScale = canvas.width / state.stage.width;
+
+      canvas.width = (
+        canvasAspectRatio > stageAspectRatio
+          ? state.stage.width
+          : state.stage.height * canvasAspectRatio
+      ) * canvasStageScale || 100;
+      canvas.height = canvas.width * (1 / canvasAspectRatio);
+      state.layers?.forEach((layer) => {
+        // eslint-disable-next-line no-param-reassign
+        layer.width = canvas.width;
+        // eslint-disable-next-line no-param-reassign
+        layer.height = canvas.height;
+      });
+    }
     if (typeof update.worker?.setup !== 'undefined' && update.worker.setup !== scriptable.setup.code) {
       scriptable.setup.code = update.worker.setup || scriptable.setup.code;
       state.worker.setup = scriptable.setup.code;

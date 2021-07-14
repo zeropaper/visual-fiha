@@ -229,10 +229,12 @@ export default class VFServer {
   }
 
   get displays(): DisplayBase[] {
-    return Object.keys(this.#displays).map((id) => {
-      const { socket, ...display } = this.#displays[id];
-      return { ...display, id };
-    });
+    return Object.keys(this.#displays)
+      .filter((id) => id !== 'control')
+      .map((id) => {
+        const { socket, ...display } = this.#displays[id];
+        return { ...display, id };
+      });
   }
 
   get displaysMaxSize(): { width: number; height: number; } {
@@ -240,8 +242,7 @@ export default class VFServer {
       width: 600,
       height: 400,
     };
-    this.displays.forEach((display) => {
-      if (display.control) return;
+    this.displays.filter((display) => !display.control).forEach((display) => {
       size.width = Math.max(display.width || 0, size.width);
       size.height = Math.max(display.height || 0, size.height);
     });
