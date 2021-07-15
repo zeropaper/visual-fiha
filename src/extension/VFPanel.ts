@@ -1,14 +1,11 @@
 /* eslint-disable no-underscore-dangle */
 import * as vscode from 'vscode';
-import { AppState } from '../types';
+import * as fs from 'fs';
+
 import getNonce from './getNonce';
 import getWebviewOptions from './getWebviewOptions';
 
-// const cats = {
-//   'Coding Cat': 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
-//   'Compiling Cat': 'https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif',
-//   'Testing Cat': 'https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif',
-// };
+const isDebugMode = () => process.env.VSCODE_DEBUG_MODE === 'true';
 
 /**
  * Manages cat coding webview panels
@@ -34,7 +31,7 @@ export default class VFPanel {
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
-    console.info('[ext] createOrShow');
+    console.info('[VFPanel] createOrShow');
     // If we already have a panel, show it.
     if (VFPanel.currentPanel) {
       VFPanel.currentPanel._panel.reveal(column);
@@ -53,7 +50,7 @@ export default class VFPanel {
   }
 
   public static revive(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
-    console.info('[ext] revive');
+    console.info('[VFPanel] revive');
     VFPanel.currentPanel = new VFPanel(panel, context);
   }
 
@@ -64,6 +61,15 @@ export default class VFPanel {
 
     // Set the webview's initial html content
     this._update();
+
+    // In development mode, listen for when the webview JS changes.
+    if (isDebugMode()) {
+      const filePath = `${context.extensionPath}/out/webviews/index.js`;
+      const fsWatcher = fs.watch(filePath, () => this._update());
+      this._disposables.push({
+        dispose: () => fsWatcher.close(),
+      });
+    }
 
     // Listen for when the panel is disposed
     // This happens when the user closes the panel or when the panel is closed programmatically

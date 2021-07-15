@@ -12,7 +12,10 @@
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
       "outFiles": ["${workspaceFolder}/out/**/*.js"],
-      "preLaunchTask": "extension: watch"
+      "preLaunchTask": "extension: watch",
+      "env": {
+        "VSCODE_DEBUG_MODE": "true"
+      }
     },
     {
       "name": "Debug Jest Tests",
