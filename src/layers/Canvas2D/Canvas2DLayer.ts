@@ -1,6 +1,7 @@
 import Layer, { LayerOptions } from '../Layer';
 import mathTools from '../../utils/mathTools';
 import miscTools from '../../utils/miscTools';
+import * as assetTools from '../../utils/assetTools';
 import canvasTools, {
   CTX,
 } from './canvasTools';
@@ -14,6 +15,7 @@ export default class Canvas2DLayer extends Layer {
     this.api = {
       ...mathTools,
       ...miscTools,
+      ...assetTools,
       ...canvasTools(this.#ctx),
       ...super.api,
     };

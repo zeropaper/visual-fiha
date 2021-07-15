@@ -2,6 +2,7 @@ import type { ScriptableAPIReference } from '../../types';
 
 import MathTools from '../../utils/mathTools';
 import MiscTools from '../../utils/miscTools';
+import deprecate from '../../utils/deprecate';
 
 const fetchCache: { [url: string]:Promise<any> } = {};
 
@@ -380,7 +381,7 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
     // fontLoad: (val) => {
     // },
 
-    fetch: (url: string) => {
+    fetch: deprecate((url: string) => {
       if (typeof fetchCache[url] !== 'undefined') return fetchCache[url];
 
       fetchCache[url] = new Promise((resolve, reject) => {
@@ -405,15 +406,15 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       });
 
       return fetchCache[url];
-    },
+    }, 'use loadImage'),
 
-    makeImage: (url: string) => {
+    makeImage: deprecate((url: string) => {
       const obj = new Image();
       obj.src = url;
       return obj;
-    },
+    }, 'use loadImage'),
 
-    makeVideo: (url: string, opts = {} as {
+    makeVideo: deprecate((url: string, opts = {} as {
       muted?: boolean;
       loop?: boolean;
     }) => {
@@ -427,7 +428,7 @@ mirror(0.5, 'y' /*, read('layer:this-layer-name') */);
       obj.loop = loop;
       obj.play();
       return obj;
-    },
+    }, 'use loadVideo'),
 
     plot: ({
       data = [],
