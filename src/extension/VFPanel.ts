@@ -9,6 +9,15 @@ import getWorkspaceFolder from './getWorkspaceFolder';
 
 const isDebugMode = () => process.env.VSCODE_DEBUG_MODE === 'true';
 
+export type OpenCommandOptions = string | {
+  relativePath: string;
+  viewColumn?: number;
+  preserveFocus?: boolean;
+  preview?: boolean;
+  selection?: vscode.Range;
+  createIfNone?: boolean;
+};
+
 /**
  * Manages cat coding webview panels
  */
@@ -66,10 +75,15 @@ export default class VFPanel {
 
     // In development mode, listen for when the webview JS changes.
     if (isDebugMode()) {
-      const filePath = `${context.extensionPath}/out/webviews/index.js`;
-      const fsWatcher = fs.watch(filePath, () => this._update());
+      const jsBundlePath = `${context.extensionPath}/out/webviews/index.js`;
+      const jsBundleWatcher = fs.watch(jsBundlePath, () => this._update());
       this._disposables.push({
-        dispose: () => fsWatcher.close(),
+        dispose: () => jsBundleWatcher.close(),
+      });
+      const cssPath = `${context.extensionPath}/media/main.css`;
+      const cssWatcher = fs.watch(cssPath, () => this._update());
+      this._disposables.push({
+        dispose: () => cssWatcher.close(),
       });
     }
 
@@ -137,31 +151,59 @@ export default class VFPanel {
     }
   }
 
-  private _open(relativePath: string, meta?: ComEventDataMeta) {
-    vscode.commands.executeCommand('vscode.open', vscode.Uri.joinPath(getWorkspaceFolder().uri, relativePath))
-      .then(() => {
-        if (!meta?.operationId) return;
-        this._panel.webview.postMessage({
-          type: 'com/reply',
-          meta: {
-            ...meta,
-            originalType: 'open',
-            processed: Date.now(),
-          },
-        });
-      }, (error) => {
-        vscode.window.showErrorMessage(`Could not open: ${relativePath}`);
-        if (!meta?.operationId) return;
-        this._panel.webview.postMessage({
-          type: 'com/reply',
-          meta: {
-            ...meta,
-            error,
-            originalType: 'open',
-            processed: Date.now(),
-          },
-        });
+  private _open(options: OpenCommandOptions, meta?: ComEventDataMeta) {
+    const filepath = vscode.Uri.joinPath(getWorkspaceFolder().uri, typeof options === 'string'
+      ? options
+      : options.relativePath);
+    const {
+      viewColumn = vscode.ViewColumn.Beside,
+      preserveFocus = true,
+      preview = false,
+      selection = undefined,
+      // createIfNone = false,s
+    } = typeof options === 'string' ? {} : options;
+
+    const resolve = () => {
+      if (!meta?.operationId) return;
+      this._panel.webview.postMessage({
+        type: 'com/reply',
+        meta: {
+          ...meta,
+          originalType: 'open',
+          processed: Date.now(),
+        },
       });
+    };
+    const reject = (error: any) => {
+      console.warn('[VFPanel] open error', error);
+      vscode.window.showErrorMessage(`Could not open: ${filepath}`);
+      if (!meta?.operationId) return;
+      this._panel.webview.postMessage({
+        type: 'com/reply',
+        meta: {
+          ...meta,
+          error,
+          originalType: 'open',
+          processed: Date.now(),
+        },
+      });
+    };
+
+    const create = () => new Promise<void>((res, rej) => {
+      fs.writeFile(filepath.fsPath, '', 'utf8', (err) => {
+        if (err) return rej(err);
+        return res();
+      });
+    });
+    const open = () => vscode.commands.executeCommand('vscode.open', filepath, {
+      viewColumn,
+      preserveFocus,
+      preview,
+      selection,
+    }).then(resolve, reject);
+
+    vscode.workspace.fs.stat(filepath)
+      .then(open, () => create().then(open).catch(reject));
   }
 
   private _update() {

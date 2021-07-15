@@ -7,38 +7,41 @@ const AppInfo = () => {
   const {
     id, stage, bpm, server,
   } = useSelector((state: WebviewAppState) => state);
-  const post = useVSCOpen();
+  const open = useVSCOpen();
 
-  const serverURL = `http://${server.host}:${server.port}/`;
+  const serverURL = `http://${server.host}:${server.port}`;
 
   const handleRCOpen = () => {
-    console.info('open fiha.json', post);
-    post('fiha.json');
+    console.info('open fiha.json', open);
+    open('fiha.json');
   };
 
   return (
     <section>
       <header>
-        <div>
-          #
-          <span>{id}</span>
-          {' '}
-          <a onClick={handleRCOpen} href="#vscode-action">edit</a>
-        </div>
-
-        <div>
-          {`${bpm} BPM `}
-          <a href="#vscode-action">edit</a>
-        </div>
-
-        <div>
-          {`${stage.width} x ${stage.height}`}
-        </div>
-
-        <div>
-          <a href={serverURL}>{serverURL}</a>
-        </div>
+        <h1>
+          {`# ${id}`}
+        </h1>
+        <a onClick={handleRCOpen} href="#vscode-action">
+          {'open '}
+          <code>fiha.json</code>
+        </a>
       </header>
+      <main>
+        <dl>
+          <dt>BPM:</dt>
+          <dd>{bpm}</dd>
+
+          <dt>Stage:</dt>
+          <dd>{`${stage.width}x${stage.height}`}</dd>
+
+          <dt>Display:</dt>
+          <dd><a href={`${serverURL}/display/`}>{`${serverURL}/display/`}</a></dd>
+
+          <dt>Capture:</dt>
+          <dd><a href={`${serverURL}/capture/`}>{`${serverURL}/capture/`}</a></dd>
+        </dl>
+      </main>
     </section>
   );
 };

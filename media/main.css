@@ -1,5 +1,26 @@
 /* https://code.visualstudio.com/api/references/theme-color */
 
+#app {
+  display: flex;
+  align-items: flex-start;
+}
+
+#app > div {
+  flex-grow: 1;
+  margin-left: 1vw;
+}
+
+@media (orientation: portrait) {
+  #app {
+    flex-direction: column;
+  }
+  #app > div {
+    flex-grow: 1;
+    margin-left: 0;
+    margin-top: 1vh;
+  }
+}
+
 #displays {
   background-color: rgba(122, 122, 122, 0.5);
   display: flex;
@@ -28,4 +49,21 @@
 
 .control-display-iframe {
   border: 1px solid currentColor;
+}
+
+.control-display {
+  /* aspect-ratio: auto var(--stage-aspect-ratio, 1.5); */
+  border: none;
+  display: block;
+  width: 100%;
+  max-width: 45vh;
+}
+@media (orientation: portrait) {
+  .control-display {
+    margin: auto;
+  }
+}
+
+a.empty-script {
+  text-decoration: dashed;
 }

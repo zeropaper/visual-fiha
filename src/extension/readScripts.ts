@@ -6,8 +6,8 @@ export default async function readScripts(type: keyof typeof TypeDirectory, id: 
   const setupFSPath = scriptUri(type, id, 'setup').path;
   const animationFSPath = scriptUri(type, id, 'animation').path;
 
-  let setup = `// cannot find file ${setupFSPath}`;
-  let animation = `// cannot find file ${animationFSPath}`;
+  let setup = '';
+  let animation = '';
 
   try {
     setup = await asyncReadFile(setupFSPath);
