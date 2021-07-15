@@ -20,7 +20,7 @@ import AppInfo from './components/AppInfo';
 import LayersList from './components/LayersList';
 
 const { post, listener } = autoBind({
-  postMessage: (data, ...args) => window.postMessage(data, 'webview', ...args),
+  postMessage: (data: ComEventData) => vscode.postMessage(data),
 }, 'webview', messageHandlers);
 
 const messageListener = (event: MessageEvent<ComEventData>) => {
