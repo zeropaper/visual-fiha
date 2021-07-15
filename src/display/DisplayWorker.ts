@@ -124,6 +124,16 @@ const socket = io();
 let socketCom: ChannelBindings;
 let workerCom: ChannelBindings;
 
+const resizeLayer = (layer: Canvas2DLayer | ThreeJSLayer) => {
+  // eslint-disable-next-line no-param-reassign
+  layer.width = state.stage.width;
+  // eslint-disable-next-line no-param-reassign
+  layer.height = state.stage.height;
+
+  layer.execSetup();
+  return layer;
+};
+
 const socketHandlers: ComActionHandlers = {
   scriptchange: async (payload: ScriptInfo & {
     script: string;
@@ -172,14 +182,9 @@ const socketHandlers: ComActionHandlers = {
               return null;
           }
         })
-        .map((layer) => {
-          if (!layer) return null;
-          // eslint-disable-next-line no-param-reassign
-          layer.width = state.stage.width;
-          // eslint-disable-next-line no-param-reassign
-          layer.height = state.stage.height;
-          return layer;
-        }) as Array<Canvas2DLayer | ThreeJSLayer>
+        .filter(Boolean)
+        // @ts-ignore
+        .map(resizeLayer) as Array<Canvas2DLayer | ThreeJSLayer>
         || state.layers,
     };
     const stageChanged = prevStage.width !== state.stage.width
@@ -195,12 +200,7 @@ const socketHandlers: ComActionHandlers = {
           : state.stage.height * canvasAspectRatio
       ) * canvasStageScale || 100;
       canvas.height = canvas.width * (1 / canvasAspectRatio);
-      state.layers?.forEach((layer) => {
-        // eslint-disable-next-line no-param-reassign
-        layer.width = canvas.width;
-        // eslint-disable-next-line no-param-reassign
-        layer.height = canvas.height;
-      });
+      state.layers?.forEach(resizeLayer);
     }
     if (typeof update.worker?.setup !== 'undefined' && update.worker.setup !== scriptable.setup.code) {
       scriptable.setup.code = update.worker.setup || scriptable.setup.code;
@@ -249,12 +249,7 @@ const messageHandlers: ComActionHandlers = {
     };
     canvas.width = state.width;
     canvas.height = state.height;
-    state.layers?.forEach((layer) => {
-      // eslint-disable-next-line no-param-reassign
-      layer.width = state.width;
-      // eslint-disable-next-line no-param-reassign
-      layer.height = state.height;
-    });
+    state.layers?.forEach(resizeLayer);
 
     if (!state.control) socketCom.post('resizedisplay', { id: state.id, width: state.width, height: state.height });
   },
