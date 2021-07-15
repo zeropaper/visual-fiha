@@ -28,3 +28,8 @@ export const useComPost = () => {
   const { post } = useComContext();
   return post;
 };
+
+export const useVSCOpen = () => {
+  const { post } = useComContext();
+  return (relativePath: string) => post('open', relativePath);
+};
