@@ -2,8 +2,10 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
+import { AppState, ComEventData, ComEventDataMeta } from '../types';
 import getNonce from './getNonce';
 import getWebviewOptions from './getWebviewOptions';
+import getWorkspaceFolder from './getWorkspaceFolder';
 
 const isDebugMode = () => process.env.VSCODE_DEBUG_MODE === 'true';
 
@@ -88,13 +90,20 @@ export default class VFPanel {
 
     // Handle messages from the webview
     this._panel.webview.onDidReceiveMessage(
-      (message) => {
-        switch (message.command) {
+      ({
+        type,
+        payload,
+        meta,
+      }: ComEventData) => {
+        switch (type) {
           case 'alert':
-            vscode.window.showErrorMessage(message.text);
+            vscode.window.showErrorMessage(payload);
+            break;
+          case 'open':
+            this._open(payload, meta);
             break;
           default:
-            vscode.window.showErrorMessage(`Unknown command: ${message.command}`);
+            vscode.window.showErrorMessage(`Unknown command: ${type}`);
         }
       },
       null,
@@ -126,6 +135,33 @@ export default class VFPanel {
         x.dispose();
       }
     }
+  }
+
+  private _open(relativePath: string, meta?: ComEventDataMeta) {
+    vscode.commands.executeCommand('vscode.open', vscode.Uri.joinPath(getWorkspaceFolder().uri, relativePath))
+      .then(() => {
+        if (!meta?.operationId) return;
+        this._panel.webview.postMessage({
+          type: 'com/reply',
+          meta: {
+            ...meta,
+            originalType: 'open',
+            processed: Date.now(),
+          },
+        });
+      }, (error) => {
+        vscode.window.showErrorMessage(`Could not open: ${relativePath}`);
+        if (!meta?.operationId) return;
+        this._panel.webview.postMessage({
+          type: 'com/reply',
+          meta: {
+            ...meta,
+            error,
+            originalType: 'open',
+            processed: Date.now(),
+          },
+        });
+      });
   }
 
   private _update() {
