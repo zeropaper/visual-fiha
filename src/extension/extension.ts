@@ -1,16 +1,9 @@
 import * as vscode from 'vscode';
-import { readFile } from 'fs';
 
 import {
   AppState,
   FihaRC,
   ScriptingData,
-  ScriptInfo,
-  ScriptType,
-  ScriptRole,
-  DirectoryTypes,
-  Layer,
-  TypeDirectory,
 } from '../types';
 import getWebviewOptions from './getWebviewOptions';
 import VFPanel from './VFPanel';
@@ -18,21 +11,11 @@ import WebServer from './WebServer';
 import commands from './commands';
 
 import store from './store';
-
-const asyncReadFile = (fsPath: string): Promise<string> => new Promise((res, rej) => {
-  try {
-    readFile(fsPath, 'utf8', (err, content) => {
-      if (err) {
-        rej(err);
-        return;
-      }
-
-      res(content);
-    });
-  } catch (err) {
-    rej(err);
-  }
-});
+import getWorkspaceFolder from './getWorkspaceFolder';
+import readScripts from './readScripts';
+import readLayerScripts from './readLayerScripts';
+import asyncReadFile from './asyncReadFile';
+import textDocumentScriptInfo from './textDocumentScriptInfo';
 
 let runtimeState: AppState = {
   server: {
@@ -67,79 +50,11 @@ let data: ScriptingData = {
 
 let refreshInterval: any;
 
-const textDocumentScriptInfo = (doc: vscode.TextDocument): ScriptInfo => {
-  const workspacePath: string = (vscode.workspace.workspaceFolders
-    && vscode.workspace.workspaceFolders.length
-    && vscode.workspace.workspaceFolders[0].uri.path) || '';
-
-  const relativePath = doc.uri.path.replace(workspacePath, '');
-  const [, directory, id, role] = (
-    relativePath.match(/\/([^/]+)\/(.+)-(setup|animation)\./) || []
-  ) as [any, keyof typeof DirectoryTypes, string, ScriptRole];
-
-  if (!directory || !id || !role) throw new Error(`Cannot determine script info for ${doc.uri.path}`);
-  return {
-    id: directory === 'worker' ? 'worker' : id,
-    relativePath,
-    path: doc.uri.path,
-    type: DirectoryTypes[directory] as ScriptType,
-    role,
-  };
-};
-
-export function getWorkspaceFolder(folderIndex = 0): vscode.WorkspaceFolder {
-  const {
-    workspaceFolders: folders,
-  } = vscode.workspace;
-
-  if (!folders?.length) {
-    throw new Error('Workspace has no folder');
-  }
-
-  if (!folders[folderIndex]) {
-    throw new Error(`Workspace has no folder with index ${folderIndex} (${folders.length})`);
-  }
-
-  return folders[folderIndex];
-}
-
 async function readWorkspaceRC(folderIndex = 0): Promise<FihaRC> {
   const folder = getWorkspaceFolder(folderIndex);
   const filepath = vscode.Uri.joinPath(folder.uri, 'fiha.json').fsPath;
   const content = await asyncReadFile(filepath);
   return JSON.parse(content);
-}
-
-export function scriptUri(type: keyof typeof TypeDirectory, id: string, role: ScriptRole) {
-  const folder = getWorkspaceFolder();
-  return vscode.Uri.joinPath(folder.uri, TypeDirectory[type], `${id}-${role}.js`);
-}
-
-export async function readScripts(type: keyof typeof TypeDirectory, id: string) {
-  const setupFSPath = scriptUri(type, id, 'setup').path;
-  const animationFSPath = scriptUri(type, id, 'animation').path;
-
-  let setup = `// cannot find file ${setupFSPath}`;
-  let animation = `// cannot find file ${animationFSPath}`;
-
-  try {
-    setup = await asyncReadFile(setupFSPath);
-  } catch (e) { /* */ }
-  try {
-    animation = await asyncReadFile(animationFSPath);
-  } catch (e) { /* */ }
-
-  return {
-    setup,
-    animation,
-  };
-}
-
-export function readLayerScripts(type: keyof typeof TypeDirectory) {
-  return async (info: Layer): Promise<Layer> => ({
-    ...info,
-    ...(await readScripts(type, info.id)),
-  });
 }
 
 export async function propagateRC() {
