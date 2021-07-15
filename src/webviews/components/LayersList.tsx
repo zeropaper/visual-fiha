@@ -41,10 +41,12 @@ const LayersList = () => {
               <span>{layer.id}</span>
               {' '}
               <span>{layer.type}</span>
-              {' '}
-              <LayerScriptLink layer={layer} scriptRole="setup" />
-              {' '}
-              <LayerScriptLink layer={layer} scriptRole="animation" />
+
+              <div>
+                <LayerScriptLink layer={layer} scriptRole="setup" />
+                {' '}
+                <LayerScriptLink layer={layer} scriptRole="animation" />
+              </div>
             </li>
           ))}
         </ul>
