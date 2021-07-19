@@ -56,6 +56,17 @@ export default class Display {
     return el;
   };
 
+  static checkSupport = () => {
+    if (typeof OffscreenCanvas === 'undefined') return false;
+    try {
+      const el = document.createElement('canvas');
+      el.transferControlToOffscreen();
+    } catch (e) {
+      return false;
+    }
+    return true;
+  };
+
   constructor(options?: DisplayOptions) {
     const {
       id,
