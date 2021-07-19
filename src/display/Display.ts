@@ -1,4 +1,7 @@
-import { AppState, ScriptingData } from '../types';
+import {
+  AppState,
+  // ScriptingData,
+} from '../types';
 import {
   autoBind,
   ComActionHandlers,
@@ -21,18 +24,18 @@ export interface DisplayState extends Omit<Omit<AppState, 'layers'>, 'displays'>
   layers?: Array<Canvas2DLayer | ThreeJSLayer>;
 }
 
-let data: ScriptingData = {
-  iterationCount: 0,
-  now: 0,
-  deltaNow: 0,
-  frequency: [],
-  volume: [],
-};
+// let data: ScriptingData = {
+//   iterationCount: 0,
+//   now: 0,
+//   deltaNow: 0,
+//   frequency: [],
+//   volume: [],
+// };
 
 const handlers: ComActionHandlers = {
-  updatedata: (payload: typeof data) => {
-    data = payload;
-  },
+  // updatedata: (payload: typeof data) => {
+  //   data = payload;
+  // },
 };
 
 export default class Display {

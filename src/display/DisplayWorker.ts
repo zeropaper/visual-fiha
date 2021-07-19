@@ -214,7 +214,7 @@ const socketHandlers: ComActionHandlers = {
   },
   updatedata: (payload: typeof data) => {
     Object.assign(data, payload);
-    workerCom.post('updatedata', data);
+    // workerCom.post('updatedata', data);
   },
 };
 
