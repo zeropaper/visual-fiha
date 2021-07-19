@@ -1,5 +1,7 @@
 /* eslint-env worker */
 
+// TODO: make a class for the worker
+
 import { io } from 'socket.io-client';
 
 import type {
