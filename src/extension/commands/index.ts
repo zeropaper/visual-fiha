@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import start from './start';
+import openControls from './openControls';
 
 export type Commands = {
   [name: string]: (context: vscode.ExtensionContext) => (...args: any[]) => any, thisArg?: any;
 };
 
 const commands: Commands = {
-  start,
+  openControls,
 };
 
 export default commands;

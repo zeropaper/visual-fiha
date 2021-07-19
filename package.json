@@ -24,13 +24,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "visualFiha.start",
-        "title": "Start cat coding session",
-        "category": "Visual Fiha"
-      },
-      {
-        "command": "visualFiha.doRefactor",
-        "title": "Do some refactoring",
+        "command": "visualFiha.openControls",
+        "title": "Open controls",
         "category": "Visual Fiha"
       }
     ]
