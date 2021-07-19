@@ -30,6 +30,7 @@
       }
     ]
   },
+  "publisher": "visual-fiha",
   "scripts": {
     "test": "jest --coverage",
     "watch:test": "jest --watch",
