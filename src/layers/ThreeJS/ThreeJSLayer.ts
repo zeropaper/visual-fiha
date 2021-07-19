@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import Layer, { LayerOptions } from '../Layer';
 import mathTools from '../../utils/mathTools';
@@ -36,6 +37,7 @@ export default class ThreeJSLayer extends Layer {
       camera,
       scene,
       renderer,
+      GLTFLoader,
     };
 
     this.execSetup();
