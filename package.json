@@ -14,11 +14,7 @@
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:**/vf.config.js",
-    "workspaceContains:**/fiha.json",
-    "onCommand:visualFiha.start",
-    "onCommand:visualFiha.doRefactor",
-    "onWebviewPanel:visualFiha"
+    "workspaceContains:fiha.json"
   ],
   "main": "./out/extension/extension.js",
   "contributes": {
