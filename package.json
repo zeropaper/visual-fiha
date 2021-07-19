@@ -95,12 +95,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zeropaper/visual-fiha.git"
+    "url": "https://github.com/zeropaper/visual-fiha.git"
   },
   "bugs": {
     "url": "https://github.com/zeropaper/visual-fiha/issues"
   },
-  "homepage": "https://github.com/zeropaper/visual-fiha#readme",
+  "homepage": "https://github.com/zeropaper/visual-fiha",
   "lint-staged": {
     "*.{ts,tsx}": "eslint --cache --fix"
   },
