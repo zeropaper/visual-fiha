@@ -1,6 +1,10 @@
 // eslint-disable-next-line max-classes-per-file
 const asyncNoop = async () => { };
 
+export interface ScriptLog {
+  (...args: any[]): void;
+}
+
 // import { JSHINT } from 'jshint';
 
 export type ScriptRunnerEventTypes = 'compilationerror' | 'executionerror' | 'log';
@@ -242,6 +246,7 @@ class ScriptRunner {
         type: 'executionerror',
         error,
       } as ScriptRunnerErrorEvent);
+      // console.info('[%s] execution error', this.#name, error.message || error.stack);
       return undefined;
     }
   }

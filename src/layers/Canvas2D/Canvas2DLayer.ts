@@ -1,5 +1,5 @@
 import Layer, { LayerOptions } from '../Layer';
-import mathTools from '../../utils/mathTools';
+import * as mathTools from '../../utils/mathTools';
 import miscTools from '../../utils/miscTools';
 import * as assetTools from '../../utils/assetTools';
 import canvasTools, {

@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  // "files": ["./Canvas2D/canvas2DAPI.ts", "./ThreeJS/threeJSAPI.ts"],
+  "compilerOptions": {
+    "lib": ["DOM", "ES2019"],
+    "rootDir": "..",
+    "declaration": true,
+    "outDir": "../../out/api-types/"
+  }
+}

@@ -72,6 +72,7 @@ export type ScriptableAPIReference = {
 };
 
 export interface ComEventDataMeta {
+  [custom: string]: any;
   operationId?: string;
   sent?: number;
   received?: number;
@@ -79,7 +80,6 @@ export interface ComEventDataMeta {
   answered?: number;
   source?: string;
   error?: string;
-  [custom: string]: any;
 }
 export interface ComEventData {
   type: string;

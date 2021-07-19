@@ -19,7 +19,7 @@ import {
   ComActionHandlers,
 } from '../utils/com';
 import Scriptable, { ScriptableOptions } from '../utils/Scriptable';
-import mathTools from '../utils/mathTools';
+import * as mathTools from '../utils/mathTools';
 import Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer';
 import ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer';
 import canvasTools from '../layers/Canvas2D/canvasTools';
@@ -87,7 +87,7 @@ const renderLayers = () => {
   state.layers?.forEach((layer) => {
     // TODO: implement and use layer.active
     layer.execAnimation();
-    tools.pasteContain(layer.canvas);
+    tools.pasteContain(layer.canvas as any);
   });
 };
 

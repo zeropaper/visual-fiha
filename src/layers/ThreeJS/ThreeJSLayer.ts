@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import Layer, { LayerOptions } from '../Layer';
-import mathTools from '../../utils/mathTools';
+import * as mathTools from '../../utils/mathTools';
 import miscTools from '../../utils/miscTools';
 
 export interface ThreeJSLayerOptions extends LayerOptions { }
