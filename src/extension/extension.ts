@@ -48,8 +48,6 @@ let data: ScriptingData = {
   volume: [],
 };
 
-let refreshInterval: any;
-
 async function readWorkspaceRC(folderIndex = 0): Promise<FihaRC> {
   const folder = getWorkspaceFolder(folderIndex);
   const filepath = vscode.Uri.joinPath(folder.uri, 'fiha.json').fsPath;
@@ -84,6 +82,23 @@ function makeDisposableStoreListener(context: vscode.ExtensionContext): vscode.D
   return {
     dispose: unsubscribe,
   };
+}
+
+let refreshInterval: any;
+function refreshData() {
+  const now = Date.now();
+  data = {
+    ...data,
+    bpm: data.bpm || 120,
+    started: data.started || now,
+    iterationCount: data.iterationCount + 1,
+    now: now - (data.started || now),
+    deltaNow: data.now ? now - data.now : 0,
+  };
+
+  data.beatNum = Math.floor(data.now / (60000 / data.bpm));
+
+  webServer.broadcastData(data);
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -161,18 +176,6 @@ export function activate(context: vscode.ExtensionContext) {
     });
   }));
 
-  function refreshData() {
-    const now = Date.now();
-    data = {
-      ...data,
-      started: data.started || now,
-      iterationCount: data.iterationCount + 1,
-      now: now - (data.started || now),
-      deltaNow: data.now ? now - data.now : 0,
-    };
-
-    webServer.broadcastData(data);
-  }
   refreshInterval = setInterval(refreshData, 8);
 }
 
