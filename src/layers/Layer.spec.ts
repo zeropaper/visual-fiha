@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import Layer, { LayerOptions } from './Layer';
 
 const setupScript = 'console.info("hello"); return { newData: "set" };';

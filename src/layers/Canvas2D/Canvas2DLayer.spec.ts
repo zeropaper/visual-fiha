@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import Canvas2DLayer, { Canvas2DLayerOptions } from './Canvas2DLayer';
 
 const setupScript = 'console.info("hello"); return { newData: "set" };';
