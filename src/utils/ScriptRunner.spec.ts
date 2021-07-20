@@ -136,9 +136,15 @@ describe('object ScriptRunner', () => {
     describe('scriptLog()', () => {
       it('logs', async () => {
         const runner = new ScriptRunner(scope);
+        const compilationErrorListener = jest.fn();
+        const executionErrorListener = jest.fn();
+        const logListener = jest.fn();
+        runner.addEventListener('compilationerror', compilationErrorListener);
+        runner.addEventListener('executionerror', executionErrorListener);
+        runner.addEventListener('log', logListener);
         runner.api = api;
         runner.code = `
-        scriptLog("script logged", this, self, window, val1, val2);
+        scriptLog("script logged", this, typeof self, typeof window, val1, val2);
         return this.stuff
         `;
 
@@ -147,16 +153,21 @@ describe('object ScriptRunner', () => {
           result = await runner.exec();
         })()).resolves.toBeUndefined();
 
-        expect(result).toBe(true);
+        expect(compilationErrorListener).not.toHaveBeenCalled();
+        expect(executionErrorListener).not.toHaveBeenCalled();
+        expect(logListener).toHaveBeenCalledTimes(1);
 
         expect(runner.log).toHaveLength(1);
         expect(runner.log[0]).toHaveLength(6);
         expect(runner.log[0][0]).toBe('script logged');
         expect(runner.log[0][1]).toStrictEqual(scope);
-        expect(runner.log[0][2]).toBeUndefined();
-        expect(runner.log[0][3]).toBeUndefined();
+        // we use typeof in the script, so we need to assert on the string "undefined"
+        expect(runner.log[0][2]).toBe('undefined');
+        expect(runner.log[0][3]).toBe('undefined');
         expect(runner.log[0][4]).toBe(api.val1);
         expect(runner.log[0][5]).toBe(api.val2);
+
+        expect(result).toBe(true);
       });
     });
   });

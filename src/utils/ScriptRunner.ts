@@ -44,6 +44,7 @@ const forbidden = [
   ...Object.keys(typeof global !== 'undefined' ? global : {}),
   // @ts-ignore
   ...Object.keys(typeof self !== 'undefined' ? self : {}),
+  // @ts-ignore
   ...Object.keys(typeof globalThis !== 'undefined' ? globalThis : {}),
 ];
 /* eslint-enable */
