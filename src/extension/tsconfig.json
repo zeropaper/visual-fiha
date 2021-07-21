@@ -5,6 +5,5 @@
     "outDir": "../../out"
   },
   "extends": "../../tsconfig.base.json",
-  "files": ["extension.ts"],
   "exclude": ["node_modules", "layers"]
 }

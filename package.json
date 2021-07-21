@@ -16,7 +16,7 @@
   "activationEvents": [
     "workspaceContains:fiha.json"
   ],
-  "main": "./out/extension/extension.js",
+  "main": "./out/extension/index.js",
   "contributes": {
     "commands": [
       {
@@ -31,12 +31,12 @@
     "test": "jest --coverage",
     "watch:test": "jest --watch",
     "vscode:prepublish": "run-p compile:*",
-    "compile:extension": "tsc -p ./src/extension/tsconfig.json",
+    "compile:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --minify --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
     "compile:webviews": "esbuild ./src/webviews/index.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
     "compile:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --minify --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
     "compile:display": "esbuild ./src/display/index.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
     "lint": "eslint . --ext .ts,.tsx",
-    "watch:extension": "tsc -w -p ./src/extension/tsconfig.json",
+    "watch:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --watch --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
     "watch:webviews": "esbuild ./src/webviews/index.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
     "watch:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --watch --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
     "watch:display": "esbuild ./src/display/index.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
