@@ -147,7 +147,8 @@ export function activate(context: vscode.ExtensionContext) {
     });
   }
 
-  propagateRC();
+  propagateRC()
+    .then(() => vscode.commands.executeCommand('visualFiha.openControls'));
   context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((event) => {
     if (!event.fileName.endsWith('fiha.json')) return;
     propagateRC();
