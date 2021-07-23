@@ -124,13 +124,17 @@ let workerCom: ChannelBindings;
 
 const resizeLayer = (layer: Canvas2DLayer | ThreeJSLayer) => {
   // eslint-disable-next-line no-param-reassign
-  layer.width = state.stage.width;
+  layer.width = canvas.width;
   // eslint-disable-next-line no-param-reassign
-  layer.height = state.stage.height;
+  layer.height = canvas.height;
 
   layer.execSetup();
   return layer;
 };
+
+function findStateLayer(id: string) {
+  return state.layers?.find((layer) => id === layer.id);
+}
 
 const socketHandlers: ComActionHandlers = {
   scriptchange: async (payload: ScriptInfo & {
@@ -152,7 +156,7 @@ const socketHandlers: ComActionHandlers = {
     } else {
       workerCom.post('scriptchange', payload);
       if (type === 'layer') {
-        const found = state.layers?.find((layer) => layer.id === id);
+        const found = findStateLayer(id);
         if (found) {
           found[role].code = script;
 
@@ -163,13 +167,19 @@ const socketHandlers: ComActionHandlers = {
       }
     }
   },
-  updatestate: (update: Partial<AppState>) => {
-    const prevStage = state.stage;
+  updatestate: debounce((update: Partial<AppState>) => {
+    // const prevStage = state.stage;
     state = {
       ...state,
       ...update,
       layers: update
         .layers?.map((options) => {
+          const found = findStateLayer(options.id);
+          if (found) {
+            found.active = !!options.active;
+            return found;
+          }
+
           switch (options.type) {
             case 'canvas2d':
             case 'canvas':
@@ -185,21 +195,6 @@ const socketHandlers: ComActionHandlers = {
         .map(resizeLayer) as Array<Canvas2DLayer | ThreeJSLayer>
         || state.layers,
     };
-    const stageChanged = prevStage.width !== state.stage.width
-      || prevStage.height !== state.stage.height;
-    if (stageChanged) {
-      const canvasAspectRatio = canvas.width / canvas.height;
-      const stageAspectRatio = state.stage.width / state.stage.height;
-      const canvasStageScale = canvas.width / state.stage.width;
-
-      canvas.width = (
-        canvasAspectRatio > stageAspectRatio
-          ? state.stage.width
-          : state.stage.height * canvasAspectRatio
-      ) * canvasStageScale || 100;
-      canvas.height = canvas.width * (1 / canvasAspectRatio);
-      state.layers?.forEach(resizeLayer);
-    }
     if (typeof update.worker?.setup !== 'undefined' && update.worker.setup !== scriptable.setup.code) {
       scriptable.setup.code = update.worker.setup || scriptable.setup.code;
       state.worker.setup = scriptable.setup.code;
@@ -209,7 +204,7 @@ const socketHandlers: ComActionHandlers = {
       scriptable.animation.code = update.worker.animation || scriptable.animation.code;
       state.worker.animation = scriptable.animation.code;
     }
-  },
+  }, 60),
   updatedata: (payload: typeof data) => {
     Object.assign(data, payload);
     // workerCom.post('updatedata', data);
@@ -221,13 +216,13 @@ socketCom = autoBind({
   postMessage: (message: any) => {
     socket.emit('message', message);
   },
-}, `display-${state.id}-socket`, socketHandlers);
+}, `display-${idFromWorkerHash}-socket`, socketHandlers);
 
 socket.on('message', (message: ComEventData) => socketCom.listener({ data: message }));
 
 function registerDisplay() {
   socket.emit('registerdisplay', {
-    id: state.id,
+    id: idFromWorkerHash,
     width: onScreenCanvas.width,
     height: onScreenCanvas.height,
   });
@@ -259,9 +254,16 @@ const messageHandlers: ComActionHandlers = {
     canvas.height = state.height;
     state.layers?.forEach(resizeLayer);
 
-    if (!state.control) socketCom.post('resizedisplay', { id: state.id, width: state.width, height: state.height });
+    if (!state.control) {
+      console.info('[worker] notify resize');
+      socketCom.post('resizedisplay', {
+        id: idFromWorkerHash,
+        width: state.width,
+        height: state.height,
+      });
+    }
   },
 };
 
-workerCom = autoBind(worker, `display-${state.id}-worker`, messageHandlers);
+workerCom = autoBind(worker, `display-${idFromWorkerHash}-worker`, messageHandlers);
 worker.addEventListener('message', workerCom.listener);
