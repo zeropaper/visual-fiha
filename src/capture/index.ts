@@ -17,9 +17,6 @@ socket.on('message', (message: ComEventData) => listener({ data: message }));
 socket.emit('registercapture');
 
 const canvasCtx = document.getElementsByTagName('canvas')[0]?.getContext('2d');
-const audio:Uint8Array[] | Float32Array[] = [];
-
-let counter = 0;
 
 let audioCtx: AudioContext;
 
@@ -71,10 +68,6 @@ function render() {
     drawValues(freqArray, 'green', (val: number) => ((val / 255) * h));
     drawValues(timeDomainArray, 'orange', (val: number) => hh + (((val - 127) / hh) * h));
   }
-
-  counter += 1;
-  if (counter % 100 === 0) console.info('audio', audio);
-  // setTimeout(render, 1000 / 60);
   requestAnimationFrame(render);
 }
 
