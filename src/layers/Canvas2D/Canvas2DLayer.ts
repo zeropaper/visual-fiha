@@ -19,7 +19,6 @@ export default class Canvas2DLayer extends Layer {
       ...canvasTools(this.#ctx),
       ...super.api,
     };
-    this.execSetup();
   }
 
   #ctx: CTX;

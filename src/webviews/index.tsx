@@ -18,6 +18,7 @@ import ControlDisplay from './components/ControlDisplay';
 import DisplaysList from './components/DisplaysList';
 import AppInfo from './components/AppInfo';
 import LayersList from './components/LayersList';
+import Audio from './components/Audio';
 
 const { post, listener } = autoBind({
   postMessage: (data: ComEventData) => vscode.postMessage(data),
@@ -48,8 +49,9 @@ const WebviewComponent = () => {
       <StoreProvider store={store}>
         <>
           <ControlDisplay />
-          <div>
+          <div id="controls">
             <AppInfo />
+            <Audio />
             <LayersList />
             <DisplaysList />
             <StoreControl />

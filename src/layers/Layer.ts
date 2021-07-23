@@ -12,7 +12,6 @@ export default class Layer extends Scriptable {
     this.active = typeof options.active !== 'undefined' ? options.active : true;
     if (!options.id) throw new Error('Missing id option');
     this.#canvas = (options.canvas || new OffscreenCanvas(600, 400)) as OffscreenCanvas;
-    this.execSetup();
   }
 
   active: boolean = true;

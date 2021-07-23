@@ -33,3 +33,8 @@ export const useVSCOpen = () => {
   const { post } = useComContext();
   return (relativePath: string) => post('open', relativePath);
 };
+
+export const useSetBPM = () => {
+  const { post } = useComContext();
+  return (bpm: number) => post('setBPM', bpm);
+};

@@ -17,7 +17,7 @@ const AppInfo = () => {
   };
 
   return (
-    <section>
+    <section id="app-info">
       <header>
         <h1>
           {`# ${id}`}

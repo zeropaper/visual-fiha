@@ -14,7 +14,7 @@ const LayerScriptLink = ({
   return (
     <a
       href="#vscode-action"
-      onClick={() => open(`/layers/${layer.id}-${scriptRole}.js`)}
+      onClick={() => open(`/layers/${layer.type}/${layer.id}-${scriptRole}.js`)}
       className={[
         scriptRole,
         !contentLength && 'empty-script',
@@ -28,9 +28,9 @@ const LayerScriptLink = ({
 const LayersList = () => {
   const { layers } = useSelector((state: AppState) => ({ layers: state.layers }));
   return (
-    <section>
+    <section id="layers">
       <header>
-        <h1>Layers List</h1>
+        <h1>Layers</h1>
       </header>
       <main>
         <ul>

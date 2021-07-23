@@ -8,8 +8,10 @@ const DisplaysList = () => {
   const items = useSelector(({ displays }: WebviewAppState) => displays);
 
   return (
-    <section>
-      <header>Displays</header>
+    <section id="displays">
+      <header>
+        <h1>Displays</h1>
+      </header>
 
       <main className="displays-wrapper">
         {items.map((item) => (
