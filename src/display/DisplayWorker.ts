@@ -225,16 +225,26 @@ socketCom = autoBind({
 
 socket.on('message', (message: ComEventData) => socketCom.listener({ data: message }));
 
+function registerDisplay() {
+  socket.emit('registerdisplay', {
+    id: state.id,
+    width: onScreenCanvas.width,
+    height: onScreenCanvas.height,
+  });
+}
+
+socket.io.on('reconnect', (attempt) => {
+  console.info('[worker] reconnect', attempt);
+  registerDisplay();
+});
+
 const messageHandlers: ComActionHandlers = {
   offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
     onScreenCanvas = onscreen;
 
     // TODO: use autoBind
-    socket.emit('registerdisplay', {
-      id: state.id,
-      width: onscreen.width,
-      height: onscreen.height,
-    });
+    console.info('[worker] offscreencanvas, register display');
+    registerDisplay();
   },
   resize: ({
     width,
