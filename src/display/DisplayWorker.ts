@@ -98,14 +98,10 @@ function render() {
   if (context && onScreenCanvas) {
     renderLayers();
 
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    if (imageData) {
-      onScreenCanvas.height = canvas.height;
-      onScreenCanvas.width = canvas.width;
-
-      const ctx = onScreenCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
-      ctx.putImageData(imageData, 0, 0, 0, 0, canvas.width, canvas.height);
-    }
+    onScreenCanvas.height = canvas.height;
+    onScreenCanvas.width = canvas.width;
+    const ctx = onScreenCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+    ctx.drawImage(canvas, 0, 0, onScreenCanvas.width, onScreenCanvas.height, 0, 0, canvas.width, canvas.height);
   }
 
   requestAnimationFrame(render);
