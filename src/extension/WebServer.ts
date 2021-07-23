@@ -230,7 +230,7 @@ export default class VFServer {
 
   get displays(): DisplayBase[] {
     return Object.keys(this.#displays)
-      .filter((id) => id !== 'control')
+      .filter((id) => !id.startsWith('control'))
       .map((id) => {
         const { socket, ...display } = this.#displays[id];
         return { ...display, id };
