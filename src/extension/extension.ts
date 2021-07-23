@@ -102,36 +102,14 @@ function refreshData() {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  context.subscriptions.push(
-    webServer.activate(context),
-    makeDisposableStoreListener(context),
-    webServer.onDisplaysChange((displays) => {
-      runtimeState = {
-        ...runtimeState,
-        stage: {
-          ...runtimeState.stage,
-          ...webServer.displaysMaxSize,
-        },
-      };
-      webServer.broadcastState(runtimeState);
-      VFPanel.currentPanel?.updateDisplays(displays);
-    }),
-    webServer.onSocketConnection((socket) => {
-      socket.emit('message', { type: 'updatestate', payload: runtimeState });
+  propagateRC()
+    .then(() => {
+      vscode.commands.executeCommand('visualFiha.openControls');
 
-      socket.on('audioupdate', (audio: { frequency: number[]; volume: number[]; }) => {
-        data = {
-          ...data,
-          ...audio,
-        };
-      });
-    }),
-  );
+      refreshInterval = setInterval(refreshData, 8);
 
-  context.subscriptions.push(
-    ...Object.keys(commands)
-      .map((name) => vscode.commands.registerCommand(`visualFiha.${name}`, commands[name](context))),
-  );
+      VFPanel.currentPanel?.updateDisplays(webServer.displays);
+    });
 
   if (vscode.window.registerWebviewPanelSerializer) {
     // Make sure we register a serializer in activation event
@@ -147,37 +125,65 @@ export function activate(context: vscode.ExtensionContext) {
     });
   }
 
-  propagateRC()
-    .then(() => vscode.commands.executeCommand('visualFiha.openControls'));
-  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((event) => {
-    if (!event.fileName.endsWith('fiha.json')) return;
-    propagateRC();
-  }));
+  context.subscriptions.push(
+    webServer.activate(context),
 
-  context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
-    // if (!event.contentChanges.length) return;
+    makeDisposableStoreListener(context),
 
-    const { document: doc } = event;
-    if (doc.isUntitled || doc.isClosed || doc.languageId !== 'javascript') return;
+    webServer.onDisplaysChange((displays) => {
+      runtimeState = {
+        ...runtimeState,
+        stage: {
+          ...runtimeState.stage,
+          ...webServer.displaysMaxSize,
+        },
+      };
+      webServer.broadcastState(runtimeState);
+      VFPanel.currentPanel?.updateDisplays(displays);
+    }),
 
-    const info = textDocumentScriptInfo(doc);
-    const script = doc.getText();
-    webServer.broadcastScript(info, script);
+    webServer.onSocketConnection((socket) => {
+      socket.emit('message', { type: 'updatestate', payload: runtimeState });
 
-    const layerIndex = runtimeState.layers.findIndex((layer) => layer.id === info.id);
-    if (layerIndex < 0) {
+      socket.on('audioupdate', (audio: { frequency: number[]; volume: number[]; }) => {
+        data = {
+          ...data,
+          ...audio,
+        };
+      });
+    }),
+
+    ...Object.keys(commands)
+      .map((name) => vscode.commands.registerCommand(`visualFiha.${name}`, commands[name](context))),
+
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      // if (!event.contentChanges.length) return;
+
+      const { document: doc } = event;
+      if (doc.isUntitled || doc.isClosed || doc.languageId !== 'javascript') return;
+
+      const info = textDocumentScriptInfo(doc);
+      const script = doc.getText();
+      webServer.broadcastScript(info, script);
+
+      const layerIndex = runtimeState.layers.findIndex((layer) => layer.id === info.id);
+      if (layerIndex < 0) {
       // TODO: check info.type
-      runtimeState.worker[info.role] = script;
-      return;
-    }
+        runtimeState.worker[info.role] = script;
+        return;
+      }
 
-    runtimeState.layers[layerIndex][info.role] = script;
-    VFPanel.currentPanel?.updateState({
-      layers: runtimeState.layers,
-    });
-  }));
+      runtimeState.layers[layerIndex][info.role] = script;
+      VFPanel.currentPanel?.updateState({
+        layers: runtimeState.layers,
+      });
+    }),
 
-  refreshInterval = setInterval(refreshData, 8);
+    vscode.workspace.onDidSaveTextDocument((event) => {
+      if (!event.fileName.endsWith('fiha.json')) return;
+      propagateRC();
+    }),
+  );
 }
 
 export function deactivate() {
