@@ -39,8 +39,6 @@ export default class ThreeJSLayer extends Layer {
       renderer,
       GLTFLoader,
     };
-
-    this.execSetup();
   }
 
   renderer: THREE.WebGLRenderer;
@@ -49,13 +47,34 @@ export default class ThreeJSLayer extends Layer {
 
   scene: THREE.Scene;
 
+  #update = () => {
+    if (!this.camera) return;
+    const aspect = this.width / this.height;
+    console.info('[ThreeJS] wanted camera aspect', aspect);
+    try {
+      this.camera.aspect = this.width / this.height;
+    } catch (e) {
+      console.info('[ThreeJS] cannot set aspect', e.message);
+    }
+  };
+
+  get width() {
+    return this.canvas.width;
+  }
+
+  get height() {
+    return this.canvas.height;
+  }
+
   set width(width: number) {
-    super.width = width;
+    this.canvas.width = width;
     this.renderer.setSize(width, this.canvas.height, false);
+    this.#update();
   }
 
   set height(height: number) {
-    super.height = height;
+    this.canvas.height = height;
     this.renderer.setSize(this.canvas.width, height, false);
+    this.#update();
   }
 }
