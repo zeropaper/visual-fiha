@@ -49,8 +49,6 @@ export default class ThreeJSLayer extends Layer {
 
   #update = () => {
     if (!this.camera) return;
-    const aspect = this.width / this.height;
-    console.info('[ThreeJS] wanted camera aspect', aspect);
     try {
       this.camera.aspect = this.width / this.height;
     } catch (e) {

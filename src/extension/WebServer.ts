@@ -284,7 +284,6 @@ export default class VFServer {
   };
 
   broadcastState = ({ displays, ...data }: Partial<AppState>) => {
-    console.info('[webServer] broadcasting updatestate to sockets', data.stage?.width, data.stage?.height);
     this.broadcast('updatestate', data);
   };
 
