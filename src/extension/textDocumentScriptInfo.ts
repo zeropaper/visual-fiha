@@ -12,9 +12,9 @@ export default function textDocumentScriptInfo(doc: vscode.TextDocument): Script
     && vscode.workspace.workspaceFolders[0].uri.path) || '';
 
   const relativePath = doc.uri.path.replace(workspacePath, '');
-  const [, directory, id, role] = (
-    relativePath.match(/\/([^/]+)\/(.+)-(setup|animation)\./) || []
-  ) as [any, keyof typeof DirectoryTypes, string, ScriptRole];
+  const [, directory, , id, role] = (
+    relativePath.match(/\/([^/]+)\/([^/]+)\/([^/]+)-(setup|animation)\./) || []
+  ) as [any, keyof typeof DirectoryTypes, any, string, ScriptRole];
 
   if (!directory || !id || !role) throw new Error(`Cannot determine script info for ${doc.uri.path}`);
   return {

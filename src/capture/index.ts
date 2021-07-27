@@ -50,15 +50,18 @@ function drawValues(values: Uint8Array | Float32Array, color:string, transform: 
 let analyser:AnalyserNode;
 let freqArray: Uint8Array;
 let timeDomainArray: Uint8Array;
+const timeDomainFloat = new Float32Array(audioConfig.fftSize);
 function render() {
   if (canvasCtx && analyser) {
     analyser.getByteFrequencyData(freqArray);
     analyser.getByteTimeDomainData(timeDomainArray);
+    analyser.getFloatTimeDomainData(timeDomainFloat);
 
     // post('audioupdate', {
     socket.emit('audioupdate', {
       frequency: Array.from(freqArray),
       volume: Array.from(timeDomainArray),
+      volumeFloat: Array.from(timeDomainFloat),
     });
 
     const { canvas: { width: w, height: h } } = canvasCtx;
@@ -66,7 +69,8 @@ function render() {
     canvasCtx.clearRect(0, 0, w, h);
 
     drawValues(freqArray, 'green', (val: number) => ((val / 255) * h));
-    drawValues(timeDomainArray, 'orange', (val: number) => hh + (((val - 127) / hh) * h));
+    drawValues(timeDomainFloat, 'orange', (val: number) => hh + ((val * hh)));
+    drawValues(timeDomainArray, 'red', (val: number) => hh + (((val - 127) / hh) * h));
   }
   requestAnimationFrame(render);
 }

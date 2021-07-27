@@ -3,6 +3,7 @@
 // TODO: make a class for the worker
 
 import { io } from 'socket.io-client';
+import { debounce } from 'lodash';
 
 import type {
   ComEventData,
@@ -60,7 +61,7 @@ const idFromWorkerHash = worker.location.hash.replace('#', '');
 if (!idFromWorkerHash) throw new Error('[worker] worker is not ready');
 
 let state: DisplayState = {
-  bpm: 120,
+  bpm: { count: 120, start: Date.now() },
   server: { host: 'localhost', port: 9999 },
   control: !!worker.location.hash?.startsWith('#control'),
   id: idFromWorkerHash,
@@ -73,6 +74,35 @@ let state: DisplayState = {
     animation: '',
   },
 };
+
+// class VFWorker {
+//   constructor() {
+//     this.#scriptable = new Scriptable(scriptableOptions);
+
+//     this.#canvas = new OffscreenCanvas(state.width, state.height);
+//     this.#context = this.#canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+
+//     this.#tools = canvasTools(this.#context);
+//   }
+
+//   #scriptable: Scriptable;
+
+//   #canvas: OffscreenCanvas;
+
+//   #context: OffscreenCanvasRenderingContext2D;
+
+//   #tools: Canvas2DAPI;
+
+//   renderLayers = () => {
+//     this.#context.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
+//     state.layers?.forEach((layer) => {
+//       // TODO: implement and use layer.active
+//       layer.execAnimation();
+//       this.#tools.pasteContain(layer.canvas as any);
+//     });
+//   };
+
+// }
 
 const scriptable = new Scriptable(scriptableOptions);
 

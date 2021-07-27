@@ -5,7 +5,10 @@ import { WebviewAppState } from '../store';
 
 const AppInfo = () => {
   const {
-    id, stage, bpm, server,
+    id,
+    stage,
+    bpm: { count: bpm },
+    server,
   } = useSelector((state: WebviewAppState) => state);
   const open = useVSCOpen();
 

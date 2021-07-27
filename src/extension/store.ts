@@ -9,8 +9,11 @@ const id = (state: string = '', action: AnyAction) => {
   return action.payload || state;
 };
 
-const bpm = (state: number = 120, action: AnyAction) => {
-  if (action.type !== 'setBpm') return state;
+const bpm = (state: {
+  count: number;
+  start?: number;
+} = { count: 120 }, action: AnyAction) => {
+  if (action.type !== 'setBPM') return state;
   return action.payload || state;
 };
 
@@ -61,10 +64,10 @@ const store = createStore(combineReducers({
 export const messageHandlers = {
   updatestate: (newState: AppState) => {
     const localState = store.getState();
-    console.info('[webview] updatestate', newState);
-    if (localState.bpm !== newState.bpm) {
-      store.dispatch({ type: 'setBpm', payload: newState.bpm });
-    }
+    // console.info('[webview] store updatestate', newState);
+    // if (localState.bpm !== newState.bpm) {
+    //   store.dispatch({ type: 'setBPM', payload: newState.bpm });
+    // }
     if (localState.id !== newState.id) {
       store.dispatch({ type: 'setId', payload: newState.id });
     }

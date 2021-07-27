@@ -1,4 +1,4 @@
-import { AnyAction, configureStore } from '@reduxjs/toolkit';
+import { AnyAction, combineReducers, configureStore } from '@reduxjs/toolkit';
 import type {
   AppState,
   Layer,
@@ -16,21 +16,25 @@ export interface WebviewAppState extends AppState {
   controlDisplay: {
     width: number;
     height: number;
-    stage: StageInfo;
+    // stage: StageInfo;
   },
 }
 
 export const defaultState: WebviewAppState = {
   server: { host: 'localhost', port: 9999 },
+  worker: {
+    setup: '',
+    animation: '',
+  },
   displays: [],
   layers: [],
-  bpm: 120,
+  bpm: { count: 120, start: Date.now() },
   id: 'vf-default',
   stage: { width: 600, height: 400, autoScale: true },
   controlDisplay: {
     width: 600,
     height: 400,
-    stage: { width: 600, height: 400, autoScale: true },
+    // stage: { width: 600, height: 400, autoScale: true },
   },
 };
 
@@ -53,28 +57,38 @@ export const readWebviewState = (): WebviewAppState => ({
 // eslint-disable-next-line max-len
 export const writeWebviewState = (newState: WebviewAppState) => appStateToWebviewState(vscode.setState(webviewStateToAppState(newState))) as WebviewAppState;
 
+const combinedReducers = combineReducers({
+  ...reducers,
+  controlDisplay: (state: {
+    width: number;
+    height: number;
+    stage: StageInfo,
+  }, action: AnyAction) => {
+    if (action.type !== 'updatecontroldisplay') return state || {};
+    return ({
+      ...(state || {}),
+      ...action.payload,
+    });
+  },
+  layers: (state: Layer[] = [], action: AnyAction) => {
+    if (action.type !== 'setLayers') return state;
+    return action.payload;
+  },
+  displays: (state: any[] = [], action: AnyAction) => {
+    if (action.type !== 'setDisplays') return state;
+    return action.payload;
+  },
+});
+
 const store = configureStore({
-  reducer: {
-    ...reducers,
-    controlDisplay: (state: {
-      width: number;
-      height: number;
-      stage: StageInfo,
-    }, action: AnyAction) => {
-      if (action.type !== 'updatecontroldisplay') return state || {};
-      return ({
-        ...(state || {}),
+  reducer: (state, action) => {
+    if (action.type === 'updatestate') {
+      return {
+        ...state,
         ...action.payload,
-      });
-    },
-    layers: (state: Layer[] = [], action: AnyAction) => {
-      if (action.type !== 'setLayers') return state;
-      return action.payload;
-    },
-    displays: (state: any[] = [], action: AnyAction) => {
-      if (action.type !== 'setDisplays') return state;
-      return action.payload;
-    },
+      };
+    }
+    return combinedReducers(state, action);
   },
   preloadedState: appStateToWebviewState(readWebviewState()),
 });
@@ -84,17 +98,7 @@ export const messageHandlers = {
     store.dispatch({ type: 'setDisplays', payload: displays });
   },
   updatestate: (newState: AppState) => {
-    const localState = store.getState();
-    if (localState.bpm !== newState.bpm) {
-      store.dispatch({ type: 'setBpm', payload: newState.bpm });
-    }
-    if (localState.id !== newState.id) {
-      store.dispatch({ type: 'setId', payload: newState.id });
-    }
-    if (localState.server !== newState.server) {
-      store.dispatch({ type: 'setDisplayServer', payload: newState.server });
-    }
-    store.dispatch({ type: 'setLayers', payload: newState.layers });
+    store.dispatch({ type: 'updatestate', payload: newState });
   },
 };
 

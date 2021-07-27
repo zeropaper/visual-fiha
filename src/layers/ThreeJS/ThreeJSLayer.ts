@@ -38,6 +38,7 @@ export default class ThreeJSLayer extends Layer {
       scene,
       renderer,
       GLTFLoader,
+      clear: this.#clearScene,
     };
   }
 
@@ -46,6 +47,13 @@ export default class ThreeJSLayer extends Layer {
   camera: THREE.PerspectiveCamera;
 
   scene: THREE.Scene;
+
+  #clearScene = () => {
+    this.scene.children.forEach((child) => {
+      console.info('[ThreeJS] clear scene child', child.name || 'no name');
+      this.scene.remove(child);
+    });
+  };
 
   #update = () => {
     if (!this.camera) return;

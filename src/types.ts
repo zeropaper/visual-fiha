@@ -43,7 +43,10 @@ export interface DisplayServerInfo {
 
 export interface AppState {
   id: string;
-  bpm: number;
+  bpm: {
+    count: number;
+    start: number;
+  };
   worker: {
     setup: string;
     animation: string;
@@ -56,7 +59,7 @@ export interface AppState {
 
 export type FihaRC = {
   id: string;
-  bpm?: number;
+  // bpm?: number;
   layers: Layer[];
   assets?: { name: string }[];
 };

@@ -5,7 +5,7 @@
   align-items: flex-start;
 }
 
-#app > div {
+#controls {
   flex-grow: 1;
   margin-left: 1vw;
 }
@@ -14,24 +14,32 @@
   #app {
     flex-direction: column;
   }
-  #app > div {
+  #controls {
     flex-grow: 1;
     margin-left: 0;
     margin-top: 1vh;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  #controls > section {
+    width: 50%;
   }
 }
 
-#displays {
+#controls > #displays {
+  width: 100%;
+}
+
+.displays-wrapper {
   background-color: rgba(122, 122, 122, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 20vh;
+  min-height: 20vmin;
   flex-direction: column;
   overflow: hidden;
-}
 
-.displays-wrapper {
   position: relative;
   display: flex;
   justify-content: space-around;

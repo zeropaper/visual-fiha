@@ -33,7 +33,7 @@ let runtimeState: AppState = {
     setup: '',
     animation: '',
   },
-  bpm: 120,
+  bpm: { count: 120, start: Date.now() },
   id: 'vf-default',
 };
 
@@ -61,10 +61,10 @@ export async function propagateRC() {
     runtimeState = {
       ...fiharc,
       ...runtimeState,
+      id: fiharc.id || runtimeState.id,
+      // bpm: fiharc.bpm || runtimeState.bpm,
       layers: await Promise.all(fiharc.layers.map(readLayerScripts('layer'))),
-      id: fiharc.id,
-      bpm: fiharc.bpm || runtimeState.bpm,
-      worker: await readScripts('worker', 'worker'),
+      worker: await readScripts('worker', 'worker', 'worker'),
     };
 
     webServer.broadcastState(runtimeState);
@@ -77,7 +77,20 @@ export async function propagateRC() {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function makeDisposableStoreListener(context: vscode.ExtensionContext): vscode.Disposable {
   const unsubscribe = store.subscribe(() => {
-    console.info('[ext] store chaned', store.getState());
+    const state = store.getState();
+    // eslint-disable-next-line prefer-const
+    let changed = false;
+
+    // if (runtimeState.bpm && state.bpm && runtimeState.bpm !== state.bpm) {
+    //   runtimeState.bpm = state.bpm;
+    //   changed = true;
+    // }
+
+    console.info('[ext] store listener', state, runtimeState, changed);
+    if (changed) {
+      webServer.broadcastState(runtimeState);
+      VFPanel.currentPanel?.updateState(runtimeState);
+    }
   });
   return {
     dispose: unsubscribe,

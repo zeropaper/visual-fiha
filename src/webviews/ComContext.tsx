@@ -31,7 +31,7 @@ export const useComPost = () => {
 
 export const useVSCOpen = () => {
   const { post } = useComContext();
-  return (relativePath: string) => post('open', relativePath);
+  return (relativePath: string) => post('openEditor', relativePath);
 };
 
 export const useSetBPM = () => {

@@ -2,9 +2,9 @@ import { TypeDirectory } from '../types';
 import scriptUri from './scriptUri';
 import asyncReadFile from './asyncReadFile';
 
-export default async function readScripts(type: keyof typeof TypeDirectory, id: string) {
-  const setupFSPath = scriptUri(type, id, 'setup').path;
-  const animationFSPath = scriptUri(type, id, 'animation').path;
+export default async function readScripts(type: keyof typeof TypeDirectory, runnerType: string, id: string) {
+  const setupFSPath = scriptUri(type, runnerType, id, 'setup').path;
+  const animationFSPath = scriptUri(type, runnerType, id, 'animation').path;
 
   let setup = '';
   let animation = '';

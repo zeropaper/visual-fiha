@@ -2,21 +2,32 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-import { AppState, ComEventData, ComEventDataMeta } from '../types';
+import {
+  AppState,
+  ComEventData,
+} from '../types';
 import getNonce from './getNonce';
 import getWebviewOptions from './getWebviewOptions';
-import getWorkspaceFolder from './getWorkspaceFolder';
 
 const isDebugMode = () => process.env.VSCODE_DEBUG_MODE === 'true';
 
-export type OpenCommandOptions = string | {
-  relativePath: string;
-  viewColumn?: number;
-  preserveFocus?: boolean;
-  preview?: boolean;
-  selection?: vscode.Range;
-  createIfNone?: boolean;
-};
+function handleIncomingMessage({
+  type,
+  payload,
+  meta,
+}: ComEventData) {
+  switch (type) {
+    case 'setBPM':
+    case 'openEditor':
+      vscode.commands.executeCommand(`visualFiha.${type}`, payload, meta);
+      break;
+    case 'alert':
+      vscode.window.showErrorMessage(payload);
+      break;
+    default:
+      vscode.window.showErrorMessage(`Unknown command: ${type}`);
+  }
+}
 
 /**
  * Manages cat coding webview panels
@@ -35,6 +46,8 @@ export default class VFPanel {
 
   private readonly _extensionUri: vscode.Uri;
 
+  private _incomingMessage: vscode.EventEmitter<ComEventData>;
+
   private _disposables: vscode.Disposable[] = [];
 
   public static createOrShow(context: vscode.ExtensionContext) {
@@ -42,7 +55,7 @@ export default class VFPanel {
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
-    console.info('[VFPanel] createOrShow');
+    // console.info('[VFPanel] createOrShow', vscode.window);
     // If we already have a panel, show it.
     if (VFPanel.currentPanel) {
       VFPanel.currentPanel._panel.reveal(column);
@@ -58,17 +71,20 @@ export default class VFPanel {
     );
 
     VFPanel.currentPanel = new VFPanel(panel, context);
+    VFPanel.currentPanel.onIncomingMessage(handleIncomingMessage);
   }
 
   public static revive(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
-    console.info('[VFPanel] revive');
+    // console.info('[VFPanel] revive');
     VFPanel.currentPanel = new VFPanel(panel, context);
+    VFPanel.currentPanel.onIncomingMessage(handleIncomingMessage);
   }
 
   private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
     this._context = context;
     this._panel = panel;
     this._extensionUri = context.extensionUri;
+    this._incomingMessage = new vscode.EventEmitter<ComEventData>();
 
     // Set the webview's initial html content
     this._update();
@@ -91,38 +107,20 @@ export default class VFPanel {
     // This happens when the user closes the panel or when the panel is closed programmatically
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-    // Update the content based on view changes
-    this._panel.onDidChangeViewState(
-      () => {
-        if (this._panel.visible) {
-          this._update();
-        }
-      },
-      null,
-      this._disposables,
-    );
-
     // Handle messages from the webview
     this._panel.webview.onDidReceiveMessage(
-      ({
-        type,
-        payload,
-        meta,
-      }: ComEventData) => {
-        switch (type) {
-          case 'alert':
-            vscode.window.showErrorMessage(payload);
-            break;
-          case 'open':
-            this._open(payload, meta);
-            break;
-          default:
-            vscode.window.showErrorMessage(`Unknown command: ${type}`);
-        }
-      },
+      (evt) => this._incomingMessage.fire(evt),
       null,
       this._disposables,
     );
+  }
+
+  public onIncomingMessage(listener: (evt: ComEventData) => void) {
+    return this._incomingMessage.event(listener);// , null, this._disposables);
+  }
+
+  public postMessage(msg: ComEventData) {
+    this._panel.webview.postMessage(msg);
   }
 
   public updateDisplays(displays: object) {
@@ -149,61 +147,6 @@ export default class VFPanel {
         x.dispose();
       }
     }
-  }
-
-  private _open(options: OpenCommandOptions, meta?: ComEventDataMeta) {
-    const filepath = vscode.Uri.joinPath(getWorkspaceFolder().uri, typeof options === 'string'
-      ? options
-      : options.relativePath);
-    const {
-      viewColumn = vscode.ViewColumn.Beside,
-      preserveFocus = true,
-      preview = false,
-      selection = undefined,
-      // createIfNone = false,s
-    } = typeof options === 'string' ? {} : options;
-
-    const resolve = () => {
-      if (!meta?.operationId) return;
-      this._panel.webview.postMessage({
-        type: 'com/reply',
-        meta: {
-          ...meta,
-          originalType: 'open',
-          processed: Date.now(),
-        },
-      });
-    };
-    const reject = (error: any) => {
-      console.warn('[VFPanel] open error', error);
-      vscode.window.showErrorMessage(`Could not open: ${filepath}`);
-      if (!meta?.operationId) return;
-      this._panel.webview.postMessage({
-        type: 'com/reply',
-        meta: {
-          ...meta,
-          error,
-          originalType: 'open',
-          processed: Date.now(),
-        },
-      });
-    };
-
-    const create = () => new Promise<void>((res, rej) => {
-      fs.writeFile(filepath.fsPath, '', 'utf8', (err) => {
-        if (err) return rej(err);
-        return res();
-      });
-    });
-    const open = () => vscode.commands.executeCommand('vscode.open', filepath, {
-      viewColumn,
-      preserveFocus,
-      preview,
-      selection,
-    }).then(resolve, reject);
-
-    vscode.workspace.fs.stat(filepath)
-      .then(open, () => create().then(open).catch(reject));
   }
 
   private _update() {
