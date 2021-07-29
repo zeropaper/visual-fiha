@@ -117,7 +117,8 @@ function refreshData() {
 export function activate(context: vscode.ExtensionContext) {
   propagateRC()
     .then(() => {
-      vscode.commands.executeCommand('visualFiha.openControls');
+      const openControls = vscode.workspace.getConfiguration('visualFiha.settings').get('openControls');
+      if (openControls) vscode.commands.executeCommand('visualFiha.openControls');
 
       refreshInterval = setInterval(refreshData, 8);
 

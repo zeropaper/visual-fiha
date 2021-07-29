@@ -24,7 +24,18 @@
         "title": "Open controls",
         "category": "Visual Fiha"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "VisualFiha",
+      "properties": {
+        "visualFiha.settings.openControls": {
+          "scope": "application",
+          "type": "boolean",
+          "default": false,
+          "description": "Open the controls whenever a Visual Fiha project is detected."
+        }
+      }
+    }
   },
   "publisher": "visual-fiha",
   "scripts": {
