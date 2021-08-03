@@ -115,7 +115,7 @@ const renderLayers = () => {
   if (!context) return;
   context.clearRect(0, 0, canvas.width, canvas.height);
   state.layers?.forEach((layer) => {
-    // TODO: implement and use layer.active
+    if (!layer.active) return;
     layer.execAnimation();
     tools.pasteContain(layer.canvas as any);
   });
