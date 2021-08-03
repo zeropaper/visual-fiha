@@ -11,12 +11,9 @@ const defaultState = {
 
 const Audio = () => {
   const {
-    // id, stage,
-    bpm,
+    bpm: { count: bpm },
     server,
-    // startTime,
   } = useSelector((state: WebviewAppState) => state);
-  // const open = useVSCOpen();
   const setBPM = useSetBPM();
 
   const [{
@@ -25,11 +22,6 @@ const Audio = () => {
     seriesStart,
   }, setState] = React.useState(defaultState);
   const serverURL = `http://${server.host}:${server.port}`;
-
-  // const handleRCOpen = () => {
-  //   console.info('open fiha.json', open);
-  //   open('fiha.json');
-  // };
 
   const openCaptureLink = (
     <a
@@ -45,7 +37,6 @@ const Audio = () => {
 
   const handleBPMClick = () => {
     const now = Date.now();
-    console.info(now - lastMeasure);
     if ((now - lastMeasure) > 2000) {
       setState({
         lastMeasure: now,
@@ -78,8 +69,7 @@ const Audio = () => {
 
       <main>
         <div>
-          BPM
-          {bpm}
+          {`BPM: ${bpm}`}
 
           <button
             style={{

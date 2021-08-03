@@ -59,15 +59,19 @@
   border: 1px solid currentColor;
 }
 
+.control-display-wrapper {
+  width: 100%;
+  max-width: 45vmax;
+  min-width: 25vmax;
+}
+
 .control-display {
-  /* aspect-ratio: auto var(--stage-aspect-ratio, 1.5); */
   border: none;
   display: block;
   width: 100%;
-  max-width: 45vh;
 }
 @media (orientation: portrait) {
-  .control-display {
+  .control-display-wrapper {
     margin: auto;
   }
 }

@@ -5,7 +5,16 @@ import { WebviewAppState } from '../store';
 import Display from './Display';
 
 const DisplaysList = () => {
-  const items = useSelector(({ displays }: WebviewAppState) => displays);
+  const {
+    displays: items,
+    host,
+    port,
+  } = useSelector(({
+    displays,
+    server,
+  }: WebviewAppState) => ({ displays, ...server }));
+
+  const displayURL = `http://${host}:${port}/display/`;
 
   return (
     <section id="displays">
@@ -18,6 +27,9 @@ const DisplaysList = () => {
           // eslint-disable-next-line react/jsx-props-no-spreading
           <Display key={item.id} {...item} />
         ))}
+        <div>
+          <a href={displayURL}>{displayURL}</a>
+        </div>
       </main>
     </section>
   );

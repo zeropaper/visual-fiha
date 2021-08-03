@@ -1,7 +1,7 @@
 import { AnyAction, combineReducers, configureStore } from '@reduxjs/toolkit';
 import type {
   AppState,
-  Layer,
+  // Layer,
   StageInfo,
   DisplayBase,
 } from '../types';
@@ -70,10 +70,6 @@ const combinedReducers = combineReducers({
       ...action.payload,
     });
   },
-  layers: (state: Layer[] = [], action: AnyAction) => {
-    if (action.type !== 'setLayers') return state;
-    return action.payload;
-  },
   displays: (state: any[] = [], action: AnyAction) => {
     if (action.type !== 'setDisplays') return state;
     return action.payload;
@@ -82,6 +78,7 @@ const combinedReducers = combineReducers({
 
 const store = configureStore({
   reducer: (state, action) => {
+    console.info('[webview] incoming action', action.type);
     if (action.type === 'updatestate') {
       return {
         ...state,

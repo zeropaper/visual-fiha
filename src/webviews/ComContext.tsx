@@ -38,3 +38,23 @@ export const useSetBPM = () => {
   const { post } = useComContext();
   return (bpm: number) => post('setBPM', bpm);
 };
+
+export const useSetStageSize = () => {
+  const { post } = useComContext();
+  return (size: { width: number; height: number; }) => post('setStageSize', size);
+};
+
+export const useToggleLayer = () => {
+  const { post } = useComContext();
+  return (id: string) => post('toggleLayer', id);
+};
+
+export const useCreateLayer = () => {
+  const { post } = useComContext();
+  return (id: string, type: string) => post('createLayer', { id, type });
+};
+
+export const useRemoveLayer = () => {
+  const { post } = useComContext();
+  return (id: string) => post('removeLayer', id);
+};

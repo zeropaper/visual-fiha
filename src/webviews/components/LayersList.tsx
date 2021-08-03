@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import { AppState, Layer } from '../../types';
-import { useVSCOpen } from '../ComContext';
+import { useToggleLayer, useVSCOpen } from '../ComContext';
 
 const LayerScriptLink = ({
   layer,
@@ -27,6 +27,7 @@ const LayerScriptLink = ({
 
 const LayersList = () => {
   const { layers } = useSelector((state: AppState) => ({ layers: state.layers }));
+  const toggleLayer = useToggleLayer();
   return (
     <section id="layers">
       <header>
@@ -36,6 +37,7 @@ const LayersList = () => {
         <ul>
           {layers.map((layer) => (
             <li key={layer.id}>
+              {/* <pre>{JSON.stringify(layer, null, 2)}</pre> */}
               <span>{layer.active}</span>
               {' '}
               <span>{layer.id}</span>
@@ -46,6 +48,8 @@ const LayersList = () => {
                 <LayerScriptLink layer={layer} scriptRole="setup" />
                 {' '}
                 <LayerScriptLink layer={layer} scriptRole="animation" />
+                {' '}
+                <button type="button" onClick={() => toggleLayer(layer.id)}>{layer.active ? 'on' : 'off'}</button>
               </div>
             </li>
           ))}

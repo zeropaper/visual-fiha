@@ -7,12 +7,12 @@ const AppInfo = () => {
   const {
     id,
     stage,
-    bpm: { count: bpm },
-    server,
+    // bpm: { count: bpm },
+    // server,
   } = useSelector((state: WebviewAppState) => state);
   const open = useVSCOpen();
 
-  const serverURL = `http://${server.host}:${server.port}`;
+  // const serverURL = `http://${server.host}:${server.port}`;
 
   const handleRCOpen = () => {
     console.info('open fiha.json', open);
@@ -32,17 +32,17 @@ const AppInfo = () => {
       </header>
       <main>
         <dl>
-          <dt>BPM:</dt>
-          <dd>{bpm}</dd>
+          {/* <dt>BPM:</dt>
+          <dd>{bpm}</dd> */}
 
           <dt>Stage:</dt>
           <dd>{`${stage.width}x${stage.height}`}</dd>
 
-          <dt>Display:</dt>
-          <dd><a href={`${serverURL}/display/`}>{`${serverURL}/display/`}</a></dd>
+          {/* <dt>Display:</dt>
+          <dd><a href={`${serverURL}/display/`}>{`${serverURL}/display/`}</a></dd> */}
 
-          <dt>Capture:</dt>
-          <dd><a href={`${serverURL}/capture/`}>{`${serverURL}/capture/`}</a></dd>
+          {/* <dt>Capture:</dt>
+          <dd><a href={`${serverURL}/capture/`}>{`${serverURL}/capture/`}</a></dd> */}
         </dl>
       </main>
     </section>
