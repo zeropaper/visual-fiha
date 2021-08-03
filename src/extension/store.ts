@@ -11,10 +11,13 @@ const id = (state: string = '', action: AnyAction) => {
 
 const bpm = (state: {
   count: number;
-  start?: number;
-} = { count: 120 }, action: AnyAction) => {
+  start: number;
+} = { count: 120, start: 0 }, action: AnyAction) => {
   if (action.type !== 'setBPM') return state;
-  return action.payload || state;
+  return {
+    count: action.payload,
+    start: Date.now(),
+  };
 };
 
 // eslint-disable-next-line max-len
@@ -41,20 +44,33 @@ export const worker = (state: {
   };
 };
 
+const layers = (state: Layer[] = [], action: AnyAction) => {
+  switch (action.type) {
+    case 'setLayers':
+      return [...(state || [])];
+
+    case 'toggleLayer':
+      return state.map((layer) => {
+        if (layer.id === action.payload) return { ...layer, active: !layer.active };
+        return layer;
+      });
+
+    default:
+      return state;
+  }
+};
+
 export const reducers = {
   id,
   bpm,
   stage,
   server,
   worker,
+  layers,
 };
 
 const store = createStore(combineReducers({
   ...reducers,
-  layers: (state: Layer[] = [], action: AnyAction) => {
-    if (action.type !== 'setLayers') return state;
-    return [...(state || [])];
-  },
   displays: (state: DisplayBase[] = [], action: AnyAction) => {
     if (action.type !== 'setDisplays') return state;
     return [...(state || [])];

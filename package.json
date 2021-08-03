@@ -23,6 +23,11 @@
         "command": "visualFiha.openControls",
         "title": "Open controls",
         "category": "Visual Fiha"
+      },
+      {
+        "command": "visualFiha.resetData",
+        "title": "Reset data",
+        "category": "Visual Fiha"
       }
     ],
     "configuration": {

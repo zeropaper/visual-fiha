@@ -1,11 +1,14 @@
 import * as vscode from 'vscode';
+import { AnyAction, EmptyObject, Store } from 'redux';
 
 import {
   AppState,
+  DisplayBase,
   FihaRC,
+  Layer,
   ScriptingData,
+  StageInfo,
 } from '../types';
-import getWebviewOptions from './getWebviewOptions';
 import VFPanel from './VFPanel';
 import WebServer from './WebServer';
 import commands from './commands';
@@ -17,37 +20,6 @@ import readLayerScripts from './readLayerScripts';
 import asyncReadFile from './asyncReadFile';
 import textDocumentScriptInfo from './textDocumentScriptInfo';
 
-let runtimeState: AppState = {
-  server: {
-    host: 'localhost',
-    port: 9999,
-  },
-  stage: {
-    width: 600,
-    height: 400,
-    autoScale: true,
-  },
-  displays: [],
-  layers: [],
-  worker: {
-    setup: '',
-    animation: '',
-  },
-  bpm: { count: 120, start: Date.now() },
-  id: 'vf-default',
-};
-
-const webServer = new WebServer(() => store.getState());
-
-let data: ScriptingData = {
-  started: 0,
-  iterationCount: 0,
-  now: 0,
-  deltaNow: 0,
-  frequency: [],
-  volume: [],
-};
-
 async function readWorkspaceRC(folderIndex = 0): Promise<FihaRC> {
   const folder = getWorkspaceFolder(folderIndex);
   const filepath = vscode.Uri.joinPath(folder.uri, 'fiha.json').fsPath;
@@ -55,152 +27,252 @@ async function readWorkspaceRC(folderIndex = 0): Promise<FihaRC> {
   return JSON.parse(content);
 }
 
-export async function propagateRC() {
-  try {
-    const fiharc = await readWorkspaceRC();
-    runtimeState = {
-      ...fiharc,
-      ...runtimeState,
-      id: fiharc.id || runtimeState.id,
-      // bpm: fiharc.bpm || runtimeState.bpm,
-      layers: await Promise.all(fiharc.layers.map(readLayerScripts('layer'))),
-      worker: await readScripts('worker', 'worker', 'worker'),
+class VFExtension {
+  constructor() {
+    this.#context = null;
+    this.#refreshInterval = null;
+    this.#store = store;
+    this.#webServer = new WebServer(() => this.#store.getState());
+  }
+
+  #refreshInterval: NodeJS.Timer | null;
+
+  #context: vscode.ExtensionContext | null;
+
+  #runtimeState: AppState = {
+    server: {
+      host: 'localhost',
+      port: 9999,
+    },
+    stage: {
+      width: 600,
+      height: 400,
+      autoScale: true,
+    },
+    displays: [],
+    layers: [],
+    worker: {
+      setup: '',
+      animation: '',
+    },
+    bpm: { count: 120, start: Date.now() },
+    id: 'vf-default',
+  };
+
+  #webServer: WebServer;
+
+  #store: Store<EmptyObject & {
+    displays: DisplayBase[];
+    id: any;
+    bpm: {
+      count: any;
+      start: number;
+    };
+    stage: StageInfo;
+    server: any;
+    worker: any;
+    layers: Layer[];
+  }, AnyAction>;
+
+  #data: ScriptingData = {
+    started: 0,
+    iterationCount: 0,
+    now: 0,
+    deltaNow: 0,
+    frequency: [],
+    volume: [],
+  };
+
+  #resetData() {
+    this.#data = {
+      started: 0,
+      iterationCount: 0,
+      now: 0,
+      deltaNow: 0,
+      frequency: [],
+      volume: [],
+    };
+  }
+
+  #refreshData() {
+    const now = Date.now();
+    const started = this.#data.started || now;
+    const bpm = this.#runtimeState.bpm.count || this.#data.bpm || 120;
+    const timeSinceBPMSet = now - (this.#runtimeState.bpm.start || started);
+    const oneMinute = 60000;
+
+    this.#data = {
+      ...this.#data,
+      bpm,
+      timeSinceBPMSet,
+      started,
+      iterationCount: this.#data.iterationCount + 1,
+      now: now - started,
+      deltaNow: this.#data.now ? now - this.#data.now : 0,
     };
 
-    webServer.broadcastState(runtimeState);
-    VFPanel.currentPanel?.updateState(runtimeState);
-  } catch (err) {
-    console.error('[ext] fiharc', err.message);
-  }
-}
+    const beatLength = oneMinute / bpm;
+    this.#data.beatPrct = (timeSinceBPMSet % beatLength) / beatLength;
+    this.#data.beatNum = Math.floor(this.#data.now / (oneMinute / bpm));
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function makeDisposableStoreListener(context: vscode.ExtensionContext): vscode.Disposable {
-  const unsubscribe = store.subscribe(() => {
-    const state = store.getState();
-    // eslint-disable-next-line prefer-const
-    let changed = false;
-
-    // if (runtimeState.bpm && state.bpm && runtimeState.bpm !== state.bpm) {
-    //   runtimeState.bpm = state.bpm;
-    //   changed = true;
-    // }
-
-    console.info('[ext] store listener', state, runtimeState, changed);
-    if (changed) {
-      webServer.broadcastState(runtimeState);
-      VFPanel.currentPanel?.updateState(runtimeState);
+    if (this.#data.iterationCount % 100 === 0) {
+      console.info('[ext] this.#data refreshed', this.#data.iterationCount, started, this.#data.beatPrct, this.#data.beatNum);
     }
-  });
-  return {
-    dispose: unsubscribe,
-  };
-}
 
-let refreshInterval: any;
-function refreshData() {
-  const now = Date.now();
-  data = {
-    ...data,
-    bpm: data.bpm || 120,
-    started: data.started || now,
-    iterationCount: data.iterationCount + 1,
-    now: now - (data.started || now),
-    deltaNow: data.now ? now - data.now : 0,
-  };
-
-  data.beatNum = Math.floor(data.now / (60000 / data.bpm));
-
-  webServer.broadcastData(data);
-}
-
-export function activate(context: vscode.ExtensionContext) {
-  propagateRC()
-    .then(() => {
-      const openControls = vscode.workspace.getConfiguration('visualFiha.settings').get('openControls');
-      if (openControls) vscode.commands.executeCommand('visualFiha.openControls');
-
-      refreshInterval = setInterval(refreshData, 8);
-
-      VFPanel.currentPanel?.updateDisplays(webServer.displays);
-    });
-
-  if (vscode.window.registerWebviewPanelSerializer) {
-    // Make sure we register a serializer in activation event
-    vscode.window.registerWebviewPanelSerializer(VFPanel.viewType, {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: AppState) {
-        // Reset the webview options so we use latest uri for `localResourceRoots`.
-        // eslint-disable-next-line no-param-reassign
-        webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-        // console.log('[ext] revive webview state', state);
-        VFPanel.revive(webviewPanel, context);
-      },
-    });
+    this.#webServer.broadcastData(this.#data);
   }
 
-  context.subscriptions.push(
-    webServer.activate(context),
+  updateState() {
+    this.#webServer.broadcastState(this.#runtimeState);
+    VFPanel.currentPanel?.updateState(this.#runtimeState);
+  }
 
-    makeDisposableStoreListener(context),
-
-    webServer.onDisplaysChange((displays) => {
-      runtimeState = {
-        ...runtimeState,
-        stage: {
-          ...runtimeState.stage,
-          ...webServer.displaysMaxSize,
-        },
+  async propagate() {
+    try {
+      const fiharc = await readWorkspaceRC();
+      this.#runtimeState = {
+        ...fiharc,
+        ...this.#runtimeState,
+        id: fiharc.id || this.#runtimeState.id,
+        // bpm: fiharc.bpm || this.#runtimeState.bpm,
+        layers: await Promise.all(fiharc.layers.map(readLayerScripts('layer'))),
+        worker: await readScripts('worker', 'worker', 'worker'),
       };
-      webServer.broadcastState(runtimeState);
-      VFPanel.currentPanel?.updateDisplays(displays);
-    }),
 
-    webServer.onSocketConnection((socket) => {
-      socket.emit('message', { type: 'updatestate', payload: runtimeState });
+      this.updateState();
+    } catch (err) {
+      console.error('[ext] fiharc', err.message);
+    }
+  }
 
-      socket.on('audioupdate', (audio: { frequency: number[]; volume: number[]; }) => {
-        data = {
-          ...data,
-          ...audio,
-        };
-      });
-    }),
+  makeDisposableStoreListener(): vscode.Disposable {
+    const unsubscribe = store.subscribe(() => {
+      const state = this.#store.getState();
+      const rState = this.#runtimeState;
+      let changed = false;
 
-    ...Object.keys(commands)
-      .map((name) => vscode.commands.registerCommand(`visualFiha.${name}`, commands[name](context))),
-
-    vscode.workspace.onDidChangeTextDocument((event) => {
-      // if (!event.contentChanges.length) return;
-
-      const { document: doc } = event;
-      if (doc.isUntitled || doc.isClosed || doc.languageId !== 'javascript') return;
-
-      const info = textDocumentScriptInfo(doc);
-      const script = doc.getText();
-      webServer.broadcastScript(info, script);
-
-      const layerIndex = runtimeState.layers.findIndex((layer) => layer.id === info.id);
-      if (layerIndex < 0) {
-      // TODO: check info.type
-        runtimeState.worker[info.role] = script;
-        return;
+      if (rState.bpm.count && state.bpm.count && rState.bpm.count !== state.bpm.count) {
+        rState.bpm.count = state.bpm.count;
+        changed = true;
+      }
+      if (rState.bpm.start && state.bpm.start && rState.bpm.start !== state.bpm.start) {
+        this.#runtimeState.bpm.start = state.bpm.start;
+        changed = true;
       }
 
-      runtimeState.layers[layerIndex][info.role] = script;
-      VFPanel.currentPanel?.updateState({
-        layers: runtimeState.layers,
-      });
-    }),
+      console.info('[ext] store listener', changed);
+      this.updateState();
+    });
+    return {
+      dispose: unsubscribe,
+    };
+  }
 
-    vscode.workspace.onDidSaveTextDocument((event) => {
-      if (!event.fileName.endsWith('fiha.json')) return;
-      propagateRC();
-    }),
-  );
+  activate(context: vscode.ExtensionContext) {
+    this.#context = context;
+    this.propagate()
+      .then(() => {
+        const openControls = vscode.workspace.getConfiguration('visualFiha.settings').get('openControls');
+        if (openControls) vscode.commands.executeCommand('visualFiha.openControls');
+
+        console.info('[ext] start refreshing data');
+        this.#refreshInterval = setInterval(() => this.#refreshData(), 8);
+
+        VFPanel.currentPanel?.updateDisplays(this.#webServer.displays);
+      })
+      .catch((err) => {
+        vscode.window.showWarningMessage(`Could not read fiha.json: "${err.message}"`);
+      });
+
+    // if (vscode.window.registerWebviewPanelSerializer) {
+    //   // Make sure we register a serializer in activation event
+    //   vscode.window.registerWebviewPanelSerializer(VFPanel.viewType, {
+    //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    //     async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: AppState) {
+    //       // Reset the webview options so we use latest uri for `localResourceRoots`.
+    //       // eslint-disable-next-line no-param-reassign
+    //       webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
+    //       // console.log('[ext] revive webview state', state);
+    //       VFPanel.revive(webviewPanel, context);
+    //     },
+    //   });
+    // }
+
+    context.subscriptions.push(
+      this.#webServer.activate(context),
+
+      this.makeDisposableStoreListener(),
+
+      this.#webServer.onDisplaysChange((displays) => {
+        this.#runtimeState = {
+          ...this.#runtimeState,
+          stage: {
+            ...this.#runtimeState.stage,
+            ...this.#webServer.displaysMaxSize,
+          },
+        };
+        this.#webServer.broadcastState(this.#runtimeState);
+        VFPanel.currentPanel?.updateDisplays(displays);
+      }),
+
+      this.#webServer.onSocketConnection((socket) => {
+        socket.emit('message', { type: 'updatestate', payload: this.#runtimeState });
+
+        socket.on('audioupdate', (audio: { frequency: number[]; volume: number[]; }) => {
+          this.#data = {
+            ...this.#data,
+            ...audio,
+          };
+        });
+      }),
+
+      ...Object.keys(commands)
+        .map((name) => vscode.commands.registerCommand(`visualFiha.${name}`, commands[name](context, {
+          resetData: () => this.#resetData(),
+        }))),
+
+      vscode.workspace.onDidChangeTextDocument((event) => {
+        // if (!event.contentChanges.length) return;
+
+        const { document: doc } = event;
+        if (doc.isUntitled || doc.isClosed || doc.languageId !== 'javascript') return;
+
+        const info = textDocumentScriptInfo(doc);
+        const script = doc.getText();
+        this.#webServer.broadcastScript(info, script);
+
+        const layerIndex = this.#runtimeState.layers.findIndex((layer) => layer.id === info.id);
+        if (layerIndex < 0) {
+          // TODO: check info.type
+          this.#runtimeState.worker[info.role] = script;
+          return;
+        }
+
+        this.#runtimeState.layers[layerIndex][info.role] = script;
+        VFPanel.currentPanel?.updateState({
+          layers: this.#runtimeState.layers,
+        });
+      }),
+
+      vscode.workspace.onDidSaveTextDocument((event) => {
+        if (!event.fileName.endsWith('fiha.json')) return;
+        this.propagate();
+      }),
+    );
+  }
+
+  deactivate() {
+    if (this.#refreshInterval) clearInterval(this.#refreshInterval);
+    this.#webServer.deactivate();
+  }
+}
+
+const extension = new VFExtension();
+
+export function activate(context: vscode.ExtensionContext) {
+  return extension.activate(context);
 }
 
 export function deactivate() {
-  clearInterval(refreshInterval);
-  webServer.deactivate();
+  return extension.deactivate();
 }
