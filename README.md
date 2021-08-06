@@ -11,6 +11,8 @@ This is a personal project and it is highly exprimental and is not ready for pro
 The Visual Fiha extension for VS Code is the third version of an application
 aimed to provide a live-coding VJing environment using web technologies.
 
+![image](https://user-images.githubusercontent.com/65971/128530419-14828850-778d-427e-bd6f-221fed02fc46.png)
+
 ## Features
 
 - Live coding
