@@ -46,6 +46,7 @@
   "scripts": {
     "test": "jest --coverage",
     "watch:test": "jest --watch",
+    "package": "vsce package --no-yarn",
     "vscode:prepublish": "run-p compile:*",
     "compile:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --minify --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
     "compile:webviews": "esbuild ./src/webviews/index.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
@@ -98,7 +99,8 @@
     "ts-jest": "27.0.4",
     "ts-node": "10.1.0",
     "typedoc": "0.21.5",
-    "typescript": "4.3.5"
+    "typescript": "4.3.5",
+    "vsce": "^1.96.1"
   },
   "workspaces": [
     "packages/controller",

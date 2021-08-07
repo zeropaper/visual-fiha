@@ -1,0 +1,6 @@
+.github
+.husky
+coverage
+src
+# out
+node_modules
