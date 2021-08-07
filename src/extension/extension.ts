@@ -168,21 +168,21 @@ class VFExtension {
     };
   }
 
-  activate(context: vscode.ExtensionContext) {
+  async activate(context: vscode.ExtensionContext) {
     this.#context = context;
-    this.propagate()
-      .then(() => {
-        const openControls = vscode.workspace.getConfiguration('visualFiha.settings').get('openControls');
-        if (openControls) vscode.commands.executeCommand('visualFiha.openControls');
 
-        console.info('[ext] start refreshing data');
-        this.#refreshInterval = setInterval(() => this.#refreshData(), 8);
+    try {
+      await this.propagate();
+      const openControls = vscode.workspace.getConfiguration('visualFiha.settings').get('openControls');
+      if (openControls) vscode.commands.executeCommand('visualFiha.openControls');
 
-        VFPanel.currentPanel?.updateDisplays(this.#webServer.displays);
-      })
-      .catch((err) => {
-        vscode.window.showWarningMessage(`Could not read fiha.json: "${err.message}"`);
-      });
+      console.info('[ext] start refreshing data');
+      this.#refreshInterval = setInterval(() => this.#refreshData(), 8);
+
+      VFPanel.currentPanel?.updateDisplays(this.#webServer.displays);
+    } catch (err) {
+      vscode.window.showWarningMessage(`Could not read fiha.json: "${err.message}"`);
+    }
 
     // if (vscode.window.registerWebviewPanelSerializer) {
     //   // Make sure we register a serializer in activation event
