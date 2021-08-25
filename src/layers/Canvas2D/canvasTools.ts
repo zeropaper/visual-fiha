@@ -151,7 +151,7 @@ interface CTXValue<T> {
   (value: T): T;
 }
 
-interface Canvas2DAPI {
+export interface Canvas2DAPI {
   width: width;
   height: height;
   vw: vw;

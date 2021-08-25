@@ -1,10 +1,9 @@
 /* eslint-env worker */
 
-// TODO: make a class for the worker
-
 import { io } from 'socket.io-client';
 import { debounce } from 'lodash';
 
+import { Socket } from 'dgram';
 import type {
   ComEventData,
   ScriptingData,
@@ -23,7 +22,7 @@ import Scriptable, { ScriptableOptions } from '../utils/Scriptable';
 import * as mathTools from '../utils/mathTools';
 import Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer';
 import ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer';
-import canvasTools from '../layers/Canvas2D/canvasTools';
+import canvasTools, { Canvas2DAPI } from '../layers/Canvas2D/canvasTools';
 
 interface WebWorker extends Worker {
   location: Location;
@@ -47,6 +46,7 @@ const data: ScriptingData = {
 
 // eslint-disable-next-line no-restricted-globals
 const worker: WebWorker = self as any;
+
 const read = (/* Worker read */ key: string, defaultVal?: any) => (typeof data[key] !== 'undefined' ? data[key] : defaultVal);
 const makeErrorHandler = (type: string) => (event: any) => console.warn('[worker]', type, event);
 const scriptableOptions: ScriptableOptions = {
@@ -75,98 +75,146 @@ let state: DisplayState = {
   },
 };
 
-// class VFWorker {
-//   constructor() {
-//     this.#scriptable = new Scriptable(scriptableOptions);
+class VFWorker {
+  constructor(
+    workerSelf: WebWorker,
+    socketHandlers: (instance: VFWorker) => ComActionHandlers,
+    messageHandlers: (instance: VFWorker) => ComActionHandlers,
+  ) {
+    this.#worker = workerSelf;
 
-//     this.#canvas = new OffscreenCanvas(state.width, state.height);
-//     this.#context = this.#canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+    this.#state = {
+      bpm: { count: 120, start: Date.now() },
+      server: { host: 'localhost', port: 9999 },
+      control: !!this.#worker.location.hash?.startsWith('#control'),
+      id: idFromWorkerHash,
+      width: defaultStage.width,
+      height: defaultStage.height,
+      layers: [],
+      stage: { ...defaultStage },
+      worker: {
+        setup: '',
+        animation: '',
+      },
+    };
 
-//     this.#tools = canvasTools(this.#context);
-//   }
+    this.scriptable = new Scriptable(scriptableOptions);
 
-//   #scriptable: Scriptable;
+    this.canvas = new OffscreenCanvas(state.width, state.height);
+    this.#context = this.canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
 
-//   #canvas: OffscreenCanvas;
+    this.#tools = canvasTools(this.#context);
 
-//   #context: OffscreenCanvasRenderingContext2D;
+    this.#socket = io() as unknown as Socket;
 
-//   #tools: Canvas2DAPI;
+    // eslint-disable-next-line prefer-const
+    this.socketCom = autoBind({
+      postMessage: (message: any) => {
+        this.#socket.emit('message', message);
+      },
+    }, `display-${idFromWorkerHash}-socket`, socketHandlers(this));
 
-//   renderLayers = () => {
-//     this.#context.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
-//     state.layers?.forEach((layer) => {
-//       // TODO: implement and use layer.active
-//       layer.execAnimation();
-//       this.#tools.pasteContain(layer.canvas as any);
-//     });
-//   };
+    this.#socket.on('message', (message: ComEventData) => this.socketCom.listener({ data: message }));
 
-// }
+    this.#socket.on('reconnect', (attempt: number) => {
+      console.info('[worker] reconnect', attempt);
+      this.registerDisplay();
+    });
 
-const scriptable = new Scriptable(scriptableOptions);
+    this.workerCom = autoBind(this.#worker, `display-${idFromWorkerHash}-worker`, messageHandlers(this));
+    worker.addEventListener('message', this.workerCom.listener);
 
-const canvas = new OffscreenCanvas(state.width, state.height);
-const context = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
-
-const tools = canvasTools(context);
-
-const renderLayers = () => {
-  if (!context) return;
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  state.layers?.forEach((layer) => {
-    if (!layer.active) return;
-    layer.execAnimation();
-    tools.pasteContain(layer.canvas as any);
-  });
-};
-
-let onScreenCanvas: OffscreenCanvas;
-function render() {
-  Object.assign(data, scriptable.execAnimation() || {});
-
-  if (context && onScreenCanvas) {
-    renderLayers();
-
-    onScreenCanvas.height = canvas.height;
-    onScreenCanvas.width = canvas.width;
-    const ctx = onScreenCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
-    ctx.drawImage(canvas, 0, 0, onScreenCanvas.width, onScreenCanvas.height, 0, 0, canvas.width, canvas.height);
+    try {
+      this.scriptable.execSetup()
+        .then(() => this.render())
+        .catch(() => console.error('Cannot run worker initial setup'));
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  requestAnimationFrame(render);
+  #worker: WebWorker;
+
+  #socket: Socket;
+
+  socketCom: ChannelBindings;
+
+  workerCom: ChannelBindings;
+
+  scriptable: Scriptable;
+
+  canvas: OffscreenCanvas;
+
+  onScreenCanvas: OffscreenCanvas | null = null;
+
+  #context: OffscreenCanvasRenderingContext2D;
+
+  #tools: Canvas2DAPI;
+
+  #state: DisplayState;
+
+  registerDisplay() {
+    if (!this.onScreenCanvas) return;
+    this.#socket.emit('registerdisplay', {
+      id: idFromWorkerHash,
+      width: this.onScreenCanvas.width,
+      height: this.onScreenCanvas.height,
+    });
+  }
+
+  resizeLayer(layer: Canvas2DLayer | ThreeJSLayer) {
+    // eslint-disable-next-line no-param-reassign
+    layer.width = this.canvas.width;
+    // eslint-disable-next-line no-param-reassign
+    layer.height = this.canvas.height;
+
+    layer.execSetup();
+    return layer;
+  }
+
+  findStateLayer(id: string) {
+    return this.#state.layers?.find((layer) => id === layer.id);
+  }
+
+  renderLayers = () => {
+    const { canvas } = this;
+    const context = this.#context;
+    if (!context) return;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    state.layers?.forEach((layer) => {
+      if (!layer.active) return;
+      layer.execAnimation();
+      this.#tools.pasteContain(layer.canvas as any);
+    });
+  };
+
+  render() {
+    Object.assign(data, this.scriptable.execAnimation() || {});
+
+    if (this.#context && this.onScreenCanvas) {
+      this.renderLayers();
+
+      this.onScreenCanvas.height = this.canvas.height;
+      this.onScreenCanvas.width = this.canvas.width;
+      const ctx = this.onScreenCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+      ctx.drawImage(
+        this.canvas,
+        0,
+        0,
+        this.onScreenCanvas.width,
+        this.onScreenCanvas.height,
+        0,
+        0,
+        this.canvas.width,
+        this.canvas.height,
+      );
+    }
+
+    requestAnimationFrame(() => this.render());
+  }
 }
 
-try {
-  scriptable.execSetup()
-    .then(render)
-    .catch(() => console.error('Cannot run worker initial setup'));
-} catch (e) {
-  console.error(e);
-}
-
-// com
-
-const socket = io();
-
-let socketCom: ChannelBindings;
-let workerCom: ChannelBindings;
-
-const resizeLayer = (layer: Canvas2DLayer | ThreeJSLayer) => {
-  // eslint-disable-next-line no-param-reassign
-  layer.width = canvas.width;
-  // eslint-disable-next-line no-param-reassign
-  layer.height = canvas.height;
-
-  layer.execSetup();
-  return layer;
-};
-
-function findStateLayer(id: string) {
-  return state.layers?.find((layer) => id === layer.id);
-}
-
-const socketHandlers: ComActionHandlers = {
+const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   scriptchange: async (payload: ScriptInfo & {
     script: string;
   }) => {
@@ -176,6 +224,11 @@ const socketHandlers: ComActionHandlers = {
       role,
       script,
     } = payload;
+    const {
+      scriptable,
+      workerCom,
+      findStateLayer,
+    } = vfWorker;
 
     if (type === 'worker') {
       scriptable[role].code = script;
@@ -199,12 +252,13 @@ const socketHandlers: ComActionHandlers = {
   },
   updatestate: debounce((update: Partial<AppState>) => {
     // const prevStage = state.stage;
+    const { scriptable } = vfWorker;
     state = {
       ...state,
       ...update,
       layers: update
         .layers?.map((options) => {
-          const found = findStateLayer(options.id);
+          const found = vfWorker.findStateLayer(options.id);
           if (found) {
             found.active = !!options.active;
             return found;
@@ -222,7 +276,7 @@ const socketHandlers: ComActionHandlers = {
         })
         .filter(Boolean)
         // @ts-ignore
-        .map(resizeLayer) as Array<Canvas2DLayer | ThreeJSLayer>
+        .map((layer) => vfWorker.resizeLayer(layer)) as Array<Canvas2DLayer | ThreeJSLayer>
         || state.layers,
     };
     if (typeof update.worker?.setup !== 'undefined' && update.worker.setup !== scriptable.setup.code) {
@@ -239,42 +293,22 @@ const socketHandlers: ComActionHandlers = {
     Object.assign(data, payload);
     // workerCom.post('updatedata', data);
   },
-};
-
-// eslint-disable-next-line prefer-const
-socketCom = autoBind({
-  postMessage: (message: any) => {
-    socket.emit('message', message);
-  },
-}, `display-${idFromWorkerHash}-socket`, socketHandlers);
-
-socket.on('message', (message: ComEventData) => socketCom.listener({ data: message }));
-
-function registerDisplay() {
-  socket.emit('registerdisplay', {
-    id: idFromWorkerHash,
-    width: onScreenCanvas.width,
-    height: onScreenCanvas.height,
-  });
-}
-
-socket.io.on('reconnect', (attempt) => {
-  console.info('[worker] reconnect', attempt);
-  registerDisplay();
 });
 
-const messageHandlers: ComActionHandlers = {
+const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
-    onScreenCanvas = onscreen;
+    // eslint-disable-next-line no-param-reassign
+    vfWorker.onScreenCanvas = onscreen;
 
     // TODO: use autoBind
     console.info('[worker] offscreencanvas, register display');
-    registerDisplay();
+    vfWorker.registerDisplay();
   },
   resize: ({
     width,
     height,
   }: { width: number; height: number; }) => {
+    const { canvas, socketCom } = vfWorker;
     state = {
       ...state,
       width: width || state.width,
@@ -282,7 +316,7 @@ const messageHandlers: ComActionHandlers = {
     };
     canvas.width = state.width;
     canvas.height = state.height;
-    state.layers?.forEach(resizeLayer);
+    state.layers?.forEach(vfWorker.resizeLayer);
 
     if (!state.control) {
       console.info('[worker] notify resize');
@@ -293,7 +327,7 @@ const messageHandlers: ComActionHandlers = {
       });
     }
   },
-};
+});
 
-workerCom = autoBind(worker, `display-${idFromWorkerHash}-worker`, messageHandlers);
-worker.addEventListener('message', workerCom.listener);
+const displayWorker = new VFWorker(worker, socketHandlers, messageHandlers);
+console.info('display worker initialized', displayWorker);
