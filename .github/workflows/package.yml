@@ -42,7 +42,7 @@ jobs:
       #   with:
       #     pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
       #     registryUrl: https://marketplace.visualstudio.com
-      - run: npx vsce verify-pat ${{ secrets.VS_MARKETPLACE_TOKEN }}
+      - run: npx vsce verify-pat -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
       - run: npx vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
       # - run: npm run package
       # # release:
