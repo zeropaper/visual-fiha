@@ -70,7 +70,7 @@
     "@types/lodash": "4.14.172",
     "@types/mime": "2.0.3",
     "@types/node": "16.6.2",
-    "@types/react": "17.0.19",
+    "@types/react": "17.0.20",
     "@types/react-dom": "17.0.9",
     "@types/react-redux": "7.1.18",
     "@types/three": "0.131.0",
