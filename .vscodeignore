@@ -4,3 +4,12 @@ coverage
 src
 # out
 node_modules
+.eslintignore
+.eslintcache
+.eslintrs.js
+jest.config.ts
+.vscode
+.nvmrc
+tsconfig.*
+renovate.json
+.gitignore
