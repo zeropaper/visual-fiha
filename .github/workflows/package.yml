@@ -36,15 +36,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - run: npm ci
-      - run: npm run package
-      # release:
-      #   runs-on: ubuntu-latest
-      #   needs: package
-      #   steps:
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v2
+      - name: Publish VS Code Extension
+        uses: HaaLeo/publish-vscode-extension@v0
         with:
-          if-no-files-found: error
-          path: '~/work/visual-fiha/visual-fiha/*.vsix'
-          # name: vscode-extension
-          # retention-days: 5
+          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+          registryUrl: https://marketplace.visualstudio.com
+      # - run: npm run package
+      # # release:
+      # #   runs-on: ubuntu-latest
+      # #   needs: package
+      # #   steps:
+      # - name: 'Upload Artifact'
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     if-no-files-found: error
+      #     path: '~/work/visual-fiha/visual-fiha/*.vsix'
+      #     # name: vscode-extension
+      #     # retention-days: 5
