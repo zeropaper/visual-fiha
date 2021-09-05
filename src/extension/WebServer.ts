@@ -109,7 +109,9 @@ export default class VFServer {
           res.end(indexTemplate({
             host: this.host,
             port: this.port,
-            path: (req.url || '').endsWith('/') ? (req.url || '') : `${req.url}/`,
+            path: (req.url || '').endsWith('/')
+              ? req.url as string
+              : `${req.url || ''}/`,
           }));
           return;
         }
