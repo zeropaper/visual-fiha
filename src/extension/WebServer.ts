@@ -154,7 +154,7 @@ export default class VFServer {
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
-        message: err.message,
+        message: (err as Error).message,
       }));
     }
   };
