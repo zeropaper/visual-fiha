@@ -141,7 +141,7 @@ class VFExtension {
 
       this.updateState();
     } catch (err) {
-      console.error('[ext] fiharc', err.message);
+      console.error('[ext] fiharc', (err as Error).message);
     }
   }
 
@@ -181,7 +181,7 @@ class VFExtension {
 
       VFPanel.currentPanel?.updateDisplays(this.#webServer.displays);
     } catch (err) {
-      vscode.window.showWarningMessage(`Could not read fiha.json: "${err.message}"`);
+      vscode.window.showWarningMessage(`Could not read fiha.json: "${(err as Error).message}"`);
     }
 
     // if (vscode.window.registerWebviewPanelSerializer) {
