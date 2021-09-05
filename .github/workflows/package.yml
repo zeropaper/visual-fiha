@@ -37,11 +37,13 @@ jobs:
             ${{ runner.os }}-node-
       - run: npm ci
       - run: npm version
-      - name: Publish VS Code Extension
-        uses: HaaLeo/publish-vscode-extension@v0
-        with:
-          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
-          registryUrl: https://marketplace.visualstudio.com
+      # - name: Publish VS Code Extension
+      #   uses: HaaLeo/publish-vscode-extension@v0
+      #   with:
+      #     pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+      #     registryUrl: https://marketplace.visualstudio.com
+      - run: npx vsce verify-pat ${{ secrets.VS_MARKETPLACE_TOKEN }}
+      - run: npx vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
       # - run: npm run package
       # # release:
       # #   runs-on: ubuntu-latest
