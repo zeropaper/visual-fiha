@@ -5,10 +5,11 @@ name: Package
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
-  # pull_request:
-  #   branches: [main]
+    inputs:
+      version:
+        description: Either a SemVer or patch, minor, major
+        required: false
+        default: 'patch'
 
 jobs:
   package:
@@ -36,23 +37,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - run: npm ci
-      - run: npm version
-      # - name: Publish VS Code Extension
-      #   uses: HaaLeo/publish-vscode-extension@v0
-      #   with:
-      #     pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
-      #     registryUrl: https://marketplace.visualstudio.com
+      - run: echo "TODO update CHANGELOG.md"
+      - run: echo "TODO stage CHANGELOG.md with git"
+      - run: npm version ${{ github.event.inputs.version }}
       - run: npx vsce verify-pat -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
       - run: npx vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
-      # - run: npm run package
-      # # release:
-      # #   runs-on: ubuntu-latest
-      # #   needs: package
-      # #   steps:
-      # - name: 'Upload Artifact'
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     if-no-files-found: error
-      #     path: '~/work/visual-fiha/visual-fiha/*.vsix'
-      #     # name: vscode-extension
-      #     # retention-days: 5
