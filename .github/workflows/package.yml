@@ -37,6 +37,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - run: npm ci
+      - run: git config user.email "zeropaper+vf-ci@irata.ch"
+      - run: git config user.name "Valentin Vago as CI"
       - run: echo "TODO update CHANGELOG.md"
       - run: echo "TODO stage CHANGELOG.md with git"
       - run: npm version ${{ github.event.inputs.version }}
