@@ -65,6 +65,8 @@
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@commitlint/cli": "13.1.0",
+    "@commitlint/config-conventional": "13.1.0",
     "@reduxjs/toolkit": "1.6.1",
     "@types/jest": "27.0.1",
     "@types/lodash": "4.14.172",
