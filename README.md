@@ -1,6 +1,6 @@
 # Visual Fiha — Visual Studio Code Extension
 
-[![Main](https://github.com/zeropaper/visual-fiha/actions/workflows/main.yml/badge.svg)](https://github.com/zeropaper/visual-fiha/actions/workflows/main.yml)
+[![Basic QA](https://github.com/zeropaper/visual-fiha/actions/workflows/01.basic-qa.yml/badge.svg)](https://github.com/zeropaper/visual-fiha/actions/workflows/01.basic-qa.yml)
 
 ## Disclaimer
 
