@@ -24,7 +24,7 @@ aimed to provide a live-coding VJing environment using web technologies.
 
 ## Installation
 
-TODO: Describe
+The extension on the [Visual Studio Code marketplace](https://marketplace.visualstudio.com/items?itemName=visual-fiha.visual-fiha) and can be installed from the extension panel of Visual Studio Code too.
 
 ## Project Tasks
 
@@ -42,6 +42,8 @@ Tip: You can double-click the display to enter full screen mode.
 ### Layers
 
 Like many other graphical softwares, Visual Fiha has a layer system that allows compositing of images.
+
+Layers can be sorted, rendered or only activated (invisible as layer but re-usable in others, e.g. 3D texture).
 
 ### Scriptables
 
@@ -65,8 +67,7 @@ Each display spawns a worker that is responsible for rendering the layers and se
 
 ### Capture
 
-The capture page is aimed to react to different inputs (audio, MIDI, mouse, keyboard, touch, etc.)
-and send back the result to the extension (that, in turn, broadcasted it to the display workers).
+The capture page is aimed to react to different inputs (audio, MIDI, mouse, keyboard, touch, etc.) and forward these inputs to the extension (that, in turn, broadcasts them to the display workers).
 
 #### Audio
 
@@ -77,15 +78,20 @@ that has no other tabs open.
 
 Gives the VJ some controls over the layers and the project settings.
 
+## Architecture
+
+The above "key concepts", graphically arranged.
+
+![architecture](./architecture.drawio.png)
+
 ## Development
 
+Obviously, Visual Studio Code is required.
+
 1. Clone the repository
-2. Install the dependecies with `npm install`
-3. Press the F5 key to start the VS Code extension development
-
-## Structure
-
-![structure](./structure.drawio.png)
+2. Ensure that you are using the right NodeJS version with [NVM](https://github.com/nvm-sh/nvm/blob/master/README.md): `nvm use`
+3. Install the dependecies with `npm install`
+4. Press the F5 key to start the VS Code extension development
 
 ## License
 
