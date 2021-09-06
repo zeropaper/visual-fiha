@@ -42,5 +42,5 @@ jobs:
       - run: echo "TODO update CHANGELOG.md"
       - run: echo "TODO stage CHANGELOG.md with git"
       - run: npm version ${{ github.event.inputs.version }}
-      - run: npx vsce verify-pat -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
+      - run: npx vsce verify-pat visual-fiha -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
       - run: npx vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
