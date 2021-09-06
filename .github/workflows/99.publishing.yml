@@ -12,7 +12,7 @@ on:
         default: patch
 
 jobs:
-  package:
+  publishu:
     runs-on: ubuntu-latest
 
     strategy:
@@ -37,10 +37,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - run: npm ci
-      - run: git config user.email "zeropaper+vf-ci@irata.ch"
-      - run: git config user.name "Valentin Vago as CI"
-      - run: cat package.json
-      - run: npm version ${{ github.event.inputs.version }}
+      # - run: git config user.email "zeropaper+vf-ci@irata.ch"
+      # - run: git config user.name "Valentin Vago as CI"
+      # - run: cat package.json
+      # - run: npm version ${{ github.event.inputs.version }}
       - run: cat package.json
       - name: Conventional Changelog Action
         uses: TriPSs/conventional-changelog-action@v3
@@ -48,10 +48,9 @@ jobs:
           github-token: ${{ secrets.GH_TOKEN }}
           git-message: 'chore(release): {version}'
           output-file: 'CHANGELOG.md'
-          # git-user-name: 'Valentin Vago as CI'
-          # git-user-email: 'zeropaper+vf-ci@irata.ch'
+          git-user-name: 'Valentin Vago as CI'
+          git-user-email: 'zeropaper+vf-ci@irata.ch'
       - run: cat package.json
-      - run: ls -ashl
       - run: git status
       # - run: npx vsce verify-pat visual-fiha -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
       - run: npx vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
