@@ -1,3 +1,12 @@
+## [3.0.9](https://github.com/zeropaper/visual-fiha/compare/v3.0.7...v3.0.9) (2021-09-07)
+
+
+### Bug Fixes
+
+* **build:** bump package version ([7c4d996](https://github.com/zeropaper/visual-fiha/commit/7c4d99662b6ec737abad34f3b34be4a6f2f03057))
+
+
+
 ## [3.0.7](https://github.com/zeropaper/visual-fiha/compare/v3.0.6...v3.0.7) (2021-09-07)
 
 
