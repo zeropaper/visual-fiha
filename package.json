@@ -5,6 +5,7 @@
   "description": "VJing extension for VS Code",
   "author": "Valentin Vago <zeropaper@irata.ch> (http://irata.graphics/)",
   "license": "MIT",
+  "icon": "media/vf.icon.alt.png",
   "engines": {
     "node": "^16.8.0",
     "npm": "^7.19.0",
