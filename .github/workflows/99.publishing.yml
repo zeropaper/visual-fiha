@@ -41,17 +41,20 @@ jobs:
       # - run: git config user.name "Valentin Vago as CI"
       # - run: cat package.json
       # - run: npm version ${{ github.event.inputs.version }}
-      - run: cat package.json
+      # - run: cat package.json
       - name: Conventional Changelog Action
         uses: TriPSs/conventional-changelog-action@v3
         with:
           github-token: ${{ secrets.GH_TOKEN }}
+          # skip-commit: 'true'
           git-message: 'chore(release): {version}'
           output-file: 'CHANGELOG.md'
           git-user-name: 'Valentin Vago as CI'
           git-user-email: 'zeropaper+vf-ci@irata.ch'
-      - run: cat package.json
+      # - run: cat package.json
       - run: git status
       # - run: npx vsce verify-pat visual-fiha -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
       - run: npx vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
+      # - run: git add package* CHANGELOG.md
+      # - run: git commit -m "chore(release)"
       - run: git push
