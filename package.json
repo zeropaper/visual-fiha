@@ -47,7 +47,7 @@
     "test": "jest --coverage",
     "watch:test": "jest --watch",
     "package": "vsce package --no-yarn",
-    "vscode:prepublish": "run-p compile:*",
+    "vscode:prepublish": "run-p compile:* compile:display:worker",
     "compile:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --minify --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
     "compile:webviews": "esbuild ./src/webviews/index.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
     "compile:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --minify --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
