@@ -52,7 +52,7 @@
     "compile:webviews": "esbuild ./src/webviews/index.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
     "compile:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --minify --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
     "compile:display": "esbuild ./src/display/index.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
-    "compile:display:worker": "esbuild ./src/display/index.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
+    "compile:display:worker": "esbuild ./src/display/DisplayWorker.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/DisplayWorker.js",
     "_compile:layerdocs": "run-p compile:layerdocs:*",
     "_compile:layerdocs:canvas2d": "typedoc --out out/docs/Canvas2DLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name Canvas2DLayer --disableSources src/layers/Canvas2D/canvas2DAPI.ts",
     "_compile:layerdocs:threejs": "typedoc --out out/docs/ThreeJSLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name ThreeJSLayer --disableSources src/layers/ThreeJS/threeJSAPI.ts",
