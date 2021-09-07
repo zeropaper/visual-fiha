@@ -1,3 +1,12 @@
+## [3.0.7](https://github.com/zeropaper/visual-fiha/compare/v3.0.6...v3.0.7) (2021-09-07)
+
+
+### Bug Fixes
+
+* **build:** correct DisplayWorker compilation ([b950734](https://github.com/zeropaper/visual-fiha/commit/b9507348e658341de5ec3a4eb483423e98993739))
+
+
+
 ## [3.0.6](https://github.com/zeropaper/visual-fiha/compare/v3.0.0-alpha.1...v3.0.6) (2021-09-06)
 
 
