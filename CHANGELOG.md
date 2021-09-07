@@ -1,3 +1,12 @@
+## [3.0.10](https://github.com/zeropaper/visual-fiha/compare/v3.0.9...v3.0.10) (2021-09-07)
+
+
+### Bug Fixes
+
+* **build:** ensure DisplayWorker compilation is run ([7920e39](https://github.com/zeropaper/visual-fiha/commit/7920e39559396d1bc3a301e8a12dc51945210a97))
+
+
+
 ## [3.0.9](https://github.com/zeropaper/visual-fiha/compare/v3.0.7...v3.0.9) (2021-09-07)
 
 
