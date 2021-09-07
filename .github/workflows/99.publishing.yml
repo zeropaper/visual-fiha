@@ -12,7 +12,7 @@ on:
         default: patch
 
 jobs:
-  publishu:
+  publish:
     runs-on: ubuntu-latest
 
     strategy:
