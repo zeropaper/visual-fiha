@@ -77,6 +77,7 @@ const combinedReducers = combineReducers({
 });
 
 const store = configureStore({
+  devTools: false,
   reducer: (state, action) => {
     console.info('[webview] incoming action', action.type);
     if (action.type === 'updatestate') {
