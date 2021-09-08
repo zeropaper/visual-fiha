@@ -5,7 +5,6 @@ import {
   DisplayBase, Layer,
   ScriptingData,
   StageInfo,
-  FihaRC,
 } from '../types';
 import VFPanel from './VFPanel';
 import WebServer from './WebServer';
@@ -14,17 +13,7 @@ import store from './store';
 import readScripts from './readScripts';
 import readLayerScripts from './readLayerScripts';
 import textDocumentScriptInfo from './textDocumentScriptInfo';
-
-
-import getWorkspaceFolder from './getWorkspaceFolder';
-import asyncReadFile from './asyncReadFile';
-
-async function readWorkspaceRC(folderIndex = 0): Promise<FihaRC> {
-  const folder = getWorkspaceFolder(folderIndex);
-  const filepath = vscode.Uri.joinPath(folder.uri, 'fiha.json').fsPath;
-  const content = await asyncReadFile(filepath);
-  return JSON.parse(content);
-}
+import readWorkspaceRC from './readWorkspaceRC';
 
 export default class VFExtension {
   constructor() {
