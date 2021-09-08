@@ -1,5 +1,7 @@
 import Scriptable, { ScriptableOptions } from '../utils/Scriptable';
 
+interface OffscreenCanvas extends HTMLCanvasElement { }
+
 export interface LayerOptions extends Omit<ScriptableOptions, 'type, api, id'> {
   id: string;
   canvas?: HTMLCanvasElement | OffscreenCanvas;
@@ -11,6 +13,7 @@ export default class Layer extends Scriptable {
     super(options);
     this.active = typeof options.active !== 'undefined' ? options.active : true;
     if (!options.id) throw new Error('Missing id option');
+    // @ts-ignore
     this.#canvas = (options.canvas || new OffscreenCanvas(600, 400)) as OffscreenCanvas;
   }
 

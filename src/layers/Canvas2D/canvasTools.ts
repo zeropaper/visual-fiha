@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
+interface OffscreenCanvas extends HTMLCanvasElement { }
+interface OffscreenCanvasRenderingContext2D extends CanvasRenderingContext2D { }
+
 import {
   PI2,
   arrayMax,
@@ -390,6 +393,7 @@ export default function canvasTools(ctx: CTX) {
     dw = canvas.width,
     dh = canvas.height,
   ) => {
+    // @ts-ignore
     const ofc = new OffscreenCanvas(canvas.width, canvas.height);
     ofc.getContext('2d')?.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
     return ofc;

@@ -11,6 +11,8 @@ import {
 import type Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer';
 import type ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer';
 
+interface OffscreenCanvas extends HTMLCanvasElement { }
+
 export interface DisplayOptions {
   id?: string;
   canvas?: HTMLCanvasElement;
@@ -57,9 +59,11 @@ export default class Display {
   };
 
   static checkSupport = () => {
+    // @ts-ignore
     if (typeof OffscreenCanvas === 'undefined') return false;
     try {
       const el = document.createElement('canvas');
+      // @ts-ignore
       el.transferControlToOffscreen();
     } catch (e) {
       return false;
@@ -84,7 +88,9 @@ export default class Display {
     this.#listener = listener;
     this.#worker.addEventListener('message', this.#listener);
 
+    // @ts-ignore
     this.#offscreen = canvas.transferControlToOffscreen();
+    // @ts-ignore
     this.#worker.postMessage({
       type: 'offscreencanvas',
       payload: { canvas: this.#offscreen },

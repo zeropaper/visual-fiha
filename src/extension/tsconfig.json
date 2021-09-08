@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "lib": ["DOM", "ES2019"],
     "rootDir": "..",
     "outDir": "../../out"
   },

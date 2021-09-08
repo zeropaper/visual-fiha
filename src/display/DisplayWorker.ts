@@ -24,6 +24,9 @@ import Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer';
 import ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer';
 import canvasTools, { Canvas2DAPI } from '../layers/Canvas2D/canvasTools';
 
+interface OffscreenCanvas extends HTMLCanvasElement { }
+interface OffscreenCanvasRenderingContext2D extends CanvasRenderingContext2D { }
+
 interface WebWorker extends Worker {
   location: Location;
 }
@@ -100,6 +103,7 @@ class VFWorker {
 
     this.scriptable = new Scriptable(scriptableOptions);
 
+    // @ts-ignore
     this.canvas = new OffscreenCanvas(state.width, state.height);
     this.#context = this.canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
 
