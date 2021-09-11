@@ -394,7 +394,7 @@ export default function canvasTools(ctx: CTX) {
     dh = canvas.height,
   ) => {
     // @ts-ignore
-    const ofc = new OffscreenCanvas(canvas.width, canvas.height);
+    const ofc = new OffscreenCanvas(canvas.width, canvas.height) as HTMLCanvasElement;
     ofc.getContext('2d')?.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
     return ofc;
   };
