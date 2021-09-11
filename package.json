@@ -103,6 +103,7 @@
     "react-redux": "7.2.5",
     "redux": "4.1.1",
     "three": "0.132.2",
+    "tmp-promise": "3.0.2",
     "ts-jest": "27.0.5",
     "ts-node": "10.2.1",
     "typedoc": "0.22.2",
