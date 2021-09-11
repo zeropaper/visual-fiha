@@ -80,7 +80,7 @@
     "@types/three": "0.131.0",
     "@types/vscode": "1.60.0",
     "@types/vscode-webview": "1.57.0",
-    "@types/web": "0.0.30",
+    "@types/web": "0.0.31",
     "@typescript-eslint/eslint-plugin": "4.31.0",
     "@typescript-eslint/parser": "4.31.0",
     "canvas": "2.8.0",
