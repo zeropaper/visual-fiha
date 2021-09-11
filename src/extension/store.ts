@@ -51,7 +51,9 @@ const layers = (state: Layer[] = [], action: AnyAction) => {
 
     case 'toggleLayer':
       return state.map((layer) => {
-        if (layer.id === action.payload) return { ...layer, active: !layer.active };
+        if (layer.id === action.payload) {
+          return { ...layer, active: !layer.active };
+        }
         return layer;
       });
 
