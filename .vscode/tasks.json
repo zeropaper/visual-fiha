@@ -43,7 +43,7 @@
     },
     {
       "type": "shell",
-      "command": "npm run watch:display:worker",
+      "command": "npm run watch:displayworker",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",
