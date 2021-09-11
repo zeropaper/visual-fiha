@@ -127,6 +127,7 @@
     "*.{ts,tsx}": "eslint --cache --fix"
   },
   "dependencies": {
+    "json5": "2.2.0",
     "mime": "2.5.2",
     "socket.io": "4.2.0",
     "socket.io-client": "4.2.0"
