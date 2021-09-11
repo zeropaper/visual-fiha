@@ -1,3 +1,4 @@
+import type * as vscode from 'vscode';
 import type { Socket } from 'socket.io';
 
 import type { ScriptableOptions } from './utils/Scriptable';
@@ -117,4 +118,11 @@ export enum TypeDirectory {
   layer = 'layers',
   signal = 'signals',
   worker = 'worker',
+}
+
+export interface VFCommand {
+  (
+    context: vscode.ExtensionContext,
+    extension: any
+  ): (...args: any[]) => any, thisArg?: any;
 }

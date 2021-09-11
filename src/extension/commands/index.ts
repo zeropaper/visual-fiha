@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import type { VFCommand } from '../../types';
 import openControls from './openControls';
 import openEditor from './openEditor';
 import setBPM from './setBPM';
@@ -9,7 +9,7 @@ import setStageSize from './setStageSize';
 import resetData from './resetData';
 
 export type Commands = {
-  [name: string]: (context: vscode.ExtensionContext, extension: any) => (...args: any[]) => any, thisArg?: any;
+  [name: string]: VFCommand;
 };
 
 const commands: Commands = {
