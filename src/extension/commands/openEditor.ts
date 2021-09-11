@@ -11,12 +11,25 @@ export type OpenCommandOptions = string | {
   preserveFocus?: boolean;
   preview?: boolean;
   selection?: vscode.Range;
-  createIfNone?: boolean;
+  createIfMissing?: boolean;
 };
 
 export default function openEditor() {
   return (options: OpenCommandOptions, meta?: ComEventDataMeta) => {
-    const filepath = vscode.Uri.joinPath(getWorkspaceFolder().uri, typeof options === 'string'
+    const {
+      commands: {
+        executeCommand,
+      },
+      workspace: {
+        fs: wfs,
+      },
+      window: {
+        showErrorMessage,
+      },
+    } = vscode;
+    const { uri } = getWorkspaceFolder();
+
+    const filepath = vscode.Uri.joinPath(uri, typeof options === 'string'
       ? options
       : options.relativePath);
     const {
@@ -24,11 +37,12 @@ export default function openEditor() {
       preserveFocus = true,
       preview = false,
       selection = undefined,
-      // createIfNone = false,s
+      // createIfMissing = false,
     } = typeof options === 'string' ? {} : options;
 
     const resolve = () => {
       if (!meta?.operationId) return;
+
       VFPanel.currentPanel?.postMessage({
         type: 'com/reply',
         meta: {
@@ -38,10 +52,14 @@ export default function openEditor() {
         },
       });
     };
+
     const reject = (error: any) => {
       console.warn('[VFPanel] open error', error);
-      vscode.window.showErrorMessage(`Could not open: ${filepath}`);
-      if (!meta?.operationId) return;
+      if (!meta?.operationId) {
+        showErrorMessage(`Could not open: ${filepath}`);
+        return;
+      }
+
       VFPanel.currentPanel?.postMessage({
         type: 'com/reply',
         meta: {
@@ -59,14 +77,14 @@ export default function openEditor() {
         return res();
       });
     });
-    const doOpen = () => vscode.commands.executeCommand('vscode.open', filepath, {
+    const doOpen = () => executeCommand('vscode.open', filepath, {
       viewColumn,
       preserveFocus,
       preview,
       selection,
     }).then(resolve, reject);
 
-    vscode.workspace.fs.stat(filepath)
+    wfs.stat(filepath)
       .then(doOpen, () => create().then(doOpen).catch(reject));
   };
 }
