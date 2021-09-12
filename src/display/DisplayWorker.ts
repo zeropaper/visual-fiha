@@ -320,7 +320,7 @@ const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     };
     canvas.width = state.width;
     canvas.height = state.height;
-    state.layers?.forEach(vfWorker.resizeLayer);
+    state.layers?.forEach((l) => vfWorker.resizeLayer(l));
 
     if (!state.control) {
       console.info('[worker] notify resize');
