@@ -14,6 +14,7 @@ import readScripts from './readScripts';
 import readLayerScripts from './readLayerScripts';
 import textDocumentScriptInfo from './textDocumentScriptInfo';
 import readWorkspaceRC from './readWorkspaceRC';
+import configuration from './configuration';
 
 export default class VFExtension {
   constructor() {
@@ -156,9 +157,10 @@ export default class VFExtension {
   async activate(context: vscode.ExtensionContext) {
     try {
       await this.propagate();
-      const openControls = vscode.workspace.getConfiguration('visualFiha.settings').get('openControls');
-      if (openControls)
+      const openControls = configuration('openControls');
+      if (openControls) {
         vscode.commands.executeCommand('visualFiha.openControls');
+      }
 
       console.info('[ext] start refreshing data');
       this.#refreshInterval = setInterval(() => this.#refreshData(), 8);
