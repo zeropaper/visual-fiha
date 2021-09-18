@@ -102,7 +102,12 @@ export default class VFExtension {
     this.#data.beatNum = Math.floor(this.#data.now / (oneMinute / bpm));
 
     if (this.#data.iterationCount % 100 === 0) {
-      console.info('[ext] this.#data refreshed', this.#data.iterationCount, started, this.#data.beatPrct, this.#data.beatNum);
+      console.info('[ext] this.#data refreshed',
+        this.#data.iterationCount,
+        now - started,
+        this.#data.deltaNow,
+        this.#data.beatPrct,
+        this.#data.beatNum);
     }
 
     this.#webServer.broadcastData(this.#data);
@@ -137,12 +142,15 @@ export default class VFExtension {
       const rState = this.#runtimeState;
       let changed = false;
 
-      if (rState.bpm.count && state.bpm.count && rState.bpm.count !== state.bpm.count) {
-        rState.bpm.count = state.bpm.count;
+      const { bpm: { count, start } } = state;
+      const { bpm: { count: rCount, start: rStart } } = rState;
+
+      if (rCount && count && rCount !== count) {
+        rState.bpm.count = count;
         changed = true;
       }
-      if (rState.bpm.start && state.bpm.start && rState.bpm.start !== state.bpm.start) {
-        this.#runtimeState.bpm.start = state.bpm.start;
+      if (rStart && start && rStart !== start) {
+        this.#runtimeState.bpm.start = start;
         changed = true;
       }
 
@@ -167,22 +175,10 @@ export default class VFExtension {
 
       VFPanel.currentPanel?.updateDisplays(this.#webServer.displays);
     } catch (err) {
-      vscode.window.showWarningMessage(`Could not read fiha.json: "${(err as Error).message}"`);
+      const msg = `Could not read fiha.json: "${(err as Error).message}"`;
+      vscode.window.showWarningMessage(msg);
     }
 
-    // if (vscode.window.registerWebviewPanelSerializer) {
-    //   // Make sure we register a serializer in activation event
-    //   vscode.window.registerWebviewPanelSerializer(VFPanel.viewType, {
-    //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    //     async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: AppState) {
-    //       // Reset the webview options so we use latest uri for `localResourceRoots`.
-    //       // eslint-disable-next-line no-param-reassign
-    //       webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-    //       // console.log('[ext] revive webview state', state);
-    //       VFPanel.revive(webviewPanel, context);
-    //     },
-    //   });
-    // }
     context.subscriptions.push(
       this.#webServer.activate(context),
 
@@ -201,9 +197,15 @@ export default class VFExtension {
       }),
 
       this.#webServer.onSocketConnection((socket) => {
-        socket.emit('message', { type: 'updatestate', payload: this.#runtimeState });
+        socket.emit('message', {
+          type: 'updatestate',
+          payload: this.#runtimeState,
+        });
 
-        socket.on('audioupdate', (audio: { frequency: number[]; volume: number[]; }) => {
+        socket.on('audioupdate', (audio: {
+          frequency: number[];
+          volume: number[];
+        }) => {
           this.#data = {
             ...this.#data,
             ...audio,
@@ -212,9 +214,10 @@ export default class VFExtension {
       }),
 
       ...Object.keys(commands)
-        .map((name) => vscode.commands.registerCommand(`visualFiha.${name}`, commands[name](context, {
-          resetData: () => this.#resetData(),
-        }))),
+        .map((name) => vscode.commands
+          .registerCommand(`visualFiha.${name}`, commands[name](context, {
+            resetData: () => this.#resetData(),
+          }))),
 
       vscode.workspace.onDidChangeTextDocument((event) => {
         // if (!event.contentChanges.length) return;
@@ -226,7 +229,8 @@ export default class VFExtension {
         const script = doc.getText();
         this.#webServer.broadcastScript(info, script);
 
-        const layerIndex = this.#runtimeState.layers.findIndex((layer) => layer.id === info.id);
+        const layerIndex = this.#runtimeState.layers
+          .findIndex((layer) => layer.id === info.id);
         if (layerIndex < 0) {
           // TODO: check info.type
           this.#runtimeState.worker[info.role] = script;
