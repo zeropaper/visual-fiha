@@ -7,5 +7,11 @@
     "sourceMap": true,
     "strict": true
   },
-  "exclude": ["node_modules", ".vscode-test"]
+  "exclude": [
+    "node_modules",
+    ".vscode-test",
+    "out",
+    "demo-project",
+    "src/scripts-dts"
+  ]
 }

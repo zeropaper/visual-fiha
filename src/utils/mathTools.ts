@@ -99,17 +99,23 @@ export const GR = 1.6180339887498948482;
 
 export const sDiv = (val: number, div: number): number => val * (1 / div);
 
-export const arrayMax = (arr: number[]) => arr.reduce((val, prev) => Math.max(val, prev), 0);
+export const arrayMax = (arr: number[]) =>
+  arr.reduce((val, prev) => Math.max(val, prev), 0);
 
-export const arrayMin = (arr: number[]) => arr.reduce((val, prev) => Math.min(val, prev), Infinity);
+export const arrayMin = (arr: number[]) =>
+  arr.reduce((val, prev) => Math.min(val, prev), Infinity);
 
-export const arraySum = (arr: number[]) => arr.reduce((val, prev) => val + prev, 0);
+export const arraySum = (arr: number[]) =>
+  arr.reduce((val, prev) => val + prev, 0);
 
-export const arrayDiff = (arr: number[]) => (Math.abs(arrayMax(arr) - arrayMin(arr)));
+export const arrayDiff = (arr: number[]) =>
+  (Math.abs(arrayMax(arr) - arrayMin(arr)));
 
-export const arrayAvg = (arr: number[]) => sDiv(arraySum(arr), arr.length);
+export const arrayAvg = (arr: number[]) =>
+  sDiv(arraySum(arr), arr.length);
 
-export const arrayMirror = (arr: number[]) => [...arr, ...arr.reverse()];
+export const arrayMirror = (arr: number[]) =>
+  [...arr, ...arr.reverse()];
 
 export const arrayDownsample = (arr: number[], samples = 2) => {
   const result: number[] = [];
@@ -119,18 +125,21 @@ export const arrayDownsample = (arr: number[], samples = 2) => {
   return result;
 };
 
-export const arraySmooth = (arr: number[], factor = 2) => arr.reduce((acc: number[], val: number, index: number) => {
-  acc.push(arrayAvg(arr.slice(index, index + factor)));
-  return acc;
-}, []);
+export const arraySmooth = (arr: number[], factor = 2) =>
+  arr.reduce((acc: number[], val: number, index: number) => {
+    acc.push(arrayAvg(arr.slice(index, index + factor)));
+    return acc;
+  }, []);
 
 export const deg2rad = (deg:number) => (PI2 / 360) * deg;
 
 export const rad2deg = (rad:number) => (360 / PI2) * rad;
 
-export const cap = (val:number, minVal = 0, maxVal = 127) => Math.min(Math.max(val, minVal), maxVal);
+export const cap = (val:number, minVal = 0, maxVal = 127) =>
+  Math.min(Math.max(val, minVal), maxVal);
 
-export const between = (val:number, minVal = 0, maxVal = 127) => val < maxVal && val > minVal;
+export const between = (val:number, minVal = 0, maxVal = 127) =>
+  val < maxVal && val > minVal;
 
 export const beatPrct = (now:number, bpm = 120) => {
   const timeBetweenBeats = sDiv(60, bpm) * 1000;
@@ -143,7 +152,8 @@ export const beat = (now:number, bpm = 120) => {
   return beatPrct(now, bpm);
 };
 
-export const orientation = (width: number, height: number) => (width >= height ? 'landscape' : 'portrait');
+export const orientation = (width: number, height: number) =>
+  (width >= height ? 'landscape' : 'portrait');
 
 export const objOrientation = (obj: Box) => orientation(obj.width, obj.height);
 

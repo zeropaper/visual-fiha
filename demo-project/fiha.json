@@ -1,0 +1,15 @@
+{
+  "id": "visual-fiha-demo",
+  "layers": [
+    {
+      "active": true,
+      "id": "basics",
+      "type": "canvas"
+    },
+    {
+      "active": true,
+      "id": "treejs-basics",
+      "type": "treejs"
+    }
+  ]
+}

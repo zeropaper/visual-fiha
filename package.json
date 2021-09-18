@@ -30,6 +30,11 @@
         "command": "visualFiha.resetData",
         "title": "Reset data",
         "category": "Visual Fiha"
+      },
+      {
+        "command": "visualFiha.scaffoldProject",
+        "title": "Scaffold project",
+        "category": "Visual Fiha"
       }
     ],
     "configuration": {
@@ -38,8 +43,14 @@
         "visualFiha.settings.openControls": {
           "scope": "application",
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Open the controls whenever a Visual Fiha project is detected."
+        },
+        "visualFiha.settings.projectsPath": {
+          "scope": "application",
+          "type": "string",
+          "default": "~/fiha-repositories",
+          "description": "A directory in which the Visual Fiha are located"
         }
       }
     }
@@ -49,12 +60,16 @@
     "test": "jest --coverage",
     "watch:test": "jest --watch",
     "package": "vsce package --no-yarn",
-    "vscode:prepublish": "run-p compile:*",
+    "vscode:prepublish": "rimraf out && run-p compile:* && run-s demo:copy && run-p demo:dts:*",
+    "demo:copy": "rimraf out/demo-project && mkdir -p out/demo-project/layers/canvas out/demo-project/layers/threejs && cp -rf demo-project/* out/demo-project/",
     "compile:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --minify --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
     "compile:webviews": "esbuild ./src/webviews/index.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
     "compile:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --minify --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
     "compile:display": "esbuild ./src/display/index.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
     "compile:displayworker": "esbuild ./src/display/DisplayWorker.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/DisplayWorker.js",
+    "demo:dts:canvas2d": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/layers/canvas/canvas.d.ts scripts-dts/canvas.ts",
+    "demo:dts:threejs": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/layers/threejs/threejs.d.ts scripts-dts/threejs.ts",
+    "demo:dts:worker": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/worker/worker.d.ts scripts-dts/worker.ts",
     "_compile:layerdocs": "run-p compile:layerdocs:*",
     "_compile:layerdocs:canvas2d": "typedoc --out out/docs/Canvas2DLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name Canvas2DLayer --disableSources src/layers/Canvas2D/canvas2DAPI.ts",
     "_compile:layerdocs:threejs": "typedoc --out out/docs/ThreeJSLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name ThreeJSLayer --disableSources src/layers/ThreeJS/threeJSAPI.ts",
@@ -70,6 +85,7 @@
     "@commitlint/cli": "13.1.0",
     "@commitlint/config-conventional": "13.1.0",
     "@reduxjs/toolkit": "1.6.1",
+    "@types/fs-extra": "9.0.12",
     "@types/jest": "27.0.2",
     "@types/lodash": "4.14.173",
     "@types/mime": "2.0.3",
@@ -102,6 +118,7 @@
     "react-dom": "17.0.2",
     "react-redux": "7.2.5",
     "redux": "4.1.1",
+    "rimraf": "3.0.2",
     "three": "0.132.2",
     "tmp-promise": "3.0.2",
     "ts-jest": "27.0.5",
@@ -127,6 +144,7 @@
     "*.{ts,tsx}": "eslint --cache --fix"
   },
   "dependencies": {
+    "fs-extra": "10.0.0",
     "json5": "2.2.0",
     "mime": "2.5.2",
     "socket.io": "4.2.0",

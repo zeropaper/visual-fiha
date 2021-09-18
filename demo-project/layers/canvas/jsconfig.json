@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "noLib": true,
+    "checkJs": true,
+    "typeRoots": ["."]
+  }
+}
