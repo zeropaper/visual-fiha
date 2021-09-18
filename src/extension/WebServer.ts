@@ -70,7 +70,11 @@ export default class VFServer {
     const filepath = vscode.Uri.joinPath(this.#context.extensionUri, reqUrl).fsPath;
 
     readFile(filepath, (err, content) => {
-      if (err) throw err;
+      if (err) {
+        res.statusCode = 500;
+        res.end(err.message);
+        return;
+      }
       let type = mime.getType(filepath.split('.').pop() || '') || 'text/plain';
       if (filepath.endsWith('.gltf')) type = 'model/gltf+json';
       res.writeHead(200, { 'Content-Type': type });
@@ -88,7 +92,11 @@ export default class VFServer {
     const filepath = vscode.Uri.joinPath(folder.uri, 'assets', reqUrl.replace('/assets/', '')).fsPath;
 
     readFile(filepath, (err, content) => {
-      if (err) throw err;
+      if (err) {
+        res.statusCode = 500;
+        res.end(err.message);
+        return;
+      }
       let type = mime.getType(filepath.split('.').pop() || '') || 'text/plain';
       if (filepath.endsWith('.gltf')) type = 'model/gltf+json';
       res.writeHead(200, { 'Content-Type': type });
