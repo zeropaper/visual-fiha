@@ -228,22 +228,17 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
       role,
       script,
     } = payload;
-    const {
-      scriptable,
-      workerCom,
-      findStateLayer,
-    } = vfWorker;
 
     if (type === 'worker') {
-      scriptable[role].code = script;
+      vfWorker.scriptable[role].code = script;
       if (role === 'setup') {
         // data = { ...data, ...((await scriptable.execSetup()) || {}) };
-        Object.assign(data, (await scriptable.execSetup() || {}));
+        Object.assign(data, (await vfWorker.scriptable.execSetup() || {}));
       }
     } else {
-      workerCom.post('scriptchange', payload);
+      vfWorker.workerCom.post('scriptchange', payload);
       if (type === 'layer') {
-        const found = findStateLayer(id);
+        const found = vfWorker.findStateLayer(id);
         if (found) {
           found[role].code = script;
 
