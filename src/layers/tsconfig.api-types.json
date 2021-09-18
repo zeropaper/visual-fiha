@@ -1,9 +1,0 @@
-{
-  "extends": "../../tsconfig.base.json",
-  // "files": ["./Canvas2D/canvas2DAPI.ts", "./ThreeJS/threeJSAPI.ts"],
-  "compilerOptions": {
-    "rootDir": "..",
-    "declaration": true,
-    "outDir": "../../out/api-types/"
-  }
-}

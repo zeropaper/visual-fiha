@@ -7,6 +7,7 @@ import removeLayer from './removeLayer';
 import toggleLayer from './toggleLayer';
 import setStageSize from './setStageSize';
 import resetData from './resetData';
+import scaffoldProject from './scaffoldProject';
 
 export type Commands = {
   [name: string]: VFCommand;
@@ -21,6 +22,7 @@ const commands: Commands = {
   toggleLayer,
   setStageSize,
   resetData,
+  scaffoldProject,
 };
 
 export default commands;
