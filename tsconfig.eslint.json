@@ -5,6 +5,7 @@
     "src/**/*.tsx",
     "__mocks__/**/*.ts",
     ".eslintrc.js",
-    "jest.config.ts"
+    "jest.config.ts",
+    "commitlint.config.js"
   ]
 }
