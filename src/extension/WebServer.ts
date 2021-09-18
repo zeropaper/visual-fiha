@@ -67,7 +67,8 @@ export default class VFServer {
   #serveExtensionFile = (reqUrl: string, res: ServerResponse) => {
     if (!this.#context) throw new Error('WebServer is missing extension context');
 
-    const filepath = vscode.Uri.joinPath(this.#context.extensionUri, reqUrl).fsPath;
+    const filepath = vscode.Uri
+      .joinPath(this.#context.extensionUri, reqUrl).fsPath;
 
     readFile(filepath, (err, content) => {
       if (err) {
@@ -89,7 +90,8 @@ export default class VFServer {
     if (!vscode.workspace.workspaceFolders?.length) return;
 
     const folder = vscode.workspace.workspaceFolders[0];
-    const filepath = vscode.Uri.joinPath(folder.uri, 'assets', reqUrl.replace('/assets/', '')).fsPath;
+    const filepath = vscode.Uri
+      .joinPath(folder.uri, 'assets', reqUrl.replace('/assets/', '')).fsPath;
 
     readFile(filepath, (err, content) => {
       if (err) {

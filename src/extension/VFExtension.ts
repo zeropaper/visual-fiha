@@ -7,7 +7,7 @@ import {
   StageInfo,
 } from '../types';
 import VFPanel from './VFPanel';
-import WebServer from './WebServer';
+import VFServer from './WebServer';
 import commands from './commands';
 import store from './store';
 import readScripts from './readScripts';
@@ -20,7 +20,7 @@ export default class VFExtension {
   constructor() {
     this.#refreshInterval = null;
     this.#store = store;
-    this.#webServer = new WebServer(() => this.#store.getState());
+    this.#webServer = new VFServer(() => this.#store.getState());
   }
 
   #refreshInterval: NodeJS.Timer | null;
@@ -45,7 +45,7 @@ export default class VFExtension {
     id: 'vf-default',
   };
 
-  #webServer: WebServer;
+  #webServer: VFServer;
 
   #store: Store<EmptyObject & {
     displays: DisplayBase[];
