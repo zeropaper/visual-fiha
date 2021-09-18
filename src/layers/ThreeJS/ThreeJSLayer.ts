@@ -60,7 +60,7 @@ export default class ThreeJSLayer extends Layer {
     try {
       this.camera.aspect = this.width / this.height;
     } catch (e) {
-      console.info('[ThreeJS] cannot set aspect', e.message);
+      console.info('[ThreeJS] cannot set aspect', (e as Error).message);
     }
   };
 

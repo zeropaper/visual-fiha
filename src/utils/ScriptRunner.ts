@@ -180,12 +180,13 @@ class ScriptRunner {
         this.#version += 1;
       }
     } catch (error) {
-      this.#errors.compilation = error;
+      const err = error as ScriptRunnerCodeError;
+      this.#errors.compilation = err;
       this.dispatchEvent({
         type: 'compilationerror',
         error,
-        lineNumber: error.lineNumber || 0,
-        columnNumber: error.columnNumber || 0,
+        lineNumber: err.lineNumber || 0,
+        columnNumber: err.columnNumber || 0,
         code,
         builderStr,
       } as ScriptRunnerErrorEvent);
@@ -241,7 +242,8 @@ class ScriptRunner {
       /* istanbul ignore next */
       return result instanceof EmptyScope ? undefined : result;
     } catch (error) {
-      this.#errors.execution = error;
+      const err = error as ScriptRunnerCodeError;
+      this.#errors.execution = err;
       this.dispatchEvent({
         type: 'executionerror',
         error,
