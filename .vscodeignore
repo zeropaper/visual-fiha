@@ -13,3 +13,6 @@ jest.config.ts
 tsconfig.*
 renovate.json
 .gitignore
+__mocks__
+scripts-dts
+commitlint.config.js
