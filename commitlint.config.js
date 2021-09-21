@@ -8,6 +8,7 @@ module.exports = {
   // https://commitlint.js.org/#/reference-rules
   rules: {
     'scope-enum': [2, 'always', [
+      'release',
       'deps',
       'extension',
       'webserver',
