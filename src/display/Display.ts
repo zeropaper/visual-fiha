@@ -1,7 +1,4 @@
-import {
-  AppState,
-  // ScriptingData,
-} from '../types';
+import { AppState } from '../types';
 import {
   autoBind,
   ComActionHandlers,
@@ -18,7 +15,8 @@ export interface DisplayOptions {
   canvas?: HTMLCanvasElement;
 }
 
-export interface DisplayState extends Omit<Omit<AppState, 'layers'>, 'displays'> {
+export interface DisplayState
+  extends Omit<Omit<AppState, 'layers'>, 'displays'> {
   id: string;
   readonly control: boolean;
   width: number;
@@ -26,19 +24,7 @@ export interface DisplayState extends Omit<Omit<AppState, 'layers'>, 'displays'>
   layers?: Array<Canvas2DLayer | ThreeJSLayer>;
 }
 
-// let data: ScriptingData = {
-//   iterationCount: 0,
-//   now: 0,
-//   deltaNow: 0,
-//   frequency: [],
-//   volume: [],
-// };
-
-const handlers: ComActionHandlers = {
-  // updatedata: (payload: typeof data) => {
-  //   data = payload;
-  // },
-};
+const handlers: ComActionHandlers = {};
 
 export default class Display {
   static ensureCanvas = (id: string = 'canvas'): HTMLCanvasElement => {
@@ -82,8 +68,11 @@ export default class Display {
     canvas.height = canvas.parentElement?.clientHeight || canvas.height;
     this.#canvas = canvas;
 
-    this.#worker = new Worker(`/DisplayWorker.js#${this.#id}`);
-    const { post, listener } = autoBind(this.#worker, `display-${id}-browser`, handlers);
+    this.#worker = new Worker(`/Display.worker.js#${this.#id}`);
+    const {
+      post,
+      listener,
+    } = autoBind(this.#worker, `display-${id}-browser`, handlers);
     this.#post = post;
     this.#listener = listener;
     this.#worker.addEventListener('message', this.#listener);

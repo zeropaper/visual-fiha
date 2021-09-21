@@ -101,14 +101,14 @@ export default class VFExtension {
     this.#data.beatPrct = (timeSinceBPMSet % beatLength) / beatLength;
     this.#data.beatNum = Math.floor(this.#data.now / (oneMinute / bpm));
 
-    if (this.#data.iterationCount % 100 === 0) {
-      console.info('[ext] this.#data refreshed',
-        this.#data.iterationCount,
-        now - started,
-        this.#data.deltaNow,
-        this.#data.beatPrct,
-        this.#data.beatNum);
-    }
+    // if (this.#data.iterationCount % 100 === 0) {
+    //   console.info('[ext] this.#data refreshed',
+    //     this.#data.iterationCount,
+    //     now - started,
+    //     this.#data.deltaNow,
+    //     this.#data.beatPrct,
+    //     this.#data.beatNum);
+    // }
 
     this.#webServer.broadcastData(this.#data);
   }
@@ -222,8 +222,9 @@ export default class VFExtension {
       vscode.workspace.onDidChangeTextDocument((event) => {
         // if (!event.contentChanges.length) return;
         const { document: doc } = event;
-        if (doc.isUntitled || doc.isClosed || doc.languageId !== 'javascript')
+        if (doc.isUntitled || doc.isClosed || doc.languageId !== 'javascript') {
           return;
+        }
 
         const info = textDocumentScriptInfo(doc);
         const script = doc.getText();
