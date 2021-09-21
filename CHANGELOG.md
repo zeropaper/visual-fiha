@@ -1,3 +1,19 @@
+# [3.2.0](https://github.com/zeropaper/visual-fiha/compare/v3.1.0...v3.2.0) (2021-09-21)
+
+
+### Bug Fixes
+
+* allow release as scope for commits ([87306da](https://github.com/zeropaper/visual-fiha/commit/87306da9199f67b93eea2f06307d8984df349d54))
+* **displayworker:** set state as a public variable ([7c5c4ab](https://github.com/zeropaper/visual-fiha/commit/7c5c4abc142e7d96a30beb878e3d5ce85d70776b))
+* handle error type declaration ([e8f6e90](https://github.com/zeropaper/visual-fiha/commit/e8f6e9073417639e0bda867af30ebe1f8fdd3b63))
+
+
+### Features
+
+* **demo:** add basic demo scaffolding ([610c32f](https://github.com/zeropaper/visual-fiha/commit/610c32f3df100d8e01ec18261ae2d36057e9e1db))
+
+
+
 # [3.1.0](https://github.com/zeropaper/visual-fiha/compare/v3.0.11...v3.1.0) (2021-09-18)
 
 
@@ -39,15 +55,6 @@
 ### Bug Fixes
 
 * **build:** bump package version ([7c4d996](https://github.com/zeropaper/visual-fiha/commit/7c4d99662b6ec737abad34f3b34be4a6f2f03057))
-
-
-
-## [3.0.7](https://github.com/zeropaper/visual-fiha/compare/v3.0.6...v3.0.7) (2021-09-07)
-
-
-### Bug Fixes
-
-* **build:** correct DisplayWorker compilation ([b950734](https://github.com/zeropaper/visual-fiha/commit/b9507348e658341de5ec3a4eb483423e98993739))
 
 
 
