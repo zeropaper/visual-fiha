@@ -136,7 +136,7 @@ export default class VFServer {
           return;
         }
 
-        if (['/DisplayWorker.js', '/DisplayWorker.js.map'].includes(req.url || '')) {
+        if (['/Display.worker.js', '/Display.worker.js.map'].includes(req.url || '')) {
           this.#serveExtensionFile(`out/display/${req.url}`, res);
           return;
         }

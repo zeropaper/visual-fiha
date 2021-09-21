@@ -66,7 +66,7 @@
     "compile:webviews": "esbuild ./src/webviews/index.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
     "compile:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --minify --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
     "compile:display": "esbuild ./src/display/index.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
-    "compile:displayworker": "esbuild ./src/display/DisplayWorker.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/DisplayWorker.js",
+    "compile:displayworker": "esbuild ./src/display/Display.worker.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/Display.worker.js",
     "demo:dts:canvas2d": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/layers/canvas/canvas.d.ts scripts-dts/canvas.ts",
     "demo:dts:threejs": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/layers/threejs/threejs.d.ts scripts-dts/threejs.ts",
     "demo:dts:worker": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/worker/worker.d.ts scripts-dts/worker.ts",
@@ -78,7 +78,7 @@
     "watch:webviews": "esbuild ./src/webviews/index.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
     "watch:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --watch --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
     "watch:display": "esbuild ./src/display/index.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
-    "watch:displayworker": "esbuild ./src/display/DisplayWorker.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/DisplayWorker.js",
+    "watch:displayworker": "esbuild ./src/display/Display.worker.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/Display.worker.js",
     "prepare": "husky install"
   },
   "devDependencies": {
