@@ -70,7 +70,7 @@
     "@commitlint/cli": "13.1.0",
     "@commitlint/config-conventional": "13.1.0",
     "@reduxjs/toolkit": "1.6.1",
-    "@types/jest": "27.0.1",
+    "@types/jest": "27.0.2",
     "@types/lodash": "4.14.173",
     "@types/mime": "2.0.3",
     "@types/node": "16.9.2",
