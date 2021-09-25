@@ -26,6 +26,10 @@ aimed to provide a live-coding VJing environment using web technologies.
 
 The extension on the [Visual Studio Code marketplace](https://marketplace.visualstudio.com/items?itemName=visual-fiha.visual-fiha) and can be installed from the extension panel of Visual Studio Code too.
 
+## Getting started
+
+Select **Visual Fiha: Scaffold project** from the Command Palette (`Ctrl+Shift+P`).
+
 ## Project Tasks
 
 https://github.com/zeropaper/visual-fiha/projects/2

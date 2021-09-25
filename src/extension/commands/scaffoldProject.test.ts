@@ -1,4 +1,20 @@
-// import scaffoldProject from './scaffoldProject';
+// import scaffoldProject, {
+//   resolveValue,
+//   promptName,
+//   promptDirectory,
+// } from './scaffoldProject';
+
+describe('resolveValue', () => {
+  it.todo('do some stuff with the fs path and homedir');
+});
+
+describe('promptName', () => {
+  it.todo('prompts user');
+});
+
+describe('promptDirectory', () => {
+  it.todo('prompts user');
+});
 
 describe('scaffoldProject', () => {
   describe('filepath argument', () => {

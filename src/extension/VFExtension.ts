@@ -15,6 +15,7 @@ import readLayerScripts from './readLayerScripts';
 import textDocumentScriptInfo from './textDocumentScriptInfo';
 import readWorkspaceRC from './readWorkspaceRC';
 import configuration from './configuration';
+// import { promptName } from './commands/scaffoldProject';
 
 export default class VFExtension {
   constructor() {
@@ -132,7 +133,17 @@ export default class VFExtension {
 
       this.updateState();
     } catch (err) {
-      console.error('[ext] fiharc', (err as Error).message);
+      console.warn('[ext] fiharc', (err as Error).message);
+      // const [ws] = vscode.workspace.workspaceFolders || [];
+      // if (!ws) return;
+
+      // promptName((projectName) => {
+      //   vscode.commands.executeCommand('visualFiha.scaffoldProject', {
+      //     projectName,
+      //     projectDirectory: ws.uri.fsPath,
+      //     openFolder: false,
+      //   });
+      // });
     }
   }
 
@@ -164,7 +175,6 @@ export default class VFExtension {
 
   async activate(context: vscode.ExtensionContext) {
     try {
-      await this.propagate();
       const openControls = configuration('openControls');
       if (openControls) {
         vscode.commands.executeCommand('visualFiha.openControls');
@@ -174,6 +184,8 @@ export default class VFExtension {
       this.#refreshInterval = setInterval(() => this.#refreshData(), 8);
 
       VFPanel.currentPanel?.updateDisplays(this.#webServer.displays);
+
+      this.propagate();
     } catch (err) {
       const msg = `Could not read fiha.json: "${(err as Error).message}"`;
       vscode.window.showWarningMessage(msg);
@@ -217,6 +229,7 @@ export default class VFExtension {
         .map((name) => vscode.commands
           .registerCommand(`visualFiha.${name}`, commands[name](context, {
             resetData: () => this.#resetData(),
+            propagate: () => this.propagate(),
           }))),
 
       vscode.workspace.onDidChangeTextDocument((event) => {

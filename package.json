@@ -16,7 +16,8 @@
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:fiha.json"
+    "workspaceContains:fiha.json",
+    "onCommand:visualFiha.scaffoldProject"
   ],
   "main": "./out/extension/index.js",
   "contributes": {
