@@ -83,8 +83,8 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@commitlint/cli": "13.1.0",
-    "@commitlint/config-conventional": "13.1.0",
+    "@commitlint/cli": "13.2.1",
+    "@commitlint/config-conventional": "13.2.0",
     "@reduxjs/toolkit": "1.6.1",
     "@types/fs-extra": "9.0.13",
     "@types/jest": "27.0.2",
