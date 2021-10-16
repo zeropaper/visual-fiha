@@ -139,11 +139,18 @@ export interface grid {
 
 export interface centeredGrid {
   (opts: {
-    cols: number,
-    rows: number,
-    dist: number,
-    unit: (v: number) => number,
-  }, cb: (...args: any[]) => void): void;
+    cols?: number,
+    rows?: number,
+    dist?: number,
+    unit?: (v: number) => number,
+  }, cb: (args: {
+      x: number;
+      y: number;
+      r: number;
+      c: number;
+      n: number;
+      d: number;
+    }) => void): void;
 }
 
 interface CTXMethod {

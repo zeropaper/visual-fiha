@@ -210,11 +210,18 @@ declare module "src/layers/Canvas2D/canvasTools" {
     }
     export interface centeredGrid {
         (opts: {
-            cols: number;
-            rows: number;
-            dist: number;
-            unit: (v: number) => number;
-        }, cb: (...args: any[]) => void): void;
+            cols?: number;
+            rows?: number;
+            dist?: number;
+            unit?: (v: number) => number;
+        }, cb: (args: {
+            x: number;
+            y: number;
+            r: number;
+            c: number;
+            n: number;
+            d: number;
+        }) => void): void;
     }
     interface CTXMethod {
         (...args: any[]): any;
@@ -338,6 +345,7 @@ declare module "src/utils/ScriptRunner" {
     export type API = {
         [scriptGlobalName: string]: any;
     };
+    export const removeExportCrutch: (str: string) => string;
     class ScriptRunnerLintingError extends Error {
         constructor(details: object[]);
         details: object[];
