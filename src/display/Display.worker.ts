@@ -75,7 +75,6 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     }
   },
   updatestate: debounce((update: Partial<AppState>) => {
-    // const prevStage = state.stage;
     const { scriptable, state } = vfWorker;
     vfWorker.state = {
       ...state,
@@ -118,7 +117,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
         || scriptable.animation.code;
       state.worker.animation = scriptable.animation.code;
     }
-  }, 60),
+  }, 32),
   updatedata: (payload: typeof data) => {
     Object.assign(data, payload);
     // workerCom.post('updatedata', data);

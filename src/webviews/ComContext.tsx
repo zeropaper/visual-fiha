@@ -41,7 +41,10 @@ export const useSetBPM = () => {
 
 export const useSetStageSize = () => {
   const { post } = useComContext();
-  return (size: { width: number; height: number; }) => post('setStageSize', size);
+  return (size: {
+    width: number;
+    height: number;
+  }) => post('setStageSize', size);
 };
 
 export const useToggleLayer = () => {

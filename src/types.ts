@@ -1,6 +1,7 @@
 import type * as vscode from 'vscode';
 import type { Socket } from 'socket.io';
 
+import type VFExtension from './extension/VFExtension';
 import type { ScriptableOptions } from './utils/Scriptable';
 
 export interface StageInfo {
@@ -107,6 +108,6 @@ export enum TypeDirectory {
 export interface VFCommand {
   (
     context: vscode.ExtensionContext,
-    extension: any
+    extension: VFExtension
   ): (...args: any[]) => any, thisArg?: any;
 }

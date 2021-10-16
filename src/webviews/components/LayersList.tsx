@@ -26,8 +26,9 @@ const LayerScriptLink = ({
 };
 
 const LayersList = () => {
-  const { layers } = useSelector((state: AppState) => ({ layers: state.layers }));
+  const layers = useSelector((state: AppState) => state.layers);
   const toggleLayer = useToggleLayer();
+  const toggleLayerId = (id: string) => () => toggleLayer(id);
   return (
     <section id="layers">
       <header>
@@ -49,7 +50,9 @@ const LayersList = () => {
                 {' '}
                 <LayerScriptLink layer={layer} scriptRole="animation" />
                 {' '}
-                <button type="button" onClick={() => toggleLayer(layer.id)}>{layer.active ? 'on' : 'off'}</button>
+                <button type="button" onClick={toggleLayerId(layer.id)}>
+                  {layer.active ? 'on' : 'off'}
+                </button>
               </div>
             </li>
           ))}

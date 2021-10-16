@@ -9,10 +9,8 @@ const id = (state: string = '', action: AnyAction) => {
   return action.payload || state;
 };
 
-const bpm = (state: {
-  count: number;
-  start: number;
-} = { count: 120, start: 0 }, action: AnyAction) => {
+const defaultBpmInfo = { count: 120, start: 0 };
+const bpm = (state = defaultBpmInfo, action: AnyAction) => {
   if (action.type !== 'setBPM') return state;
   return {
     count: action.payload,
@@ -20,13 +18,16 @@ const bpm = (state: {
   };
 };
 
-// eslint-disable-next-line max-len
-const stage = (state: StageInfo = { width: 600, height: 400, autoScale: true }, action: AnyAction) => {
+const defaultStageInfo = { width: 600, height: 400, autoScale: true };
+const stage = (state: StageInfo = defaultStageInfo, action: AnyAction) => {
   if (action.type !== 'setStage') return state;
   return { ...(state || {}) };
 };
 
-export const server = (state: DisplayServerInfo = { host: 'localhost', port: 9999 }, action: AnyAction) => {
+export const server = (state: DisplayServerInfo = {
+  host: 'localhost',
+  port: 9999,
+}, action: AnyAction) => {
   if (action.type !== 'setDisplayServer') return state;
   return {
     ...state,
@@ -34,9 +35,8 @@ export const server = (state: DisplayServerInfo = { host: 'localhost', port: 999
   };
 };
 
-export const worker = (state: {
-  setup: string; animation: string;
-} = { setup: '', animation: '' }, action: AnyAction) => {
+const defaultWorkerScripts = { setup: '', animation: '' };
+export const worker = (state = defaultWorkerScripts, action: AnyAction) => {
   if (action.type !== 'setWorkerScript') return state;
   return {
     ...state,
@@ -71,21 +71,44 @@ export const reducers = {
   layers,
 };
 
-const store = createStore(combineReducers({
+const topReducer = combineReducers({
   ...reducers,
   displays: (state: DisplayBase[] = [], action: AnyAction) => {
     if (action.type !== 'setDisplays') return state;
     return [...(state || [])];
   },
-}));
+});
+
+export type CombinedState = Parameters<typeof topReducer>[0];
+const defaultState: CombinedState = {
+  id: null,
+  bpm: { count: 0, start: 0 },
+  stage: {
+    autoScale: true,
+    height: 600,
+    width: 800,
+  },
+  displays: [],
+  layers: [],
+  worker: {},
+  server: {
+    host: 'localhost',
+    port: 9999,
+  },
+};
+const store = createStore((state = defaultState, action: AnyAction) => {
+  switch (action.type) {
+    case 'replaceState':
+      return action.payload;
+    default:
+      return topReducer(state as CombinedState, action);
+  }
+});
 
 export const messageHandlers = {
   updatestate: (newState: AppState) => {
-    const localState = store.getState();
-    // console.info('[webview] store updatestate', newState);
-    // if (localState.bpm !== newState.bpm) {
-    //   store.dispatch({ type: 'setBPM', payload: newState.bpm });
-    // }
+    const localState = store.getState() as AppState;
+
     if (localState.id !== newState.id) {
       store.dispatch({ type: 'setId', payload: newState.id });
     }

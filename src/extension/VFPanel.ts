@@ -20,7 +20,6 @@ function handleIncomingMessage({
     case 'toggleLayer':
     case 'createLayer':
     case 'removeLayer':
-      // console.info('[VFPanel] incoming command', type);
       vscode.commands.executeCommand(`visualFiha.${type}`, payload, meta);
       break;
     case 'alert':

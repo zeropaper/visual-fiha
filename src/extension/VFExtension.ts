@@ -1,10 +1,15 @@
 import * as vscode from 'vscode';
-import { AnyAction, EmptyObject, Store } from 'redux';
+import {
+  AnyAction,
+  // EmptyObject,
+  // Store,
+} from 'redux';
 import {
   AppState,
-  DisplayBase, Layer,
   ScriptingData,
-  StageInfo,
+  // DisplayBase,
+  // Layer,
+  // StageInfo,
 } from '../types';
 import VFPanel from './VFPanel';
 import VFServer from './WebServer';
@@ -15,51 +20,20 @@ import readLayerScripts from './readLayerScripts';
 import textDocumentScriptInfo from './textDocumentScriptInfo';
 import readWorkspaceRC from './readWorkspaceRC';
 import configuration from './configuration';
-// import { promptName } from './commands/scaffoldProject';
 
 export default class VFExtension {
   constructor() {
     this.#refreshInterval = null;
     this.#store = store;
-    this.#webServer = new VFServer(() => this.#store.getState());
+    this.#webServer = new VFServer(() => this.state);
   }
 
   #refreshInterval: NodeJS.Timer | null;
 
-  #runtimeState: AppState = {
-    server: {
-      host: 'localhost',
-      port: 9999,
-    },
-    stage: {
-      width: 600,
-      height: 400,
-      autoScale: true,
-    },
-    displays: [],
-    layers: [],
-    worker: {
-      setup: '',
-      animation: '',
-    },
-    bpm: { count: 120, start: Date.now() },
-    id: 'vf-default',
-  };
-
   #webServer: VFServer;
 
-  #store: Store<EmptyObject & {
-    displays: DisplayBase[];
-    id: any;
-    bpm: {
-      count: any;
-      start: number;
-    };
-    stage: StageInfo;
-    server: any;
-    worker: any;
-    layers: Layer[];
-  }, AnyAction>;
+  #store: typeof store;
+  // #store: Store<CombinedState, AnyAction>;
 
   #data: ScriptingData = {
     started: 0,
@@ -70,7 +44,7 @@ export default class VFExtension {
     volume: [],
   };
 
-  #resetData() {
+  resetData() {
     this.#data = {
       started: 0,
       iterationCount: 0,
@@ -82,10 +56,11 @@ export default class VFExtension {
   }
 
   #refreshData() {
+    const { state } = this;
     const now = Date.now();
     const started = this.#data.started || now;
-    const bpm = this.#runtimeState.bpm.count || this.#data.bpm || 120;
-    const timeSinceBPMSet = now - (this.#runtimeState.bpm.start || started);
+    const bpm = state.bpm.count || this.#data.bpm || 120;
+    const timeSinceBPMSet = now - (state.bpm.start || started);
     const oneMinute = 60000;
 
     this.#data = {
@@ -114,58 +89,45 @@ export default class VFExtension {
     this.#webServer.broadcastData(this.#data);
   }
 
+  get state() {
+    return this.#store.getState() as AppState;
+  }
+
+  dispatch(action: AnyAction) {
+    return this.#store.dispatch(action);
+  }
+
   updateState() {
-    this.#webServer.broadcastState(this.#runtimeState);
-    VFPanel.currentPanel?.updateState(this.#runtimeState);
+    const { state } = this;
+    this.#webServer.broadcastState(state);
+    VFPanel.currentPanel?.updateState(state);
   }
 
   async propagate() {
+    console.info('[ext] propagate');
+
     try {
       const fiharc = await readWorkspaceRC();
-      this.#runtimeState = {
-        ...fiharc,
-        ...this.#runtimeState,
-        id: fiharc.id || this.#runtimeState.id,
-        // bpm: fiharc.bpm || this.#runtimeState.bpm,
-        layers: await Promise.all(fiharc.layers.map(readLayerScripts('layer'))),
-        worker: await readScripts('worker', 'worker', 'worker'),
-      };
 
-      this.updateState();
+      const { state: current } = this;
+      this.dispatch({
+        type: 'replaceState',
+        payload: {
+          ...fiharc,
+          ...current,
+          id: fiharc.id || current.id,
+          layers: await Promise.all(fiharc.layers
+            .map(readLayerScripts('layer'))),
+          worker: await readScripts('worker', 'worker', 'worker'),
+        },
+      });
     } catch (err) {
       console.warn('[ext] fiharc', (err as Error).message);
-      // const [ws] = vscode.workspace.workspaceFolders || [];
-      // if (!ws) return;
-
-      // promptName((projectName) => {
-      //   vscode.commands.executeCommand('visualFiha.scaffoldProject', {
-      //     projectName,
-      //     projectDirectory: ws.uri.fsPath,
-      //     openFolder: false,
-      //   });
-      // });
     }
   }
 
   makeDisposableStoreListener(): vscode.Disposable {
     const unsubscribe = store.subscribe(() => {
-      const state = this.#store.getState();
-      const rState = this.#runtimeState;
-      let changed = false;
-
-      const { bpm: { count, start } } = state;
-      const { bpm: { count: rCount, start: rStart } } = rState;
-
-      if (rCount && count && rCount !== count) {
-        rState.bpm.count = count;
-        changed = true;
-      }
-      if (rStart && start && rStart !== start) {
-        this.#runtimeState.bpm.start = start;
-        changed = true;
-      }
-
-      console.info('[ext] store listener', changed);
       this.updateState();
     });
     return {
@@ -197,21 +159,23 @@ export default class VFExtension {
       this.makeDisposableStoreListener(),
 
       this.#webServer.onDisplaysChange((displays) => {
-        this.#runtimeState = {
-          ...this.#runtimeState,
-          stage: {
-            ...this.#runtimeState.stage,
+        const { state } = this;
+        this.dispatch({
+          type: 'setStage',
+          payload: {
+            ...state.stage,
             ...this.#webServer.displaysMaxSize,
           },
-        };
-        this.#webServer.broadcastState(this.#runtimeState);
+        });
+
+        // this.#webServer.broadcastState(this.#runtimeState);
         VFPanel.currentPanel?.updateDisplays(displays);
       }),
 
       this.#webServer.onSocketConnection((socket) => {
         socket.emit('message', {
           type: 'updatestate',
-          payload: this.#runtimeState,
+          payload: this.state,
         });
 
         socket.on('audioupdate', (audio: {
@@ -226,11 +190,11 @@ export default class VFExtension {
       }),
 
       ...Object.keys(commands)
-        .map((name) => vscode.commands
-          .registerCommand(`visualFiha.${name}`, commands[name](context, {
-            resetData: () => this.#resetData(),
-            propagate: () => this.propagate(),
-          }))),
+        .map((name) => {
+          const fn = commands[name](context, this);
+          return vscode.commands
+            .registerCommand(`visualFiha.${name}`, fn);
+        }),
 
       vscode.workspace.onDidChangeTextDocument((event) => {
         // if (!event.contentChanges.length) return;
@@ -243,17 +207,19 @@ export default class VFExtension {
         const script = doc.getText();
         this.#webServer.broadcastScript(info, script);
 
-        const layerIndex = this.#runtimeState.layers
+        const { state } = this;
+
+        const layerIndex = state.layers
           .findIndex((layer) => layer.id === info.id);
         if (layerIndex < 0) {
           // TODO: check info.type
-          this.#runtimeState.worker[info.role] = script;
+          state.worker[info.role] = script;
           return;
         }
 
-        this.#runtimeState.layers[layerIndex][info.role] = script;
+        state.layers[layerIndex][info.role] = script;
         VFPanel.currentPanel?.updateState({
-          layers: this.#runtimeState.layers,
+          layers: state.layers,
         });
       }),
 
