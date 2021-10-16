@@ -4,7 +4,7 @@
 
 ## Disclaimer
 
-This is a personal project and it is highly exprimental and is not ready for production use.
+This is a personal project and it is highly experimental and is not ready for production use.
 
 ## Description
 
@@ -17,7 +17,7 @@ aimed to provide a live-coding VJing environment using web technologies.
 
 - Live coding
 - Multi-display
-- Audio analasys
+- Audio analysis
 - Custom, function based, 2D canvas rendering context API
 - ThreeJS based 3D rendering
 - Assets support
@@ -71,7 +71,8 @@ Each display spawns a worker that is responsible for rendering the layers and se
 
 ### Capture
 
-The capture page is aimed to react to different inputs (audio, MIDI, mouse, keyboard, touch, etc.) and forward these inputs to the extension (that, in turn, broadcasts them to the display workers).
+The capture page is aimed to react to different inputs (audio, MIDI, mouse, keyboard, touch, etc.) and forwards
+these inputs to the extension (that, in turn, broadcasts them to the display workers).
 
 #### Audio
 
@@ -94,7 +95,7 @@ Obviously, Visual Studio Code is required.
 
 1. Clone the repository
 2. Ensure that you are using the right NodeJS version with [NVM](https://github.com/nvm-sh/nvm/blob/master/README.md): `nvm use`
-3. Install the dependecies with `npm install`
+3. Install the dependencies with `npm install`
 4. Press the F5 key to start the VS Code extension development
 
 ## License
