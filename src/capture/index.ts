@@ -1,7 +1,6 @@
 import { io } from 'socket.io-client';
 
-import { ComEventData } from '../types';
-import { autoBind } from '../utils/com';
+import { autoBind, ComEventData } from '../utils/com';
 
 const socket = io();
 

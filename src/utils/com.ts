@@ -1,4 +1,18 @@
-import type { ComEventData, ComEventDataMeta } from '../types';
+export interface ComEventDataMeta {
+  [custom: string]: any;
+  operationId?: string;
+  sent?: number;
+  received?: number;
+  processed?: number;
+  answered?: number;
+  source?: string;
+  error?: string;
+}
+export interface ComEventData {
+  type: string;
+  payload?: any;
+  meta?: ComEventDataMeta;
+}
 
 export interface ComActionHandler {
   (payload?: any, meta?: ComEventDataMeta): Promise<any> | any

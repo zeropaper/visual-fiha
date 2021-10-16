@@ -1,4 +1,4 @@
-import { ComEventDataMeta } from '../../types';
+import type { ComEventDataMeta } from '../../utils/com';
 import store from '../store';
 
 export default function setBPM() {

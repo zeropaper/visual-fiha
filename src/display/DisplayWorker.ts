@@ -3,10 +3,8 @@
 import { io } from 'socket.io-client';
 
 import { Socket } from 'dgram';
-import type {
-  ComEventData,
-  ScriptingData,
-} from '../types';
+import type { ComEventData } from '../utils/com';
+import type { ScriptingData } from '../types';
 
 import type { DisplayState } from './Display';
 

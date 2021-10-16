@@ -2,10 +2,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-import {
-  AppState,
-  ComEventData,
-} from '../types';
+import type { ComEventData } from '../utils/com';
+import { AppState } from '../types';
 import getNonce from './getNonce';
 import getWebviewOptions from './getWebviewOptions';
 

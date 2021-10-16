@@ -75,22 +75,6 @@ export type ScriptableAPIReference = {
   };
 };
 
-export interface ComEventDataMeta {
-  [custom: string]: any;
-  operationId?: string;
-  sent?: number;
-  received?: number;
-  processed?: number;
-  answered?: number;
-  source?: string;
-  error?: string;
-}
-export interface ComEventData {
-  type: string;
-  payload?: any;
-  meta?: ComEventDataMeta;
-}
-
 export type ScriptingData = {
   iterationCount: number;
   now: number;

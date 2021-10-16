@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-import { ComEventDataMeta } from '../../types';
+import type { ComEventDataMeta } from '../../utils/com';
 import getWorkspaceFolder from '../getWorkspaceFolder';
 import VFPanel from '../VFPanel';
 

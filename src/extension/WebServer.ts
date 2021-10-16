@@ -9,7 +9,8 @@ import {
 import * as mime from 'mime';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 
-import { AppState, ComEventData, DisplayBase } from '../types';
+import type { ComEventData } from '../utils/com';
+import { AppState, DisplayBase } from '../types';
 // import { ChannelPost } from '../utils/com';
 
 export type ServerDisplay = Omit<DisplayBase, 'id'> & {

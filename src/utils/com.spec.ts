@@ -1,4 +1,3 @@
-import { ComEventData } from '../types';
 import * as com from './com';
 
 // const expectedError = new Error('Expected');
@@ -52,14 +51,14 @@ describe('com.messenger', () => {
 
     listener2({
       data: { ...args[0] },
-    } as MessageEvent<ComEventData>);
+    } as MessageEvent<com.ComEventData>);
 
     await new Promise((res) => setTimeout(res, 1));
     expect(postBack).toHaveBeenCalledTimes(1);
 
     listener1({
       data: postBack.mock.calls[0][0],
-    } as MessageEvent<ComEventData>);
+    } as MessageEvent<com.ComEventData>);
 
     await new Promise((res) => setTimeout(res, 1));
     await expect(promise).resolves.toBe('B');
@@ -79,7 +78,7 @@ describe('com.messenger', () => {
 
     listener2({
       data: { ...args[0] },
-    } as MessageEvent<ComEventData>);
+    } as MessageEvent<com.ComEventData>);
 
     expect(post).toHaveBeenCalledTimes(1);
     expect(promise).toHaveProperty('then');
@@ -90,7 +89,7 @@ describe('com.messenger', () => {
     expect(postBack.mock.calls[0][0]).toHaveProperty('meta.error', 'Expected');
     const postBackEvent = {
       data: postBack.mock.calls[0][0],
-    } as MessageEvent<ComEventData>;
+    } as MessageEvent<com.ComEventData>;
 
     listener1(postBackEvent);
 
@@ -125,7 +124,7 @@ describe('com.autoBind', () => {
     //   data: {
     //     ...response,
     //   },
-    // } as MessageEvent<ComEventData>);
+    // } as MessageEvent<com.ComEventData>);
     // await expect(postPromise).resolves.toBe('B');
 
     // expect(obj.postMessage).toHaveBeenCalledTimes(2);

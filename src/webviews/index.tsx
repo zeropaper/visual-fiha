@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render } from 'react-dom';
 import { Provider as StoreProvider } from 'react-redux';
 
-import { autoBind } from '../utils/com';
+import { autoBind, ComEventData } from '../utils/com';
 import store, {
   webviewStateToAppState,
   messageHandlers,
@@ -11,7 +11,6 @@ import store, {
 import vscode from './vscode';
 
 import { Provider as ComProvider } from './ComContext';
-import { ComEventData } from '../types';
 
 import StoreControl from './components/StoreControl';
 import ControlDisplay from './components/ControlDisplay';
