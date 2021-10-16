@@ -20,6 +20,8 @@ module.exports = {
       'controls',
       'com',
       'demo',
+      'canvas',
+      'three',
     ]],
   },
 };
