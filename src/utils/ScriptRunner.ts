@@ -38,6 +38,8 @@ export interface ScriptRunnerEventListener {
 
 export type API = { [scriptGlobalName: string]: any };
 
+export const removeExportCrutch = (str: string) => str.replace(/export\s+{\s?};?/g, '');
+
 class EmptyScope { }
 
 /* eslint-disable */
@@ -166,7 +168,7 @@ class ScriptRunner {
     const builderStr = `
     return ${sync} function ${this.#name}_${this.#version + 1}(${paramsStr}) {
       ${forbiddenStr ? `let ${forbiddenStr};` : ''}
-      ${code || '// empty'}
+      ${removeExportCrutch(code || '// empty')}
     };`.trim();
 
     try {
