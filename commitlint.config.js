@@ -16,7 +16,7 @@ module.exports = {
       'displayworker',
       'worker',
       'audio',
-      'mmidi',
+      'midi',
       'controls',
       'com',
       'demo',
