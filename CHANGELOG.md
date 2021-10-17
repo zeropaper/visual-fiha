@@ -1,3 +1,19 @@
+# [3.3.0](https://github.com/zeropaper/visual-fiha/compare/v3.2.0...v3.3.0) (2021-10-17)
+
+
+### Bug Fixes
+
+* correct runtime state implementation and usage ([9cbb8a1](https://github.com/zeropaper/visual-fiha/commit/9cbb8a17556a14549d3a4b253f5ebf863b8cab62))
+* hack around TS block scoped variable error ([35b42cf](https://github.com/zeropaper/visual-fiha/commit/35b42cf6cac770b94c4351bd115c6532a5713040))
+
+
+### Features
+
+* **canvas:** improve centererGrid typing ([a62ea31](https://github.com/zeropaper/visual-fiha/commit/a62ea31b8d446ec8737c6f00baddc4a343a04f85))
+* **demo:** allow command when ext. not activated ([f94a0cf](https://github.com/zeropaper/visual-fiha/commit/f94a0cf5dcc37c12de5361b178b553cd3cbd13ce))
+
+
+
 # [3.2.0](https://github.com/zeropaper/visual-fiha/compare/v3.1.0...v3.2.0) (2021-09-21)
 
 
@@ -46,15 +62,6 @@
 ### Bug Fixes
 
 * **build:** ensure DisplayWorker compilation is run ([7920e39](https://github.com/zeropaper/visual-fiha/commit/7920e39559396d1bc3a301e8a12dc51945210a97))
-
-
-
-## [3.0.9](https://github.com/zeropaper/visual-fiha/compare/v3.0.7...v3.0.9) (2021-09-07)
-
-
-### Bug Fixes
-
-* **build:** bump package version ([7c4d996](https://github.com/zeropaper/visual-fiha/commit/7c4d99662b6ec737abad34f3b34be4a6f2f03057))
 
 
 
