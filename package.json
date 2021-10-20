@@ -9,7 +9,7 @@
   "icon": "media/vf.icon.alt.png",
   "engines": {
     "node": "^16.8.0",
-    "npm": "^7.19.0",
+    "npm": "^8.0.0",
     "vscode": "^1.61.0"
   },
   "categories": [
