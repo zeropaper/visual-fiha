@@ -1,13 +1,16 @@
-// @ts-check
-
+clear();
 const now = read('now', 0);
 
-const n = (now % 10000) * 0.0001;
-const h = (sin(n * PI2)) * 0.1;
-const color = hsla(h + 0.75, 0.5, .7, 1);
+const beatP = beatPrct(now, read('bpm', 120) * (1 / 2));
+const beatNum = read('beatNum', 1);
+const frq = read('frequency', []);
+const vol = read('volume', []);
+const frqAvg = arrayAvg(frq);
 
-clear();
-fillStyle(color);
-
-rect(width(2), height(2), width(4), height(4));
-fill();
+// if (frqAvg > 80) {
+//   cache.generate();
+// }
+lineCap('round');
+lineCap('square');
+(cache.lines || [])
+  .forEach((line) => line.render(now));
