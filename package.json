@@ -121,7 +121,7 @@
     "redux": "4.1.1",
     "rimraf": "3.0.2",
     "three": "0.133.1",
-    "tmp-promise": "3.0.2",
+    "tmp-promise": "3.0.3",
     "ts-jest": "27.0.7",
     "ts-node": "10.3.0",
     "typedoc": "0.22.6",
