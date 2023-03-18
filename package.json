@@ -97,7 +97,7 @@
     "@types/three": "0.133.1",
     "@types/vscode": "1.61.0",
     "@types/vscode-webview": "1.57.0",
-    "@types/web": "0.0.42",
+    "@types/web": "0.0.99",
     "@typescript-eslint/eslint-plugin": "4.33.0",
     "@typescript-eslint/parser": "4.33.0",
     "canvas": "2.8.0",
