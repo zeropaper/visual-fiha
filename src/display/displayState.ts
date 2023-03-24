@@ -1,30 +1,30 @@
-import type { Layer } from '../types';
+import type { Layer } from '../types'
 
-export type DisplayState = {
+export interface DisplayState {
   meta: {
-    displayId: string;
-    connected: boolean;
-    socketId?: string;
-  };
-  data: object;
+    displayId: string
+    connected: boolean
+    socketId?: string
+  }
+  data: object
   worker: {
-    setup: string;
-    animate: string;
-  };
-  layers: Layer[];
-};
+    setup: string
+    animate: string
+  }
+  layers: Layer[]
+}
 
 const defaultState: DisplayState = {
   meta: {
     displayId: `display${(Math.random() * 10000).toFixed()}`,
-    connected: false,
+    connected: false
   },
   data: {},
   worker: {
     setup: '',
-    animate: '',
+    animate: ''
   },
-  layers: [],
-};
+  layers: []
+}
 
-export default defaultState;
+export default defaultState

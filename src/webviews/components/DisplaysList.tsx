@@ -1,20 +1,20 @@
-import * as React from 'react';
-import { useSelector } from 'react-redux';
-import { WebviewAppState } from '../store';
+import * as React from 'react'
+import { useSelector } from 'react-redux'
+import { type WebviewAppState } from '../store'
 
-import Display from './Display';
+import Display from './Display'
 
 const DisplaysList = () => {
   const {
     displays: items,
     host,
-    port,
+    port
   } = useSelector(({
     displays,
-    server,
-  }: WebviewAppState) => ({ displays, ...server }));
+    server
+  }: WebviewAppState) => ({ displays, ...server }))
 
-  const displayURL = `http://${host}:${port}/display/`;
+  const displayURL = `http://${host}:${port}/display/`
 
   return (
     <section id="displays">
@@ -32,7 +32,7 @@ const DisplaysList = () => {
         </div>
       </main>
     </section>
-  );
-};
+  )
+}
 
-export default DisplaysList;
+export default DisplaysList

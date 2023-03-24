@@ -1,14 +1,14 @@
-import * as React from 'react';
-import { useSelector } from 'react-redux';
-import { AppState } from '../../types';
+import * as React from 'react'
+import { useSelector } from 'react-redux'
+import { type AppState } from '../../types'
 
 const ControlDisplay = () => {
-  const info = useSelector((state: AppState) => ({ ...state.server, ...state.stage }));
-  const iframeRef = React.useRef<HTMLIFrameElement>(null);
-  const src = `http://${info.host}:${info.port}/display/#control`;
+  const info = useSelector((state: AppState) => ({ ...state.server, ...state.stage }))
+  const iframeRef = React.useRef<HTMLIFrameElement>(null)
+  const src = `http://${info.host}:${info.port}/display/#control`
   const handleReload = () => {
-    if (iframeRef.current) iframeRef.current.src = src;
-  };
+    if (iframeRef.current != null) iframeRef.current.src = src
+  }
   return (
     <div className="control-display-wrapper">
       <iframe
@@ -20,7 +20,7 @@ const ControlDisplay = () => {
       />
       <button onClick={handleReload} type="button">reload</button>
     </div>
-  );
-};
+  )
+}
 
-export default ControlDisplay;
+export default ControlDisplay

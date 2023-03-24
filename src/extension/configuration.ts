@@ -1,16 +1,16 @@
-import { workspace } from 'vscode';
+import { workspace } from 'vscode'
 
-export default function configuration(
+export default function configuration (
   key?: string,
   value?: string | boolean | number | null) {
-  const conf = workspace.getConfiguration('visualFiha.settings');
+  const conf = workspace.getConfiguration('visualFiha.settings')
   if (!key) {
-    return conf;
+    return conf
   }
 
   if (typeof value === 'undefined') {
-    return conf.get(key);
+    return conf.get(key)
   }
 
-  return conf.update(key, value);
+  return conf.update(key, value)
 }

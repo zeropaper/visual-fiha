@@ -1,153 +1,137 @@
 export interface ComEventDataMeta {
-  [custom: string]: any;
-  operationId?: string;
-  sent?: number;
-  received?: number;
-  processed?: number;
-  answered?: number;
-  source?: string;
-  error?: string;
+  [custom: string]: any
+  operationId?: string
+  sent?: number
+  received?: number
+  processed?: number
+  answered?: number
+  source?: string
+  error?: string
 }
 export interface ComEventData {
-  type: string;
-  payload?: any;
-  meta?: ComEventDataMeta;
+  type: string
+  payload?: any
+  meta?: ComEventDataMeta
 }
 
-export interface ComActionHandler {
-  (payload?: any, meta?: ComEventDataMeta): Promise<any> | any
-}
+export type ComActionHandler = (payload?: any, meta?: ComEventDataMeta) => Promise<any> | any
 
-export type ComActionHandlers = {
-  [type: string]: ComActionHandler;
-};
+export type ComActionHandlers = Record<string, ComActionHandler>
 
-export interface ComAnswerer {
-  (type: ComEventData): any;
-}
+export type ComAnswerer = (type: ComEventData) => any
 
-const promises: {
-  [operationId: string]: (err: any, result?: any) => void;
-} = {};
+const promises: Record<string, (err: any, result?: any) => void> = {}
 
-export interface Poster {
-  (message: ComEventData): any;
-}
+export type Poster = (message: ComEventData) => any
 
-export interface ChannelPost {
-  (type: string, payload?: any, originalMeta?: ComEventDataMeta | true): Promise<any>
-}
+export type ChannelPost = (type: string, payload?: any, originalMeta?: ComEventDataMeta | true) => Promise<any>
 
-export interface ChannelPostMaker {
-  (poster: Poster, source: string): ChannelPost;
-}
+export type ChannelPostMaker = (poster: Poster, source: string) => ChannelPost
 
 export interface ComMessageEvent {
   data: ComEventData
 }
 
-export interface ComMessageEventListener {
-  (event: ComMessageEvent): void
-}
+export type ComMessageEventListener = (event: ComMessageEvent) => void
 
-export interface ChannelListenerMaker {
-  (postBack: ComAnswerer, handlers: ComActionHandlers): ComMessageEventListener;
-}
+export type ChannelListenerMaker = (postBack: ComAnswerer, handlers: ComActionHandlers) => ComMessageEventListener
 
 // eslint-disable-next-line max-len
-export const makeChannelPost: ChannelPostMaker = (poster, source) => (type, payload, originalMeta) => {
+export const makeChannelPost: ChannelPostMaker = (poster, source) => async (type, payload, originalMeta) => {
   const meta: ComEventDataMeta = {
-    ...(originalMeta === true ? {
-      operationId: `${Date.now()}-${source}-${(Math.random() * 1000000).toFixed()}`,
-    } : originalMeta || {}),
+    ...(originalMeta === true
+      ? {
+          operationId: `${Date.now()}-${source}-${(Math.random() * 1000000).toFixed()}`
+        }
+      : (originalMeta != null) || {}),
     sent: Date.now(),
-    source,
-  };
+    source
+  }
 
   if (meta.operationId) {
-    const { operationId } = meta;
+    const { operationId } = meta
     const promise = new Promise((res, rej) => {
-      if (promises[operationId]) throw new Error('Promise already exists');
+      if (promises[operationId]) throw new Error('Promise already exists')
       promises[operationId] = (err, result) => {
         if (err) {
-          rej(err);
-          return;
+          rej(err)
+          return
         }
-        res(result);
-      };
-      poster({ type, payload, meta });
-    });
-    return promise;
+        res(result)
+      }
+      poster({ type, payload, meta })
+    })
+    return await promise
   }
 
   poster({
     type,
     payload,
-    meta,
-  });
-  return Promise.resolve();
-};
+    meta
+  })
+  await Promise.resolve()
+}
 
 const handleComReply = (payload: any, meta: ComEventDataMeta) => {
   if (!meta.operationId) {
-    return;
+    return
   }
 
   if (typeof promises[meta.operationId] !== 'function') {
-    throw new Error('No promise found');
+    throw new Error('No promise found')
   }
 
-  const cb = promises[meta.operationId];
+  const cb = promises[meta.operationId]
   if (meta.error) {
-    cb(new Error(meta.error));
+    cb(new Error(meta.error))
   } else {
-    cb(null, payload);
+    cb(null, payload)
   }
-};
+}
 
 // eslint-disable-next-line max-len
 const replyError = (postBack: ComAnswerer, err: Error | string, type: string, meta: ComEventDataMeta) => {
-  const error = typeof err === 'string' ? err : err.message || 'Unexpected error';
+  const error = typeof err === 'string' ? err : err.message || 'Unexpected error'
   postBack({
     type: 'com/reply',
     meta: {
       ...meta,
       originalType: type,
       processed: Date.now(),
-      error,
-    },
-  });
-};
+      error
+    }
+  })
+}
 
 export const makeChannelListener: ChannelListenerMaker = (postBack, handlers) => (event) => {
   const {
     type,
     payload,
-    meta: originalMeta,
-  } = event.data;
+    meta: originalMeta
+  } = event.data
   const meta: ComEventDataMeta = {
     ...originalMeta,
-    received: Date.now(),
-  };
-
-  if (type === 'com/reply' && meta.operationId) {
-    handleComReply(payload, meta);
-    return;
+    received: Date.now()
   }
 
-  const { [event.data.type]: handler } = handlers;
+  if (type === 'com/reply' && meta.operationId) {
+    handleComReply(payload, meta)
+    return
+  }
+
+  const { [event.data.type]: handler } = handlers
   if (!handler) {
-    const err = `Unexepected ${type} action type`;
+    const err = `Unexepected ${type} action type`
 
-    if (!meta.operationId) return;
+    if (!meta.operationId) return
 
-    replyError(postBack, err, type, meta);
-    return;
+    replyError(postBack, err, type, meta)
+    return
   }
 
   if (!meta.operationId) {
-    handler(payload, meta);
-    return;
+    handler(payload, meta)
+    return
   }
 
   handler(payload, meta)
@@ -157,28 +141,28 @@ export const makeChannelListener: ChannelListenerMaker = (postBack, handlers) =>
       meta: {
         ...meta,
         originalType: type,
-        processed: Date.now(),
-      },
+        processed: Date.now()
+      }
     }))
-    .catch((err: Error) => replyError(postBack, err, type, meta));
-};
-
-export interface ComMessageChannel {
-  postMessage: Poster;
-  addEventListener?: (eventName: string, listener: (event: any) => void) => void;
+    .catch((err: Error) => { replyError(postBack, err, type, meta) })
 }
 
-export type ComChannel = ComMessageChannel;
+export interface ComMessageChannel {
+  postMessage: Poster
+  addEventListener?: (eventName: string, listener: (event: any) => void) => void
+}
+
+export type ComChannel = ComMessageChannel
 
 export interface ChannelBindings {
-  post: ChannelPost;
-  listener: (event: ComMessageEvent) => void;
+  post: ChannelPost
+  listener: (event: ComMessageEvent) => void
 }
 
 export const autoBind = (obj: ComChannel, source: string, handlers: ComActionHandlers) => {
-  const originalPost = obj.postMessage.bind(obj) as Poster;
+  const originalPost = obj.postMessage.bind(obj)
   return {
     post: makeChannelPost(originalPost, source),
-    listener: makeChannelListener(originalPost, handlers),
-  };
-};
+    listener: makeChannelListener(originalPost, handlers)
+  }
+}

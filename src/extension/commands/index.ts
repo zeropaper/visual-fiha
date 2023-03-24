@@ -1,17 +1,15 @@
-import type { VFCommand } from '../../types';
-import openControls from './openControls';
-import openEditor from './openEditor';
-import setBPM from './setBPM';
-import createLayer from './createLayer';
-import removeLayer from './removeLayer';
-import toggleLayer from './toggleLayer';
-import setStageSize from './setStageSize';
-import resetData from './resetData';
-import scaffoldProject from './scaffoldProject';
+import type { VFCommand } from '../../types'
+import openControls from './openControls'
+import openEditor from './openEditor'
+import setBPM from './setBPM'
+import createLayer from './createLayer'
+import removeLayer from './removeLayer'
+import toggleLayer from './toggleLayer'
+import setStageSize from './setStageSize'
+import resetData from './resetData'
+import scaffoldProject from './scaffoldProject'
 
-export type Commands = {
-  [name: string]: VFCommand;
-};
+export type Commands = Record<string, VFCommand>
 
 const commands: Commands = {
   openControls,
@@ -22,7 +20,7 @@ const commands: Commands = {
   toggleLayer,
   setStageSize,
   resetData,
-  scaffoldProject,
-};
+  scaffoldProject
+}
 
-export default commands;
+export default commands

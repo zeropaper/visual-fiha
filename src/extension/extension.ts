@@ -1,13 +1,13 @@
-import * as vscode from 'vscode';
+import type * as vscode from 'vscode'
 
-import VFExtension from './VFExtension';
+import VFExtension from './VFExtension'
 
-const extension = new VFExtension();
+const extension = new VFExtension()
 
-export function activate(context: vscode.ExtensionContext) {
-  return extension.activate(context);
+export async function activate (context: vscode.ExtensionContext) {
+  await extension.activate(context)
 }
 
-export function deactivate() {
-  return extension.deactivate();
+export function deactivate () {
+  extension.deactivate()
 }

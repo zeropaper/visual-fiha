@@ -1,3 +1,3 @@
-export default function createLayer() {
-  return () => { };
+export default function createLayer () {
+  return () => { }
 }

@@ -1,38 +1,38 @@
-import * as vscode from 'vscode';
+import * as vscode from 'vscode'
 import {
-  AnyAction,
+  type AnyAction
   // EmptyObject,
   // Store,
-} from 'redux';
+} from 'redux'
 import {
-  AppState,
-  ScriptingData,
+  type AppState,
+  type ScriptingData
   // DisplayBase,
   // Layer,
   // StageInfo,
-} from '../types';
-import VFPanel from './VFPanel';
-import VFServer from './WebServer';
-import commands from './commands';
-import store from './store';
-import readScripts from './readScripts';
-import readLayerScripts from './readLayerScripts';
-import textDocumentScriptInfo from './textDocumentScriptInfo';
-import readWorkspaceRC from './readWorkspaceRC';
-import configuration from './configuration';
+} from '../types'
+import VFPanel from './VFPanel'
+import VFServer from './WebServer'
+import commands from './commands'
+import store from './store'
+import readScripts from './readScripts'
+import readLayerScripts from './readLayerScripts'
+import textDocumentScriptInfo from './textDocumentScriptInfo'
+import readWorkspaceRC from './readWorkspaceRC'
+import configuration from './configuration'
 
 export default class VFExtension {
-  constructor() {
-    this.#refreshInterval = null;
-    this.#store = store;
-    this.#webServer = new VFServer(() => this.state);
+  constructor () {
+    this.#refreshInterval = null
+    this.#store = store
+    this.#webServer = new VFServer(() => this.state)
   }
 
-  #refreshInterval: NodeJS.Timer | null;
+  #refreshInterval: NodeJS.Timer | null
 
-  #webServer: VFServer;
+  #webServer: VFServer
 
-  #store: typeof store;
+  #store: typeof store
   // #store: Store<CombinedState, AnyAction>;
 
   #data: ScriptingData = {
@@ -41,27 +41,27 @@ export default class VFExtension {
     now: 0,
     deltaNow: 0,
     frequency: [],
-    volume: [],
-  };
+    volume: []
+  }
 
-  resetData() {
+  resetData () {
     this.#data = {
       started: 0,
       iterationCount: 0,
       now: 0,
       deltaNow: 0,
       frequency: [],
-      volume: [],
-    };
+      volume: []
+    }
   }
 
-  #refreshData() {
-    const { state } = this;
-    const now = Date.now();
-    const started = this.#data.started || now;
-    const bpm = state.bpm.count || this.#data.bpm || 120;
-    const timeSinceBPMSet = now - (state.bpm.start || started);
-    const oneMinute = 60000;
+  #refreshData () {
+    const { state } = this
+    const now = Date.now()
+    const started = this.#data.started || now
+    const bpm = state.bpm.count || this.#data.bpm || 120
+    const timeSinceBPMSet = now - (state.bpm.start || started)
+    const oneMinute = 60000
 
     this.#data = {
       ...this.#data,
@@ -70,12 +70,12 @@ export default class VFExtension {
       started,
       iterationCount: this.#data.iterationCount + 1,
       now: now - started,
-      deltaNow: this.#data.now ? now - this.#data.now : 0,
-    };
+      deltaNow: this.#data.now ? now - this.#data.now : 0
+    }
 
-    const beatLength = oneMinute / bpm;
-    this.#data.beatPrct = (timeSinceBPMSet % beatLength) / beatLength;
-    this.#data.beatNum = Math.floor(this.#data.now / (oneMinute / bpm));
+    const beatLength = oneMinute / bpm
+    this.#data.beatPrct = (timeSinceBPMSet % beatLength) / beatLength
+    this.#data.beatNum = Math.floor(this.#data.now / (oneMinute / bpm))
 
     // if (this.#data.iterationCount % 100 === 0) {
     //   console.info('[ext] this.#data refreshed',
@@ -86,30 +86,30 @@ export default class VFExtension {
     //     this.#data.beatNum);
     // }
 
-    this.#webServer.broadcastData(this.#data);
+    this.#webServer.broadcastData(this.#data)
   }
 
-  get state() {
-    return this.#store.getState() as AppState;
+  get state () {
+    return this.#store.getState() as AppState
   }
 
-  dispatch(action: AnyAction) {
-    return this.#store.dispatch(action);
+  dispatch (action: AnyAction) {
+    return this.#store.dispatch(action)
   }
 
-  updateState() {
-    const { state } = this;
-    this.#webServer.broadcastState(state);
-    VFPanel.currentPanel?.updateState(state);
+  updateState () {
+    const { state } = this
+    this.#webServer.broadcastState(state)
+    VFPanel.currentPanel?.updateState(state)
   }
 
-  async propagate() {
-    console.info('[ext] propagate');
+  async propagate () {
+    console.info('[ext] propagate')
 
     try {
-      const fiharc = await readWorkspaceRC();
+      const fiharc = await readWorkspaceRC()
 
-      const { state: current } = this;
+      const { state: current } = this
       this.dispatch({
         type: 'replaceState',
         payload: {
@@ -118,39 +118,39 @@ export default class VFExtension {
           id: fiharc.id || current.id,
           layers: await Promise.all(fiharc.layers
             .map(readLayerScripts('layer'))),
-          worker: await readScripts('worker', 'worker', 'worker'),
-        },
-      });
+          worker: await readScripts('worker', 'worker', 'worker')
+        }
+      })
     } catch (err) {
-      console.warn('[ext] fiharc', (err as Error).message);
+      console.warn('[ext] fiharc', (err as Error).message)
     }
   }
 
-  makeDisposableStoreListener(): vscode.Disposable {
+  makeDisposableStoreListener (): vscode.Disposable {
     const unsubscribe = store.subscribe(() => {
-      this.updateState();
-    });
+      this.updateState()
+    })
     return {
-      dispose: unsubscribe,
-    };
+      dispose: unsubscribe
+    }
   }
 
-  async activate(context: vscode.ExtensionContext) {
+  async activate (context: vscode.ExtensionContext) {
     try {
-      const openControls = configuration('openControls');
+      const openControls = configuration('openControls')
       if (openControls) {
-        vscode.commands.executeCommand('visualFiha.openControls');
+        vscode.commands.executeCommand('visualFiha.openControls')
       }
 
-      console.info('[ext] start refreshing data');
-      this.#refreshInterval = setInterval(() => this.#refreshData(), 8);
+      console.info('[ext] start refreshing data')
+      this.#refreshInterval = setInterval(() => { this.#refreshData() }, 8)
 
-      VFPanel.currentPanel?.updateDisplays(this.#webServer.displays);
+      VFPanel.currentPanel?.updateDisplays(this.#webServer.displays)
 
-      this.propagate();
+      this.propagate()
     } catch (err) {
-      const msg = `Could not read fiha.json: "${(err as Error).message}"`;
-      vscode.window.showWarningMessage(msg);
+      const msg = `Could not read fiha.json: "${(err as Error).message}"`
+      vscode.window.showWarningMessage(msg)
     }
 
     context.subscriptions.push(
@@ -159,81 +159,79 @@ export default class VFExtension {
       this.makeDisposableStoreListener(),
 
       this.#webServer.onDisplaysChange((displays) => {
-        const { state } = this;
+        const { state } = this
         this.dispatch({
           type: 'setStage',
           payload: {
             ...state.stage,
-            ...this.#webServer.displaysMaxSize,
-          },
-        });
+            ...this.#webServer.displaysMaxSize
+          }
+        })
 
         // this.#webServer.broadcastState(this.#runtimeState);
-        VFPanel.currentPanel?.updateDisplays(displays);
+        VFPanel.currentPanel?.updateDisplays(displays)
       }),
 
       this.#webServer.onSocketConnection((socket) => {
         socket.emit('message', {
           type: 'updatestate',
-          payload: this.state,
-        });
+          payload: this.state
+        })
 
         socket.on('audioupdate', (audio: {
-          frequency: number[];
-          volume: number[];
+          frequency: number[]
+          volume: number[]
         }) => {
           this.#data = {
             ...this.#data,
-            ...audio,
-          };
-        });
+            ...audio
+          }
+        })
       }),
 
       ...Object.keys(commands)
         .map((name) => {
-          const fn = commands[name](context, this);
+          const fn = commands[name](context, this)
           return vscode.commands
-            .registerCommand(`visualFiha.${name}`, fn);
+            .registerCommand(`visualFiha.${name}`, fn)
         }),
 
       vscode.workspace.onDidChangeTextDocument((event) => {
         // if (!event.contentChanges.length) return;
-        const { document: doc } = event;
+        const { document: doc } = event
         if (doc.isUntitled || doc.isClosed || doc.languageId !== 'javascript') {
-          return;
+          return
         }
 
-        const info = textDocumentScriptInfo(doc);
-        const script = doc.getText();
-        this.#webServer.broadcastScript(info, script);
+        const info = textDocumentScriptInfo(doc)
+        const script = doc.getText()
+        this.#webServer.broadcastScript(info, script)
 
-        const { state } = this;
+        const { state } = this
 
         const layerIndex = state.layers
-          .findIndex((layer) => layer.id === info.id);
+          .findIndex((layer) => layer.id === info.id)
         if (layerIndex < 0) {
           // TODO: check info.type
-          state.worker[info.role] = script;
-          return;
+          state.worker[info.role] = script
+          return
         }
 
-        state.layers[layerIndex][info.role] = script;
+        state.layers[layerIndex][info.role] = script
         VFPanel.currentPanel?.updateState({
-          layers: state.layers,
-        });
+          layers: state.layers
+        })
       }),
 
       vscode.workspace.onDidSaveTextDocument((event) => {
-        if (!event.fileName.endsWith('fiha.json'))
-          return;
-        this.propagate();
-      }),
-    );
+        if (!event.fileName.endsWith('fiha.json')) { return }
+        this.propagate()
+      })
+    )
   }
 
-  deactivate() {
-    if (this.#refreshInterval)
-      clearInterval(this.#refreshInterval);
-    this.#webServer.deactivate();
+  deactivate () {
+    if (this.#refreshInterval != null) { clearInterval(this.#refreshInterval) }
+    this.#webServer.deactivate()
   }
 }

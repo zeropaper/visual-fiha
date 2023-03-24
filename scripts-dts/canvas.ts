@@ -1,94 +1,95 @@
-import type { Canvas2DAPI } from '../src/layers/Canvas2D/canvasTools';
+import type { Canvas2DAPI } from '../src/layers/Canvas2D/canvasTools'
 
-import './scriptRunner';
-import './mathTools';
-import './miscTools';
-import './assetTools';
+import './scriptRunner'
+import './mathTools'
+import './miscTools'
+import './assetTools'
 
 declare global {
-  const width: Canvas2DAPI['width'];
-  const height: Canvas2DAPI['height'];
-  const vmin: Canvas2DAPI['vmin'];
-  const vmax: Canvas2DAPI['vmax'];
-  const vh: Canvas2DAPI['vh'];
-  const vw: Canvas2DAPI['vw'];
-  const textLines: Canvas2DAPI['textLines'];
-  const mirror: Canvas2DAPI['mirror'];
-  const mediaType: Canvas2DAPI['mediaType'];
-  const clear: Canvas2DAPI['clear'];
-  const copy: Canvas2DAPI['copy'];
-  const pasteImage: Canvas2DAPI['pasteImage'];
-  const pasteContain: Canvas2DAPI['pasteContain'];
-  const pasteCover: Canvas2DAPI['pasteCover'];
-  const fontSize: Canvas2DAPI['fontSize'];
-  const fontFamily: Canvas2DAPI['fontFamily'];
-  const fontWeight: Canvas2DAPI['fontWeight'];
-  const plot: Canvas2DAPI['plot'];
-  const circle: Canvas2DAPI['circle'];
-  const polygon: Canvas2DAPI['polygon'];
-  const grid: Canvas2DAPI['grid'];
-  const centeredGrid: Canvas2DAPI['centeredGrid'];
+  const width: Canvas2DAPI['width']
+  const height: Canvas2DAPI['height']
+  const vmin: Canvas2DAPI['vmin']
+  const vmax: Canvas2DAPI['vmax']
+  const vh: Canvas2DAPI['vh']
+  const vw: Canvas2DAPI['vw']
+  const textLines: Canvas2DAPI['textLines']
+  const mirror: Canvas2DAPI['mirror']
+  const mediaType: Canvas2DAPI['mediaType']
+  const clear: Canvas2DAPI['clear']
+  const copy: Canvas2DAPI['copy']
+  const pasteImage: Canvas2DAPI['pasteImage']
+  const pasteContain: Canvas2DAPI['pasteContain']
+  const pasteCover: Canvas2DAPI['pasteCover']
+  const fontSize: Canvas2DAPI['fontSize']
+  const fontFamily: Canvas2DAPI['fontFamily']
+  const fontWeight: Canvas2DAPI['fontWeight']
+  const plot: Canvas2DAPI['plot']
+  const circle: Canvas2DAPI['circle']
+  const polygon: Canvas2DAPI['polygon']
+  const grid: Canvas2DAPI['grid']
+  const centeredGrid: Canvas2DAPI['centeredGrid']
 
-  const clip: Canvas2DAPI['clip'];
-  const createImageData: Canvas2DAPI['createImageData'];
-  const createLinearGradient: Canvas2DAPI['createLinearGradient'];
-  const createPattern: Canvas2DAPI['createPattern'];
-  const createRadialGradient: Canvas2DAPI['createRadialGradient'];
-  const drawImage: Canvas2DAPI['drawImage'];
-  const fill: Canvas2DAPI['fill'];
-  const fillText: Canvas2DAPI['fillText'];
-  const getImageData: Canvas2DAPI['getImageData'];
-  const getLineDash: Canvas2DAPI['getLineDash'];
-  const getTransform: Canvas2DAPI['getTransform'];
-  const isPointInPath: Canvas2DAPI['isPointInPath'];
-  const isPointInStroke: Canvas2DAPI['isPointInStroke'];
-  const measureText: Canvas2DAPI['measureText'];
-  const putImageData: Canvas2DAPI['putImageData'];
-  const scale: Canvas2DAPI['scale'];
-  const setLineDash: Canvas2DAPI['setLineDash'];
-  const setTransform: Canvas2DAPI['setTransform'];
-  const stroke: Canvas2DAPI['stroke'];
-  const strokeText: Canvas2DAPI['strokeText'];
-  const transform: Canvas2DAPI['transform'];
-  const translate: Canvas2DAPI['translate'];
-  const arc: Canvas2DAPI['arc'];
-  const arcTo: Canvas2DAPI['arcTo'];
-  const beginPath: Canvas2DAPI['beginPath'];
-  const bezierCurveTo: Canvas2DAPI['bezierCurveTo'];
-  const clearRect: Canvas2DAPI['clearRect'];
-  const closePath: Canvas2DAPI['closePath'];
-  const ellipse: Canvas2DAPI['ellipse'];
-  const fillRect: Canvas2DAPI['fillRect'];
-  const lineTo: Canvas2DAPI['lineTo'];
-  // @ts-ignore
-  const moveTo: Canvas2DAPI['moveTo'];
-  const quadraticCurveTo: Canvas2DAPI['quadraticCurveTo'];
-  const rect: Canvas2DAPI['rect'];
-  const resetTransform: Canvas2DAPI['resetTransform'];
-  const restore: Canvas2DAPI['restore'];
-  const rotate: Canvas2DAPI['rotate'];
-  const save: Canvas2DAPI['save'];
-  const strokeRect: Canvas2DAPI['strokeRect'];
-  const globalAlpha: Canvas2DAPI['globalAlpha'];
-  const globalCompositeOperation: Canvas2DAPI['globalCompositeOperation'];
-  const filter: Canvas2DAPI['filter'];
-  const imageSmoothingEnabled: Canvas2DAPI['imageSmoothingEnabled'];
-  const imageSmoothingQuality: Canvas2DAPI['imageSmoothingQuality'];
-  const strokeStyle: Canvas2DAPI['strokeStyle'];
-  const fillStyle: Canvas2DAPI['fillStyle'];
-  const shadowOffsetX: Canvas2DAPI['shadowOffsetX'];
-  const shadowOffsetY: Canvas2DAPI['shadowOffsetY'];
-  const shadowBlur: Canvas2DAPI['shadowBlur'];
-  const shadowColor: Canvas2DAPI['shadowColor'];
-  const lineWidth: Canvas2DAPI['lineWidth'];
-  const lineCap: Canvas2DAPI['lineCap'];
-  const lineJoin: Canvas2DAPI['lineJoin'];
-  const miterLimit: Canvas2DAPI['miterLimit'];
-  const lineDashOffset: Canvas2DAPI['lineDashOffset'];
-  const font: Canvas2DAPI['font'];
-  const textAlign: Canvas2DAPI['textAlign'];
-  const textBaseline: Canvas2DAPI['textBaseline'];
-  const direction: Canvas2DAPI['direction'];
+  const clip: Canvas2DAPI['clip']
+  const createImageData: Canvas2DAPI['createImageData']
+  const createLinearGradient: Canvas2DAPI['createLinearGradient']
+  const createPattern: Canvas2DAPI['createPattern']
+  const createRadialGradient: Canvas2DAPI['createRadialGradient']
+  const drawImage: Canvas2DAPI['drawImage']
+  const fill: Canvas2DAPI['fill']
+  const fillText: Canvas2DAPI['fillText']
+  const getImageData: Canvas2DAPI['getImageData']
+  const getLineDash: Canvas2DAPI['getLineDash']
+  const getTransform: Canvas2DAPI['getTransform']
+  const isPointInPath: Canvas2DAPI['isPointInPath']
+  const isPointInStroke: Canvas2DAPI['isPointInStroke']
+  const measureText: Canvas2DAPI['measureText']
+  const putImageData: Canvas2DAPI['putImageData']
+  const scale: Canvas2DAPI['scale']
+  const setLineDash: Canvas2DAPI['setLineDash']
+  const setTransform: Canvas2DAPI['setTransform']
+  const stroke: Canvas2DAPI['stroke']
+  const strokeText: Canvas2DAPI['strokeText']
+  const transform: Canvas2DAPI['transform']
+  const translate: Canvas2DAPI['translate']
+  const arc: Canvas2DAPI['arc']
+  const arcTo: Canvas2DAPI['arcTo']
+  const beginPath: Canvas2DAPI['beginPath']
+  const bezierCurveTo: Canvas2DAPI['bezierCurveTo']
+  const clearRect: Canvas2DAPI['clearRect']
+  const closePath: Canvas2DAPI['closePath']
+  const ellipse: Canvas2DAPI['ellipse']
+  const fillRect: Canvas2DAPI['fillRect']
+  const lineTo: Canvas2DAPI['lineTo']
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  const moveTo: Canvas2DAPI['moveTo']
+  const quadraticCurveTo: Canvas2DAPI['quadraticCurveTo']
+  const rect: Canvas2DAPI['rect']
+  const resetTransform: Canvas2DAPI['resetTransform']
+  const restore: Canvas2DAPI['restore']
+  const rotate: Canvas2DAPI['rotate']
+  const save: Canvas2DAPI['save']
+  const strokeRect: Canvas2DAPI['strokeRect']
+  const globalAlpha: Canvas2DAPI['globalAlpha']
+  const globalCompositeOperation: Canvas2DAPI['globalCompositeOperation']
+  const filter: Canvas2DAPI['filter']
+  const imageSmoothingEnabled: Canvas2DAPI['imageSmoothingEnabled']
+  const imageSmoothingQuality: Canvas2DAPI['imageSmoothingQuality']
+  const strokeStyle: Canvas2DAPI['strokeStyle']
+  const fillStyle: Canvas2DAPI['fillStyle']
+  const shadowOffsetX: Canvas2DAPI['shadowOffsetX']
+  const shadowOffsetY: Canvas2DAPI['shadowOffsetY']
+  const shadowBlur: Canvas2DAPI['shadowBlur']
+  const shadowColor: Canvas2DAPI['shadowColor']
+  const lineWidth: Canvas2DAPI['lineWidth']
+  const lineCap: Canvas2DAPI['lineCap']
+  const lineJoin: Canvas2DAPI['lineJoin']
+  const miterLimit: Canvas2DAPI['miterLimit']
+  const lineDashOffset: Canvas2DAPI['lineDashOffset']
+  const font: Canvas2DAPI['font']
+  const textAlign: Canvas2DAPI['textAlign']
+  const textBaseline: Canvas2DAPI['textBaseline']
+  const direction: Canvas2DAPI['direction']
 }
 
-export { };
+export { }

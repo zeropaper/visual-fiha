@@ -16,7 +16,18 @@ module.exports = {
   },
   plugins: [
     'react'
-  ]
+  ],
+  rules: {
+    'promise/param-names': 'warn',
+    '@typescript-eslint/explicit-function-return-type': 'warn',
+    '@typescript-eslint/strict-boolean-expressions': 'warn',
+    '@typescript-eslint/no-floating-promises': 'warn',
+    '@typescript-eslint/no-misused-promises': 'warn',
+    '@typescript-eslint/no-loss-of-precision': 'warn',
+    '@typescript-eslint/consistent-type-assertions': 'warn',
+    '@typescript-eslint/no-dynamic-delete': 'warn',
+    '@typescript-eslint/prefer-nullish-coalescing': 'warn'
+  }
   // rules: {
   //   'max-len': 'warn',
   //   'no-console': ['warn', { allow: ['warn', 'error'] }],

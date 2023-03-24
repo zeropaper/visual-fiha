@@ -1,125 +1,124 @@
-import { AppState } from '../types';
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import { type AppState } from '../types'
 import {
   autoBind,
-  ComActionHandlers,
-  ComMessageEventListener,
-  ChannelPost,
-} from '../utils/com';
-import type Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer';
-import type ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer';
+  type ComActionHandlers,
+  type ComMessageEventListener,
+  type ChannelPost
+} from '../utils/com'
+import type Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer'
+import type ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer'
 
 interface OffscreenCanvas extends HTMLCanvasElement { }
 
 export interface DisplayOptions {
-  id?: string;
-  canvas?: HTMLCanvasElement;
+  id?: string
+  canvas?: HTMLCanvasElement
 }
 
 export interface DisplayState
   extends Omit<Omit<AppState, 'layers'>, 'displays'> {
-  id: string;
-  readonly control: boolean;
-  width: number;
-  height: number;
-  layers?: Array<Canvas2DLayer | ThreeJSLayer>;
+  id: string
+  readonly control: boolean
+  width: number
+  height: number
+  layers?: Array<Canvas2DLayer | ThreeJSLayer>
 }
 
-const handlers: ComActionHandlers = {};
+const handlers: ComActionHandlers = {}
 
 export default class Display {
   static ensureCanvas = (id: string = 'canvas'): HTMLCanvasElement => {
-    let el = document.querySelector(`body>#${id}`) as HTMLCanvasElement;
+    let el = document.querySelector(`body>#${id}`) as HTMLCanvasElement
     if (!el) {
-      el = document.createElement('canvas');
-      el.id = id;
-      document.body.appendChild(el);
-      document.body.style.margin = '0';
-      document.body.style.padding = '0';
-      document.body.style.overflow = 'hidden';
+      el = document.createElement('canvas')
+      el.id = id
+      document.body.appendChild(el)
+      document.body.style.margin = '0'
+      document.body.style.padding = '0'
+      document.body.style.overflow = 'hidden'
     }
 
-    const { style: parentStyle } = el.parentElement as HTMLElement;
-    parentStyle.position = 'relative';
-    parentStyle.background = 'black';
-    return el;
-  };
+    const { style: parentStyle } = el.parentElement as HTMLElement
+    parentStyle.position = 'relative'
+    parentStyle.background = 'black'
+    return el
+  }
 
   static checkSupport = () => {
-    // @ts-ignore
-    if (typeof OffscreenCanvas === 'undefined') return false;
+    if (typeof OffscreenCanvas === 'undefined') return false
     try {
-      const el = document.createElement('canvas');
-      // @ts-ignore
-      el.transferControlToOffscreen();
+      const el = document.createElement('canvas')
+      el.transferControlToOffscreen()
     } catch (e) {
-      return false;
+      return false
     }
-    return true;
-  };
+    return true
+  }
 
-  constructor(options?: DisplayOptions) {
+  constructor (options?: DisplayOptions) {
     const {
       id,
-      canvas = Display.ensureCanvas(),
-    } = options || {};
-    this.#id = id || `display${(Math.random() * 10000).toFixed()}`;
+      canvas = Display.ensureCanvas()
+    } = (options != null) || {}
+    this.#id = id || `display${(Math.random() * 10000).toFixed()}`
 
-    canvas.width = canvas.parentElement?.clientWidth || canvas.width;
-    canvas.height = canvas.parentElement?.clientHeight || canvas.height;
-    this.#canvas = canvas;
+    canvas.width = canvas.parentElement?.clientWidth || canvas.width
+    canvas.height = canvas.parentElement?.clientHeight || canvas.height
+    this.#canvas = canvas
 
-    this.#worker = new Worker(`/Display.worker.js#${this.#id}`);
+    this.#worker = new Worker(`/Display.worker.js#${this.#id}`)
     const {
       post,
-      listener,
-    } = autoBind(this.#worker, `display-${id}-browser`, handlers);
-    this.#post = post;
-    this.#listener = listener;
-    this.#worker.addEventListener('message', this.#listener);
+      listener
+    } = autoBind(this.#worker, `display-${this.#id}-browser`, handlers)
+    this.#post = post
+    this.#listener = listener
+    this.#worker.addEventListener('message', this.#listener)
 
-    // @ts-ignore
-    this.#offscreen = canvas.transferControlToOffscreen();
-    // @ts-ignore
+    // @ts-expect-error
+    this.#offscreen = canvas.transferControlToOffscreen()
     this.#worker.postMessage({
       type: 'offscreencanvas',
-      payload: { canvas: this.#offscreen },
-    }, [this.#offscreen]);
-    requestAnimationFrame(() => this.resize());
+      payload: { canvas: this.#offscreen }
+      // @ts-expect-error
+    }, [this.#offscreen])
+    requestAnimationFrame(() => this.resize())
   }
 
-  #offscreen: OffscreenCanvas;
+  #offscreen: OffscreenCanvas
 
-  #worker: Worker;
+  #worker: Worker
 
-  #post: ChannelPost;
+  #post: ChannelPost
 
-  #id: string;
+  #id: string
 
-  #canvas: HTMLCanvasElement;
+  #canvas: HTMLCanvasElement
 
-  #listener: ComMessageEventListener;
+  #listener: ComMessageEventListener
 
-  get canvas() {
-    return this.#canvas;
+  get canvas () {
+    return this.#canvas
   }
 
-  get state(): Partial<DisplayState> {
+  get state (): Partial<DisplayState> {
     return {
       id: this.#id,
       width: this.#canvas.width,
-      height: this.#canvas.height,
-    };
+      height: this.#canvas.height
+    }
   }
 
-  get post(): ChannelPost {
-    return this.#post;
+  get post (): ChannelPost {
+    return this.#post
   }
 
   resize = () => requestAnimationFrame(() => {
-    const { canvas } = this;
+    const { canvas } = this
     this.post('resize', {
       width: canvas.parentElement?.clientWidth || this.#canvas.width,
-      height: canvas.parentElement?.clientHeight || this.#canvas.height,
-    });
-  });
+      height: canvas.parentElement?.clientHeight || this.#canvas.height
+    })
+  })
 }

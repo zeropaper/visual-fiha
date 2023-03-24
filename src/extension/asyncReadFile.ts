@@ -1,18 +1,18 @@
-import { readFile } from 'fs';
+import { readFile } from 'fs'
 
-export default function asyncReadFile(fsPath: string): Promise<string> {
-  return new Promise((res, rej) => {
+export default async function asyncReadFile (fsPath: string): Promise<string> {
+  return await new Promise((res, rej) => {
     try {
       readFile(fsPath, 'utf8', (err, content) => {
-        if (err) {
-          rej(err);
-          return;
+        if (err != null) {
+          rej(err)
+          return
         }
 
-        res(content);
-      });
+        res(content)
+      })
     } catch (err) {
-      rej(err);
+      rej(err)
     }
-  });
+  })
 }

@@ -1,34 +1,33 @@
-/* eslint-disable jsx-a11y/control-has-associated-label */
-import * as React from 'react';
-import { useSelector } from 'react-redux';
-import { AppState, Layer } from '../../types';
-import { useToggleLayer, useVSCOpen } from '../ComContext';
+import * as React from 'react'
+import { useSelector } from 'react-redux'
+import { type AppState, type Layer } from '../../types'
+import { useToggleLayer, useVSCOpen } from '../ComContext'
 
 const LayerScriptLink = ({
   layer,
-  scriptRole,
+  scriptRole
 }: { layer: Layer, scriptRole: 'setup' | 'animation' }) => {
-  const open = useVSCOpen();
+  const open = useVSCOpen()
   // eslint-disable-next-line react/destructuring-assignment
-  const contentLength = layer[scriptRole]?.length || 0;
+  const contentLength = layer[scriptRole]?.length || 0
   return (
     <a
       href="#vscode-action"
-      onClick={() => open(`/layers/${layer.type}/${layer.id}-${scriptRole}.js`)}
+      onClick={async () => await open(`/layers/${layer.type}/${layer.id}-${scriptRole}.js`)}
       className={[
         scriptRole,
-        !contentLength && 'empty-script',
+        !contentLength && 'empty-script'
       ].filter(Boolean).join(' ').trim()}
     >
       {`open ${scriptRole}`}
     </a>
-  );
-};
+  )
+}
 
 const LayersList = () => {
-  const layers = useSelector((state: AppState) => state.layers);
-  const toggleLayer = useToggleLayer();
-  const toggleLayerId = (id: string) => () => toggleLayer(id);
+  const layers = useSelector((state: AppState) => state.layers)
+  const toggleLayer = useToggleLayer()
+  const toggleLayerId = (id: string) => async () => await toggleLayer(id)
   return (
     <section id="layers">
       <header>
@@ -59,7 +58,7 @@ const LayersList = () => {
         </ul>
       </main>
     </section>
-  );
-};
+  )
+}
 
-export default LayersList;
+export default LayersList
