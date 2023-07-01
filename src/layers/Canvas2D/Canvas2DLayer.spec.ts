@@ -7,10 +7,10 @@ const setupScript = 'console.info("hello"); return { newData: "set" };'
 
 let layer: Canvas2DLayer
 
-const options = {
+const options: Canvas2DLayerOptions = {
   id: 'layerId',
   canvas: document.createElement('canvas')
-} as Canvas2DLayerOptions
+}
 
 const compilationErrorListener = jest.fn((err) => {
   console.info(err.builderStr)
@@ -26,9 +26,11 @@ describe('instanciation', () => {
   })
 
   it('throws an error if no id is provided', () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     expect(() => new Canvas2DLayer({
       canvas: document.createElement('canvas')
-    } as Canvas2DLayerOptions)).toThrowError()
+    })).toThrowError()
   })
 
   it('has a cache', () => {
@@ -46,7 +48,7 @@ describe('setup script', () => {
   })
 
   it('can be set', () => {
-    layer.setup.addEventListener('compilationerror', compilationErrorListener)
+    layer.setup.addEventListener('compilationerror', compilationErrorListener as any)
     expect(() => {
       layer.setup.code = setupScript
     }).not.toThrowError()
@@ -77,7 +79,7 @@ describe('animation script', () => {
     const code = 'cache.added = true; scriptLog("cache", cache);'
     layer.animation.code = code
     layer.animation.addEventListener('log', logListener)
-    layer.animation.addEventListener('executionerror', (err) => { console.info(err) })
+    layer.animation.addEventListener('executionerror', ((err) => { console.info(err) }) as any)
     expect(layer).toHaveProperty('animation.code', code)
     expect(layer.cache).toHaveProperty('newData', 'set')
     expect(layer.execAnimation).not.toThrow()

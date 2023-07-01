@@ -13,9 +13,7 @@ export default class Layer extends Scriptable {
     super(options)
     this.active = typeof options.active !== 'undefined' ? options.active : true
     if (!options.id) throw new Error('Missing id option')
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore
-    this.#canvas = ((options.canvas != null) || new OffscreenCanvas(600, 400)) as OffscreenCanvas
+    this.#canvas = ((options.canvas != null) ? options.canvas : new OffscreenCanvas(600, 400)) as OffscreenCanvas
   }
 
   active: boolean = true

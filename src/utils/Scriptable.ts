@@ -1,4 +1,4 @@
-/* eslint-disable no-debugger */
+/* eslint-disable @typescript-eslint/explicit-function-return-type, no-debugger */
 import ScriptRunner, { type ScriptRunnerEventListener, type API } from './ScriptRunner'
 
 export type Cache = Record<string, any>
@@ -28,7 +28,8 @@ export default class Scriptable {
     this.api = {
       read: this.read,
       cache: this.cache,
-      ...((options.api != null) || {})
+      // eslint-disable-next-line
+      ...(options.api || {})
     }
     this.initialize(options)
   }
@@ -43,7 +44,7 @@ export default class Scriptable {
   // TODO: make it private?
   cache: Cache = {}
 
-  read: ReadInterface = (key, fb) => (/* Scriptable read */ typeof this.cache[key] === 'undefined' ? fb : this.cache[key])
+  read: true | ReadInterface = (key, fb) => (/* Scriptable read */ typeof this.cache[key] === 'undefined' ? fb : this.cache[key])
 
   get id () {
     return this.#id
@@ -92,7 +93,7 @@ export default class Scriptable {
       this.setup.addEventListener('executionerror', onExecutionError)
       this.animation.addEventListener('executionerror', onExecutionError)
     }
-    if (this.setup.code !== setup && setup) this.setup.code = setup
+    if (this.setup.code !== setup && (setup != null)) this.setup.code = setup
     if (this.animation.code !== animation && animation) this.animation.code = animation
   }
 

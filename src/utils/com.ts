@@ -38,12 +38,13 @@ export type ChannelListenerMaker = (postBack: ComAnswerer, handlers: ComActionHa
 
 // eslint-disable-next-line max-len
 export const makeChannelPost: ChannelPostMaker = (poster, source) => async (type, payload, originalMeta) => {
+  const addiontions = originalMeta === true
+    ? {
+        operationId: `${Date.now()}-${source}-${(Math.random() * 1000000).toFixed()}`
+      }
+    : ((originalMeta != null) ? originalMeta : {})
   const meta: ComEventDataMeta = {
-    ...(originalMeta === true
-      ? {
-          operationId: `${Date.now()}-${source}-${(Math.random() * 1000000).toFixed()}`
-        }
-      : (originalMeta != null) || {}),
+    ...addiontions,
     sent: Date.now(),
     source
   }
