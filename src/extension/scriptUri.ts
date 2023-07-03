@@ -10,12 +10,12 @@ export default function scriptUri(
 ) {
   const folder = getWorkspaceFolder();
   if (id === "worker") {
-    return vscode.Uri.joinPath(folder.uri, `worker/${role}.js`);
+    return vscode.Uri.joinPath(folder.uri, `worker/${role}.mjs`);
   }
   return vscode.Uri.joinPath(
     folder.uri,
     TypeDirectory[type],
     runnerType,
-    `${id}-${role}.js`
+    `${id}-${role}.mjs`
   );
 }
