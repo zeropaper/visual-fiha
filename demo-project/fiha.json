@@ -3,13 +3,13 @@
   "layers": [
     {
       "active": true,
-      "id": "basics",
+      "id": "canvas-basics",
       "type": "canvas"
     },
     {
       "active": true,
-      "id": "treejs-basics",
-      "type": "treejs"
+      "id": "threejs-basics",
+      "type": "threejs"
     }
   ]
 }
