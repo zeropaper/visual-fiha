@@ -63,6 +63,8 @@ export type copy = (
 
 type PasteOperation = (
   src: CanvasImageSource & {
+    width?: number;
+    height?: number;
     videoWidth?: number;
     videoHeight?: number;
   },
@@ -402,8 +404,8 @@ export default function canvasTools(ctx: CTX) {
   };
 
   const pasteImage: pasteImage = (src, opts = {}) => {
-    const w = (src.width || src.videoWidth || canvas.width || 0) as number;
-    const h = (src.height || src.videoHeight || canvas.height || 0) as number;
+    const w = src.width ?? src.videoWidth ?? canvas.width ?? 0;
+    const h = src.height ?? src.videoHeight ?? canvas.height ?? 0;
     const {
       sx = 0,
       sy = 0,
@@ -418,8 +420,8 @@ export default function canvasTools(ctx: CTX) {
   };
 
   const pasteContain: pasteContain = (src, opts = {}) => {
-    const w = (src.width || src.videoWidth || canvas.width || 0) as number;
-    const h = (src.height || src.videoHeight || canvas.height || 0) as number;
+    const w = src.width ?? src.videoWidth ?? canvas.width ?? 0;
+    const h = src.height ?? src.videoHeight ?? canvas.height ?? 0;
     const wp = canvas.width / w;
     const hp = canvas.height / h;
     const p = Math.abs(wp) < Math.abs(hp) ? wp : hp;
@@ -439,8 +441,8 @@ export default function canvasTools(ctx: CTX) {
   };
 
   const pasteCover: pasteCover = (src, opts = {}) => {
-    const w = (src.width || src.videoWidth || canvas.width || 0) as number;
-    const h = (src.height || src.videoHeight || canvas.height || 0) as number;
+    const w = src.width ?? src.videoWidth ?? canvas.width ?? 0;
+    const h = src.height ?? src.videoHeight ?? canvas.height ?? 0;
     const wp = canvas.width / w;
     const hp = canvas.height / h;
     const p = Math.abs(wp) > Math.abs(hp) ? wp : hp;
