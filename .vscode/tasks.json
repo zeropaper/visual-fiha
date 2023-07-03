@@ -11,7 +11,8 @@
       "group": "build",
       "label": "extension: watch",
       "dependsOn": [
-        "webviews: watch",
+        "webviews:panel: watch",
+        "webviews:controlView: watch",
         "display worker: watch",
         "capture: watch",
         "display: watch"
@@ -19,11 +20,19 @@
     },
     {
       "type": "shell",
-      "command": "npm run watch:webviews",
+      "command": "npm run watch:webviews:panel",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",
-      "label": "webviews: watch"
+      "label": "webviews:panel: watch"
+    },
+    {
+      "type": "shell",
+      "command": "npm run watch:webviews:controlView",
+      "problemMatcher": "$esbuild-watch",
+      "isBackground": true,
+      "group": "build",
+      "label": "webviews:controlView: watch"
     },
     {
       "type": "shell",

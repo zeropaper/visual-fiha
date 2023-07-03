@@ -20,6 +20,7 @@ import readLayerScripts from "./readLayerScripts";
 import textDocumentScriptInfo from "./textDocumentScriptInfo";
 import readWorkspaceRC from "./readWorkspaceRC";
 import configuration from "./configuration";
+import ControlViewProvider from "./ControlViewProvider";
 
 export default class VFExtension {
   constructor() {
@@ -140,7 +141,7 @@ export default class VFExtension {
     try {
       const openControls = configuration("openControls");
       if (openControls) {
-        vscode.commands.executeCommand("visualFiha.openControls");
+        void vscode.commands.executeCommand("visualFiha.openControls");
       }
 
       console.info("[ext] start refreshing data");
@@ -150,11 +151,20 @@ export default class VFExtension {
 
       VFPanel.currentPanel?.updateDisplays(this.#webServer.displays);
 
-      this.propagate();
+      void this.propagate();
     } catch (err) {
       const msg = `Could not read fiha.json: "${(err as Error).message}"`;
-      vscode.window.showWarningMessage(msg);
+      void vscode.window.showWarningMessage(msg);
     }
+
+    const controlsProvider = new ControlViewProvider(context.extensionUri);
+
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        ControlViewProvider.viewType,
+        controlsProvider
+      )
+    );
 
     context.subscriptions.push(
       this.#webServer.activate(context),

@@ -16,13 +16,13 @@ function handleIncomingMessage({ type, payload, meta }: ComEventData) {
     case "toggleLayer":
     case "createLayer":
     case "removeLayer":
-      vscode.commands.executeCommand(`visualFiha.${type}`, payload, meta);
+      void vscode.commands.executeCommand(`visualFiha.${type}`, payload, meta);
       break;
     case "alert":
-      vscode.window.showErrorMessage(payload);
+      void vscode.window.showErrorMessage(payload);
       break;
     default:
-      vscode.window.showErrorMessage(`Unknown command: ${type}`);
+      void vscode.window.showErrorMessage(`Unknown command: ${type}`);
   }
 }
 
@@ -140,22 +140,28 @@ export default class VFPanel {
   }
 
   public postMessage(msg: ComEventData) {
-    this._panel.webview.postMessage(msg);
+    void this._panel.webview.postMessage(msg);
   }
 
   public updateDisplays(displays: object) {
-    this._panel.webview.postMessage({
+    void this._panel.webview.postMessage({
       type: "updatedisplays",
       payload: displays,
     });
   }
 
   public updateState(update: Partial<AppState> = {}) {
-    this._panel.webview.postMessage({ type: "updatestate", payload: update });
+    void this._panel.webview.postMessage({
+      type: "updatestate",
+      payload: update,
+    });
   }
 
   public updateData(update = {}) {
-    this._panel.webview.postMessage({ type: "updatedata", payload: update });
+    void this._panel.webview.postMessage({
+      type: "updatedata",
+      payload: update,
+    });
   }
 
   public dispose() {
@@ -183,7 +189,7 @@ export default class VFPanel {
       this._extensionUri,
       "out",
       "webviews",
-      "index.js"
+      "panel.js"
     );
 
     // And the uri we use to load this script in the webview
