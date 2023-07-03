@@ -4,12 +4,12 @@
   "version": "3.3.0",
   "preview": true,
   "description": "VJing extension for VS Code",
-  "author": "Valentin Vago <zeropaper@irata.ch> (http://irata.graphics/)",
+  "author": "Valentin Vago <zeropaper@irata.ch> (https://zeropaper.style/)",
   "license": "MIT",
   "icon": "media/vf.icon.alt.png",
   "engines": {
-    "node": "^16.8.0",
-    "npm": "^7.19.0",
+    "node": "^16.19.1",
+    "npm": "^8.19.3",
     "vscode": "^1.61.0"
   },
   "categories": [
@@ -74,6 +74,7 @@
     "_compile:layerdocs:canvas2d": "typedoc --out out/docs/Canvas2DLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name Canvas2DLayer --disableSources src/layers/Canvas2D/canvas2DAPI.ts",
     "_compile:layerdocs:threejs": "typedoc --out out/docs/ThreeJSLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name ThreeJSLayer --disableSources src/layers/ThreeJS/threeJSAPI.ts",
     "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
     "watch:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --watch --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
     "watch:webviews": "esbuild ./src/webviews/index.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/index.js",
     "watch:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --watch --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
@@ -101,14 +102,15 @@
     "@typescript-eslint/parser": "5.60.1",
     "canvas": "2.11.2",
     "esbuild": "0.18.10",
-    "eslint": "^8.43.0",
+    "eslint": "^8.44.0",
     "eslint-config-airbnb": "19.0.4",
     "eslint-config-airbnb-typescript": "17.0.0",
-    "eslint-config-standard-with-typescript": "^35.0.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-config-standard-with-typescript": "^36.0.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "27.2.2",
     "eslint-plugin-jsx-a11y": "6.7.1",
-    "eslint-plugin-n": "^16.0.1",
+    "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "4.6.0",
@@ -118,6 +120,7 @@
     "lint-staged": "13.2.3",
     "lodash": "4.17.21",
     "npm-run-all": "4.1.5",
+    "prettier": "^2.8.8",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-redux": "8.1.1",
@@ -128,7 +131,7 @@
     "ts-jest": "29.1.0",
     "ts-node": "10.9.1",
     "typedoc": "0.24.8",
-    "typescript": "^4.9.5",
+    "typescript": "^5.1.6",
     "vsce": "1.100.1"
   },
   "workspaces": [
@@ -145,7 +148,10 @@
   },
   "homepage": "https://github.com/zeropaper/visual-fiha",
   "lint-staged": {
-    "*.{ts,tsx}": "eslint --cache --fix"
+    "*.{ts,tsx}": [
+      "eslint --cache --fix",
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "fs-extra": "11.1.1",
