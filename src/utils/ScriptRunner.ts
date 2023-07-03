@@ -3,8 +3,6 @@ const asyncNoop = async () => {};
 
 export type ScriptLog = (...args: any[]) => void;
 
-// import { JSHINT } from 'jshint';
-
 export type ScriptRunnerEventTypes =
   | "compilationerror"
   | "executionerror"
@@ -48,7 +46,7 @@ export const removeExportCrutch = (str: string) =>
 class EmptyScope {}
 
 /* eslint-disable */
-const forbidden = [
+const forbidden = new Set<string>([
   // @ts-ignore
   ...Object.keys(typeof window !== "undefined" ? window : {}),
   // @ts-ignore
@@ -57,7 +55,7 @@ const forbidden = [
   ...Object.keys(typeof self !== "undefined" ? self : {}),
   // @ts-ignore
   ...Object.keys(typeof globalThis !== "undefined" ? globalThis : {}),
-];
+]);
 /* eslint-enable */
 
 class ScriptRunnerLintingError extends Error {
@@ -146,31 +144,9 @@ class ScriptRunner {
 
     const paramsStr = Object.keys(this.api).join(", ");
 
-    const forbiddenStr = [...forbidden, ...Object.keys(this)]
-      .reduce(
-        (acc: string[], val: string) =>
-          acc.includes(val) || paramsStr.includes(val) ? acc : [...acc, val],
-        []
-      )
-      .join(", ");
+    const forbiddenStr = Array.from(forbidden).join(", ");
 
     const sync = code.includes("await") ? "async" : "";
-
-    // const jshintReadOnly = Object.keys(this.api)
-    //   .reduce((obj, name) => ({ ...obj, [name]: false }), {});
-
-    // JSHINT(code, {
-    //   esversion: 6,
-    // }, jshintReadOnly);
-
-    // if (JSHINT.errors.length) {
-    //   this.#errors.compilation = new ScriptRunnerLintingError(JSHINT.errors);
-    //   this.dispatchEvent({
-    //     type: 'compilationerror',
-    //     error: this.#errors.compilation,
-    //   } as ScriptRunnerErrorEvent);
-    //   return;
-    // }
 
     const builderStr = `
     return ${sync} function ${this.#name}_${this.#version + 1}(${paramsStr}) {

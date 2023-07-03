@@ -22,7 +22,7 @@ export interface ScriptableOptions {
 
 export default class Scriptable {
   constructor(options: ScriptableOptions = { id: `scriptable${Date.now()}` }) {
-    this.read = options.read != null || this.read;
+    this.read = typeof options.read === "function" ? options.read : this.read;
     this.#id = options.id;
     this.#runners = {
       setup: new ScriptRunner(options.scope, `${this.#id}_S`),
@@ -47,10 +47,11 @@ export default class Scriptable {
   // TODO: make it private?
   cache: Cache = {};
 
-  read: true | ReadInterface = (key, fb) =>
-    /* Scriptable read */ typeof this.cache[key] === "undefined"
-      ? fb
-      : this.cache[key];
+  read: ReadInterface = (key, fb) => {
+    /* Scriptable read */
+    console.info("[Scriptable] read", key, fb, this.cache[key], this.cache);
+    return typeof this.cache[key] === "undefined" ? fb : this.cache[key];
+  };
 
   get id() {
     return this.#id;
@@ -91,6 +92,11 @@ export default class Scriptable {
     onCompilationError,
     onExecutionError,
   }: ScriptableOptions) => {
+    console.info(
+      "[Scriptable] initialize",
+      onCompilationError,
+      onExecutionError
+    );
     if (onCompilationError != null) {
       this.setup.addEventListener("compilationerror", onCompilationError);
       this.animation.addEventListener("compilationerror", onCompilationError);
