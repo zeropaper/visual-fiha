@@ -12,6 +12,7 @@ import type { ScriptingData, ScriptInfo, AppState } from "../types";
 import { type ComActionHandlers } from "../utils/com";
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
+import { type ScriptRunnerEventListener } from "../utils/ScriptRunner";
 
 type LayerTypes = Canvas2DLayer | ThreeJSLayer;
 
@@ -27,6 +28,15 @@ const data: ScriptingData = {
   deltaNow: 0,
   frequency: [],
   volume: [],
+};
+
+const onExecutionError: ScriptRunnerEventListener = (err: any) => {
+  console.error("onExecutionError", err);
+  return false;
+};
+const onCompilationError: ScriptRunnerEventListener = (err: any) => {
+  console.error("onCompilationError", err);
+  return false;
 };
 
 // eslint-disable-next-line no-restricted-globals
@@ -53,6 +63,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
         Object.assign(data, (await vfWorker.scriptable.execSetup()) || {});
       }
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       vfWorker.workerCom.post("scriptchange", payload);
       if (type === "layer") {
         const found = vfWorker.findStateLayer(id);
@@ -60,6 +71,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
           found[role].code = script;
 
           if (role === "setup") {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             found.execSetup();
           }
         } else {
@@ -70,21 +82,27 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   },
   updatestate: debounce((update: Partial<AppState>) => {
     const { scriptable, state } = vfWorker;
-    const layers = update.layers
+
+    const layers = Array.isArray(update.layers)
       ? update.layers
-          ?.map((options) => {
+          .map((options) => {
             const found = vfWorker.findStateLayer(options.id);
             if (found != null) {
               found.active = !!options.active;
               return found;
             }
-
+            const completeOptions = {
+              ...options,
+              read,
+              onCompilationError,
+              onExecutionError,
+            };
             switch (options.type) {
               // case 'canvas2d':
               case "canvas":
-                return new Canvas2DLayer({ ...options, read });
+                return new Canvas2DLayer(completeOptions);
               case "threejs":
-                return new ThreeJSLayer({ ...options, read });
+                return new ThreeJSLayer(completeOptions);
               default:
                 return null;
             }
@@ -107,6 +125,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     ) {
       scriptable.setup.code = update.worker.setup || scriptable.setup.code;
       state.worker.setup = scriptable.setup.code;
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       scriptable.execSetup();
     }
     if (
@@ -144,6 +163,7 @@ const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     state.layers?.forEach((l) => vfWorker.resizeLayer(l));
 
     if (!state.control) {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       socketCom.post("resizedisplay", {
         id: idFromWorkerHash,
         width: state.width,
