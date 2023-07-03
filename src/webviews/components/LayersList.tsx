@@ -16,9 +16,9 @@ const LayerScriptLink = ({
   return (
     <a
       href="#vscode-action"
-      onClick={async () =>
-        await open(`/layers/${layer.type}/${layer.id}-${scriptRole}.js`)
-      }
+      onClick={() => {
+        void open(`/layers/${layer.type}/${layer.id}-${scriptRole}.mjs`);
+      }}
       className={[scriptRole, !contentLength && "empty-script"]
         .filter(Boolean)
         .join(" ")
