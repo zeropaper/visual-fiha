@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { render } from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import { Provider as StoreProvider } from 'react-redux'
 
 import { autoBind, type ComEventData } from '../utils/com'
@@ -61,4 +61,6 @@ const WebviewComponent = () => {
   )
 }
 
-render(<WebviewComponent />, document.getElementById('app'))
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const root = createRoot(document.getElementById('app')!)
+root.render(<WebviewComponent />)

@@ -88,7 +88,7 @@ export default function scaffoldProject (context: vscode.ExtensionContext, {
 }: { propagate: () => Promise<void> }) {
   const demoProjectPath = context.asAbsolutePath('out/demo-project')
 
-  const [currentWorkspaceFolder] = (vscode.workspace.workspaceFolders != null) || []
+  const [currentWorkspaceFolder] = vscode.workspace.workspaceFolders ?? []
   const wsUri = currentWorkspaceFolder ? currentWorkspaceFolder.uri : null
 
   function scaffold (projectId: string, projectPath: string) {
@@ -108,14 +108,14 @@ export default function scaffoldProject (context: vscode.ExtensionContext, {
     return projectPath
   }
 
-  return async () => await new Promise((res, rej) => {
+  return async () => await new Promise((resolve, reject) => {
     function onAbort (reason?: any) {
       const err = reason instanceof Error
         ? reason
         : new Error(reason?.message || reason)
       console.warn(
         '[command] project scaffolding aborted', err.stack)
-      rej(reason)
+      reject(reason)
     }
 
     function proceed (projectId: string, projectPath: string) {
@@ -123,7 +123,7 @@ export default function scaffoldProject (context: vscode.ExtensionContext, {
         scaffold(projectId, projectPath)
 
         if (projectPath === wsUri?.fsPath) {
-          propagate().then(res).catch(rej)
+          propagate().then(resolve).catch(reject)
           return
         }
 
@@ -131,7 +131,7 @@ export default function scaffoldProject (context: vscode.ExtensionContext, {
         vscode.commands.executeCommand('vscode.openFolder', uri, {
           forceNewWindow: false
         })
-          .then(() => { res(projectPath) }, onAbort)
+          .then(() => { resolve(projectPath) }, onAbort)
       } catch (err: any) {
         console.error((err as Error).message)
         onAbort(err)

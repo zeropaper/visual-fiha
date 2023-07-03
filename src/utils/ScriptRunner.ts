@@ -23,6 +23,8 @@ export interface ScriptRunnerErrorEvent extends ScriptRunnerEvent {
   readonly type: 'compilationerror' | 'executionerror'
   builderStr?: string
   code?: string
+  lineNumber?: number
+  columnNumber?: number
 }
 
 export interface ScriptRunnerLogEvent extends ScriptRunnerEvent {
@@ -184,12 +186,12 @@ class ScriptRunner {
       this.#errors.compilation = err
       this.dispatchEvent({
         type: 'compilationerror',
-        error,
-        lineNumber: err.lineNumber || 0,
-        columnNumber: err.columnNumber || 0,
+        error: err,
+        lineNumber: err.lineNumber ?? 0,
+        columnNumber: err.columnNumber ?? 0,
         code,
         builderStr
-      } as ScriptRunnerErrorEvent)
+      } satisfies ScriptRunnerErrorEvent)
     }
   }
 
@@ -236,7 +238,7 @@ class ScriptRunner {
         this.dispatchEvent({
           type: 'log',
           data: this.#logs
-        } as ScriptRunnerLogEvent)
+        } satisfies ScriptRunnerLogEvent)
       }
 
       /* istanbul ignore next */
@@ -246,8 +248,8 @@ class ScriptRunner {
       this.#errors.execution = err
       this.dispatchEvent({
         type: 'executionerror',
-        error
-      } as ScriptRunnerErrorEvent)
+        error: err
+      } satisfies ScriptRunnerErrorEvent)
       // console.info('[%s] execution error', this.#name, error.message || error.stack);
       return undefined
     }

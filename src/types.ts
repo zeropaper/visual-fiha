@@ -30,7 +30,7 @@ export interface ServerDisplay extends Omit<DisplayBase, 'id'> {
 }
 
 export type Layer = Omit<ScriptableOptions, 'api'> & {
-  type: 'canvas' | 'threejs' | 'canvas2d' | 'webgl' | 'webgl2'
+  type: 'canvas' | 'threejs' // | 'canvas2d' | 'webgl' | 'webgl2'
   id: string
   weight?: number
   active?: boolean

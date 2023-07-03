@@ -77,7 +77,7 @@ export default class VFServer {
         res.end(err.message)
         return
       }
-      let type = mime.getType(filepath.split('.').pop() || '') || 'text/plain'
+      let type = mime.getType(filepath.split('.').pop() ?? '') ?? 'text/plain'
       if (filepath.endsWith('.gltf')) type = 'model/gltf+json'
       res.writeHead(200, { 'Content-Type': type })
       res.end(content)
@@ -100,7 +100,7 @@ export default class VFServer {
         res.end(err.message)
         return
       }
-      let type = mime.getType(filepath.split('.').pop() || '') || 'text/plain'
+      let type = mime.getType(filepath.split('.').pop() ?? '') ?? 'text/plain'
       if (filepath.endsWith('.gltf')) type = 'model/gltf+json'
       res.writeHead(200, { 'Content-Type': type })
       res.end(content)
@@ -116,14 +116,14 @@ export default class VFServer {
           '/display/',
           '/capture',
           '/capture/'
-        ].includes(req.url || '')) {
+        ].includes(req.url ?? '')) {
           res.writeHead(200, { 'Content-Type': 'text/html' })
           res.end(indexTemplate({
             host: this.host,
             port: this.port,
-            path: (req.url || '').endsWith('/')
+            path: (req.url ?? '').endsWith('/')
               ? req.url as string
-              : `${req.url || ''}/`
+              : `${req.url ?? ''}/`
           }))
           return
         }
@@ -133,7 +133,7 @@ export default class VFServer {
           '/display/index.js.map',
           '/capture/index.js',
           '/capture/index.js.map'
-        ].includes(req.url || '')) {
+        ].includes(req.url ?? '')) {
           this.#serveExtensionFile(`out/${url}`, res)
           return
         }
@@ -257,8 +257,8 @@ export default class VFServer {
       height: 400
     }
     this.displays.filter((display) => !display.control).forEach((display) => {
-      size.width = Math.max(display.width || 0, size.width)
-      size.height = Math.max(display.height || 0, size.height)
+      size.width = Math.max(display.width ?? 0, size.width)
+      size.height = Math.max(display.height ?? 0, size.height)
     })
     return size
   }

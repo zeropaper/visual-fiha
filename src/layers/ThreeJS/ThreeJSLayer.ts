@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import Layer, { type LayerOptions } from '../Layer'
 import * as mathTools from '../../utils/mathTools'
@@ -48,15 +49,15 @@ export default class ThreeJSLayer extends Layer {
 
   scene: THREE.Scene
 
-  #clearScene = () => {
+  #clearScene = (): void => {
     this.scene.children.forEach((child) => {
       console.info('[ThreeJS] clear scene child', child.name || 'no name')
       this.scene.remove(child)
     })
   }
 
-  #update = () => {
-    if (!this.camera) return
+  #update = (): void => {
+    // if (!this.camera) return
     try {
       this.camera.aspect = this.width / this.height
     } catch (e) {
@@ -64,7 +65,7 @@ export default class ThreeJSLayer extends Layer {
     }
   }
 
-  get width () {
+  get width (): number {
     return this.canvas.width
   }
 
@@ -74,7 +75,7 @@ export default class ThreeJSLayer extends Layer {
     this.#update()
   }
 
-  get height () {
+  get height (): number {
     return this.canvas.height
   }
 

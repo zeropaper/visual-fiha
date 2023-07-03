@@ -209,6 +209,8 @@ export default class VFExtension {
 
         const { state } = this
 
+        console.info('[ext] onDidChangeTextDocument', info, state)
+
         const layerIndex = state.layers
           .findIndex((layer) => layer.id === info.id)
         if (layerIndex < 0) {
@@ -226,6 +228,7 @@ export default class VFExtension {
       vscode.workspace.onDidSaveTextDocument((event) => {
         if (!event.fileName.endsWith('fiha.json')) { return }
         this.propagate()
+          .catch((err) => { console.info('propagate error', err) })
       })
     )
   }

@@ -1,8 +1,9 @@
-import { type AnyAction, createStore, combineReducers } from 'redux'
+import { type AnyAction, legacy_createStore as createStore, combineReducers } from 'redux'
 
 import {
   type AppState, type Layer, type StageInfo, type DisplayServerInfo, type DisplayBase
 } from '../types'
+import { reducerSpy } from './reducerSpy'
 
 const id = (state: string = '', action: AnyAction) => {
   if (action.type !== 'setId') return state
@@ -44,10 +45,10 @@ export const worker = (state = defaultWorkerScripts, action: AnyAction) => {
   }
 }
 
-const layers = (state: Layer[] = [], action: AnyAction) => {
+const layers = reducerSpy((state: Layer[] = [], action: AnyAction) => {
   switch (action.type) {
     case 'setLayers':
-      return [...(state || [])]
+      return action.payload
 
     case 'toggleLayer':
       return state.map((layer) => {
@@ -60,7 +61,7 @@ const layers = (state: Layer[] = [], action: AnyAction) => {
     default:
       return state
   }
-}
+}, 'layers')
 
 export const reducers = {
   id,
@@ -75,7 +76,7 @@ const topReducer = combineReducers({
   ...reducers,
   displays: (state: DisplayBase[] = [], action: AnyAction) => {
     if (action.type !== 'setDisplays') return state
-    return [...(state || [])]
+    return state
   }
 })
 

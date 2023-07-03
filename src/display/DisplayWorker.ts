@@ -59,6 +59,17 @@ const scriptableOptions: ScriptableOptions = {
 const idFromWorkerHash = worker.location.hash.replace('#', '')
 if (!idFromWorkerHash) throw new Error('[worker] worker is not ready')
 
+export function isDisplayState (data: any): data is DisplayState {
+  return data &&
+    typeof data === 'object' &&
+    'layers' in data &&
+    Array.isArray(data.layers) &&
+    'stage' in data &&
+    typeof data.stage === 'object' &&
+    'width' in data.stage &&
+    'height' in data.stage
+}
+
 export default class VFWorker {
   constructor (
     workerSelf: WebWorker,
@@ -102,7 +113,18 @@ export default class VFWorker {
     }, `display-${idFromWorkerHash}-socket`, socketHandlers(this))
 
     this.#socket.on('message',
-      (message: ComEventData) => { this.socketCom.listener({ data: message }) })
+      (message: ComEventData) => {
+        // if (message.type === 'updatestate') {
+        //   console.info('[worker] updatestate', message)
+        // }
+        const before = isDisplayState(this.state)
+        this.socketCom.listener({ data: message })
+        const after = isDisplayState(this.state)
+        if (before !== after) {
+          console.error('[worker] state is not a DisplayState', message)
+          throw new Error('state is not a DisplayState')
+        }
+      })
 
     this.#socket.on('reconnect', (attempt: number) => {
       console.info('[worker] reconnect', attempt)
@@ -159,6 +181,7 @@ export default class VFWorker {
     layer.height = this.canvas.height
 
     layer.execSetup()
+      .catch((err) => { console.error('resizeLayer execSetup error', err) })
     return layer
   }
 
@@ -171,6 +194,10 @@ export default class VFWorker {
     const context = this.#context
     if (!context) return
     context.clearRect(0, 0, canvas.width, canvas.height)
+    if (!Array.isArray(this.state.layers)) {
+      // console.error('DisplayWorker.state.layers is not an array', this.state.layers)
+      return
+    }
     this.state.layers?.forEach((layer) => {
       if (!layer.active) return
       layer.execAnimation()
@@ -182,6 +209,7 @@ export default class VFWorker {
     Object.assign(data, this.scriptable.execAnimation() || {})
 
     if (this.#context && (this.onScreenCanvas != null)) {
+      // console.info('[worker] render isDisplayState', isDisplayState(this.state))
       this.renderLayers()
 
       this.onScreenCanvas.height = this.canvas.height

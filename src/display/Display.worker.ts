@@ -2,7 +2,7 @@
 
 import { debounce } from 'lodash'
 
-import VFWorker, { type OffscreenCanvas } from './DisplayWorker'
+import VFWorker, { isDisplayState, type OffscreenCanvas } from './DisplayWorker'
 
 import type {
   ScriptingData,
@@ -76,10 +76,8 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   },
   updatestate: debounce((update: Partial<AppState>) => {
     const { scriptable, state } = vfWorker
-    vfWorker.state = {
-      ...state,
-      ...update,
-      layers: ((update
+    const layers = update.layers
+      ? update
         .layers?.map((options) => {
           const found = vfWorker.findStateLayer(options.id)
           if (found != null) {
@@ -88,7 +86,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
           }
 
           switch (options.type) {
-            case 'canvas2d':
+          // case 'canvas2d':
             case 'canvas':
               return new Canvas2DLayer({ ...options, read })
             case 'threejs':
@@ -98,9 +96,17 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
           }
         })
         .filter(Boolean)
-        .map((layer) => vfWorker.resizeLayer(layer as LayerTypes))) != null) ||
-        state.layers
+        .map((layer) => vfWorker.resizeLayer(layer as LayerTypes))
+      : state.layers
+    const updated = {
+      ...state,
+      ...update,
+      layers
     }
+    if (!isDisplayState(updated)) {
+      throw new Error('updatestate: invalid state')
+    }
+    vfWorker.state = updated
     if (
       typeof update.worker?.setup !== 'undefined' &&
       update.worker.setup !== scriptable.setup.code

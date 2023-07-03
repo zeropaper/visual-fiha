@@ -67,7 +67,7 @@ export default class VFPanel {
     const panel = vscode.window.createWebviewPanel(
       VFPanel.viewType,
       'Visual Fiha',
-      column || vscode.ViewColumn.One,
+      column ?? vscode.ViewColumn.One,
       getWebviewOptions(context.extensionUri)
     )
 
@@ -128,7 +128,7 @@ export default class VFPanel {
     this._panel.webview.postMessage({ type: 'updatedisplays', payload: displays })
   }
 
-  public updateState (update = {} as Partial<AppState>) {
+  public updateState (update: Partial<AppState> = {}) {
     this._panel.webview.postMessage({ type: 'updatestate', payload: update })
   }
 

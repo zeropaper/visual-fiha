@@ -60,11 +60,11 @@ export default class Display {
     const {
       id,
       canvas = Display.ensureCanvas()
-    } = (options != null) || {}
-    this.#id = id || `display${(Math.random() * 10000).toFixed()}`
+    } = options ?? {}
+    this.#id = id ?? `display${(Math.random() * 10000).toFixed()}`
 
-    canvas.width = canvas.parentElement?.clientWidth || canvas.width
-    canvas.height = canvas.parentElement?.clientHeight || canvas.height
+    canvas.width = canvas.parentElement?.clientWidth ?? canvas.width
+    canvas.height = canvas.parentElement?.clientHeight ?? canvas.height
     this.#canvas = canvas
 
     this.#worker = new Worker(`/Display.worker.js#${this.#id}`)
@@ -117,8 +117,8 @@ export default class Display {
   resize = () => requestAnimationFrame(() => {
     const { canvas } = this
     this.post('resize', {
-      width: canvas.parentElement?.clientWidth || this.#canvas.width,
-      height: canvas.parentElement?.clientHeight || this.#canvas.height
+      width: canvas.parentElement?.clientWidth ?? this.#canvas.width,
+      height: canvas.parentElement?.clientHeight ?? this.#canvas.height
     })
   })
 }
