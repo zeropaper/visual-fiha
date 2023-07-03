@@ -1,23 +1,32 @@
-import * as vscode from 'vscode'
-import { readFile } from 'fs'
+import * as vscode from "vscode";
+import { readFile } from "fs";
 import {
   createServer,
   type Server,
   type IncomingMessage,
-  type ServerResponse
-} from 'http'
-import * as mime from 'mime'
-import { Server as SocketIOServer, type Socket } from 'socket.io'
+  type ServerResponse,
+} from "http";
+import * as mime from "mime";
+import { Server as SocketIOServer, type Socket } from "socket.io";
 
-import type { ComEventData } from '../utils/com'
-import { type AppState, type DisplayBase } from '../types'
+import type { ComEventData } from "../utils/com";
+import { type AppState, type DisplayBase } from "../types";
 // import { ChannelPost } from '../utils/com';
 
-export type ServerDisplay = Omit<DisplayBase, 'id'> & {
-  socket: Socket
-}
+export type ServerDisplay = Omit<DisplayBase, "id"> & {
+  socket: Socket;
+};
 
-export const indexTemplate = ({ host, port, path }: { host: string, port: number, path: string }) => `
+export const indexTemplate = ({
+  host,
+  port,
+  path,
+}: {
+  host: string;
+  port: number;
+  path: string;
+}) =>
+  `
 <html style="background: black;">
   <head>
     <title>Visual Fiha</title>
@@ -28,282 +37,304 @@ export const indexTemplate = ({ host, port, path }: { host: string, port: number
     <canvas id="canvas" width="600" height="400" style="z-index: 10; width: auto; height: auto;"></canvas>
     <script src="http://${host}:${port}${path}index.js"></script>
   </body>
-</html>`.trim()
+</html>`.trim();
 
 export default class VFServer {
-  constructor (stateGetter: () => AppState, {
-    host = 'localhost',
-    port = 9999
-  }: {
-    host?: string
-    port?: number
-  } = {}) {
-    this.#stateGetter = stateGetter
-    this.#host = host || this.#host
-    this.#port = port || this.#port
-    this.#server = createServer(this.#handleHTTPRequest)
+  constructor(
+    stateGetter: () => AppState,
+    {
+      host = "localhost",
+      port = 9999,
+    }: {
+      host?: string;
+      port?: number;
+    } = {}
+  ) {
+    this.#stateGetter = stateGetter;
+    this.#host = host || this.#host;
+    this.#port = port || this.#port;
+    this.#server = createServer(this.#handleHTTPRequest);
 
-    this.#io = new SocketIOServer(this.#server)
-    this.#io.on('connection', this.#handleIOConnection)
+    this.#io = new SocketIOServer(this.#server);
+    this.#io.on("connection", this.#handleIOConnection);
   }
 
-  #stateGetter: () => AppState
+  #stateGetter: () => AppState;
 
-  #context: vscode.ExtensionContext | null = null
+  #context: vscode.ExtensionContext | null = null;
 
-  #host = 'localhost'
+  #host = "localhost";
 
-  #port = 9999
+  #port = 9999;
 
-  #server: Server
+  #server: Server;
 
-  #io: SocketIOServer
+  #io: SocketIOServer;
 
-  #displays: Record<string, ServerDisplay> = {}
+  #displays: Record<string, ServerDisplay> = {};
 
-  #displaysChange = new vscode.EventEmitter<DisplayBase[]>()
+  #displaysChange = new vscode.EventEmitter<DisplayBase[]>();
 
-  #socketConnection = new vscode.EventEmitter<Socket>()
+  #socketConnection = new vscode.EventEmitter<Socket>();
 
   #serveExtensionFile = (reqUrl: string, res: ServerResponse) => {
-    if (this.#context == null) throw new Error('WebServer is missing extension context')
+    if (this.#context == null)
+      throw new Error("WebServer is missing extension context");
 
-    const filepath = vscode.Uri
-      .joinPath(this.#context.extensionUri, reqUrl).fsPath
+    const filepath = vscode.Uri.joinPath(
+      this.#context.extensionUri,
+      reqUrl
+    ).fsPath;
 
     readFile(filepath, (err, content) => {
       if (err != null) {
-        res.statusCode = 500
-        res.end(err.message)
-        return
+        res.statusCode = 500;
+        res.end(err.message);
+        return;
       }
-      let type = mime.getType(filepath.split('.').pop() ?? '') ?? 'text/plain'
-      if (filepath.endsWith('.gltf')) type = 'model/gltf+json'
-      res.writeHead(200, { 'Content-Type': type })
-      res.end(content)
-    })
-  }
+      let type = mime.getType(filepath.split(".").pop() ?? "") ?? "text/plain";
+      if (filepath.endsWith(".gltf")) type = "model/gltf+json";
+      res.writeHead(200, { "Content-Type": type });
+      res.end(content);
+    });
+  };
 
   #serveAsset = (reqUrl: string, res: ServerResponse) => {
-    if (this.#context == null) throw new Error('WebServer is missing extension context')
+    if (this.#context == null)
+      throw new Error("WebServer is missing extension context");
 
-    if (vscode.workspace.workspaceFolders == null) return
-    if (!vscode.workspace.workspaceFolders?.length) return
+    if (vscode.workspace.workspaceFolders == null) return;
+    if (!vscode.workspace.workspaceFolders?.length) return;
 
-    const folder = vscode.workspace.workspaceFolders[0]
-    const filepath = vscode.Uri
-      .joinPath(folder.uri, 'assets', reqUrl.replace('/assets/', '')).fsPath
+    const folder = vscode.workspace.workspaceFolders[0];
+    const filepath = vscode.Uri.joinPath(
+      folder.uri,
+      "assets",
+      reqUrl.replace("/assets/", "")
+    ).fsPath;
 
     readFile(filepath, (err, content) => {
       if (err != null) {
-        res.statusCode = 500
-        res.end(err.message)
-        return
+        res.statusCode = 500;
+        res.end(err.message);
+        return;
       }
-      let type = mime.getType(filepath.split('.').pop() ?? '') ?? 'text/plain'
-      if (filepath.endsWith('.gltf')) type = 'model/gltf+json'
-      res.writeHead(200, { 'Content-Type': type })
-      res.end(content)
-    })
-  }
+      let type = mime.getType(filepath.split(".").pop() ?? "") ?? "text/plain";
+      if (filepath.endsWith(".gltf")) type = "model/gltf+json";
+      res.writeHead(200, { "Content-Type": type });
+      res.end(content);
+    });
+  };
 
   #handleHTTPRequest = (req: IncomingMessage, res: ServerResponse) => {
     try {
-      const { url = '' } = req
-      if (req.method === 'GET') {
-        if ([
-          '/display',
-          '/display/',
-          '/capture',
-          '/capture/'
-        ].includes(req.url ?? '')) {
-          res.writeHead(200, { 'Content-Type': 'text/html' })
-          res.end(indexTemplate({
-            host: this.host,
-            port: this.port,
-            path: (req.url ?? '').endsWith('/')
-              ? req.url as string
-              : `${req.url ?? ''}/`
-          }))
-          return
+      const { url = "" } = req;
+      if (req.method === "GET") {
+        if (
+          ["/display", "/display/", "/capture", "/capture/"].includes(
+            req.url ?? ""
+          )
+        ) {
+          res.writeHead(200, { "Content-Type": "text/html" });
+          res.end(
+            indexTemplate({
+              host: this.host,
+              port: this.port,
+              path: (req.url ?? "").endsWith("/")
+                ? (req.url as string)
+                : `${req.url ?? ""}/`,
+            })
+          );
+          return;
         }
 
-        if ([
-          '/display/index.js',
-          '/display/index.js.map',
-          '/capture/index.js',
-          '/capture/index.js.map'
-        ].includes(req.url ?? '')) {
-          this.#serveExtensionFile(`out/${url}`, res)
-          return
+        if (
+          [
+            "/display/index.js",
+            "/display/index.js.map",
+            "/capture/index.js",
+            "/capture/index.js.map",
+          ].includes(req.url ?? "")
+        ) {
+          this.#serveExtensionFile(`out/${url}`, res);
+          return;
         }
 
-        if (['/Display.worker.js', '/Display.worker.js.map'].includes(url)) {
-          this.#serveExtensionFile(`out/display/${url}`, res)
-          return
+        if (["/Display.worker.js", "/Display.worker.js.map"].includes(url)) {
+          this.#serveExtensionFile(`out/display/${url}`, res);
+          return;
         }
 
-        if (req.url === '/favicon.png') {
-          this.#serveExtensionFile('media/favicon.png', res)
-          return
+        if (req.url === "/favicon.png") {
+          this.#serveExtensionFile("media/favicon.png", res);
+          return;
         }
 
-        if (req.url === '/reset.css') {
-          this.#serveExtensionFile('media/reset.css', res)
-          return
+        if (req.url === "/reset.css") {
+          this.#serveExtensionFile("media/reset.css", res);
+          return;
         }
 
-        if (req.url?.startsWith('/assets/')) {
-          this.#serveAsset(req.url, res)
-          return
+        if (req.url?.startsWith("/assets/")) {
+          this.#serveAsset(req.url, res);
+          return;
         }
       }
 
-      res.writeHead(404, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({
-        message: 'Not Found'
-      }))
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          message: "Not Found",
+        })
+      );
     } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({
-        message: (err as Error).message
-      }))
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          message: (err as Error).message,
+        })
+      );
     }
-  }
+  };
 
   #resizeDisplay = ({
     id,
     width,
-    height
-    // stage: displayStage,
-  }: DisplayBase) => {
-    const display = this.#displays[id]
-    if (!display) return
+    height,
+  }: // stage: displayStage,
+  DisplayBase) => {
+    const display = this.#displays[id];
+    if (!display) return;
 
-    display.width = width
-    display.height = height
+    display.width = width;
+    display.height = height;
     // display.stage = displayStage;
-    this.#displaysChange.fire(this.displays)
-  }
+    this.#displaysChange.fire(this.displays);
+  };
 
   #registerDisplay = (socket: Socket, display: DisplayBase) => {
-    this.#displays[display.id] = { ...display, socket }
+    this.#displays[display.id] = { ...display, socket };
 
-    this.#displaysChange.fire(this.displays)
-  }
+    this.#displaysChange.fire(this.displays);
+  };
 
   #handleIOConnection = (socket: Socket) => {
     // TODO: register socket, use autoBind
 
-    socket.on('registerdisplay', (display: DisplayBase) => {
-      this.#registerDisplay(socket, display)
-    })
+    socket.on("registerdisplay", (display: DisplayBase) => {
+      this.#registerDisplay(socket, display);
+    });
 
-    socket.on('disconnect', () => {
+    socket.on("disconnect", () => {
       const id = Object.keys(this.#displays).find((key) => {
-        const { socket: displaySocket } = this.#displays[key]
-        return displaySocket.id === socket.id
-      })
-      if (!id) return
-      const { [id]: dropped, ...displays } = this.#displays
-      this.#displays = displays
-      this.#displaysChange.fire(this.displays)
-    })
+        const { socket: displaySocket } = this.#displays[key];
+        return displaySocket.id === socket.id;
+      });
+      if (!id) return;
+      const { [id]: dropped, ...displays } = this.#displays;
+      this.#displays = displays;
+      this.#displaysChange.fire(this.displays);
+    });
 
-    socket.on('unregisterdisplay', ({ id }) => {
-      const { [id]: dropped, ...displays } = this.#displays
-      this.#displays = displays
-      this.#displaysChange.fire(this.displays)
-    })
+    socket.on("unregisterdisplay", ({ id }) => {
+      const { [id]: dropped, ...displays } = this.#displays;
+      this.#displays = displays;
+      this.#displaysChange.fire(this.displays);
+    });
 
     // TODO: use autoBind
-    socket.on('message', ({
-      type,
-      payload
-      // meta,
-    }: ComEventData) => {
-      if (type === 'resizedisplay') {
-        this.#resizeDisplay(payload)
+    socket.on(
+      "message",
+      ({
+        type,
+        payload,
+      }: // meta,
+      ComEventData) => {
+        if (type === "resizedisplay") {
+          this.#resizeDisplay(payload);
+        }
       }
-    })
+    );
 
-    this.#socketConnection.fire(socket)
+    this.#socketConnection.fire(socket);
+  };
+
+  get state(): AppState {
+    return this.#stateGetter();
   }
 
-  get state (): AppState {
-    return this.#stateGetter()
+  get host() {
+    return this.#host;
   }
 
-  get host () {
-    return this.#host
+  get port() {
+    return this.#port;
   }
 
-  get port () {
-    return this.#port
-  }
-
-  get displays (): DisplayBase[] {
+  get displays(): DisplayBase[] {
     return Object.keys(this.#displays)
-      .filter((id) => !id.startsWith('control'))
+      .filter((id) => !id.startsWith("control"))
       .map((id) => {
-        const { socket, ...display } = this.#displays[id]
-        return { ...display, id }
-      })
+        const { socket, ...display } = this.#displays[id];
+        return { ...display, id };
+      });
   }
 
-  get displaysMaxSize (): { width: number, height: number } {
+  get displaysMaxSize(): { width: number; height: number } {
     const size = {
       width: 600,
-      height: 400
-    }
-    this.displays.filter((display) => !display.control).forEach((display) => {
-      size.width = Math.max(display.width ?? 0, size.width)
-      size.height = Math.max(display.height ?? 0, size.height)
-    })
-    return size
+      height: 400,
+    };
+    this.displays
+      .filter((display) => !display.control)
+      .forEach((display) => {
+        size.width = Math.max(display.width ?? 0, size.width);
+        size.height = Math.max(display.height ?? 0, size.height);
+      });
+    return size;
   }
 
   activate = (context: vscode.ExtensionContext): vscode.Disposable => {
-    console.info('[webServer] activation')
+    console.info("[webServer] activation");
 
-    this.#context = context
-    this.#server.listen(this.#port)
+    this.#context = context;
+    this.#server.listen(this.#port);
 
     return {
       dispose: () => {
-        console.info('[webServer] dispose')
-        this.deactivate()
-      }
-    }
+        console.info("[webServer] dispose");
+        this.deactivate();
+      },
+    };
+  };
+
+  get onDisplaysChange() {
+    return this.#displaysChange.event;
   }
 
-  get onDisplaysChange () {
-    return this.#displaysChange.event
-  }
-
-  get onSocketConnection () {
-    return this.#socketConnection.event
+  get onSocketConnection() {
+    return this.#socketConnection.event;
   }
 
   broadcast = (type: string, payload?: any) => {
-    this.#io.emit('message', { type, payload })
-  }
+    this.#io.emit("message", { type, payload });
+  };
 
   broadcastScript = (info: Record<string, any>, script: string) => {
-    this.broadcast('scriptchange', { ...info, script })
-  }
+    this.broadcast("scriptchange", { ...info, script });
+  };
 
   broadcastData = (data: any) => {
-    this.broadcast('updatedata', data)
-  }
+    this.broadcast("updatedata", data);
+  };
 
   broadcastState = ({ displays, ...data }: Partial<AppState>) => {
-    this.broadcast('updatestate', data)
-  }
+    this.broadcast("updatestate", data);
+  };
 
   deactivate = (cb?: (err?: Error) => void) => {
-    console.info('[webServer] deactivation')
+    console.info("[webServer] deactivation");
     // TODO: disconnect IO clients
-    this.#server.close(cb)
-  }
+    this.#server.close(cb);
+  };
 }

@@ -1,5 +1,5 @@
-import type { AppState } from '../types'
+import type { AppState } from "../types";
 
-const vscode = acquireVsCodeApi<AppState>()
+const vscode = acquireVsCodeApi<AppState>();
 
-export default vscode
+export default vscode;

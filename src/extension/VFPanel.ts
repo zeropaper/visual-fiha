@@ -1,32 +1,28 @@
 /* eslint-disable no-underscore-dangle */
-import * as vscode from 'vscode'
-import * as fs from 'fs'
+import * as vscode from "vscode";
+import * as fs from "fs";
 
-import type { ComEventData } from '../utils/com'
-import { type AppState } from '../types'
-import getNonce from './getNonce'
-import getWebviewOptions from './getWebviewOptions'
+import type { ComEventData } from "../utils/com";
+import { type AppState } from "../types";
+import getNonce from "./getNonce";
+import getWebviewOptions from "./getWebviewOptions";
 
-const isDebugMode = () => process.env.VSCODE_DEBUG_MODE === 'true'
+const isDebugMode = () => process.env.VSCODE_DEBUG_MODE === "true";
 
-function handleIncomingMessage ({
-  type,
-  payload,
-  meta
-}: ComEventData) {
+function handleIncomingMessage({ type, payload, meta }: ComEventData) {
   switch (type) {
-    case 'setBPM':
-    case 'openEditor':
-    case 'toggleLayer':
-    case 'createLayer':
-    case 'removeLayer':
-      vscode.commands.executeCommand(`visualFiha.${type}`, payload, meta)
-      break
-    case 'alert':
-      vscode.window.showErrorMessage(payload)
-      break
+    case "setBPM":
+    case "openEditor":
+    case "toggleLayer":
+    case "createLayer":
+    case "removeLayer":
+      vscode.commands.executeCommand(`visualFiha.${type}`, payload, meta);
+      break;
+    case "alert":
+      vscode.window.showErrorMessage(payload);
+      break;
     default:
-      vscode.window.showErrorMessage(`Unknown command: ${type}`)
+      vscode.window.showErrorMessage(`Unknown command: ${type}`);
   }
 }
 
@@ -37,145 +33,192 @@ export default class VFPanel {
   /**
    * Track the currently panel. Only allow a single panel to exist at a time.
    */
-  public static currentPanel: VFPanel | undefined
+  public static currentPanel: VFPanel | undefined;
 
-  public static readonly viewType = 'visualFiha'
+  public static readonly viewType = "visualFiha";
 
-  private readonly _panel: vscode.WebviewPanel
+  private readonly _panel: vscode.WebviewPanel;
 
-  private readonly _context: vscode.ExtensionContext
+  private readonly _context: vscode.ExtensionContext;
 
-  private readonly _extensionUri: vscode.Uri
+  private readonly _extensionUri: vscode.Uri;
 
-  private readonly _incomingMessage: vscode.EventEmitter<ComEventData>
+  private readonly _incomingMessage: vscode.EventEmitter<ComEventData>;
 
-  private readonly _disposables: vscode.Disposable[] = []
+  private readonly _disposables: vscode.Disposable[] = [];
 
-  public static createOrShow (context: vscode.ExtensionContext) {
-    const column = (vscode.window.activeTextEditor != null)
-      ? vscode.window.activeTextEditor.viewColumn
-      : undefined
+  public static createOrShow(context: vscode.ExtensionContext) {
+    const column =
+      vscode.window.activeTextEditor != null
+        ? vscode.window.activeTextEditor.viewColumn
+        : undefined;
 
     // console.info('[VFPanel] createOrShow', vscode.window);
     // If we already have a panel, show it.
     if (VFPanel.currentPanel != null) {
-      VFPanel.currentPanel._panel.reveal(column)
-      return
+      VFPanel.currentPanel._panel.reveal(column);
+      return;
     }
 
     // Otherwise, create a new panel.
     const panel = vscode.window.createWebviewPanel(
       VFPanel.viewType,
-      'Visual Fiha',
+      "Visual Fiha",
       column ?? vscode.ViewColumn.One,
       getWebviewOptions(context.extensionUri)
-    )
+    );
 
-    VFPanel.currentPanel = new VFPanel(panel, context)
-    VFPanel.currentPanel.onIncomingMessage(handleIncomingMessage)
+    VFPanel.currentPanel = new VFPanel(panel, context);
+    VFPanel.currentPanel.onIncomingMessage(handleIncomingMessage);
   }
 
-  public static revive (panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
+  public static revive(
+    panel: vscode.WebviewPanel,
+    context: vscode.ExtensionContext
+  ) {
     // console.info('[VFPanel] revive');
-    VFPanel.currentPanel = new VFPanel(panel, context)
-    VFPanel.currentPanel.onIncomingMessage(handleIncomingMessage)
+    VFPanel.currentPanel = new VFPanel(panel, context);
+    VFPanel.currentPanel.onIncomingMessage(handleIncomingMessage);
   }
 
-  private constructor (panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
-    this._context = context
-    this._panel = panel
-    this._extensionUri = context.extensionUri
-    this._incomingMessage = new vscode.EventEmitter<ComEventData>()
+  private constructor(
+    panel: vscode.WebviewPanel,
+    context: vscode.ExtensionContext
+  ) {
+    this._context = context;
+    this._panel = panel;
+    this._extensionUri = context.extensionUri;
+    this._incomingMessage = new vscode.EventEmitter<ComEventData>();
 
     // Set the webview's initial html content
-    this._update()
+    this._update();
 
     // In development mode, listen for when the webview JS changes.
     if (isDebugMode()) {
-      const jsBundlePath = `${context.extensionPath}/out/webviews/index.js`
-      const jsBundleWatcher = fs.watch(jsBundlePath, () => { this._update() })
+      const jsBundlePath = `${context.extensionPath}/out/webviews/index.js`;
+      const jsBundleWatcher = fs.watch(jsBundlePath, () => {
+        this._update();
+      });
       this._disposables.push({
-        dispose: () => { jsBundleWatcher.close() }
-      })
-      const cssPath = `${context.extensionPath}/media/main.css`
-      const cssWatcher = fs.watch(cssPath, () => { this._update() })
+        dispose: () => {
+          jsBundleWatcher.close();
+        },
+      });
+      const cssPath = `${context.extensionPath}/media/main.css`;
+      const cssWatcher = fs.watch(cssPath, () => {
+        this._update();
+      });
       this._disposables.push({
-        dispose: () => { cssWatcher.close() }
-      })
+        dispose: () => {
+          cssWatcher.close();
+        },
+      });
     }
 
     // Listen for when the panel is disposed
     // This happens when the user closes the panel or when the panel is closed programmatically
-    this._panel.onDidDispose(() => { this.dispose() }, null, this._disposables)
+    this._panel.onDidDispose(
+      () => {
+        this.dispose();
+      },
+      null,
+      this._disposables
+    );
 
     // Handle messages from the webview
     this._panel.webview.onDidReceiveMessage(
-      (evt) => { this._incomingMessage.fire(evt) },
+      (evt) => {
+        this._incomingMessage.fire(evt);
+      },
       null,
       this._disposables
-    )
+    );
   }
 
-  public onIncomingMessage (listener: (evt: ComEventData) => void) {
-    return this._incomingMessage.event(listener)// , null, this._disposables);
+  public onIncomingMessage(listener: (evt: ComEventData) => void) {
+    return this._incomingMessage.event(listener); // , null, this._disposables);
   }
 
-  public postMessage (msg: ComEventData) {
-    this._panel.webview.postMessage(msg)
+  public postMessage(msg: ComEventData) {
+    this._panel.webview.postMessage(msg);
   }
 
-  public updateDisplays (displays: object) {
-    this._panel.webview.postMessage({ type: 'updatedisplays', payload: displays })
+  public updateDisplays(displays: object) {
+    this._panel.webview.postMessage({
+      type: "updatedisplays",
+      payload: displays,
+    });
   }
 
-  public updateState (update: Partial<AppState> = {}) {
-    this._panel.webview.postMessage({ type: 'updatestate', payload: update })
+  public updateState(update: Partial<AppState> = {}) {
+    this._panel.webview.postMessage({ type: "updatestate", payload: update });
   }
 
-  public updateData (update = {}) {
-    this._panel.webview.postMessage({ type: 'updatedata', payload: update })
+  public updateData(update = {}) {
+    this._panel.webview.postMessage({ type: "updatedata", payload: update });
   }
 
-  public dispose () {
-    VFPanel.currentPanel = undefined
+  public dispose() {
+    VFPanel.currentPanel = undefined;
 
     // Clean up our resources
-    this._panel.dispose()
+    this._panel.dispose();
 
     while (this._disposables.length > 0) {
-      const x = this._disposables.pop()
+      const x = this._disposables.pop();
       if (x != null) {
-        x.dispose()
+        x.dispose();
       }
     }
   }
 
-  private _update () {
-    const { webview } = this._panel
-    this._panel.webview.html = this._getHtmlForWebview(webview)
+  private _update() {
+    const { webview } = this._panel;
+    this._panel.webview.html = this._getHtmlForWebview(webview);
   }
 
-  private _getHtmlForWebview (webview: vscode.Webview) {
+  private _getHtmlForWebview(webview: vscode.Webview) {
     // Local path to main script run in the webview
-    const scriptPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'out', 'webviews', 'index.js')
+    const scriptPathOnDisk = vscode.Uri.joinPath(
+      this._extensionUri,
+      "out",
+      "webviews",
+      "index.js"
+    );
 
     // And the uri we use to load this script in the webview
-    const scriptUri = webview.asWebviewUri(scriptPathOnDisk).toString()
+    const scriptUri = webview.asWebviewUri(scriptPathOnDisk).toString();
 
     // Local path to css styles
-    const styleResetPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'reset.css')
-    const stylesPathVSCPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'vscode.css')
-    const stylesPathMainPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'main.css')
-    const iconPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'favicon.png')
+    const styleResetPath = vscode.Uri.joinPath(
+      this._extensionUri,
+      "media",
+      "reset.css"
+    );
+    const stylesPathVSCPath = vscode.Uri.joinPath(
+      this._extensionUri,
+      "media",
+      "vscode.css"
+    );
+    const stylesPathMainPath = vscode.Uri.joinPath(
+      this._extensionUri,
+      "media",
+      "main.css"
+    );
+    const iconPath = vscode.Uri.joinPath(
+      this._extensionUri,
+      "media",
+      "favicon.png"
+    );
 
     // Uri to load styles into webview
-    const stylesResetUri = webview.asWebviewUri(styleResetPath).toString()
-    const stylesVSCUri = webview.asWebviewUri(stylesPathVSCPath).toString()
-    const stylesMainUri = webview.asWebviewUri(stylesPathMainPath).toString()
-    const iconUri = webview.asWebviewUri(iconPath).toString()
+    const stylesResetUri = webview.asWebviewUri(styleResetPath).toString();
+    const stylesVSCUri = webview.asWebviewUri(stylesPathVSCPath).toString();
+    const stylesMainUri = webview.asWebviewUri(stylesPathMainPath).toString();
+    const iconUri = webview.asWebviewUri(iconPath).toString();
 
     // Use a nonce to only allow specific scripts to be run
-    const nonce = getNonce()
+    const nonce = getNonce();
 
     return `<!DOCTYPE html>
       <html lang="en">
@@ -236,6 +279,6 @@ export default class VFPanel {
         </div>
         <script nonce="${nonce}" src="${scriptUri}"></script>
       </body>
-      </html>`
+      </html>`;
   }
 }

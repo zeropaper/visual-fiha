@@ -1,25 +1,22 @@
 /* eslint-env worker */
 
-import { debounce } from 'lodash'
+import { debounce } from "lodash";
 
-import VFWorker, { isDisplayState, type OffscreenCanvas } from './DisplayWorker'
+import VFWorker, {
+  isDisplayState,
+  type OffscreenCanvas,
+} from "./DisplayWorker";
 
-import type {
-  ScriptingData,
-  ScriptInfo,
-  AppState
-} from '../types'
+import type { ScriptingData, ScriptInfo, AppState } from "../types";
 
-import {
-  type ComActionHandlers
-} from '../utils/com'
-import Canvas2DLayer from '../layers/Canvas2D/Canvas2DLayer'
-import ThreeJSLayer from '../layers/ThreeJS/ThreeJSLayer'
+import { type ComActionHandlers } from "../utils/com";
+import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
+import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
 
-type LayerTypes = Canvas2DLayer | ThreeJSLayer
+type LayerTypes = Canvas2DLayer | ThreeJSLayer;
 
 interface WebWorker extends Worker {
-  location: Location
+  location: Location;
 }
 
 // scripting
@@ -29,139 +26,133 @@ const data: ScriptingData = {
   now: 0,
   deltaNow: 0,
   frequency: [],
-  volume: []
-}
+  volume: [],
+};
 
 // eslint-disable-next-line no-restricted-globals
-const worker: WebWorker = self as any
+const worker: WebWorker = self as any;
 
 const read = (key: string, defaultVal?: any) =>
-  (typeof data[key] !== 'undefined' ? data[key] : defaultVal)
+  typeof data[key] !== "undefined" ? data[key] : defaultVal;
 
-const idFromWorkerHash = worker.location.hash.replace('#', '')
-if (!idFromWorkerHash) throw new Error('[worker] worker is not ready')
+const idFromWorkerHash = worker.location.hash.replace("#", "");
+if (!idFromWorkerHash) throw new Error("[worker] worker is not ready");
 
 const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
-  scriptchange: async (payload: ScriptInfo & {
-    script: string
-  }) => {
-    const {
-      id,
-      type,
-      role,
-      script
-    } = payload
+  scriptchange: async (
+    payload: ScriptInfo & {
+      script: string;
+    }
+  ) => {
+    const { id, type, role, script } = payload;
 
-    if (type === 'worker') {
-      vfWorker.scriptable[role].code = script
-      if (role === 'setup') {
+    if (type === "worker") {
+      vfWorker.scriptable[role].code = script;
+      if (role === "setup") {
         // data = { ...data, ...((await scriptable.execSetup()) || {}) };
-        Object.assign(data, (await vfWorker.scriptable.execSetup() || {}))
+        Object.assign(data, (await vfWorker.scriptable.execSetup()) || {});
       }
     } else {
-      vfWorker.workerCom.post('scriptchange', payload)
-      if (type === 'layer') {
-        const found = vfWorker.findStateLayer(id)
+      vfWorker.workerCom.post("scriptchange", payload);
+      if (type === "layer") {
+        const found = vfWorker.findStateLayer(id);
         if (found != null) {
-          found[role].code = script
+          found[role].code = script;
 
-          if (role === 'setup') {
-            found.execSetup()
+          if (role === "setup") {
+            found.execSetup();
           }
         } else {
-          console.error('scriptchange layer not found', id)
+          console.error("scriptchange layer not found", id);
         }
       }
     }
   },
   updatestate: debounce((update: Partial<AppState>) => {
-    const { scriptable, state } = vfWorker
+    const { scriptable, state } = vfWorker;
     const layers = update.layers
-      ? update
-        .layers?.map((options) => {
-          const found = vfWorker.findStateLayer(options.id)
-          if (found != null) {
-            found.active = !!options.active
-            return found
-          }
+      ? update.layers
+          ?.map((options) => {
+            const found = vfWorker.findStateLayer(options.id);
+            if (found != null) {
+              found.active = !!options.active;
+              return found;
+            }
 
-          switch (options.type) {
-          // case 'canvas2d':
-            case 'canvas':
-              return new Canvas2DLayer({ ...options, read })
-            case 'threejs':
-              return new ThreeJSLayer({ ...options, read })
-            default:
-              return null
-          }
-        })
-        .filter(Boolean)
-        .map((layer) => vfWorker.resizeLayer(layer as LayerTypes))
-      : state.layers
+            switch (options.type) {
+              // case 'canvas2d':
+              case "canvas":
+                return new Canvas2DLayer({ ...options, read });
+              case "threejs":
+                return new ThreeJSLayer({ ...options, read });
+              default:
+                return null;
+            }
+          })
+          .filter(Boolean)
+          .map((layer) => vfWorker.resizeLayer(layer as LayerTypes))
+      : state.layers;
     const updated = {
       ...state,
       ...update,
-      layers
-    }
+      layers,
+    };
     if (!isDisplayState(updated)) {
-      throw new Error('updatestate: invalid state')
+      throw new Error("updatestate: invalid state");
     }
-    vfWorker.state = updated
+    vfWorker.state = updated;
     if (
-      typeof update.worker?.setup !== 'undefined' &&
+      typeof update.worker?.setup !== "undefined" &&
       update.worker.setup !== scriptable.setup.code
     ) {
-      scriptable.setup.code = update.worker.setup || scriptable.setup.code
-      state.worker.setup = scriptable.setup.code
-      scriptable.execSetup()
+      scriptable.setup.code = update.worker.setup || scriptable.setup.code;
+      state.worker.setup = scriptable.setup.code;
+      scriptable.execSetup();
     }
     if (
-      typeof update.worker?.animation !== 'undefined' &&
+      typeof update.worker?.animation !== "undefined" &&
       update.worker.animation !== scriptable.animation.code
     ) {
-      scriptable.animation.code = update.worker.animation ||
-        scriptable.animation.code
-      state.worker.animation = scriptable.animation.code
+      scriptable.animation.code =
+        update.worker.animation || scriptable.animation.code;
+      state.worker.animation = scriptable.animation.code;
     }
   }, 32),
   updatedata: (payload: typeof data) => {
-    Object.assign(data, payload)
+    Object.assign(data, payload);
     // workerCom.post('updatedata', data);
-  }
-})
+  },
+});
 
 const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
     // eslint-disable-next-line no-param-reassign
-    vfWorker.onScreenCanvas = onscreen
+    vfWorker.onScreenCanvas = onscreen;
 
     // TODO: use autoBind
-    vfWorker.registerDisplay()
+    vfWorker.registerDisplay();
   },
-  resize: ({
-    width,
-    height
-  }: { width: number, height: number }) => {
-    const { canvas, socketCom, state } = vfWorker
+  resize: ({ width, height }: { width: number; height: number }) => {
+    const { canvas, socketCom, state } = vfWorker;
     vfWorker.state = {
       ...state,
       width: width || state.width,
-      height: height || state.height
-    }
-    canvas.width = state.width
-    canvas.height = state.height
-    state.layers?.forEach((l) => vfWorker.resizeLayer(l))
+      height: height || state.height,
+    };
+    canvas.width = state.width;
+    canvas.height = state.height;
+    state.layers?.forEach((l) => vfWorker.resizeLayer(l));
 
     if (!state.control) {
-      socketCom.post('resizedisplay', {
+      socketCom.post("resizedisplay", {
         id: idFromWorkerHash,
         width: state.width,
-        height: state.height
-      })
+        height: state.height,
+      });
     }
-  }
-})
+  },
+});
 
-const displayWorker = new VFWorker(worker, socketHandlers, messageHandlers)
+const displayWorker = new VFWorker(worker, socketHandlers, messageHandlers);
 // eslint-disable-next-line no-console
-console.info('displayWorker', displayWorker)
+console.info("displayWorker", displayWorker);

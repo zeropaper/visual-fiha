@@ -1,3 +1,3 @@
-describe('DisplayWorker', () => {
-  it.todo('is comprehensively tested (haha)')
-})
+describe("DisplayWorker", () => {
+  it.todo("is comprehensively tested (haha)");
+});

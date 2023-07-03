@@ -1,10 +1,14 @@
 import {
-  type ScriptingData
+  type ScriptingData,
   // DisplayBase,
   // Layer,
   // StageInfo,
-} from '../types'
+} from "../types";
 
-export function isScriptingData (value: any): value is ScriptingData {
-  return value != null && typeof value === 'object' && typeof value.iterationCount === 'number'
+export function isScriptingData(value: any): value is ScriptingData {
+  return (
+    value != null &&
+    typeof value === "object" &&
+    typeof value.iterationCount === "number"
+  );
 }

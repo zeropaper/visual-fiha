@@ -1,20 +1,20 @@
-import * as React from 'react'
-import { useSelector } from 'react-redux'
-import { type WebviewAppState } from '../store'
+import * as React from "react";
+import { useSelector } from "react-redux";
+import { type WebviewAppState } from "../store";
 
-import Display from './Display'
+import Display from "./Display";
 
 const DisplaysList = () => {
   const {
     displays: items,
     host,
-    port
-  } = useSelector(({
+    port,
+  } = useSelector(({ displays, server }: WebviewAppState) => ({
     displays,
-    server
-  }: WebviewAppState) => ({ displays, ...server }))
+    ...server,
+  }));
 
-  const displayURL = `http://${host}:${port}/display/`
+  const displayURL = `http://${host}:${port}/display/`;
   // const handleDisplayClick: React.MouseEventHandler = (evt) => {
   //   evt.preventDefault()
   //   window.open(`${displayURL}#${Math.round(Math.random() * 1000)}`, '_blank')
@@ -33,11 +33,13 @@ const DisplaysList = () => {
         ))}
         <div>
           {/* <a href="#" onClick={handleDisplayClick}>{displayURL}</a> */}
-          <a href={`${displayURL}#${Math.round(Math.random() * 1000)}`}>{displayURL}</a>
+          <a href={`${displayURL}#${Math.round(Math.random() * 1000)}`}>
+            {displayURL}
+          </a>
         </div>
       </main>
     </section>
-  )
-}
+  );
+};
 
-export default DisplaysList
+export default DisplaysList;

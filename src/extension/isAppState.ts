@@ -1,5 +1,7 @@
-import { type AppState } from '../types'
+import { type AppState } from "../types";
 
-export function isAppState (value: any): value is AppState {
-  return value != null && typeof value === 'object' && typeof value.id === 'string'
+export function isAppState(value: any): value is AppState {
+  return (
+    value != null && typeof value === "object" && typeof value.id === "string"
+  );
 }

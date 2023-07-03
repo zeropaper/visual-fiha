@@ -1,8 +1,9 @@
-import { type Layer } from '../types'
+import { type Layer } from "../types";
 
-export function isLayerType (type: string): type is Layer['type'] {
+export function isLayerType(type: string): type is Layer["type"] {
   return [
-    'canvas', 'threejs'
+    "canvas",
+    "threejs",
     // , 'canvas2d', 'webgl', 'webgl2'
-  ].includes(type)
+  ].includes(type);
 }
