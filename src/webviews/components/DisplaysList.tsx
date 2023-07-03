@@ -15,6 +15,10 @@ const DisplaysList = () => {
   }: WebviewAppState) => ({ displays, ...server }))
 
   const displayURL = `http://${host}:${port}/display/`
+  // const handleDisplayClick: React.MouseEventHandler = (evt) => {
+  //   evt.preventDefault()
+  //   window.open(`${displayURL}#${Math.round(Math.random() * 1000)}`, '_blank')
+  // }
 
   return (
     <section id="displays">
@@ -28,7 +32,8 @@ const DisplaysList = () => {
           <Display key={item.id} {...item} />
         ))}
         <div>
-          <a href={displayURL}>{displayURL}</a>
+          {/* <a href="#" onClick={handleDisplayClick}>{displayURL}</a> */}
+          <a href={`${displayURL}#${Math.round(Math.random() * 1000)}`}>{displayURL}</a>
         </div>
       </main>
     </section>
