@@ -1,7 +1,5 @@
 /* eslint-env worker */
 
-import { debounce } from "lodash";
-
 import VFWorker, {
   isDisplayState,
   type OffscreenCanvas,
@@ -80,7 +78,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
       }
     }
   },
-  updatestate: debounce((update: Partial<AppState>) => {
+  updatestate: (update: Partial<AppState>) => {
     const { scriptable, state } = vfWorker;
 
     const layers = Array.isArray(update.layers)
@@ -136,7 +134,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
         update.worker.animation || scriptable.animation.code;
       state.worker.animation = scriptable.animation.code;
     }
-  }, 32),
+  },
   updatedata: (payload: typeof data) => {
     Object.assign(data, payload);
     // workerCom.post('updatedata', data);
