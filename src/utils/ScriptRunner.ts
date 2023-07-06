@@ -142,9 +142,12 @@ class ScriptRunner {
     this.#errors.compilation = null;
     this.#errors.execution = null;
 
-    const paramsStr = Object.keys(this.api).join(", ");
+    const paramNames = Object.keys(this.api);
+    const paramsStr = paramNames.join(", ");
 
-    const forbiddenStr = Array.from(forbidden).join(", ");
+    const forbiddenStr = Array.from(forbidden)
+      .filter((value) => !paramNames.includes(value))
+      .join(", ");
 
     const sync = code.includes("await") ? "async" : "";
 
