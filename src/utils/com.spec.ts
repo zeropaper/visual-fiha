@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/consistent-type-assertions */
 import * as com from "./com";
 
 // const expectedError = new Error('Expected');
@@ -14,7 +15,7 @@ describe("com.messenger", () => {
   it("properly use the posting function", () => {
     const post = jest.fn();
     const messenger = com.makeChannelPost(post, "side-1");
-    messenger("actionA");
+    void messenger("actionA");
 
     expect(post).toHaveBeenCalledTimes(1);
 
@@ -113,7 +114,7 @@ describe("com.autoBind", () => {
       expect(typeof post).toBe("function");
       expect(typeof listener).toBe("function");
 
-      post("actionA");
+      void post("actionA");
     }).not.toThrow();
 
     expect(obj.postMessage).toHaveBeenCalledTimes(1);

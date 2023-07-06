@@ -58,7 +58,8 @@ export default class Display {
 
   constructor(options?: DisplayOptions) {
     const { id, canvas = Display.ensureCanvas() } = options ?? {};
-    this.#id = id ?? `display${(Math.random() * 10000).toFixed()}`;
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    this.#id = id || `display${(Math.random() * 10000).toFixed()}`;
 
     canvas.width = canvas.parentElement?.clientWidth ?? canvas.width;
     canvas.height = canvas.parentElement?.clientHeight ?? canvas.height;
@@ -80,8 +81,8 @@ export default class Display {
       {
         type: "offscreencanvas",
         payload: { canvas: this.#offscreen },
-        // @ts-expect-error
       },
+      // @ts-expect-error
       [this.#offscreen]
     );
     requestAnimationFrame(() => this.resize());
@@ -118,9 +119,11 @@ export default class Display {
   resize = () =>
     requestAnimationFrame(() => {
       const { canvas } = this;
-      this.post("resize", {
+      const size = {
         width: canvas.parentElement?.clientWidth ?? this.#canvas.width,
         height: canvas.parentElement?.clientHeight ?? this.#canvas.height,
-      });
+      };
+      console.info("[display] resize", !!canvas.parentElement, size);
+      void this.post("resize", size);
     });
 }
