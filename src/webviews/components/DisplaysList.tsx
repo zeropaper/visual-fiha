@@ -15,30 +15,23 @@ const DisplaysList = () => {
   }));
 
   const displayURL = `http://${host}:${port}/display/`;
-  // const handleDisplayClick: React.MouseEventHandler = (evt) => {
-  //   evt.preventDefault()
-  //   window.open(`${displayURL}#${Math.round(Math.random() * 1000)}`, '_blank')
-  // }
 
   return (
-    <section id="displays">
-      <header>
-        <h1>Displays</h1>
-      </header>
-
-      <main className="displays-wrapper">
+    <>
+      <div className="displays-wrapper">
         {items.map((item) => (
-          // eslint-disable-next-line react/jsx-props-no-spreading
           <Display key={item.id} {...item} />
         ))}
-        <div>
-          {/* <a href="#" onClick={handleDisplayClick}>{displayURL}</a> */}
-          <a href={`${displayURL}#${Math.round(Math.random() * 1000)}`}>
-            {displayURL}
-          </a>
-        </div>
-      </main>
-    </section>
+      </div>
+      <div className="button-wrapper">
+        <a
+          className="new-display monaco-text-button button"
+          href={`${displayURL}`}
+        >
+          {displayURL}
+        </a>
+      </div>
+    </>
   );
 };
 

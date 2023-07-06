@@ -34,7 +34,7 @@ export const indexTemplate = ({
     <link rel="stylesheet" href="http://${host}:${port}/reset.css" />
   </head>
   <body style="background: black; position: relative; margin: 0; padding: 0; overflow: hidden; height: 100%; display: flex; justify-content: center; align-items: center">
-    <canvas id="canvas" width="600" height="400" style="z-index: 10; width: auto; height: auto;"></canvas>
+    <canvas id="canvas" width="600" height="400" style="z-index: 10; width: auto; height: auto; max-width:100%; max-height:100%"></canvas>
     <script src="http://${host}:${port}${path}index.js"></script>
   </body>
 </html>`.trim();
@@ -197,12 +197,7 @@ export default class VFServer {
     }
   };
 
-  #resizeDisplay = ({
-    id,
-    width,
-    height,
-  }: // stage: displayStage,
-  DisplayBase) => {
+  #resizeDisplay = ({ id, width, height }: DisplayBase) => {
     const display = this.#displays[id];
     if (!display) return;
 

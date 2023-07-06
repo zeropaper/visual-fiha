@@ -1,12 +1,12 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import ControlDisplay from "./components/ControlDisplay";
+import Displays from "./components/DisplaysList";
 import Providers from "./components/Providers";
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const root = createRoot(document.getElementById("control-view")!);
+const root = createRoot(document.getElementById("displays-view")!);
 root.render(
-  <Providers name="controlView">
-    <ControlDisplay />
+  <Providers name="displaysView">
+    <Displays />
   </Providers>
 );

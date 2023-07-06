@@ -1,6 +1,6 @@
 import { type Layer } from "../types";
 
-export function isLayerType(type: string): type is Layer["type"] {
+export function isLayerType(type: any): type is Layer["type"] {
   return [
     "canvas",
     "threejs",

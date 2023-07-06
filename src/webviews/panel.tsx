@@ -13,11 +13,8 @@ import vscode from "./vscode";
 import { Provider as ComProvider } from "./ComContext";
 
 import StoreControl from "./components/StoreControl";
-// import ControlDisplay from "./components/ControlDisplay";
 import DisplaysList from "./components/DisplaysList";
 import AppInfo from "./components/AppInfo";
-import LayersList from "./components/LayersList";
-import Audio from "./components/Audio";
 
 const { post, listener } = autoBind(
   {
@@ -25,7 +22,7 @@ const { post, listener } = autoBind(
       vscode.postMessage(data);
     },
   },
-  "webview",
+  "panel",
   messageHandlers
 );
 
@@ -57,11 +54,8 @@ const WebviewComponent = () => {
     <ComProvider post={post}>
       <StoreProvider store={store}>
         <>
-          {/* <ControlDisplay /> */}
           <div id="controls">
             <AppInfo />
-            <Audio />
-            <LayersList />
             <DisplaysList />
             <StoreControl />
           </div>

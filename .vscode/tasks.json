@@ -11,20 +11,14 @@
       "group": "build",
       "label": "extension: watch",
       "dependsOn": [
-        "webviews:panel: watch",
         "webviews:controlView: watch",
+        "webviews:audioView: watch",
+        "webviews:displaysView: watch",
+        "webviews:timelineView: watch",
         "display worker: watch",
         "capture: watch",
         "display: watch"
       ]
-    },
-    {
-      "type": "shell",
-      "command": "npm run watch:webviews:panel",
-      "problemMatcher": "$esbuild-watch",
-      "isBackground": true,
-      "group": "build",
-      "label": "webviews:panel: watch"
     },
     {
       "type": "shell",
@@ -33,6 +27,30 @@
       "isBackground": true,
       "group": "build",
       "label": "webviews:controlView: watch"
+    },
+    {
+      "type": "shell",
+      "command": "npm run watch:webviews:audioView",
+      "problemMatcher": "$esbuild-watch",
+      "isBackground": true,
+      "group": "build",
+      "label": "webviews:audioView: watch"
+    },
+    {
+      "type": "shell",
+      "command": "npm run watch:webviews:displaysView",
+      "problemMatcher": "$esbuild-watch",
+      "isBackground": true,
+      "group": "build",
+      "label": "webviews:displaysView: watch"
+    },
+    {
+      "type": "shell",
+      "command": "npm run watch:webviews:timelineView",
+      "problemMatcher": "$esbuild-watch",
+      "isBackground": true,
+      "group": "build",
+      "label": "webviews:timelineView: watch"
     },
     {
       "type": "shell",

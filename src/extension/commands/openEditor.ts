@@ -30,7 +30,7 @@ export default function openEditor() {
       typeof options === "string" ? options : options.relativePath
     );
     const {
-      viewColumn = vscode.ViewColumn.Beside,
+      viewColumn = vscode.ViewColumn.Active,
       preserveFocus = true,
       preview = false,
       selection = undefined,
@@ -53,7 +53,7 @@ export default function openEditor() {
     const reject = (error: any) => {
       console.warn("[VFPanel] open error", error);
       if (!meta?.operationId) {
-        showErrorMessage(`Could not open: ${filepath.toString()}`);
+        void showErrorMessage(`Could not open: ${filepath.toString()}`);
         return;
       }
 

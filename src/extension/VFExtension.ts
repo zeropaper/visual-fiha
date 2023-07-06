@@ -1,26 +1,18 @@
 import * as vscode from "vscode";
-import {
-  type AnyAction,
-  // EmptyObject,
-  // Store,
-} from "redux";
-import {
-  type AppState,
-  type ScriptingData,
-  // DisplayBase,
-  // Layer,
-  // StageInfo,
-} from "../types";
-import VFPanel from "./VFPanel";
+import { type ScriptingData } from "../types";
 import VFServer from "./WebServer";
 import commands from "./commands";
-import store from "./store";
+import store, { type StoreAction } from "./store";
 import readScripts from "./readScripts";
 import readLayerScripts from "./readLayerScripts";
 import textDocumentScriptInfo from "./textDocumentScriptInfo";
 import readWorkspaceRC from "./readWorkspaceRC";
-import configuration from "./configuration";
-import ControlViewProvider from "./ControlViewProvider";
+import ControlViewProvider from "./views/ControlViewProvider";
+import AudioViewProvider from "./views/AudioViewProvider";
+import ScriptsViewProvider from "./views/ScriptsViewProvider";
+import SettingsViewProvider from "./views/SettingsViewProvider";
+import DisplaysViewProvider from "./views/DisplaysViewProvider";
+import TimelineViewProvider from "./views/TimelineViewProvider";
 
 export default class VFExtension {
   constructor() {
@@ -91,17 +83,20 @@ export default class VFExtension {
   }
 
   get state() {
-    return this.#store.getState() as AppState;
+    return this.#store.getState();
   }
 
-  dispatch(action: AnyAction) {
+  get subscribe() {
+    return this.#store.subscribe;
+  }
+
+  dispatch(action: StoreAction) {
     return this.#store.dispatch(action);
   }
 
   updateState() {
     const { state } = this;
     this.#webServer.broadcastState(state);
-    VFPanel.currentPanel?.updateState(state);
   }
 
   async propagate() {
@@ -139,17 +134,10 @@ export default class VFExtension {
 
   async activate(context: vscode.ExtensionContext) {
     try {
-      const openControls = configuration("openControls");
-      if (openControls) {
-        void vscode.commands.executeCommand("visualFiha.openControls");
-      }
-
       console.info("[ext] start refreshing data");
       this.#refreshInterval = setInterval(() => {
         this.#refreshData();
       }, 8);
-
-      VFPanel.currentPanel?.updateDisplays(this.#webServer.displays);
 
       void this.propagate();
     } catch (err) {
@@ -158,15 +146,31 @@ export default class VFExtension {
     }
 
     const controlsProvider = new ControlViewProvider(context.extensionUri);
+    const audioProvider = new AudioViewProvider(context.extensionUri);
+    const displaysProvider = new DisplaysViewProvider(context.extensionUri);
+    const timelineProvider = new TimelineViewProvider(context.extensionUri);
 
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
         ControlViewProvider.viewType,
         controlsProvider
-      )
-    );
+      ),
 
-    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        AudioViewProvider.viewType,
+        audioProvider
+      ),
+
+      vscode.window.registerWebviewViewProvider(
+        DisplaysViewProvider.viewType,
+        displaysProvider
+      ),
+
+      vscode.window.registerWebviewViewProvider(
+        TimelineViewProvider.viewType,
+        timelineProvider
+      ),
+
       this.#webServer.activate(context),
 
       this.makeDisposableStoreListener(),
@@ -182,7 +186,6 @@ export default class VFExtension {
         });
 
         // this.#webServer.broadcastState(this.#runtimeState);
-        VFPanel.currentPanel?.updateDisplays(displays);
       }),
 
       this.#webServer.onSocketConnection((socket) => {
@@ -202,10 +205,12 @@ export default class VFExtension {
         );
       }),
 
-      ...Object.keys(commands).map((name) => {
-        const fn = commands[name](context, this);
-        return vscode.commands.registerCommand(`visualFiha.${name}`, fn);
-      }),
+      ...Object.keys(commands).map((name) =>
+        vscode.commands.registerCommand(
+          `visualFiha.${name}`,
+          commands[name](context, this)
+        )
+      ),
 
       vscode.workspace.onDidChangeTextDocument((event) => {
         // if (!event.contentChanges.length) return;
@@ -232,9 +237,6 @@ export default class VFExtension {
         }
 
         state.layers[layerIndex][info.role] = script;
-        VFPanel.currentPanel?.updateState({
-          layers: state.layers,
-        });
       }),
 
       vscode.workspace.onDidSaveTextDocument((event) => {
@@ -246,6 +248,12 @@ export default class VFExtension {
         });
       })
     );
+
+    // eslint-disable-next-line no-new
+    new ScriptsViewProvider(context, this);
+
+    // eslint-disable-next-line no-new
+    new SettingsViewProvider(context);
   }
 
   deactivate() {

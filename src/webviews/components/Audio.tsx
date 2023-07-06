@@ -20,16 +20,6 @@ const Audio = () => {
     React.useState(defaultState);
   const serverURL = `http://${server.host}:${server.port}`;
 
-  const openCaptureLink = (
-    <a
-      href={`${serverURL}/capture/`}
-      // target="_blank"
-      // rel="noreferrer"
-    >
-      {`${serverURL}/capture/`}
-    </a>
-  );
-
   const newBPM = Math.round(
     60000 / ((Date.now() - seriesStart) * (1 / measuresCount))
   );
@@ -46,7 +36,7 @@ const Audio = () => {
     }
 
     if (measuresCount > 2) {
-      setBPM(newBPM);
+      void setBPM(newBPM);
     }
 
     setState({
@@ -57,33 +47,25 @@ const Audio = () => {
   };
 
   return (
-    <section id="audio">
-      <header>
-        <h1>Audio</h1>
+    <>
+      <a href={`${serverURL}/capture/`}>{`${serverURL}/capture/`}</a>
+      <div className="bpm">
+        {`BPM: ${bpm}`}
 
-        {openCaptureLink}
-      </header>
-
-      <main>
-        <div>
-          {`BPM: ${bpm}`}
-
-          <button
-            style={{
-              borderRadius: 40,
-              margin: 20,
-              width: 60,
-              height: 60,
-            }}
-            type="button"
-            onClick={handleBPMClick}
-          >
-            {newBPM}
-          </button>
-        </div>
-        <div>visualization</div>
-      </main>
-    </section>
+        <button
+          style={{
+            borderRadius: 40,
+            margin: 20,
+            width: 60,
+            height: 60,
+          }}
+          type="button"
+          onClick={handleBPMClick}
+        >
+          {newBPM}
+        </button>
+      </div>
+    </>
   );
 };
 

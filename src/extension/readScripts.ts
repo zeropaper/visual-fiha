@@ -1,6 +1,6 @@
 import { type TypeDirectory } from "../types";
 import scriptUri from "./scriptUri";
-import asyncReadFile from "./asyncReadFile";
+import { readFile } from "fs/promises";
 
 export default async function readScripts(
   type: keyof typeof TypeDirectory,
@@ -14,12 +14,12 @@ export default async function readScripts(
   let animation = "";
 
   try {
-    setup = await asyncReadFile(setupFSPath);
+    setup = await readFile(setupFSPath, "utf8");
   } catch (e) {
     /* */
   }
   try {
-    animation = await asyncReadFile(animationFSPath);
+    animation = await readFile(animationFSPath, "utf8");
   } catch (e) {
     /* */
   }
