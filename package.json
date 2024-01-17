@@ -93,7 +93,7 @@
     "@types/node": "18.15.7",
     "@types/react": "18.0.29",
     "@types/react-dom": "18.0.11",
-    "@types/react-redux": "7.1.25",
+    "@types/react-redux": "7.1.33",
     "@types/three": "0.149.0",
     "@types/vscode": "1.76.0",
     "@types/vscode-webview": "1.57.1",
