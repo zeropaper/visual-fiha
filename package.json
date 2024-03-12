@@ -88,7 +88,7 @@
     "@reduxjs/toolkit": "1.9.3",
     "@types/fs-extra": "11.0.1",
     "@types/jest": "29.5.0",
-    "@types/lodash": "4.14.191",
+    "@types/lodash": "4.17.0",
     "@types/mime": "3.0.1",
     "@types/node": "18.15.7",
     "@types/react": "18.0.29",
