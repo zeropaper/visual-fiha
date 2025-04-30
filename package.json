@@ -9,7 +9,7 @@
   "icon": "media/vf.icon.alt.png",
   "engines": {
     "node": "^22.14.0",
-    "vscode": "^1.61.0"
+    "vscode": "^1.99.2"
   },
   "categories": [
     "Other"
