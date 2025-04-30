@@ -5,7 +5,7 @@
   "tasks": [
     {
       "type": "shell",
-      "command": "npm run watch:extension",
+      "command": "pnpm watch:extension",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",
@@ -22,7 +22,7 @@
     },
     {
       "type": "shell",
-      "command": "npm run watch:webviews:controlView",
+      "command": "pnpm watch:webviews:controlView",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",
@@ -30,7 +30,7 @@
     },
     {
       "type": "shell",
-      "command": "npm run watch:webviews:audioView",
+      "command": "pnpm watch:webviews:audioView",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",
@@ -38,7 +38,7 @@
     },
     {
       "type": "shell",
-      "command": "npm run watch:webviews:displaysView",
+      "command": "pnpm watch:webviews:displaysView",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",
@@ -46,7 +46,7 @@
     },
     {
       "type": "shell",
-      "command": "npm run watch:webviews:timelineView",
+      "command": "pnpm watch:webviews:timelineView",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",
@@ -54,7 +54,7 @@
     },
     {
       "type": "shell",
-      "command": "npm run watch:display",
+      "command": "pnpm watch:display",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",
@@ -62,7 +62,7 @@
     },
     {
       "type": "shell",
-      "command": "npm run watch:capture",
+      "command": "pnpm watch:capture",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",
@@ -70,7 +70,7 @@
     },
     {
       "type": "shell",
-      "command": "npm run watch:displayworker",
+      "command": "pnpm watch:displayworker",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
       "group": "build",

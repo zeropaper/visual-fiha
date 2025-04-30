@@ -8,8 +8,7 @@
   "license": "MIT",
   "icon": "media/vf.icon.alt.png",
   "engines": {
-    "node": "^16.19.1",
-    "npm": "^8.19.3",
+    "node": "^22.14.0",
     "vscode": "^1.61.0"
   },
   "categories": [
@@ -139,7 +138,7 @@
     "_compile:layerdocs": "run-p compile:layerdocs:*",
     "_compile:layerdocs:canvas2d": "typedoc --out out/docs/Canvas2DLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name Canvas2DLayer --disableSources src/layers/Canvas2D/canvas2DAPI.ts",
     "_compile:layerdocs:threejs": "typedoc --out out/docs/ThreeJSLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name ThreeJSLayer --disableSources src/layers/ThreeJS/threeJSAPI.ts",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "biome check --files-ignore-unknown=true --diagnostic-level=error --apply --no-errors-on-unmatched",
     "format": "prettier --write .",
     "watch:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --watch --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
     "watch:webviews:controlView": "esbuild ./src/webviews/controlView.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/controlView.js",
@@ -152,6 +151,7 @@
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.6.1",
     "@commitlint/cli": "17.6.6",
     "@commitlint/config-conventional": "17.6.6",
     "@reduxjs/toolkit": "1.9.5",
@@ -167,18 +167,12 @@
     "@types/vscode": "1.79.1",
     "@types/vscode-webview": "1.57.1",
     "@types/web": "0.0.102",
-    "@typescript-eslint/eslint-plugin": "^5.60.1",
-    "@typescript-eslint/parser": "5.60.1",
-    "@vscode/vsce": "^2.19.0",
+    "@vscode/vsce": "^2.32.0",
     "canvas": "2.11.2",
     "esbuild": "0.18.10",
-    "eslint": "^8.44.0",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-config-standard-with-typescript": "^36.0.0",
-    "eslint-plugin-react": "^7.32.2",
     "husky": "8.0.3",
     "jest": "29.5.0",
-    "jest-environment-jsdom": "^29.5.0",
+    "jest-environment-jsdom": "^29.7.0",
     "lint-staged": "13.2.3",
     "lodash": "4.17.21",
     "npm-run-all": "4.1.5",
@@ -193,13 +187,8 @@
     "ts-jest": "29.1.0",
     "ts-node": "10.9.1",
     "typedoc": "0.24.8",
-    "typescript": "^5.1.6"
+    "typescript": "^5.8.3"
   },
-  "workspaces": [
-    "packages/controller",
-    "packages/display",
-    "packages/vscode"
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/zeropaper/visual-fiha.git"
@@ -208,12 +197,6 @@
     "url": "https://github.com/zeropaper/visual-fiha/issues"
   },
   "homepage": "https://github.com/zeropaper/visual-fiha",
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --cache --fix",
-      "prettier --write"
-    ]
-  },
   "dependencies": {
     "fs-extra": "11.1.1",
     "json5": "2.2.3",
@@ -221,5 +204,20 @@
     "mime": "3.0.0",
     "socket.io": "4.7.1",
     "socket.io-client": "4.7.1"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --files-ignore-unknown=true --diagnostic-level=error --apply --no-errors-on-unmatched"
+    ]
+  },
+  "packageManager": "pnpm@10.10.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "@vscode/vsce-sign",
+      "canvas",
+      "esbuild",
+      "keytar"
+    ]
   }
 }
