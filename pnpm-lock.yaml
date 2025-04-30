@@ -49,8 +49,8 @@ importers:
         specifier: 4.14.195
         version: 4.14.195
       '@types/mime':
-        specifier: 3.0.1
-        version: 3.0.1
+        specifier: 3.0.4
+        version: 3.0.4
       '@types/node':
         specifier: 20.3.2
         version: 20.3.2
@@ -809,8 +809,8 @@ packages:
   '@types/lodash@4.14.195':
     resolution: {integrity: sha512-Hwx9EUgdwf2GLarOjQp5ZH8ZmblzcbTBC2wtQWNKARBSxM9ezRIAUpeDTgoQRAFB0+8CNWXVA9+MaSOzOF3nPg==}
 
-  '@types/mime@3.0.1':
-    resolution: {integrity: sha512-Y4XFY5VJAuw0FgAqPNd6NNoV44jbq9Bz2L7Rh/J6jLTiHBSBJa9fxqQIvkIld4GsoDOcCbvzOUAbLPsSKKg+uA==}
+  '@types/mime@3.0.4':
+    resolution: {integrity: sha512-iJt33IQnVRkqeqC7PzBHPTC6fDlRNRW8vjrgqtScAhrmMwe8c4Eo7+fUGTa+XdWrpEgpyKWMYmi2dIwMAYRzPw==}
 
   '@types/minimist@1.2.5':
     resolution: {integrity: sha512-hov8bUuiLiyFPGyFPE1lwWhmzYbirOXQNNo40+y3zow8aFVTeyn3VWL0VFFfdNddA8S4Vf0Tc062rzyNr7Paag==}
@@ -4432,7 +4432,7 @@ snapshots:
 
   '@types/lodash@4.14.195': {}
 
-  '@types/mime@3.0.1': {}
+  '@types/mime@3.0.4': {}
 
   '@types/minimist@1.2.5': {}
 
