@@ -10,7 +10,6 @@ html, body {
 
 body { 
   background-color: var(--vscode-editorWidget-background);
-  overflow: hidden;
 }
 
 body > * {
@@ -95,12 +94,33 @@ a.button {
  */
 #audio-view {
   padding: var(--spacing);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing);
+  height: 100%;
 }
 
 #audio-view .bpm {
   display: flex;
   justify-content: space-around;
   align-items: center;
+}
+
+#audio-view .visualizer-wrapper {
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+
+#audio-view .visualizer {
+  background-color: var(--vscode-editor-background);
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  min-height: 120px;
 }
 
 /**

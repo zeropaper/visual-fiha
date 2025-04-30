@@ -1,4 +1,4 @@
-import type { Layer } from "../types";
+import type { LayerInfo } from "../types";
 
 export interface DisplayState {
   meta: {
@@ -11,7 +11,7 @@ export interface DisplayState {
     setup: string;
     animate: string;
   };
-  layers: Layer[];
+  layers: LayerInfo[];
 }
 
 const defaultState: DisplayState = {

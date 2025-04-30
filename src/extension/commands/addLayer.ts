@@ -1,8 +1,8 @@
-import type { Layer, VFCommand } from "../../types";
 import * as vscode from "vscode";
+import type { LayerInfo, VFCommand } from "../../types";
 import { isLayerType } from "../isLayerType";
 
-async function collectLayerInfo(): Promise<Layer> {
+async function collectLayerInfo(): Promise<LayerInfo> {
   function validateId(value: string) {
     if (!value) return "The value is required";
 
@@ -38,7 +38,7 @@ async function collectLayerInfo(): Promise<Layer> {
         {
           title: "Layer type",
           canPickMany: false,
-        }
+        },
       )
       .then((type?: { label: string }) => {
         if (!type || !isLayerType(type?.label)) {
@@ -59,7 +59,7 @@ async function collectLayerInfo(): Promise<Layer> {
         {
           title: "Set active",
           canPickMany: false,
-        }
+        },
       )
       .then((active?: { label: string }) => {
         if (!active) {
@@ -70,7 +70,7 @@ async function collectLayerInfo(): Promise<Layer> {
   };
 }
 
-async function writeNewLayer(layer: Layer) {
+async function writeNewLayer(layer: LayerInfo) {
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) {
     throw new Error("No workspace folder found");
@@ -78,19 +78,18 @@ async function writeNewLayer(layer: Layer) {
 
   const filepath = vscode.Uri.joinPath(folder.uri, "fiha.json").fsPath;
   const fiha = JSON.parse(
-    (await vscode.workspace.fs.readFile(vscode.Uri.file(filepath))).toString()
+    (await vscode.workspace.fs.readFile(vscode.Uri.file(filepath))).toString(),
   );
   fiha.layers.push(layer);
   await vscode.workspace.fs.writeFile(
     vscode.Uri.file(filepath),
-    Buffer.from(JSON.stringify(fiha, null, 2))
+    Buffer.from(JSON.stringify(fiha, null, 2)),
   );
   return layer;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const addLayer: VFCommand = function (context, extension) {
-  return async (layer?: Layer) => {
+const addLayer: VFCommand =
+  (context, extension) => async (layer?: LayerInfo) => {
     console.info("[command] addLayer", layer);
 
     if (!layer) {
@@ -109,6 +108,5 @@ const addLayer: VFCommand = function (context, extension) {
       payload: layer,
     });
   };
-};
 
 export default addLayer;

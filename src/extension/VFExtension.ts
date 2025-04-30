@@ -1,17 +1,18 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as vscode from "vscode";
-import { type ScriptingData } from "../types";
+import type { ScriptingData } from "../types";
 import VFServer from "./WebServer";
 import commands from "./commands";
-import store, { type StoreAction } from "./store";
-import readScripts from "./readScripts";
 import readLayerScripts from "./readLayerScripts";
-import textDocumentScriptInfo from "./textDocumentScriptInfo";
+import readScripts from "./readScripts";
 import readWorkspaceRC from "./readWorkspaceRC";
-import ControlViewProvider from "./views/ControlViewProvider";
+import store, { type StoreAction } from "./store";
+import textDocumentScriptInfo from "./textDocumentScriptInfo";
 import AudioViewProvider from "./views/AudioViewProvider";
+import ControlViewProvider from "./views/ControlViewProvider";
+import DisplaysViewProvider from "./views/DisplaysViewProvider";
 import ScriptsViewProvider from "./views/ScriptsViewProvider";
 import SettingsViewProvider from "./views/SettingsViewProvider";
-import DisplaysViewProvider from "./views/DisplaysViewProvider";
 import TimelineViewProvider from "./views/TimelineViewProvider";
 
 export default class VFExtension {
@@ -19,6 +20,11 @@ export default class VFExtension {
     this.#refreshInterval = null;
     this.#store = store;
     this.#webServer = new VFServer(() => this.state);
+
+    this.#controlProvider = null;
+    this.#audioProvider = null;
+    this.#displaysProvider = null;
+    this.#timelineProvider = null;
   }
 
   #refreshInterval: NodeJS.Timer | null;
@@ -26,7 +32,6 @@ export default class VFExtension {
   #webServer: VFServer;
 
   #store: typeof store;
-  // #store: Store<CombinedState, AnyAction>;
 
   #data: ScriptingData = {
     started: 0,
@@ -36,6 +41,14 @@ export default class VFExtension {
     frequency: [],
     volume: [],
   };
+
+  #controlProvider: ControlViewProvider | null;
+
+  #audioProvider: AudioViewProvider | null;
+
+  #displaysProvider: DisplaysViewProvider | null;
+
+  #timelineProvider: TimelineViewProvider | null;
 
   resetData() {
     this.#data = {
@@ -113,7 +126,7 @@ export default class VFExtension {
           ...current,
           id: fiharc.id || current.id,
           layers: await Promise.all(
-            fiharc.layers.map(readLayerScripts("layer"))
+            fiharc.layers.map(readLayerScripts("layer")),
           ),
           worker: await readScripts("worker", "worker", "worker"),
         },
@@ -132,12 +145,21 @@ export default class VFExtension {
     };
   }
 
+  #prepareViews(context: vscode.ExtensionContext) {
+    this.#controlProvider = new ControlViewProvider(context.extensionUri);
+    this.#audioProvider = new AudioViewProvider(context.extensionUri);
+    this.#displaysProvider = new DisplaysViewProvider(context.extensionUri);
+    this.#timelineProvider = new TimelineViewProvider(context.extensionUri);
+  }
+
   async activate(context: vscode.ExtensionContext) {
     try {
+      this.#prepareViews(context);
       console.info("[ext] start refreshing data");
       this.#refreshInterval = setInterval(() => {
         this.#refreshData();
-      }, 8);
+        this.#audioProvider?.updateData(this.#data);
+      }, 2);
 
       void this.propagate();
     } catch (err) {
@@ -145,30 +167,25 @@ export default class VFExtension {
       void vscode.window.showWarningMessage(msg);
     }
 
-    const controlsProvider = new ControlViewProvider(context.extensionUri);
-    const audioProvider = new AudioViewProvider(context.extensionUri);
-    const displaysProvider = new DisplaysViewProvider(context.extensionUri);
-    const timelineProvider = new TimelineViewProvider(context.extensionUri);
-
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
         ControlViewProvider.viewType,
-        controlsProvider
+        this.#controlProvider!,
       ),
 
       vscode.window.registerWebviewViewProvider(
         AudioViewProvider.viewType,
-        audioProvider
+        this.#audioProvider!,
       ),
 
       vscode.window.registerWebviewViewProvider(
         DisplaysViewProvider.viewType,
-        displaysProvider
+        this.#displaysProvider!,
       ),
 
       vscode.window.registerWebviewViewProvider(
         TimelineViewProvider.viewType,
-        timelineProvider
+        this.#timelineProvider!,
       ),
 
       this.#webServer.activate(context),
@@ -201,15 +218,15 @@ export default class VFExtension {
               ...this.#data,
               ...audio,
             };
-          }
+          },
         );
       }),
 
       ...Object.keys(commands).map((name) =>
         vscode.commands.registerCommand(
           `visualFiha.${name}`,
-          commands[name](context, this)
-        )
+          commands[name](context, this),
+        ),
       ),
 
       vscode.workspace.onDidChangeTextDocument((event) => {
@@ -225,10 +242,10 @@ export default class VFExtension {
 
         const { state } = this;
 
-        console.info("[ext] onDidChangeTextDocument", info, state);
+        // console.info("[ext] onDidChangeTextDocument", info, state);
 
         const layerIndex = state.layers.findIndex(
-          (layer) => layer.id === info.id
+          (layer) => layer.id === info.id,
         );
         if (layerIndex < 0) {
           // TODO: check info.type
@@ -246,7 +263,7 @@ export default class VFExtension {
         this.propagate().catch((err) => {
           console.info("propagate error", err);
         });
-      })
+      }),
     );
 
     // eslint-disable-next-line no-new

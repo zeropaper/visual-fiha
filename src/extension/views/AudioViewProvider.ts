@@ -12,7 +12,7 @@ export default class AudioViewProvider implements vscode.WebviewViewProvider {
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
     context: vscode.WebviewViewResolveContext,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ) {
     this._view = webviewView;
 
@@ -27,6 +27,13 @@ export default class AudioViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.onDidReceiveMessage((data) => {
       console.info("[AudioViewProvider] onDidReceiveMessage", data);
+    });
+  }
+
+  public updateData(data: any) {
+    void this._view?.webview.postMessage({
+      type: "updatedata",
+      payload: data,
     });
   }
 

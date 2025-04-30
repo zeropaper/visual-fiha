@@ -1,5 +1,5 @@
 import * as React from "react";
-import { type ChannelPost } from "../utils/com";
+import type { ChannelPost } from "../../utils/com";
 
 // A context that can be used to send messages to the VSCode extension.
 // See https://code.visualstudio.com/docs/extensionAPI/api-comm-messages
@@ -7,6 +7,7 @@ export interface ComContextInterface {
   post: ChannelPost;
 }
 
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 const ComContext = React.createContext({} as ComContextInterface);
 
 export const { Consumer } = ComContext;

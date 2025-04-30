@@ -1,5 +1,5 @@
-import type * as vscode from "vscode";
 import type { Socket } from "socket.io";
+import type * as vscode from "vscode";
 
 import type VFExtension from "./extension/VFExtension";
 import type { ScriptableOptions } from "./utils/Scriptable";
@@ -29,7 +29,7 @@ export interface ServerDisplay extends Omit<DisplayBase, "id"> {
   socket: Socket;
 }
 
-export type Layer = Omit<ScriptableOptions, "api"> & {
+export type LayerInfo = Omit<ScriptableOptions, "api"> & {
   type: "canvas" | "threejs"; // | 'canvas2d' | 'webgl' | 'webgl2'
   id: string;
   weight?: number;
@@ -55,14 +55,14 @@ export interface AppState {
   };
   server: DisplayServerInfo;
   displays: DisplayBase[];
-  layers: Layer[];
+  layers: LayerInfo[];
   stage: StageInfo;
 }
 
 export interface FihaRC {
   id: string;
   // bpm?: number;
-  layers: Layer[];
+  layers: LayerInfo[];
   assets?: Array<{ name: string }>;
 }
 
@@ -108,5 +108,7 @@ export enum TypeDirectory {
 
 export type VFCommand = (
   context: vscode.ExtensionContext,
-  extension: VFExtension
+  extension: VFExtension,
 ) => (...args: any[]) => any;
+
+export type ReadFunction = (key: string, defaultVal?: any) => any;

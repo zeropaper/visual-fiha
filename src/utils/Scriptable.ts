@@ -29,6 +29,7 @@ export default class Scriptable {
       animation: new ScriptRunner(options.scope, `${this.#id}_A`),
     };
     this.api = {
+      debug: this.#debug,
       read: this.read,
       cache: this.cache,
       // eslint-disable-next-line
@@ -53,12 +54,17 @@ export default class Scriptable {
     return typeof this.cache[key] === "undefined" ? fb : this.cache[key];
   };
 
+  #debug = (...args: any[]) => {
+    console.info("[script] debug %s", this.#id, ...args);
+  };
+
   get id() {
     return this.#id;
   }
 
   get api(): API & { cache: Cache } {
     return {
+      debug: this.#debug,
       read: this.read,
       cache: this.cache,
       ...this.#runners.animation.api,
@@ -92,11 +98,11 @@ export default class Scriptable {
     onCompilationError,
     onExecutionError,
   }: ScriptableOptions) => {
-    console.info(
-      "[Scriptable] initialize",
-      onCompilationError,
-      onExecutionError
-    );
+    // console.info(
+    //   "[Scriptable] initialize",
+    //   onCompilationError,
+    //   onExecutionError
+    // );
     if (onCompilationError != null) {
       this.setup.addEventListener("compilationerror", onCompilationError);
       this.animation.addEventListener("compilationerror", onCompilationError);

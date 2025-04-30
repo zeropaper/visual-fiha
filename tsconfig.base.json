@@ -5,7 +5,8 @@
     "lib": ["ES2021"],
     "outDir": "out",
     "sourceMap": true,
-    "strict": true
+    "strict": true,
+    "typeRoots": ["./types", "./node_modules/@types"],
   },
   "exclude": [
     "node_modules",

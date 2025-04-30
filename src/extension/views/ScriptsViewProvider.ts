@@ -1,10 +1,10 @@
+import type { Unsubscribe } from "redux";
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as vscode from "vscode";
+import type { LayerInfo } from "../../types";
 import type VFExtension from "../VFExtension";
-import type { Layer } from "../../types";
-import { type Unsubscribe } from "redux";
 
-interface Node extends Pick<Layer, "id" | "weight" | "active"> {
+interface Node extends Pick<LayerInfo, "id" | "weight" | "active"> {
   type: string;
   parent?: Node;
 }
@@ -36,67 +36,78 @@ class ScriptsViewProvider implements vscode.TreeDataProvider<Node> {
     this._onDidChangeTreeData.fire(undefined);
   }
 
+  private getScriptChildren(element: Node) {
+    return [
+      {
+        id: `${element.id}-setup}`,
+        type: "setup",
+        weight: 0,
+        active: true,
+        parent: element,
+      },
+      {
+        id: `${element.id}-animation`,
+        type: "animation",
+        weight: 1,
+        active: true,
+        parent: element,
+      },
+    ];
+  }
+
+  private getLayers() {
+    return this.#extension.state.layers
+      .map((layer) => ({
+        id: layer.id,
+        type: layer.type,
+        weight: layer.weight,
+        active: layer.active,
+      }))
+      .sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0));
+  }
+
   getChildren(element?: Node) {
     if (element) {
-      return [
-        {
-          id: `${element.id}-setup}`,
-          type: "setup",
-          weight: 0,
-          active: true,
-          parent: element,
-        },
-        {
-          id: `${element.id}-animation`,
-          type: "animation",
-          weight: 1,
-          active: true,
-          parent: element,
-        },
-      ];
+      return this.getScriptChildren(element);
     }
-    return (
-      [
-        {
-          id: "worker",
-          type: "worker",
-          weight: -1000,
-          active: true,
-        },
-        ...this.#extension.state.layers.map((layer) => ({
-          id: layer.id,
-          type: layer.type,
-          weight: layer.weight,
-          active: layer.active,
-        })),
-      ] as Node[]
-    ).sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0));
+    return [
+      {
+        id: "worker",
+        type: "worker",
+        active: true,
+      },
+      ...this.getLayers(),
+    ] as Node[];
+  }
+
+  private getScriptTreeItem(element: Node): vscode.TreeItem {
+    const scriptId = element.parent!.id;
+    const scriptType = element.parent!.type;
+    const scriptRole = element.type;
+
+    const title = `Open ${scriptId} ${scriptRole} script`;
+
+    const scriptRelativePath =
+      scriptId === "worker"
+        ? `worker/worker-${scriptRole}.mjs`
+        : `layers/${scriptType}/${scriptId}-${scriptRole}.mjs`;
+
+    return {
+      id: element.id,
+      label: scriptRole,
+      collapsibleState: vscode.TreeItemCollapsibleState.None,
+      tooltip: title,
+      command: {
+        command: "visualFiha.openEditor",
+        title,
+        arguments: [scriptRelativePath],
+      },
+    };
   }
 
   getTreeItem(element: Node): vscode.TreeItem | Thenable<vscode.TreeItem> {
     if (["setup", "animation"].includes(element.type)) {
-      const scriptId = element.parent!.id;
-      const scriptType = element.parent!.type;
-      const scriptRole = element.type;
-
-      const title = `Open ${scriptId} ${scriptRole} script`;
-
-      const scriptRelativePath =
-        scriptId === "worker"
-          ? `worker/worker-${scriptRole}.mjs`
-          : `layers/${scriptType}/${scriptId}-${scriptRole}.mjs`;
-
-      return {
-        id: element.id,
-        label: scriptRole,
-        collapsibleState: vscode.TreeItemCollapsibleState.None,
-        tooltip: title,
-        command: {
-          command: "visualFiha.openEditor",
-          title,
-          arguments: [scriptRelativePath],
-        },
-      };
+      return this.getScriptTreeItem(element);
     }
     return {
       id: element.id,

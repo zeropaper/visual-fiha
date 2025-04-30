@@ -5,14 +5,19 @@ import VFWorker, {
   type OffscreenCanvas,
 } from "./DisplayWorker";
 
-import type { ScriptingData, ScriptInfo, AppState } from "../types";
+import type {
+  AppState,
+  ReadFunction,
+  ScriptInfo,
+  ScriptingData,
+} from "../types";
 
-import { type ComActionHandlers } from "../utils/com";
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
-import { type ScriptRunnerEventListener } from "../utils/ScriptRunner";
+import type { ScriptRunnerEventListener } from "../utils/ScriptRunner";
+import type { ComActionHandlers } from "../utils/com";
 
-type LayerTypes = Canvas2DLayer | ThreeJSLayer;
+type LayerType = Canvas2DLayer | ThreeJSLayer;
 
 interface WebWorker extends Worker {
   location: Location;
@@ -40,7 +45,7 @@ const onCompilationError: ScriptRunnerEventListener = (err: any) => {
 // eslint-disable-next-line no-restricted-globals
 const worker: WebWorker = self as any;
 
-const read = (key: string, defaultVal?: any) =>
+const read: ReadFunction = (key, defaultVal) =>
   typeof data[key] !== "undefined" ? data[key] : defaultVal;
 
 const idFromWorkerHash = worker.location.hash.replace("#", "");
@@ -50,7 +55,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   scriptchange: async (
     payload: ScriptInfo & {
       script: string;
-    }
+    },
   ) => {
     const { id, type, role, script } = payload;
 
@@ -61,16 +66,14 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
         Object.assign(data, (await vfWorker.scriptable.execSetup()) || {});
       }
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      vfWorker.workerCom.post("scriptchange", payload);
+      void vfWorker.workerCom.post("scriptchange", payload);
       if (type === "layer") {
         const found = vfWorker.findStateLayer(id);
         if (found != null) {
           found[role].code = script;
 
           if (role === "setup") {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            found.execSetup();
+            void found.execSetup();
           }
         } else {
           console.error("scriptchange layer not found", id);
@@ -106,7 +109,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
             }
           })
           .filter(Boolean)
-          .map((layer) => vfWorker.resizeLayer(layer as LayerTypes))
+          .map((layer) => vfWorker.resizeLayer(layer as LayerType))
       : state.layers;
     const updated = {
       ...state,

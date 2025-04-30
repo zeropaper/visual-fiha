@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
-import { useVSCOpen } from "../ComContext";
-import { type WebviewAppState } from "../store";
+import { useVSCOpen } from "../contexts/ComContext";
+import type { WebviewAppState } from "../store";
 
 const AppInfo = () => {
   const {
@@ -23,6 +23,7 @@ const AppInfo = () => {
     <section id="app-info">
       <header>
         <h1>{`# ${id}`}</h1>
+        {/* biome-ignore lint/a11y/useValidAnchor: <explanation> */}
         <a onClick={handleRCOpen} href="#vscode-action">
           {"open "}
           <code>fiha.json</code>

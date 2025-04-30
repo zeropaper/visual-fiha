@@ -5,9 +5,9 @@ import {
 } from "@reduxjs/toolkit";
 import type {
   AppState,
+  DisplayBase,
   // Layer,
   StageInfo,
-  DisplayBase,
 } from "../types";
 
 import { reducers } from "../extension/store";
@@ -43,7 +43,7 @@ export const defaultState: WebviewAppState = {
 };
 
 export const appStateToWebviewState = (
-  appState: AppState
+  appState: AppState,
 ): Partial<WebviewAppState> => ({
   ...appState,
 });
@@ -60,10 +60,9 @@ export const readWebviewState = (): WebviewAppState => ({
   ...appStateToWebviewState((vscode.getState() != null || {}) as AppState),
 });
 
-// eslint-disable-next-line max-len
 export const writeWebviewState = (newState: WebviewAppState) =>
   appStateToWebviewState(
-    vscode.setState(webviewStateToAppState(newState))
+    vscode.setState(webviewStateToAppState(newState)),
   ) as WebviewAppState;
 
 const combinedReducers = combineReducers({
@@ -74,7 +73,7 @@ const combinedReducers = combineReducers({
       height: number;
       stage: StageInfo;
     },
-    action: AnyAction
+    action: AnyAction,
   ) => {
     if (action.type !== "updatecontroldisplay") return state || {};
     return {
@@ -82,16 +81,15 @@ const combinedReducers = combineReducers({
       ...action.payload,
     };
   },
-  displays: (state: any[] = [], action: AnyAction) => {
+  displays: (state: any[], action: AnyAction) => {
     if (action.type !== "setDisplays") return state;
     return action.payload;
   },
 });
 
-const store = configureStore({
+const store = configureStore<WebviewAppState>({
   devTools: false,
   reducer: (state, action) => {
-    console.info("[webview] incoming action", action.type);
     if (action.type === "updatestate") {
       return {
         ...state,
@@ -103,7 +101,7 @@ const store = configureStore({
   preloadedState: appStateToWebviewState(readWebviewState()),
 });
 
-export const messageHandlers = {
+export const storeMessageHandlers = {
   updatedisplays: (displays: DisplayBase[]) => {
     store.dispatch({ type: "setDisplays", payload: displays });
   },

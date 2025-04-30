@@ -129,7 +129,7 @@
     "compile:webviews:audioView": "esbuild ./src/webviews/audioView.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/audioView.js",
     "compile:webviews:displaysView": "esbuild ./src/webviews/displaysView.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/displaysView.js",
     "compile:webviews:timelineView": "esbuild ./src/webviews/timelineView.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/timelineView.js",
-    "compile:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --minify --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
+    "compile:capture": "esbuild ./src/capture/index.tsx --sourcemap --bundle --minify --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
     "compile:display": "esbuild ./src/display/index.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
     "compile:displayworker": "esbuild ./src/display/Display.worker.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/Display.worker.js",
     "demo:dts:canvas2d": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/layers/canvas/canvas.d.ts scripts-dts/canvas.ts",
@@ -145,7 +145,7 @@
     "watch:webviews:audioView": "esbuild ./src/webviews/audioView.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/audioView.js",
     "watch:webviews:displaysView": "esbuild ./src/webviews/displaysView.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/displaysView.js",
     "watch:webviews:timelineView": "esbuild ./src/webviews/timelineView.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/timelineView.js",
-    "watch:capture": "esbuild ./src/capture/index.ts --sourcemap --bundle --watch --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
+    "watch:capture": "esbuild ./src/capture/index.tsx --sourcemap --bundle --watch --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
     "watch:display": "esbuild ./src/display/index.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
     "watch:displayworker": "esbuild ./src/display/Display.worker.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/Display.worker.js",
     "prepare": "husky install"

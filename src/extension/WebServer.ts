@@ -1,43 +1,22 @@
-import * as vscode from "vscode";
-import { readFile } from "fs";
+import { readFile } from "node:fs";
 import {
-  createServer,
-  type Server,
   type IncomingMessage,
+  type Server,
   type ServerResponse,
-} from "http";
+  createServer,
+} from "node:http";
+import mic from "mic";
 import * as mime from "mime";
-import { Server as SocketIOServer, type Socket } from "socket.io";
+import { type Socket, Server as SocketIOServer } from "socket.io";
+import * as vscode from "vscode";
 
+import type { AppState, DisplayBase } from "../types";
 import type { ComEventData } from "../utils/com";
-import { type AppState, type DisplayBase } from "../types";
 // import { ChannelPost } from '../utils/com';
 
 export type ServerDisplay = Omit<DisplayBase, "id"> & {
   socket: Socket;
 };
-
-export const indexTemplate = ({
-  host,
-  port,
-  path,
-}: {
-  host: string;
-  port: number;
-  path: string;
-}) =>
-  `
-<html style="background: black;">
-  <head>
-    <title>Visual Fiha</title>
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="stylesheet" href="http://${host}:${port}/reset.css" />
-  </head>
-  <body style="background: black; position: relative; margin: 0; padding: 0; overflow: hidden; height: 100%; display: flex; justify-content: center; align-items: center">
-    <canvas id="canvas" width="600" height="400" style="z-index: 10; width: auto; height: auto; max-width:100%; max-height:100%"></canvas>
-    <script src="http://${host}:${port}${path}index.js"></script>
-  </body>
-</html>`.trim();
 
 export default class VFServer {
   constructor(
@@ -48,7 +27,7 @@ export default class VFServer {
     }: {
       host?: string;
       port?: number;
-    } = {}
+    } = {},
   ) {
     this.#stateGetter = stateGetter;
     this.#host = host || this.#host;
@@ -57,7 +36,19 @@ export default class VFServer {
 
     this.#io = new SocketIOServer(this.#server);
     this.#io.on("connection", this.#handleIOConnection);
+
+    this.#mic = mic({
+      rate: "16000",
+      channels: "1",
+      debug: true,
+      exitOnSilence: 6,
+    });
+    this.#micInputStream = this.#mic.getAudioStream();
   }
+
+  #mic: ReturnType<typeof mic>;
+
+  #micInputStream: NodeJS.ReadableStream;
 
   #stateGetter: () => AppState;
 
@@ -83,7 +74,7 @@ export default class VFServer {
 
     const filepath = vscode.Uri.joinPath(
       this.#context.extensionUri,
-      reqUrl
+      reqUrl,
     ).fsPath;
 
     readFile(filepath, (err, content) => {
@@ -110,7 +101,7 @@ export default class VFServer {
     const filepath = vscode.Uri.joinPath(
       folder.uri,
       "assets",
-      reqUrl.replace("/assets/", "")
+      reqUrl.replace("/assets/", ""),
     ).fsPath;
 
     readFile(filepath, (err, content) => {
@@ -126,24 +117,60 @@ export default class VFServer {
     });
   };
 
+  #handleDisplayHTML = ({ host, port }: { host: string; port: number }) =>
+    `
+<html style="background: black;">
+  <head>
+    <title>Visual Fiha - Display</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="http://${host}:${port}/reset.css" />
+  </head>
+  <body style="background: black; position: relative; margin: 0; padding: 0; overflow: hidden; height: 100%; display: flex; justify-content: center; align-items: stretch">
+    <canvas id="canvas" width="600" height="400" style="z-index: 10; width: auto; height: auto; max-width:100%; max-height:100%"></canvas>
+    <script src="http://${host}:${port}/display/index.js"></script>
+  </body>
+</html>`.trim();
+
+  #handleCaptureHTML = ({ host, port }: { host: string; port: number }) =>
+    `
+<html>
+  <head>
+    <title>Visual Fiha - Capture</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="http://${host}:${port}/reset.css" />
+    <link rel="stylesheet" href="http://${host}:${port}/vscode.css" />
+    <link rel="stylesheet" href="http://${host}:${port}/main.css" />
+  </head>
+  <body>
+    <div id="capture-view">
+    </div>
+    <canvas id="canvas"></canvas>
+    <script src="http://${host}:${port}/capture/index.js"></script>
+  </body>
+</html>`.trim();
+
   #handleHTTPRequest = (req: IncomingMessage, res: ServerResponse) => {
     try {
       const { url = "" } = req;
       if (req.method === "GET") {
-        if (
-          ["/display", "/display/", "/capture", "/capture/"].includes(
-            req.url ?? ""
-          )
-        ) {
+        if (["/display", "/display/"].includes(req.url ?? "")) {
           res.writeHead(200, { "Content-Type": "text/html" });
           res.end(
-            indexTemplate({
+            this.#handleDisplayHTML({
               host: this.host,
               port: this.port,
-              path: (req.url ?? "").endsWith("/")
-                ? (req.url as string)
-                : `${req.url ?? ""}/`,
-            })
+            }),
+          );
+          return;
+        }
+
+        if (["/capture", "/capture/"].includes(req.url ?? "")) {
+          res.writeHead(200, { "Content-Type": "text/html" });
+          res.end(
+            this.#handleCaptureHTML({
+              host: this.host,
+              port: this.port,
+            }),
           );
           return;
         }
@@ -174,6 +201,14 @@ export default class VFServer {
           this.#serveExtensionFile("media/reset.css", res);
           return;
         }
+        if (req.url === "/vscode.css") {
+          this.#serveExtensionFile("media/vscode.css", res);
+          return;
+        }
+        if (req.url === "/main.css") {
+          this.#serveExtensionFile("media/main.css", res);
+          return;
+        }
 
         if (req.url?.startsWith("/assets/")) {
           this.#serveAsset(req.url, res);
@@ -185,14 +220,14 @@ export default class VFServer {
       res.end(
         JSON.stringify({
           message: "Not Found",
-        })
+        }),
       );
     } catch (err) {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(
         JSON.stringify({
           message: (err as Error).message,
-        })
+        }),
       );
     }
   };
@@ -248,7 +283,7 @@ export default class VFServer {
         if (type === "resizedisplay") {
           this.#resizeDisplay(payload);
         }
-      }
+      },
     );
 
     this.#socketConnection.fire(socket);

@@ -1,23 +1,23 @@
 import {
+  type Action,
   type AnyAction,
   type Reducer,
-  type Action,
-  legacy_createStore as createStore,
   combineReducers,
+  legacy_createStore as createStore,
 } from "redux";
 
 import type {
   AppState,
-  Layer,
-  StageInfo,
-  DisplayServerInfo,
   DisplayBase,
+  DisplayServerInfo,
+  LayerInfo,
+  StageInfo,
 } from "../types";
 
 type SetIdAction = Action<"setId"> & {
   payload: string;
 };
-const id = (state: string = "", action: AnyAction | SetIdAction) => {
+const id = (state: string, action: AnyAction | SetIdAction) => {
   if (action.type !== "setId") return state;
   return action.payload || state;
 };
@@ -26,7 +26,7 @@ type SetBPMAction = Action<"setBPM"> & {
   payload: number;
 };
 const defaultBpmInfo = { count: 120, start: 0 };
-const bpm = (state = defaultBpmInfo, action: AnyAction | SetBPMAction) => {
+const bpm = (state: any, action: AnyAction | SetBPMAction) => {
   if (action.type !== "setBPM") return state;
   return {
     count: action.payload,
@@ -42,10 +42,7 @@ type SetStageSizeAction = Action<"setStageSize"> & {
 };
 type StageAction = SetStageAction | SetStageSizeAction;
 const defaultStageInfo = { width: 600, height: 400, autoScale: true };
-const stage = (
-  state: StageInfo = defaultStageInfo,
-  action: AnyAction | StageAction
-) => {
+const stage = (state: StageInfo, action: AnyAction | StageAction) => {
   switch (action.type) {
     case "setStage":
       return action.payload;
@@ -63,11 +60,8 @@ type SetServerAction = Action<"setDisplayServer"> & {
   payload: DisplayServerInfo;
 };
 export const server = (
-  state: DisplayServerInfo = {
-    host: "localhost",
-    port: 9999,
-  },
-  action: AnyAction | SetServerAction
+  state: DisplayServerInfo,
+  action: AnyAction | SetServerAction,
 ) => {
   if (action.type !== "setDisplayServer") return state;
   return {
@@ -81,8 +75,8 @@ type SetWorkerScriptAction = Action<"setWorkerScript"> & {
 };
 const defaultWorkerScripts = { setup: "", animation: "" };
 export const worker = (
-  state = defaultWorkerScripts,
-  action: AnyAction | SetWorkerScriptAction
+  state: any,
+  action: AnyAction | SetWorkerScriptAction,
 ) => {
   if (action.type !== "setWorkerScript") return state;
   return {
@@ -92,10 +86,10 @@ export const worker = (
 };
 
 type AddLayerAction = Action<"addLayer"> & {
-  payload: Layer;
+  payload: LayerInfo;
 };
 type SetLayersAction = Action<"setLayers"> & {
-  payload: Layer[];
+  payload: LayerInfo[];
 };
 type RemoveLayerAction = Action<"removeLayer"> & {
   payload: string;
@@ -108,7 +102,7 @@ type LayerAction =
   | SetLayersAction
   | RemoveLayerAction
   | ToggleLayerAction;
-const layers = (state: Layer[] = [], action: AnyAction | LayerAction) => {
+const layers = (state: LayerInfo[], action: AnyAction | LayerAction) => {
   switch (action.type) {
     case "addLayer":
       return [...state, action.payload];
@@ -133,8 +127,8 @@ type SetDisplaysAction = Action<"setDisplays"> & {
   payload: DisplayBase[];
 };
 const displays = (
-  state: DisplayBase[] = [],
-  action: AnyAction | SetDisplaysAction
+  state: DisplayBase[],
+  action: AnyAction | SetDisplaysAction,
 ) => {
   if (action.type !== "setDisplays") return state;
   return action.payload;
@@ -183,10 +177,7 @@ export type StoreAction =
   | SetWorkerScriptAction
   | SetDisplaysAction
   | LayerAction;
-const reducer: Reducer<AppState, StoreAction> = (
-  state = defaultState,
-  action
-) => {
+const reducer: Reducer<AppState, StoreAction> = (state, action) => {
   switch (action.type) {
     case "replaceState":
       return action.payload;

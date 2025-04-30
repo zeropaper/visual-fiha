@@ -1,3 +1,5 @@
+import { camelCase } from "lodash";
+
 // eslint-disable-next-line max-classes-per-file
 const asyncNoop = async () => {};
 
@@ -34,7 +36,7 @@ export interface ScriptRunnerLogEvent extends ScriptRunnerEvent {
 }
 
 export type ScriptRunnerEventListener = (
-  event: ScriptRunnerErrorEvent | ScriptRunnerLogEvent
+  event: ScriptRunnerErrorEvent | ScriptRunnerLogEvent,
 ) => boolean | undefined;
 
 export type API = Record<string, any>;
@@ -70,7 +72,7 @@ class ScriptRunnerLintingError extends Error {
 class ScriptRunner {
   constructor(scope: any = null, name = `sr${Date.now()}`) {
     this.#scope = scope;
-    this.#name = name;
+    this.#name = camelCase(name);
   }
 
   #name: string;
@@ -91,7 +93,7 @@ class ScriptRunner {
 
   #scope: any = new EmptyScope();
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
+  // biome-ignore lint/complexity/noBannedTypes: <explanation>
   #fn: Function = asyncNoop;
 
   #logs: any[] = [];
@@ -158,7 +160,6 @@ class ScriptRunner {
     };`.trim();
 
     try {
-      // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
       const builder = new Function(builderStr);
 
       const fn = builder();
@@ -183,7 +184,7 @@ class ScriptRunner {
 
   addEventListener(
     type: ScriptRunnerEventTypes,
-    callback: ScriptRunnerEventListener
+    callback: ScriptRunnerEventListener,
   ) {
     /* istanbul ignore next */
     if (!this.#listeners[type]) this.#listeners[type] = [];
@@ -193,7 +194,7 @@ class ScriptRunner {
 
   removeEventListener(
     type: ScriptRunnerEventTypes,
-    callback: ScriptRunnerEventListener
+    callback: ScriptRunnerEventListener,
   ) {
     /* istanbul ignore next */
     if (!this.#listeners[type]) return;
