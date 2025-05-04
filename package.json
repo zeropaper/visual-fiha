@@ -156,7 +156,7 @@
     "@commitlint/config-conventional": "17.6.6",
     "@reduxjs/toolkit": "1.9.5",
     "@types/fs-extra": "11.0.1",
-    "@types/lodash": "4.14.195",
+    "@types/lodash": "4.17.16",
     "@types/mime": "3.0.1",
     "@types/node": "20.3.2",
     "@types/react": "18.2.14",
