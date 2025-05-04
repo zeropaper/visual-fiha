@@ -154,7 +154,7 @@
     "@biomejs/biome": "1.6.1",
     "@commitlint/cli": "17.6.6",
     "@commitlint/config-conventional": "17.6.6",
-    "@reduxjs/toolkit": "1.9.5",
+    "@reduxjs/toolkit": "1.9.7",
     "@types/fs-extra": "11.0.1",
     "@types/lodash": "4.14.195",
     "@types/mime": "3.0.1",
