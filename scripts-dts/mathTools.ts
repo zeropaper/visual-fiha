@@ -62,7 +62,7 @@ declare global {
   const between: typeof mathTools.between
   const beatPrct: typeof mathTools.beatPrct
   const beat: typeof mathTools.beat
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
   // @ts-expect-error
   const orientation: typeof mathTools.orientation
   const objOrientation: typeof mathTools.objOrientation

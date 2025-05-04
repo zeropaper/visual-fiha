@@ -98,7 +98,7 @@ export {
 
 export const PI2 = Math.PI * 2;
 
-export const GR = 1.6180339887498948482;
+export const GR = 1.618033988;
 
 export const sDiv = (val: number, div: number): number => val * (1 / div);
 
@@ -106,7 +106,7 @@ export const arrayMax = (arr: number[]) =>
   arr.reduce((val, prev) => Math.max(val, prev), 0);
 
 export const arrayMin = (arr: number[]) =>
-  arr.reduce((val, prev) => Math.min(val, prev), Infinity);
+  arr.reduce((val, prev) => Math.min(val, prev), Number.POSITIVE_INFINITY);
 
 export const arraySum = (arr: number[]) =>
   arr.reduce((val, prev) => val + prev, 0);
@@ -148,7 +148,6 @@ export const beatPrct = (now: number, bpm = 120) => {
 };
 
 export const beat = (now: number, bpm = 120) => {
-  // eslint-disable-next-line no-console
   console.log("[DERECATED]: beat(), use beatPrct() instead");
   return beatPrct(now, bpm);
 };

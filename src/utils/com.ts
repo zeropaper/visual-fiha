@@ -16,7 +16,7 @@ export interface ComEventData {
 
 export type ComActionHandler = (
   payload?: any,
-  meta?: ComEventDataMeta
+  meta?: ComEventDataMeta,
 ) => Promise<any> | any;
 
 export type ComActionHandlers = Record<string, ComActionHandler>;
@@ -30,7 +30,7 @@ export type Poster = (message: ComEventData) => any;
 export type ChannelPost = (
   type: string,
   payload?: any,
-  originalMeta?: ComEventDataMeta | true
+  originalMeta?: ComEventDataMeta | true,
 ) => Promise<any>;
 
 export type ChannelPostMaker = (poster: Poster, source: string) => ChannelPost;
@@ -43,10 +43,9 @@ export type ComMessageEventListener = (event: ComMessageEvent) => void;
 
 export type ChannelListenerMaker = (
   postBack: ComAnswerer,
-  handlers: ComActionHandlers
+  handlers: ComActionHandlers,
 ) => ComMessageEventListener;
 
-// eslint-disable-next-line max-len
 export const makeChannelPost: ChannelPostMaker =
   (poster, source) => async (type, payload, originalMeta) => {
     const addiontions =
@@ -57,8 +56,8 @@ export const makeChannelPost: ChannelPostMaker =
             ).toFixed()}`,
           }
         : originalMeta != null
-        ? originalMeta
-        : {};
+          ? originalMeta
+          : {};
     const meta: ComEventDataMeta = {
       ...addiontions,
       sent: Date.now(),
@@ -106,12 +105,11 @@ const handleComReply = (payload: any, meta: ComEventDataMeta) => {
   }
 };
 
-// eslint-disable-next-line max-len
 const replyError = (
   postBack: ComAnswerer,
   err: Error | string,
   type: string,
-  meta: ComEventDataMeta
+  meta: ComEventDataMeta,
 ) => {
   const error =
     typeof err === "string" ? err : err.message || "Unexpected error";
@@ -164,7 +162,7 @@ export const makeChannelListener: ChannelListenerMaker =
             originalType: type,
             processed: Date.now(),
           },
-        })
+        }),
       )
       .catch((err: Error) => {
         replyError(postBack, err, type, meta);
@@ -175,7 +173,7 @@ export interface ComMessageChannel {
   postMessage: Poster;
   addEventListener?: (
     eventName: string,
-    listener: (event: any) => void
+    listener: (event: any) => void,
   ) => void;
 }
 
@@ -189,7 +187,7 @@ export interface ChannelBindings {
 export const autoBind = (
   obj: ComChannel,
   source: string,
-  handlers: ComActionHandlers
+  handlers: ComActionHandlers,
 ) => {
   const originalPost = obj.postMessage.bind(obj);
   return {

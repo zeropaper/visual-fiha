@@ -2,22 +2,22 @@
 
 import { io } from "socket.io-client";
 
-import { type Socket } from "dgram";
+import type { Socket } from "node:dgram";
+import type { ScriptingData } from "../types";
 import { autoBind } from "../utils/com";
 import type {
-  ComEventData,
   ChannelBindings,
   ComActionHandlers,
+  ComEventData,
 } from "../utils/com";
-import type { ScriptingData } from "../types";
 
 import type { DisplayState } from "./Display";
 
+import type Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
+import canvasTools, { type Canvas2DAPI } from "../layers/Canvas2D/canvasTools";
+import type ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
 import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
 import * as mathTools from "../utils/mathTools";
-import type Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
-import type ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
-import canvasTools, { type Canvas2DAPI } from "../layers/Canvas2D/canvasTools";
 
 export interface OffscreenCanvas extends HTMLCanvasElement {}
 interface OffscreenCanvasRenderingContext2D extends CanvasRenderingContext2D {}
@@ -42,7 +42,6 @@ const data: ScriptingData = {
   volume: [],
 };
 
-// eslint-disable-next-line no-restricted-globals
 const worker: WebWorker = self as any;
 
 const read = (/* Worker read */ key: string, defaultVal?: any) =>
@@ -80,7 +79,7 @@ export default class VFWorker {
   constructor(
     workerSelf: WebWorker,
     socketHandlers: (instance: VFWorker) => ComActionHandlers,
-    messageHandlers: (instance: VFWorker) => ComActionHandlers
+    messageHandlers: (instance: VFWorker) => ComActionHandlers,
   ) {
     this.#worker = workerSelf;
 
@@ -101,18 +100,16 @@ export default class VFWorker {
 
     this.scriptable = new Scriptable(scriptableOptions);
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore
     this.canvas = new OffscreenCanvas(this.state.width, this.state.height);
     this.#context = this.canvas.getContext(
-      "2d"
+      "2d",
     ) as OffscreenCanvasRenderingContext2D;
 
     this.#tools = canvasTools(this.#context);
 
     this.#socket = io() as unknown as Socket;
 
-    // eslint-disable-next-line prefer-const
     this.socketCom = autoBind(
       {
         postMessage: (message: any) => {
@@ -120,7 +117,7 @@ export default class VFWorker {
         },
       },
       `display-${idFromWorkerHash}-socket`,
-      socketHandlers(this)
+      socketHandlers(this),
     );
 
     this.#socket.on("message", (message: ComEventData) => {
@@ -144,7 +141,7 @@ export default class VFWorker {
     this.workerCom = autoBind(
       this.#worker,
       `display-${idFromWorkerHash}-worker`,
-      messageHandlers(this)
+      messageHandlers(this),
     );
     worker.addEventListener("message", this.workerCom.listener);
 
@@ -192,9 +189,8 @@ export default class VFWorker {
   }
 
   resizeLayer(layer: Canvas2DLayer | ThreeJSLayer) {
-    // eslint-disable-next-line no-param-reassign
     layer.width = this.canvas.width;
-    // eslint-disable-next-line no-param-reassign
+
     layer.height = this.canvas.height;
 
     layer.execSetup().catch((err) => {
@@ -233,7 +229,7 @@ export default class VFWorker {
       this.onScreenCanvas.height = this.canvas.height;
       this.onScreenCanvas.width = this.canvas.width;
       const ctx = this.onScreenCanvas.getContext(
-        "2d"
+        "2d",
       ) as OffscreenCanvasRenderingContext2D;
       ctx.drawImage(
         this.canvas,
@@ -244,7 +240,7 @@ export default class VFWorker {
         0,
         0,
         this.canvas.width,
-        this.canvas.height
+        this.canvas.height,
       );
     }
 

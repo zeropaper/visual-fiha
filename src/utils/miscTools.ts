@@ -2,7 +2,6 @@ import blobURI2DataURI from "./blobURI2DataURI";
 
 type ReadInterface = (name: string, defaultValue?: any) => any;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const noop = (...args: any[]): any => {};
 
 export const rgba = (r = 0.5, g = 0.5, b = 0.5, a = 1) =>

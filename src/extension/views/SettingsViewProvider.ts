@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export default class SettingsView {
   constructor(context: vscode.ExtensionContext) {
     const view = vscode.window.createTreeView("visualFiha.settingsView", {
@@ -15,7 +14,7 @@ export default class SettingsView {
       if (key) {
         await view.reveal(
           { key },
-          { focus: true, select: false, expand: true }
+          { focus: true, select: false, expand: true },
         );
       }
     });
@@ -57,7 +56,7 @@ function aNodeWithIdTreeDataProvider(): vscode.TreeDataProvider<{
   return {
     getChildren: (element: { key: string }): Array<{ key: string }> => {
       return getChildren(element ? element.key : undefined).map((key) =>
-        getNode(key)
+        getNode(key),
       );
     },
     getTreeItem: (element: { key: string }): vscode.TreeItem => {

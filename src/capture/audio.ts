@@ -1,7 +1,7 @@
 import type { Socket } from "socket.io-client";
 import type { DefaultEventsMap } from "socket.io/dist/typed-events";
 import type { ChannelPost } from "../utils/com";
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
+
 const canvasCtx = document.getElementsByTagName("canvas")[0].getContext("2d")!;
 
 let audioCtx: AudioContext;
@@ -105,7 +105,6 @@ export default function audioCapture(
         analyser.smoothingTimeConstant = audioConfig.smoothingTimeConstant;
         analyser.fftSize = audioConfig.fftSize;
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.warn(err);
       }
 
@@ -140,7 +139,6 @@ export const comHandlers = {
       analyser.smoothingTimeConstant = merged.smoothingTimeConstant;
       analyser.fftSize = merged.fftSize;
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.warn(err);
     }
   },

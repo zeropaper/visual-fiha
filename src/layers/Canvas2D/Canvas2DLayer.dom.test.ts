@@ -26,7 +26,6 @@ describe("instanciation", () => {
   it("throws an error if no id is provided", () => {
     expect(
       () =>
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         new Canvas2DLayer({
           canvas: document.createElement("canvas"),

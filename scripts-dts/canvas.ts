@@ -60,7 +60,7 @@ declare global {
   const ellipse: Canvas2DAPI['ellipse']
   const fillRect: Canvas2DAPI['fillRect']
   const lineTo: Canvas2DAPI['lineTo']
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
   // @ts-expect-error
   const moveTo: Canvas2DAPI['moveTo']
   const quadraticCurveTo: Canvas2DAPI['quadraticCurveTo']

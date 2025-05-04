@@ -7,7 +7,6 @@ export interface ComContextInterface {
   post: ChannelPost;
 }
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 const ComContext = React.createContext({} as ComContextInterface);
 
 export const { Consumer } = ComContext;

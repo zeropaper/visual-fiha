@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function writeFile(vfsPath: string, content: string) {
   //
 }
@@ -21,8 +20,8 @@ export default class VFS {
           ...promises,
           writeFile(key, this.#files[key]),
         ],
-        []
-      )
+        [],
+      ),
     );
   }
 }

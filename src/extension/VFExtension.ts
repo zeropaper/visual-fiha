@@ -266,10 +266,8 @@ export default class VFExtension {
       }),
     );
 
-    // eslint-disable-next-line no-new
     new ScriptsViewProvider(context, this);
 
-    // eslint-disable-next-line no-new
     new SettingsViewProvider(context);
   }
 

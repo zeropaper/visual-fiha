@@ -32,7 +32,7 @@ export default class Scriptable {
       debug: this.#debug,
       read: this.read,
       cache: this.cache,
-      // eslint-disable-next-line
+
       ...(options.api || {}),
     };
     this.initialize(options);

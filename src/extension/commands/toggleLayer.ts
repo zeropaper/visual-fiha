@@ -1,8 +1,7 @@
-import { type VFCommand } from "../../types";
+import type { VFCommand } from "../../types";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const toggleLayer: VFCommand = function (context, extension) {
-  return (layerId: string | { id: string }) => {
+const toggleLayer: VFCommand =
+  (context, extension) => (layerId: string | { id: string }) => {
     console.info("[command] toggleLayer", layerId);
 
     // const { state: { layers } } = extension;
@@ -14,6 +13,5 @@ const toggleLayer: VFCommand = function (context, extension) {
       payload: typeof layerId === "string" ? layerId : layerId.id,
     });
   };
-};
 
 export default toggleLayer;

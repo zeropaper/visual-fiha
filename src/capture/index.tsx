@@ -28,6 +28,5 @@ socket.emit("registercapture");
 audioCapture(post, socket);
 void midiCapture(post, socket);
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const root = createRoot(document.getElementById("capture-view")!);
 root.render(<div>Tada</div>);

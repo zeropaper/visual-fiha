@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/indent */
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import { PI2, arrayMax, arrayMin, arrayAvg, sDiv } from "../../utils/mathTools";
+import { PI2, arrayAvg, arrayMax, arrayMin, sDiv } from "../../utils/mathTools";
 import { noop, repeat } from "../../utils/miscTools";
 
 interface OffscreenCanvas extends HTMLCanvasElement {}
@@ -37,13 +37,13 @@ export type textLines = (
     position?: string;
     fill?: string | false;
     stroke?: string | false;
-  }
+  },
 ) => void;
 
 export type mirror = (
   distance?: number,
   axis?: "x" | "y",
-  img?: OffscreenCanvas
+  img?: OffscreenCanvas,
 ) => void;
 
 export type mediaType = (url: string) => "image" | "video";
@@ -58,7 +58,7 @@ export type copy = (
   dx?: number,
   dy?: number,
   dw?: number,
-  dh?: number
+  dh?: number,
 ) => OffscreenCanvas;
 
 type PasteOperation = (
@@ -68,7 +68,7 @@ type PasteOperation = (
     videoWidth?: number;
     videoHeight?: number;
   },
-  opts?: ImageCopyCoordinates
+  opts?: ImageCopyCoordinates,
 ) => void;
 
 export interface pasteImage extends PasteOperation {}
@@ -121,7 +121,7 @@ export type polygon = (opts?: {
 export type grid = (
   rows: number,
   cols: number,
-  func: (...args: any[]) => void
+  func: (...args: any[]) => void,
 ) => void;
 
 export type centeredGrid = (
@@ -138,7 +138,7 @@ export type centeredGrid = (
     c: number;
     n: number;
     d: number;
-  }) => void
+  }) => void,
 ) => void;
 
 type CTXMethod = (...args: any[]) => any;
@@ -261,7 +261,7 @@ export default function canvasTools(ctx: CTX) {
       stroke = false,
       lineHeight = 1.618,
     } = opts;
-    const lh = (parseInt(ctx.font, 10) || 20) * lineHeight;
+    const lh = (Number.parseInt(ctx.font, 10) || 20) * lineHeight;
     const linesHeight = lines.length * lh;
     let top = y - linesHeight * 0.5;
     ctx.textBaseline = "middle";
@@ -312,8 +312,8 @@ export default function canvasTools(ctx: CTX) {
     if (stroke) ctx.strokeStyle = stroke;
     if (fill) ctx.fillStyle = fill;
 
-    let line;
-    let h;
+    let line: string;
+    let h: number;
     for (let l = 0; l < lines.length; l += 1) {
       line = lines[l];
       h = lh * (l + 0.5);
@@ -325,19 +325,19 @@ export default function canvasTools(ctx: CTX) {
   const mirror: mirror = (
     distance = 0.5,
     axis = "x",
-    img = canvas as OffscreenCanvas
+    img = canvas as OffscreenCanvas,
   ) => {
-    let sx;
-    let sy;
-    let sw;
-    let sh;
-    let dx;
-    let dy;
-    let dw;
-    let dh;
-    let scaleX;
-    let translateX;
-    let translateY;
+    let sx: number;
+    let sy: number;
+    let sw: number;
+    let sh: number;
+    let dx: number;
+    let dy: number;
+    let dw: number;
+    let dh: number;
+    let scaleX: number;
+    let translateX: number;
+    let translateY: number;
 
     if (axis === "y") {
       sx = img.width * distance;
@@ -391,13 +391,12 @@ export default function canvasTools(ctx: CTX) {
     dx = 0,
     dy = 0,
     dw = canvas.width,
-    dh = canvas.height
+    dh = canvas.height,
   ) => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore
     const ofc = new OffscreenCanvas(
       canvas.width,
-      canvas.height
+      canvas.height,
     ) as HTMLCanvasElement;
     ofc.getContext("2d")?.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
     return ofc;
@@ -523,9 +522,9 @@ export default function canvasTools(ctx: CTX) {
 
     ctx.beginPath();
 
-    let val;
-    let py;
-    let px;
+    let val: number;
+    let py: number;
+    let px: number;
     for (let v = 0; v < data.length; v += 1) {
       val = data[v];
       py = top + (pHeight - h * (val - min));
@@ -602,7 +601,7 @@ export default function canvasTools(ctx: CTX) {
         position: legend,
         fill: color || "white",
         stroke: "black",
-      }
+      },
     );
     ctx.font = originalFont;
   };
@@ -634,8 +633,8 @@ export default function canvasTools(ctx: CTX) {
     stroke = "",
     fill = "",
   } = {}) => {
-    let px;
-    let py;
+    let px: number;
+    let py: number;
     const a = PI2 * (1 / sides);
     if (stroke) ctx.strokeStyle = stroke;
     if (fill) ctx.fillStyle = fill;
@@ -655,8 +654,8 @@ export default function canvasTools(ctx: CTX) {
   const grid: grid = (rows = 4, cols = 4, func = noop) => {
     const xs = width(rows);
     const ys = height(cols);
-    let x;
-    let y;
+    let x: number;
+    let y: number;
     let n = 0;
 
     for (let r = 0; r < rows; r += 1) {
@@ -676,7 +675,7 @@ export default function canvasTools(ctx: CTX) {
       dist: vmin(10),
       unit: vmin,
     },
-    cb = noop
+    cb = noop,
   ) => {
     const d =
       typeof dist === "undefined"
@@ -745,7 +744,7 @@ export default function canvasTools(ctx: CTX) {
   const tools = { ...baseTools } as Canvas2DAPI;
 
   const instKeys = Object.keys(ctx).filter(
-    (key) => !["function", "object"].includes(key)
+    (key) => !["function", "object"].includes(key),
   );
   const proto = ctx.constructor.prototype;
 
@@ -759,7 +758,6 @@ export default function canvasTools(ctx: CTX) {
         tools[key as keyof typeof tools] = prop.bind(ctx);
       } else if (!tools[key as keyof typeof tools]) {
         tools[key as keyof typeof tools] = (value = prop) => {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
           // @ts-ignore
           if (prop !== value) ctx[key] = value;
           return prop;

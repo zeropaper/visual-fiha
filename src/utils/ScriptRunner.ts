@@ -43,17 +43,12 @@ export type API = Record<string, any>;
 export const removeExportCrutch = (str: string) =>
   str.replace(/export\s+{\s?};?/g, "");
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 class EmptyScope {}
 
 const forbidden = new Set<string>([
-  // @ts-ignore
   ...Object.keys(typeof window !== "undefined" ? window : {}),
-  // @ts-ignore
   ...Object.keys(typeof global !== "undefined" ? global : {}),
-  // @ts-ignore
   ...Object.keys(typeof self !== "undefined" ? self : {}),
-  // @ts-ignore
   ...Object.keys(typeof globalThis !== "undefined" ? globalThis : {}),
 ]);
 

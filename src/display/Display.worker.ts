@@ -42,7 +42,6 @@ const onCompilationError: ScriptRunnerEventListener = (err: any) => {
   return false;
 };
 
-// eslint-disable-next-line no-restricted-globals
 const worker: WebWorker = self as any;
 
 const read: ReadFunction = (key, defaultVal) =>
@@ -126,7 +125,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     ) {
       scriptable.setup.code = update.worker.setup || scriptable.setup.code;
       state.worker.setup = scriptable.setup.code;
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+
       scriptable.execSetup();
     }
     if (
@@ -146,7 +145,6 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
 
 const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
-    // eslint-disable-next-line no-param-reassign
     vfWorker.onScreenCanvas = onscreen;
 
     // TODO: use autoBind
@@ -164,7 +162,6 @@ const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     state.layers?.forEach((l) => vfWorker.resizeLayer(l));
 
     if (!state.control) {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       socketCom.post("resizedisplay", {
         id: idFromWorkerHash,
         width: state.width,
@@ -175,5 +172,5 @@ const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
 });
 
 const displayWorker = new VFWorker(worker, socketHandlers, messageHandlers);
-// eslint-disable-next-line no-console
+
 console.info("displayWorker", displayWorker);

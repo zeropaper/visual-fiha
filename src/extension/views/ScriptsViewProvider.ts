@@ -119,7 +119,6 @@ class ScriptsViewProvider implements vscode.TreeDataProvider<Node> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export default class ScriptsView {
   constructor(context: vscode.ExtensionContext, extension: VFExtension) {
     this.#provider = new ScriptsViewProvider(context, extension);

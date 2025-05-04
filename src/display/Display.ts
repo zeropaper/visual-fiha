@@ -1,13 +1,13 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-import { type AppState } from "../types";
-import {
-  autoBind,
-  type ComActionHandlers,
-  type ComMessageEventListener,
-  type ChannelPost,
-} from "../utils/com";
 import type Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import type ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import type { AppState } from "../types";
+import {
+  type ChannelPost,
+  type ComActionHandlers,
+  type ComMessageEventListener,
+  autoBind,
+} from "../utils/com";
 
 interface OffscreenCanvas extends HTMLCanvasElement {}
 
@@ -28,7 +28,7 @@ export interface DisplayState
 const handlers: ComActionHandlers = {};
 
 export default class Display {
-  static ensureCanvas = (id: string = "canvas"): HTMLCanvasElement => {
+  static ensureCanvas = (id = "canvas"): HTMLCanvasElement => {
     let el = document.querySelector(`body>#${id}`) as HTMLCanvasElement;
     if (!el) {
       el = document.createElement("canvas");
@@ -58,7 +58,7 @@ export default class Display {
 
   constructor(options?: DisplayOptions) {
     const { id, canvas = Display.ensureCanvas() } = options ?? {};
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+
     this.#id = id || `display${(Math.random() * 10000).toFixed()}`;
 
     canvas.width = canvas.parentElement?.clientWidth ?? canvas.width;
@@ -69,7 +69,7 @@ export default class Display {
     const { post, listener } = autoBind(
       this.#worker,
       `display-${this.#id}-browser`,
-      handlers
+      handlers,
     );
     this.#post = post;
     this.#listener = listener;
@@ -83,7 +83,7 @@ export default class Display {
         payload: { canvas: this.#offscreen },
       },
       // @ts-expect-error
-      [this.#offscreen]
+      [this.#offscreen],
     );
     requestAnimationFrame(() => this.resize());
   }
