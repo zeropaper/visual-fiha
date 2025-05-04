@@ -89,8 +89,8 @@ class ScriptsViewProvider implements vscode.TreeDataProvider<Node> {
 
     const scriptRelativePath =
       scriptId === "worker"
-        ? `worker/worker-${scriptRole}.mjs`
-        : `layers/${scriptType}/${scriptId}-${scriptRole}.mjs`;
+        ? `worker/worker-${scriptRole}.js`
+        : `layers/${scriptType}/${scriptId}-${scriptRole}.js`;
 
     return {
       id: element.id,
