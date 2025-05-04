@@ -18,7 +18,7 @@ type SetIdAction = Action<"setId"> & {
   payload: string;
 };
 const id = (state: string, action: AnyAction | SetIdAction) => {
-  if (action.type !== "setId") return state;
+  if (action.type !== "setId") return state || null;
   return action.payload || state;
 };
 
@@ -27,7 +27,7 @@ type SetBPMAction = Action<"setBPM"> & {
 };
 const defaultBpmInfo = { count: 120, start: 0 };
 const bpm = (state: any, action: AnyAction | SetBPMAction) => {
-  if (action.type !== "setBPM") return state;
+  if (action.type !== "setBPM") return state || defaultBpmInfo;
   return {
     count: action.payload,
     start: Date.now(),
@@ -52,7 +52,7 @@ const stage = (state: StageInfo, action: AnyAction | StageAction) => {
         ...action.payload,
       };
     default:
-      return state;
+      return state || defaultStageInfo;
   }
 };
 
@@ -63,7 +63,7 @@ export const server = (
   state: DisplayServerInfo,
   action: AnyAction | SetServerAction,
 ) => {
-  if (action.type !== "setDisplayServer") return state;
+  if (action.type !== "setDisplayServer") return state || null;
   return {
     ...state,
     ...action.payload,
@@ -78,7 +78,7 @@ export const worker = (
   state: any,
   action: AnyAction | SetWorkerScriptAction,
 ) => {
-  if (action.type !== "setWorkerScript") return state;
+  if (action.type !== "setWorkerScript") return state || defaultWorkerScripts;
   return {
     ...state,
     ...action.payload,
@@ -119,7 +119,7 @@ const layers = (state: LayerInfo[], action: AnyAction | LayerAction) => {
       });
 
     default:
-      return [...state];
+      return [...(Array.isArray(state) ? state : [])];
   }
 };
 
@@ -130,7 +130,7 @@ const displays = (
   state: DisplayBase[],
   action: AnyAction | SetDisplaysAction,
 ) => {
-  if (action.type !== "setDisplays") return state;
+  if (action.type !== "setDisplays") return state || [];
   return action.payload;
 };
 
