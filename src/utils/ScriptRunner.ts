@@ -1,6 +1,5 @@
 import { camelCase } from "lodash";
 
-// eslint-disable-next-line max-classes-per-file
 const asyncNoop = async () => {};
 
 export type ScriptLog = (...args: any[]) => void;
@@ -47,7 +46,6 @@ export const removeExportCrutch = (str: string) =>
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 class EmptyScope {}
 
-/* eslint-disable */
 const forbidden = new Set<string>([
   // @ts-ignore
   ...Object.keys(typeof window !== "undefined" ? window : {}),
@@ -58,7 +56,6 @@ const forbidden = new Set<string>([
   // @ts-ignore
   ...Object.keys(typeof globalThis !== "undefined" ? globalThis : {}),
 ]);
-/* eslint-enable */
 
 class ScriptRunnerLintingError extends Error {
   constructor(details: object[]) {
