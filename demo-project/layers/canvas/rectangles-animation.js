@@ -1,5 +1,4 @@
 clear();
-const now = read("now", 0);
 
 const beatP = beatPrct(now, read("bpm", 120) * (1 / 2));
 const beatNum = read("beatNum", 1);

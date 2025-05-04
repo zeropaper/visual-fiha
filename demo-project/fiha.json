@@ -2,8 +2,13 @@
   "id": "visual-fiha-demo",
   "layers": [
     {
+      "active": false,
+      "id": "rectangles",
+      "type": "canvas"
+    },
+    {
       "active": true,
-      "id": "canvas-basics",
+      "id": "lines",
       "type": "canvas"
     },
     {
