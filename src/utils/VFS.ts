@@ -15,13 +15,10 @@ export default class VFS {
 
   async write() {
     return await Promise.all(
-      Object.keys(this.#files).reduce(
-        (promises: Array<Promise<any>>, key) => [
-          ...promises,
-          writeFile(key, this.#files[key]),
-        ],
-        [],
-      ),
+      Object.keys(this.#files).reduce((promises: Array<Promise<any>>, key) => {
+        promises.push(writeFile(key, this.#files[key]));
+        return promises;
+      }, []),
     );
   }
 }
