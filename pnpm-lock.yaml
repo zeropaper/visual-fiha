@@ -70,8 +70,8 @@ importers:
         specifier: 1.57.1
         version: 1.57.1
       '@types/web':
-        specifier: 0.0.102
-        version: 0.0.102
+        specifier: 0.0.231
+        version: 0.0.231
       '@vitest/browser':
         specifier: ^3.1.2
         version: 3.1.2(vite@6.3.4(@types/node@20.3.2)(yaml@2.7.1))(vitest@3.1.2)
@@ -879,8 +879,8 @@ packages:
   '@types/vscode@1.79.1':
     resolution: {integrity: sha512-Ikwc4YbHABzqthrWfeAvItaAIfX9mdjMWxqNgTpGjhgOu0TMRq9LzyZ2yBK0JhYqoSjEubEPawf6zJgnl6Egtw==}
 
-  '@types/web@0.0.102':
-    resolution: {integrity: sha512-tw/GrgzPPKZ8D3ObPhiH9TRKU5WY6SxubgkC3miTRhkBC5TccVNIkk6nm53EpMbir8Vtq/3lHNOWDnA4rJ+kuA==}
+  '@types/web@0.0.231':
+    resolution: {integrity: sha512-kVETlRQb0fhoswV0DoPE9Pq7I2s22CkEKH6lq2lHiKmh5/VMWSTLZhqOyEwdFj+0fb52PlYtZXuAMVN+nVwqZQ==}
 
   '@types/webxr@0.5.22':
     resolution: {integrity: sha512-Vr6Stjv5jPRqH690f5I5GLjVk8GSsoQSYJ2FVd/3jJF7KaqfwPi3ehfBS96mlQ2kPCwZaX6U0rG2+NGHBKkA/A==}
@@ -4100,7 +4100,7 @@ snapshots:
 
   '@types/vscode@1.79.1': {}
 
-  '@types/web@0.0.102': {}
+  '@types/web@0.0.231': {}
 
   '@types/webxr@0.5.22': {}
 
