@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 export default function getWorkspaceFolder(
-  folderIndex = 0
+  folderIndex = 0,
 ): vscode.WorkspaceFolder {
   const { workspaceFolders: folders } = vscode.workspace;
 
@@ -11,7 +11,7 @@ export default function getWorkspaceFolder(
 
   if (!folders[folderIndex]) {
     throw new Error(
-      `Workspace has no folder with index ${folderIndex} (${folders.length})`
+      `Workspace has no folder with index ${folderIndex} (${folders.length})`,
     );
   }
 

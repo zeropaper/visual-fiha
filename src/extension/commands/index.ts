@@ -1,13 +1,13 @@
 import type { VFCommand } from "../../types";
-import openEditor from "./openEditor";
-import setBPM from "./setBPM";
-import createLayer from "./createLayer";
-import removeLayer from "./removeLayer";
-import toggleLayer from "./toggleLayer";
 import addLayer from "./addLayer";
-import setStageSize from "./setStageSize";
+import createLayer from "./createLayer";
+import openEditor from "./openEditor";
+import removeLayer from "./removeLayer";
 import resetData from "./resetData";
 import scaffoldProject from "./scaffoldProject";
+import setBPM from "./setBPM";
+import setStageSize from "./setStageSize";
+import toggleLayer from "./toggleLayer";
 
 export type Commands = Record<string, VFCommand>;
 

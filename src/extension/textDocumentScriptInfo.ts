@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 import {
-  type ScriptInfo,
-  type ScriptType,
-  type ScriptRole,
   DirectoryTypes,
+  type ScriptInfo,
+  type ScriptRole,
+  type ScriptType,
 } from "../types";
 
 export default function textDocumentScriptInfo(
-  doc: vscode.TextDocument
+  doc: vscode.TextDocument,
 ): ScriptInfo {
   const workspacePath: string =
     (vscode.workspace.workspaceFolders != null &&
@@ -17,7 +17,7 @@ export default function textDocumentScriptInfo(
 
   const relativePath = doc.uri.path.replace(workspacePath, "");
   const match = relativePath.match(
-    /\/([^/]+)\/([^/]+)\/([^/]+)-(setup|animation)\./
+    /\/([^/]+)\/([^/]+)\/([^/]+)-(setup|animation)\./,
   );
   if (!match)
     throw new Error(`Cannot determine script info for ${doc.uri.path}`);
@@ -27,7 +27,7 @@ export default function textDocumentScriptInfo(
     keyof typeof DirectoryTypes,
     any,
     string,
-    ScriptRole
+    ScriptRole,
   ];
 
   if (!directory || !id || !role)

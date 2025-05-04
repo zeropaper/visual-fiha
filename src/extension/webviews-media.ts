@@ -3,11 +3,11 @@ import * as vscode from "vscode";
 export function getMediaUri(
   scriptname: string,
   webview: vscode.Webview,
-  extensionUri: vscode.Uri
+  extensionUri: vscode.Uri,
 ) {
   const script = webview
     .asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "out", "webviews", `${scriptname}.js`)
+      vscode.Uri.joinPath(extensionUri, "out", "webviews", `${scriptname}.js`),
     )
     .toString();
   const styleReset = webview

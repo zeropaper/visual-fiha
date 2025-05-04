@@ -1,8 +1,8 @@
-import { type AnyAction } from "redux";
+import type { AnyAction } from "redux";
 
 export function reducerSpy(
   reducer: (state: any, action: any) => any,
-  name: string
+  name: string,
 ) {
   return (state: unknown, action: AnyAction) => {
     const newState = reducer(state, action);

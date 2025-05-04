@@ -1,11 +1,11 @@
-import { type TypeDirectory } from "../types";
+import { readFile } from "node:fs/promises";
+import type { TypeDirectory } from "../types";
 import scriptUri from "./scriptUri";
-import { readFile } from "fs/promises";
 
 export default async function readScripts(
   type: keyof typeof TypeDirectory,
   runnerType: string,
-  id: string
+  id: string,
 ) {
   const setupFSPath = scriptUri(type, runnerType, id, "setup").path;
   const animationFSPath = scriptUri(type, runnerType, id, "animation").path;

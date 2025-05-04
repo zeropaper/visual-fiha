@@ -138,7 +138,7 @@
     "_compile:layerdocs": "run-p compile:layerdocs:*",
     "_compile:layerdocs:canvas2d": "typedoc --out out/docs/Canvas2DLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name Canvas2DLayer --disableSources src/layers/Canvas2D/canvas2DAPI.ts",
     "_compile:layerdocs:threejs": "typedoc --out out/docs/ThreeJSLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name ThreeJSLayer --disableSources src/layers/ThreeJS/threeJSAPI.ts",
-    "lint": "biome check --files-ignore-unknown=true --diagnostic-level=error --apply --no-errors-on-unmatched",
+    "lint": "biome check --files-ignore-unknown=true --diagnostic-level=error --apply --no-errors-on-unmatched .",
     "format": "prettier --write .",
     "watch:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --watch --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
     "watch:webviews:controlView": "esbuild ./src/webviews/controlView.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/controlView.js",

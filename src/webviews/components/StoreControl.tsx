@@ -1,11 +1,11 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
 
-import { type AppState } from "../../types";
+import type { AppState } from "../../types";
 
 const StoreControl = () => {
   const { layers, worker, displays, server, ...result } = useSelector(
-    (appState: AppState) => appState
+    (appState: AppState) => appState,
   );
 
   return (

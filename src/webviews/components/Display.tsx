@@ -1,5 +1,5 @@
 import * as React from "react";
-import { type DisplayBase } from "../../types";
+import type { DisplayBase } from "../../types";
 
 export interface DisplayProps extends DisplayBase {}
 

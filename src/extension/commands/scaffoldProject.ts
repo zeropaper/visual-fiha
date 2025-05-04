@@ -1,8 +1,8 @@
+import { stat } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join, resolve } from "node:path";
+import { copySync, existsSync, outputFileSync, readFileSync } from "fs-extra";
 import * as vscode from "vscode";
-import { stat } from "fs/promises";
-import { resolve, join } from "path";
-import { existsSync, outputFileSync, readFileSync, copySync } from "fs-extra";
-import { homedir } from "os";
 import configuration from "../configuration";
 
 type OnValue<T> = (value: T) => any;
@@ -36,7 +36,7 @@ export function promptName(onValue: OnValue<string>, onAbort?: OnAbort) {
       (err: any) => {
         console.warn("[command] scaffoldProject promptName err", err);
         if (typeof onAbort === "function") onAbort(err);
-      }
+      },
     );
 }
 
@@ -89,13 +89,13 @@ export function promptDirectory(onValue: OnValue<string>, onAbort?: OnAbort) {
       },
       (err: any) => {
         if (typeof onAbort === "function") onAbort(err);
-      }
+      },
     );
 }
 
 export default function scaffoldProject(
   context: vscode.ExtensionContext,
-  { propagate }: { propagate: () => Promise<void> }
+  { propagate }: { propagate: () => Promise<void> },
 ) {
   const demoProjectPath = context.asAbsolutePath("out/demo-project");
 
@@ -116,7 +116,7 @@ export default function scaffoldProject(
         id: projectId,
       },
       null,
-      2
+      2,
     );
     outputFileSync(join(projectPath, "fiha.json"), content, "utf8");
 

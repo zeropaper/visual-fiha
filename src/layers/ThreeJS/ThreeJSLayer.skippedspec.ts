@@ -27,7 +27,7 @@ describe.skip("instanciation", () => {
       () =>
         new ThreeJSLayer({
           canvas: document.createElement("canvas"),
-        } as ThreeJSLayerOptions)
+        } as ThreeJSLayerOptions),
     ).toThrowError();
   });
 

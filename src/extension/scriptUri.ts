@@ -6,7 +6,7 @@ export default function scriptUri(
   type: keyof typeof TypeDirectory,
   runnerType: string,
   id: string,
-  role: ScriptRole
+  role: ScriptRole,
 ) {
   const folder = getWorkspaceFolder();
   if (id === "worker") {
@@ -16,6 +16,6 @@ export default function scriptUri(
     folder.uri,
     TypeDirectory[type],
     runnerType,
-    `${id}-${role}.mjs`
+    `${id}-${role}.mjs`,
   );
 }

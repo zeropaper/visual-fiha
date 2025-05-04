@@ -1,9 +1,9 @@
 class Line {
   constructor(index) {
-    this.x = width(2) - (width() * random());
+    this.x = width(2) - width() * random();
     this.y = height() * random();
     this.length = random() * width(0.75);
-    this.index = index
+    this.index = index;
     this.velocity = random() - 0.5;
     this.width = random();
 
@@ -25,7 +25,7 @@ class Line {
     if (this.velocity < 0) {
       x = width() - relative;
     }
-    
+
     moveTo(x, this.y);
     lineTo(x + this.length, this.y);
     stroke();
@@ -37,5 +37,5 @@ cache.generate = () => {
   repeat(50, (i) => {
     cache.lines.push(new Line(i));
   });
-}
+};
 cache.generate();

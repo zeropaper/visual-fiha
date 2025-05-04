@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
-import { type AppState } from "../../types";
+import type { AppState } from "../../types";
 
 const ControlDisplay = () => {
   const info = useSelector((state: AppState) => ({

@@ -1,5 +1,5 @@
-import {
-  type ScriptingData,
+import type {
+  ScriptingData,
   // DisplayBase,
   // Layer,
   // StageInfo,

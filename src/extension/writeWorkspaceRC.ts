@@ -1,11 +1,11 @@
+import { writeFile } from "node:fs/promises";
 import * as vscode from "vscode";
 import type { AppState, FihaRC } from "../types";
 import getWorkspaceFolder from "./getWorkspaceFolder";
-import { writeFile } from "fs/promises";
 
 export default async function writeWorkspaceRC(
   content: AppState,
-  folderIndex = 0
+  folderIndex = 0,
 ): Promise<void> {
   const folder = getWorkspaceFolder(folderIndex);
 
@@ -19,8 +19,8 @@ export default async function writeWorkspaceRC(
         assets: [],
       } satisfies FihaRC,
       null,
-      2
+      2,
     ),
-    "utf8"
+    "utf8",
   );
 }

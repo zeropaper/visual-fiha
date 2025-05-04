@@ -1,4 +1,4 @@
-import { type Layer } from "../types";
+import type { Layer } from "../types";
 import { isLayerType } from "./isLayerType";
 
 export function isLayer(layer: unknown): layer is Layer {

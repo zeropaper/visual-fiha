@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 export default function getWebviewOptions(
-  extensionUri: vscode.Uri
+  extensionUri: vscode.Uri,
 ): vscode.WebviewOptions {
   return {
     // Enable javascript in the webview

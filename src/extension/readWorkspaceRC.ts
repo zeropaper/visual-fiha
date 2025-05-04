@@ -1,11 +1,11 @@
-import * as vscode from "vscode";
+import { readFile } from "node:fs/promises";
 import * as JSON5 from "json5";
-import { type FihaRC } from "../types";
+import * as vscode from "vscode";
+import type { FihaRC } from "../types";
 import getWorkspaceFolder from "./getWorkspaceFolder";
-import { readFile } from "fs/promises";
 
 export default async function readWorkspaceRC(
-  folderIndex = 0
+  folderIndex = 0,
 ): Promise<FihaRC> {
   const folder = getWorkspaceFolder(folderIndex);
 

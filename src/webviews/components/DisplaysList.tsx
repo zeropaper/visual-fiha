@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
-import { type WebviewAppState } from "../store";
+import type { WebviewAppState } from "../store";
 
 import Display from "./Display";
 

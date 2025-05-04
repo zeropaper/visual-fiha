@@ -1,7 +1,7 @@
-import Layer, { type LayerOptions } from "../Layer";
+import * as assetTools from "../../utils/assetTools";
 import * as mathTools from "../../utils/mathTools";
 import miscTools from "../../utils/miscTools";
-import * as assetTools from "../../utils/assetTools";
+import Layer, { type LayerOptions } from "../Layer";
 import canvasTools, { type CTX } from "./canvasTools";
 
 export interface Canvas2DLayerOptions extends LayerOptions {}

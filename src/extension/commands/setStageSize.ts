@@ -35,7 +35,7 @@ async function promptForSize(): Promise<Size> {
     {
       placeHolder: "Select a size",
       title: "Set Stage Size",
-    }
+    },
   );
 
   if (!choice) {

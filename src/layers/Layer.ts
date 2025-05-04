@@ -18,7 +18,7 @@ export default class Layer extends Scriptable {
     ) as OffscreenCanvas;
   }
 
-  active: boolean = true;
+  active = true;
 
   #canvas: HTMLCanvasElement | OffscreenCanvas;
 
