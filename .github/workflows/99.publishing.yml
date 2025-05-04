@@ -18,43 +18,53 @@ jobs:
     strategy:
       matrix:
         node-version:
-          # - 12.x
-          # - 14.x
-          - 16.x
+          - 20.x
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - uses: actions/cache@v2
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          version: 8
+          run_install: false
+      
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-node-
-      - run: npm ci
-      # - run: git config user.email "zeropaper+vf-ci@irata.ch"
-      # - run: git config user.name "Valentin Vago as CI"
-      # - run: cat package.json
-      # - run: npm version ${{ github.event.inputs.version }}
-      # - run: cat package.json
+            ${{ runner.os }}-pnpm-store-
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
       - name: Conventional Changelog Action
-        uses: TriPSs/conventional-changelog-action@v3
+        uses: TriPSs/conventional-changelog-action@v5
         with:
           github-token: ${{ secrets.GH_TOKEN }}
-          # skip-commit: 'true'
           git-message: 'chore(release): {version}'
           output-file: 'CHANGELOG.md'
           git-user-name: 'Valentin Vago as CI'
           git-user-email: 'zeropaper+vf-ci@irata.ch'
-      # - run: cat package.json
+      
       - run: git status
-      # - run: npx vsce verify-pat visual-fiha -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
-      - run: npx vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
-      # - run: git add package* CHANGELOG.md
-      # - run: git commit -m "chore(release)"
+      
+      - name: Publish to VS Marketplace
+        run: pnpm exec vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }}
+      
       - run: git push
