@@ -180,7 +180,7 @@
     "react-dom": "18.2.0",
     "react-redux": "8.1.1",
     "redux": "4.2.1",
-    "rimraf": "5.0.1",
+    "rimraf": "5.0.10",
     "three": "0.154.0",
     "tmp-promise": "3.0.3",
     "ts-node": "10.9.1",
