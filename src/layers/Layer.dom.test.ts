@@ -1,6 +1,4 @@
-/**
- * @jest-environment jsdom
- */
+import { describe, expect, it, vi } from "vitest";
 import Layer, { type LayerOptions } from "./Layer";
 
 const setupScript = 'console.info("hello"); return { newData: "set" };';
@@ -12,7 +10,7 @@ const options: LayerOptions = {
   canvas: document.createElement("canvas"),
 };
 
-const compilationErrorListener = jest.fn((err) => {
+const compilationErrorListener = vi.fn((err) => {
   console.info(err.builderStr);
 });
 
@@ -28,11 +26,10 @@ describe("instanciation", () => {
   it("throws an error if no id is provided", () => {
     expect(
       () =>
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         new Layer({
           canvas: document.createElement("canvas"),
-        })
+        }),
     ).toThrowError();
   });
 
@@ -53,7 +50,7 @@ describe("setup script", () => {
   it("can be set", () => {
     layer.setup.addEventListener(
       "compilationerror",
-      compilationErrorListener as any
+      compilationErrorListener as any,
     );
     expect(() => {
       layer.setup.code = setupScript;
@@ -82,7 +79,7 @@ describe("animation script", () => {
   });
 
   it("can use the script cache", () => {
-    const logListener = jest.fn();
+    const logListener = vi.fn();
     const code = 'cache.added = true; scriptLog("cache", cache);';
     layer.animation.code = code;
     layer.animation.addEventListener("log", logListener);

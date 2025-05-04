@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "vitest";
 import ScriptRunner from "./ScriptRunner";
 
 const api = {
@@ -82,11 +83,11 @@ describe("object ScriptRunner", () => {
         runner.code = syncCode;
         runner.api = api;
 
-        let result;
+        let result: any;
         await expect(
           (async () => {
             result = await runner.exec();
-          })()
+          })(),
         ).resolves.toBeUndefined();
         expect(result).not.toBeInstanceOf(Promise);
 
@@ -108,19 +109,22 @@ describe("object ScriptRunner", () => {
     });
 
     describe("scope", () => {
-      it("prevents access to global", async () => {
-        const runner = new ScriptRunner(scope);
-        runner.code = "return console";
+      it.each(["global", "parent", "window", "document", "self", "globalThis"])(
+        "prevents access to %s",
+        async (name) => {
+          const runner = new ScriptRunner(scope);
+          runner.code = "return ${name}";
+          console.info("console", runner.code, scope, runner);
+          let result: any;
+          await expect(
+            (async () => {
+              result = await runner.exec();
+            })(),
+          ).resolves.toBeUndefined();
 
-        let result;
-        await expect(
-          (async () => {
-            result = await runner.exec();
-          })()
-        ).resolves.toBeUndefined();
-
-        expect(result).toBeUndefined();
-      });
+          expect(result).toBeUndefined();
+        },
+      );
 
       it("can be set", async () => {
         const runner = new ScriptRunner(scope);
@@ -128,11 +132,11 @@ describe("object ScriptRunner", () => {
         return this.stuff
         `;
 
-        let result;
+        let result: any;
         await expect(
           (async () => {
             result = await runner.exec();
-          })()
+          })(),
         ).resolves.toBeUndefined();
 
         expect(result).toBe(true);
@@ -142,9 +146,9 @@ describe("object ScriptRunner", () => {
     describe("scriptLog()", () => {
       it("logs", async () => {
         const runner = new ScriptRunner(scope);
-        const compilationErrorListener = jest.fn();
-        const executionErrorListener = jest.fn();
-        const logListener = jest.fn();
+        const compilationErrorListener = vi.fn();
+        const executionErrorListener = vi.fn();
+        const logListener = vi.fn();
         runner.addEventListener("compilationerror", compilationErrorListener);
         runner.addEventListener("executionerror", executionErrorListener);
         runner.addEventListener("log", logListener);
@@ -154,11 +158,11 @@ describe("object ScriptRunner", () => {
         return this.stuff
         `;
 
-        let result;
+        let result: any;
         await expect(
           (async () => {
             result = await runner.exec();
-          })()
+          })(),
         ).resolves.toBeUndefined();
 
         expect(compilationErrorListener).not.toHaveBeenCalled();
@@ -183,7 +187,7 @@ describe("object ScriptRunner", () => {
   describe("events", () => {
     describe('"compilationerror" type', () => {
       it("is triggered when code cannot be compiled", () => {
-        const listener = jest.fn();
+        const listener = vi.fn();
 
         const runner = new ScriptRunner(scope);
         runner.addEventListener("compilationerror", listener);
@@ -195,8 +199,8 @@ describe("object ScriptRunner", () => {
 
     describe('"executionerror" type', () => {
       it("is triggered when code execution fails", async () => {
-        const compilationErrorListener = jest.fn();
-        const executionErrorListener = jest.fn();
+        const compilationErrorListener = vi.fn();
+        const executionErrorListener = vi.fn();
         const runner = new ScriptRunner(scope);
 
         runner.addEventListener("compilationerror", compilationErrorListener);
@@ -217,7 +221,7 @@ describe("object ScriptRunner", () => {
 
     describe('"log" type', () => {
       it("is triggered after execution of code", async () => {
-        const listener = jest.fn();
+        const listener = vi.fn();
 
         const runner = new ScriptRunner(scope);
         runner.code = 'scriptLog("log");';
@@ -233,7 +237,7 @@ describe("object ScriptRunner", () => {
       });
 
       it("is triggered only if log() has been called within the code", async () => {
-        const listener = jest.fn();
+        const listener = vi.fn();
 
         const runner = new ScriptRunner(scope);
         runner.addEventListener("log", listener);
@@ -250,7 +254,7 @@ describe("object ScriptRunner", () => {
 
     describe(".removeEventListener()", () => {
       it("can be used to remove event listeners", async () => {
-        const listener = jest.fn();
+        const listener = vi.fn();
 
         const runner = new ScriptRunner(scope);
         runner.code = 'scriptLog("log");';

@@ -1,7 +1,13 @@
-import { dir, type DirectoryResult } from "tmp-promise";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
-// @ts-ignore
-import { __setWorkspace } from "vscode";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import { type DirectoryResult, dir } from "tmp-promise";
+// Mock function to simulate setting up a workspace
+const __setWorkspace = (
+  path: string,
+  options: { worksapceFolders: string[] },
+) => {
+  // Simulate workspace setup logic here
+};
 
 import workspaceFileExists from "./workspaceFileExists";
 

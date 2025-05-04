@@ -1,19 +1,19 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
+import { describe, expect, it, vi } from "vitest";
 import * as com from "./com";
 
 // const expectedError = new Error('Expected');
 
 const handlers = {
-  actionA: jest.fn(() => {}),
-  actionB: jest.fn(async () => "B"),
-  actionC: jest.fn(async () => {
+  actionA: vi.fn(() => {}),
+  actionB: vi.fn(async () => "B"),
+  actionC: vi.fn(async () => {
     throw new Error("Expected");
   }),
 };
 
 describe("com.messenger", () => {
   it("properly use the posting function", () => {
-    const post = jest.fn();
+    const post = vi.fn();
     const messenger = com.makeChannelPost(post, "side-1");
     void messenger("actionA");
 
@@ -29,7 +29,7 @@ describe("com.messenger", () => {
   });
 
   it("can use async", async () => {
-    const post = jest.fn();
+    const post = vi.fn();
     const messenger = com.makeChannelPost(post, "side-1");
 
     const promise = messenger("actionB", {}, true);
@@ -45,7 +45,7 @@ describe("com.messenger", () => {
     expect(args[0]).toHaveProperty("meta.sent");
     expect(args[0]).toHaveProperty("meta.operationId");
 
-    const postBack = jest.fn();
+    const postBack = vi.fn();
     const listener2 = com.makeChannelListener(postBack, handlers);
 
     const listener1 = com.makeChannelListener(post, {});
@@ -66,12 +66,12 @@ describe("com.messenger", () => {
   });
 
   it("handles async error", async () => {
-    const post = jest.fn();
+    const post = vi.fn();
     const messenger = com.makeChannelPost(post, "side-1");
 
     const listener1 = com.makeChannelListener(post, {});
 
-    const postBack = jest.fn();
+    const postBack = vi.fn();
     const listener2 = com.makeChannelListener(postBack, handlers);
     const promise: Promise<any> = messenger("actionC", {}, true);
 
@@ -103,7 +103,7 @@ describe("com.autoBind", () => {
     let post: com.ChannelPost;
     let listener: com.ComMessageEventListener;
     const obj = {
-      postMessage: jest.fn(),
+      postMessage: vi.fn(),
     };
 
     expect(() => {

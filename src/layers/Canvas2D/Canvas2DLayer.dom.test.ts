@@ -1,6 +1,4 @@
-/**
- * @jest-environment jsdom
- */
+import { describe, expect, it, vi } from "vitest";
 import Canvas2DLayer, { type Canvas2DLayerOptions } from "./Canvas2DLayer";
 
 const setupScript = 'console.info("hello"); return { newData: "set" };';
@@ -12,7 +10,7 @@ const options: Canvas2DLayerOptions = {
   canvas: document.createElement("canvas"),
 };
 
-const compilationErrorListener = jest.fn((err) => {
+const compilationErrorListener = vi.fn((err) => {
   console.info(err.builderStr);
 });
 
@@ -32,7 +30,7 @@ describe("instanciation", () => {
         // @ts-expect-error
         new Canvas2DLayer({
           canvas: document.createElement("canvas"),
-        })
+        }),
     ).toThrowError();
   });
 
@@ -53,7 +51,7 @@ describe("setup script", () => {
   it("can be set", () => {
     layer.setup.addEventListener(
       "compilationerror",
-      compilationErrorListener as any
+      compilationErrorListener as any,
     );
     expect(() => {
       layer.setup.code = setupScript;
@@ -82,7 +80,7 @@ describe("animation script", () => {
   });
 
   it("can use the script cache", () => {
-    const logListener = jest.fn();
+    const logListener = vi.fn();
     const code = 'cache.added = true; scriptLog("cache", cache);';
     layer.animation.code = code;
     layer.animation.addEventListener("log", logListener);
