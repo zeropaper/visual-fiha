@@ -82,7 +82,7 @@ const combinedReducers = combineReducers({
     };
   },
   displays: (state: any[], action: AnyAction) => {
-    if (action.type !== "setDisplays") return state;
+    if (action.type !== "setDisplays") return state || [];
     return action.payload;
   },
 });
