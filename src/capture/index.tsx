@@ -29,4 +29,3 @@ audioCapture(post, socket);
 void midiCapture(post, socket);
 
 const root = createRoot(document.getElementById("capture-view")!);
-root.render(<div>Tada</div>);
