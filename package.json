@@ -1,192 +1,39 @@
 {
   "private": true,
-  "name": "visual-fiha",
-  "version": "3.3.0",
+  "name": "visual-fiha-web",
+  "version": "2.0.0",
   "preview": true,
   "description": "VJing extension for VS Code",
   "author": "Valentin Vago <zeropaper@irata.ch> (https://zeropaper.style/)",
   "license": "MIT",
-  "icon": "media/vf.icon.alt.png",
   "engines": {
-    "node": "^20.19.1",
-    "vscode": "^1.99.2"
+    "node": "v22.16.0",
+    "pnpm": "10.11.0"
   },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "workspaceContains:fiha.json"
-  ],
-  "main": "./out/extension/index.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "visualFiha.resetData",
-        "title": "Reset data",
-        "category": "Visual Fiha"
-      },
-      {
-        "command": "visualFiha.scaffoldProject",
-        "title": "Scaffold project",
-        "category": "Visual Fiha"
-      },
-      {
-        "command": "visualFiha.toggleLayer",
-        "title": "Toggle layer",
-        "category": "Visual Fiha"
-      },
-      {
-        "command": "visualFiha.addLayer",
-        "title": "Add layer",
-        "category": "Visual Fiha"
-      },
-      {
-        "command": "visualFiha.removeLayer",
-        "title": "Remove layer",
-        "category": "Visual Fiha"
-      }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "visual-fiha",
-          "title": "Visual Fiha",
-          "icon": "media/vf.icon.svg"
-        }
-      ]
-    },
-    "views": {
-      "visual-fiha": [
-        {
-          "type": "webview",
-          "id": "visualFiha.controlView",
-          "name": "Control"
-        },
-        {
-          "id": "visualFiha.scriptsView",
-          "name": "Scripts"
-        },
-        {
-          "type": "webview",
-          "id": "visualFiha.displaysView",
-          "name": "Displays"
-        },
-        {
-          "type": "webview",
-          "id": "visualFiha.timelineView",
-          "name": "Timeline"
-        },
-        {
-          "id": "visualFiha.settingsView",
-          "name": "Settings"
-        },
-        {
-          "type": "webview",
-          "id": "visualFiha.audioView",
-          "name": "Audio"
-        }
-      ]
-    },
-    "menus": {
-      "view/title": [
-        {
-          "command": "visualFiha.addLayer",
-          "when": "view == visualFiha.scriptsView"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "visualFiha.toggleLayer",
-          "when": "view == visualFiha.scriptsView && viewItem == layer"
-        },
-        {
-          "command": "visualFiha.removeLayer",
-          "when": "view == visualFiha.scriptsView && viewItem == layer"
-        }
-      ]
-    },
-    "configuration": {
-      "title": "VisualFiha",
-      "properties": {
-        "visualFiha.settings.projectsPath": {
-          "scope": "application",
-          "type": "string",
-          "default": "~/fiha-repositories",
-          "description": "A directory in which the Visual Fiha are located"
-        }
-      }
-    }
-  },
-  "publisher": "visual-fiha",
   "scripts": {
-    "test": "vitest run --coverage",
-    "watch:test": "vitest",
-    "package": "vsce package --no-yarn",
-    "vscode:prepublish": "rimraf out && run-p compile:* && run-s demo:copy && run-p demo:dts:*",
-    "demo:copy": "rimraf out/demo-project && mkdir -p out/demo-project/layers/canvas out/demo-project/layers/threejs && cp -rf demo-project/* out/demo-project/",
-    "compile:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --minify --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
-    "compile:webviews:controlView": "esbuild ./src/webviews/controlView.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/controlView.js",
-    "compile:webviews:audioView": "esbuild ./src/webviews/audioView.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/audioView.js",
-    "compile:webviews:displaysView": "esbuild ./src/webviews/displaysView.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/displaysView.js",
-    "compile:webviews:timelineView": "esbuild ./src/webviews/timelineView.tsx --sourcemap --bundle --minify --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/timelineView.js",
-    "compile:capture": "esbuild ./src/capture/index.tsx --sourcemap --bundle --minify --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
-    "compile:display": "esbuild ./src/display/index.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
-    "compile:displayworker": "esbuild ./src/display/Display.worker.ts --sourcemap --bundle --minify --tsconfig=./src/display/tsconfig.json --outfile=./out/display/Display.worker.js",
-    "demo:dts:canvas2d": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/layers/canvas/canvas.d.ts scripts-dts/canvas.ts",
-    "demo:dts:threejs": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/layers/threejs/threejs.d.ts scripts-dts/threejs.ts",
-    "demo:dts:worker": "tsc --skipLibCheck -d --emitDeclarationOnly --target ES2020 --outFile demo-project/worker/worker.d.ts scripts-dts/worker.ts",
-    "_compile:layerdocs": "run-p compile:layerdocs:*",
-    "_compile:layerdocs:canvas2d": "typedoc --out out/docs/Canvas2DLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name Canvas2DLayer --disableSources src/layers/Canvas2D/canvas2DAPI.ts",
-    "_compile:layerdocs:threejs": "typedoc --out out/docs/ThreeJSLayer --tsconfig src/layers/tsconfig.api-types.json --readme none --name ThreeJSLayer --disableSources src/layers/ThreeJS/threeJSAPI.ts",
-    "lint": "biome check --files-ignore-unknown=true --diagnostic-level=error --apply --no-errors-on-unmatched .",
-    "format": "prettier --write .",
-    "watch:extension": "esbuild ./src/extension/extension.ts --platform=node --sourcemap --bundle --watch --tsconfig=./src/extension/tsconfig.json --external:vscode --outfile=./out/extension/index.js",
-    "watch:webviews:controlView": "esbuild ./src/webviews/controlView.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/controlView.js",
-    "watch:webviews:audioView": "esbuild ./src/webviews/audioView.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/audioView.js",
-    "watch:webviews:displaysView": "esbuild ./src/webviews/displaysView.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/displaysView.js",
-    "watch:webviews:timelineView": "esbuild ./src/webviews/timelineView.tsx --sourcemap --bundle --watch --tsconfig=./src/webviews/tsconfig.json --outfile=./out/webviews/timelineView.js",
-    "watch:capture": "esbuild ./src/capture/index.tsx --sourcemap --bundle --watch --tsconfig=./src/capture/tsconfig.json --outfile=./out/capture/index.js",
-    "watch:display": "esbuild ./src/display/index.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/index.js",
-    "watch:displayworker": "esbuild ./src/display/Display.worker.ts --sourcemap --bundle --watch --tsconfig=./src/display/tsconfig.json --outfile=./out/display/Display.worker.js",
-    "prepare": "husky install"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run --reporter=verbose",
+    "test:watch": "vitest --reporter=verbose --watch",
+    "test:coverage": "vitest run --reporter=verbose --coverage",
+    "copy-typescript": "cp node_modules/typescript/lib/typescript.js public/typescript.js",
+    "prepare": "husky install && pnpm run copy-typescript"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.6.1",
-    "@commitlint/cli": "17.6.6",
-    "@commitlint/config-conventional": "17.6.6",
-    "@reduxjs/toolkit": "1.9.5",
-    "@types/fs-extra": "11.0.1",
-    "@types/lodash": "4.14.195",
-    "@types/mime": "3.0.1",
-    "@types/node": "20.3.2",
-    "@types/react": "18.2.14",
-    "@types/react-dom": "18.2.6",
-    "@types/react-redux": "7.1.25",
-    "@types/three": "0.152.1",
-    "@types/vscode": "1.79.1",
-    "@types/vscode-webview": "1.57.1",
-    "@types/web": "0.0.102",
-    "@vitest/browser": "^3.1.2",
-    "@vitest/coverage-v8": "3.1.2",
-    "@vscode/vsce": "^2.32.0",
-    "canvas": "2.11.2",
-    "esbuild": "0.18.10",
-    "husky": "8.0.3",
-    "lint-staged": "13.2.3",
-    "lodash": "4.17.21",
-    "npm-run-all": "4.1.5",
-    "prettier": "^2.8.8",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-redux": "8.1.1",
-    "redux": "4.2.1",
-    "rimraf": "5.0.1",
-    "three": "0.154.0",
-    "tmp-promise": "3.0.3",
-    "ts-node": "10.9.1",
-    "typedoc": "0.24.8",
+    "@biomejs/biome": "^1.9.4",
+    "@commitlint/cli": "^17.8.1",
+    "@commitlint/config-conventional": "^17.8.1",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "@types/three": "^0.152.1",
+    "@vitejs/plugin-react": "^4.5.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.3.0",
     "typescript": "^5.8.3",
-    "vitest": "^3.1.2"
+    "vite": "^6.3.5",
+    "vite-plugin-monaco-editor": "^1.1.0",
+    "vitest": "^3.1.4"
   },
   "repository": {
     "type": "git",
@@ -197,26 +44,20 @@
   },
   "homepage": "https://github.com/zeropaper/visual-fiha",
   "dependencies": {
-    "fs-extra": "11.1.1",
-    "json5": "2.2.3",
-    "mic": "^2.1.2",
-    "mime": "3.0.0",
-    "socket.io": "4.7.1",
-    "socket.io-client": "4.7.1"
+    "monaco-editor": "^0.52.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.154.0"
   },
   "lint-staged": {
     "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
       "biome check --files-ignore-unknown=true --diagnostic-level=error --apply --no-errors-on-unmatched"
     ]
   },
-  "packageManager": "pnpm@10.10.0",
+  "packageManager": "pnpm@10.11.0",
   "pnpm": {
     "onlyBuiltDependencies": [
-      "@biomejs/biome",
-      "@vscode/vsce-sign",
-      "canvas",
-      "esbuild",
-      "keytar"
+      "@biomejs/biome"
     ]
   }
 }

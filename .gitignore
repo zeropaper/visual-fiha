@@ -1,5 +1,3 @@
 node_modules
-out
-.eslintcache
 coverage
-*.vsix
+public/typescript.js
