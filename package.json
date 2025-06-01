@@ -24,11 +24,15 @@
     "@biomejs/biome": "^1.9.4",
     "@commitlint/cli": "^17.8.1",
     "@commitlint/config-conventional": "^17.8.1",
+    "@types/lodash": "^4.17.17",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@types/three": "^0.152.1",
     "@vitejs/plugin-react": "^4.5.0",
+    "canvas": "^3.1.0",
+    "happy-dom": "^17.5.6",
     "husky": "^8.0.3",
+    "jsdom": "^26.1.0",
     "lint-staged": "^13.3.0",
     "typescript": "^5.8.3",
     "typescript-plugin-css-modules": "^5.1.0",
@@ -45,6 +49,7 @@
   },
   "homepage": "https://github.com/zeropaper/visual-fiha",
   "dependencies": {
+    "lodash": "^4.17.21",
     "monaco-editor": "^0.52.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -59,7 +64,8 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "@biomejs/biome",
-      "@parcel/watcher"
+      "@parcel/watcher",
+      "canvas"
     ]
   }
 }
