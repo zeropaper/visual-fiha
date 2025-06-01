@@ -1,3 +1,32 @@
+/*
+ * Message-based communication utilities for cross-context (e.g., worker, iframe, main thread) messaging.
+ *
+ * Types:
+ *   - ComEventData: Message event data with { type, payload, meta: { source, sent, operationId?, error? } }
+ *
+ * Functions:
+ *
+ * makeChannelPost(post, source): Messenger
+ *   - Returns a function to send messages of a given type and payload.
+ *   - If called with awaitResponse=true, returns a Promise that resolves/rejects with the handler's result or error.
+ *   - All messages include meta fields: source, sent timestamp, and (for async) operationId.
+ *
+ * makeChannelListener(post, handlers): Listener
+ *   - Returns a message event listener that dispatches to handlers by type.
+ *   - Handles both sync and async handlers.
+ *   - For async, posts back result or error (with operationId).
+ *
+ * autoBind(obj, source, handlers): { post, listener }
+ *   - For an object with postMessage, returns a post function and a listener.
+ *   - post: Messenger function bound to obj.postMessage.
+ *   - listener: Message event listener using provided handlers.
+ *
+ * Features:
+ *   - Async request/response with error propagation.
+ *   - All messages and responses are properly meta-tagged.
+ *   - Thoroughly tested for sync, async, error, and autoBind scenarios.
+ */
+
 export interface ComEventDataMeta {
   [custom: string]: any;
   operationId?: string;
