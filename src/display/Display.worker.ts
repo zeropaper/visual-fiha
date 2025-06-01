@@ -1,5 +1,3 @@
-/* eslint-env worker */
-
 import VFWorker, {
   isDisplayState,
   type OffscreenCanvas,

@@ -1,5 +1,3 @@
-/* eslint-env worker */
-
 import { io } from "socket.io-client";
 
 import type { Socket } from "node:dgram";

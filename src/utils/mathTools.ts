@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-properties */
-/* eslint-disable @typescript-eslint/naming-convention */
 interface Box {
   width: number;
   height: number;

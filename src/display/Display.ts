@@ -1,6 +1,5 @@
 import type Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import type ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import type { AppState } from "../types";
 import {
   type ChannelPost,

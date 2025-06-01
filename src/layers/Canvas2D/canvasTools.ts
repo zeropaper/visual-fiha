@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/indent */
-/* eslint-disable @typescript-eslint/naming-convention */
-
 import { PI2, arrayAvg, arrayMax, arrayMin, sDiv } from "../../utils/mathTools";
 import { noop, repeat } from "../../utils/miscTools";
 

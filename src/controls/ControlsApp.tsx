@@ -44,7 +44,6 @@ export default function ControlsApp() {
     return () => {
       worker.terminate();
     };
-    // eslint-disable-next-line
   }, []);
 
   const transpileTsCode = (code: string) => {

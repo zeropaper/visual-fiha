@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type, no-debugger */
 import ScriptRunner, {
   type ScriptRunnerEventListener,
   type API,
