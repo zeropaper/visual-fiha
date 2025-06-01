@@ -14,14 +14,12 @@ interface MonacoEditorProps {
   language?: "typescript" | "javascript";
   onChange?: (value: string) => void;
   theme?: string;
-  height?: string;
 }
 export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
   value = "",
   language = "typescript",
   onChange,
   theme = "vs-dark",
-  height = "400px",
 }) => {
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<_monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -172,12 +170,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
   return (
     <div
       ref={editorContainerRef}
-      style={{
-        height,
-        width: "100%",
-        border: "1px solid #ccc",
-        borderRadius: "4px",
-      }}
+      style={{ flexGrow: 1, height: "100%", width: "100%" }}
     />
   );
 };
