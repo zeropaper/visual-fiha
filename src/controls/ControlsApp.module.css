@@ -1,28 +1,20 @@
-.header {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-  font-size: 2rem;
+.sidebar {
+  min-width: 250px;
+  max-width: 75%;
 }
-.editorSection {
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+.controlDisplay {
+  background: #000;
+  width: 100%;
+  aspect-ratio: var(--control-display-aspect-ratio, 3 / 2);
 }
-.codePreview {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #282c34;
-  color: #abb2bf;
-  border-radius: 4px;
-  overflow-x: auto;
-  font-size: 0.9em;
-  white-space: pre-wrap;
+
+.editorContainer {
+  flex-grow: 1;
 }
+
 .errorMessage {
-  background-color: #ffebee;
+  background: #ffebee;
   color: #c62828;
   padding: 10px 15px;
   border-radius: 4px;

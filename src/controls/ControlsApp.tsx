@@ -69,38 +69,48 @@ export default function ControlsApp() {
   }, []);
 
   return (
-    <div>
-      {workerError && (
-        <div className={styles.errorMessage}>
-          <strong>Warning:</strong> {workerError}
-        </div>
-      )}
-      <MonacoEditorComponent
-        language="typescript"
-        value={tsCode}
-        onChange={transpileTsCode}
-        theme="vs-light" // Options: 'vs-dark', 'vs-light', 'hc-black'
-      />
-      <details>
-        <summary
-          style={{ cursor: "pointer", marginTop: "10px", color: "#1a73e8" }}
-        >
-          View TypeScript Code
-        </summary>
-        <pre className={styles.codePreview}>
-          <code>{tsCode}</code>
-        </pre>
-      </details>
-      <details open>
-        <summary
-          style={{ cursor: "pointer", marginTop: "10px", color: "#43a047" }}
-        >
-          View Transpiled JavaScript
-        </summary>
-        <pre className={styles.codePreview}>
-          <code>{jsCode}</code>
-        </pre>
-      </details>
-    </div>
+    <>
+      <div className={styles.sidebar}>
+        <canvas id="controls-display" className={styles.controlDisplay} />
+        <details open>
+          <summary>Layers</summary>
+          <ul id="layers">
+            <li>Layer 1</li>
+            <li>Layer 2</li>
+            <li>Layer 3</li>
+          </ul>
+        </details>
+        <details open>
+          <summary>Signals</summary>
+          <ul id="signals">
+            <li>Signal 1</li>
+            <li>Signal 2</li>
+            <li>Signal 3</li>
+          </ul>
+        </details>
+        <details open>
+          <summary>Inputs</summary>
+          <ul id="inputs">
+            <li>Time</li>
+            <li>Audio</li>
+            <li>MIDI</li>
+          </ul>
+        </details>
+      </div>
+
+      <div className={styles.editorContainer}>
+        {workerError && (
+          <div className={styles.errorMessage}>
+            <strong>Warning:</strong> {workerError}
+          </div>
+        )}
+        <MonacoEditorComponent
+          language="typescript"
+          value={tsCode}
+          onChange={transpileTsCode}
+          theme="vs-light" // Options: 'vs-dark', 'vs-light', 'hc-black'
+        />
+      </div>
+    </>
   );
 }
