@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styles from "./ControlApp.module.css";
+import styles from "./ControlsApp.module.css";
 import { MonacoEditorComponent } from "./MonacoEditorComponent";
 
 const initialTsCode = `
@@ -20,7 +20,7 @@ console.log(getUserName(user));
 // to see TypeScript's error checking in action.
 `;
 
-export default function ControlApp() {
+export default function ControlsApp() {
   const [tsCode, setTsCode] = useState<string>(initialTsCode);
   const [workerError, setWorkerError] = useState<string | null>(null);
   const [jsCode, setJsCode] = useState<string>("");
