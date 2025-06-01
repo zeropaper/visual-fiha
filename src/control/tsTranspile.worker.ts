@@ -1,12 +1,11 @@
-// src/tsTranspile.worker.ts
 // Web Worker for transpiling TypeScript to JavaScript in-browser
+/// <reference lib="webworker" />
 
-// self.importScripts('./typescript.js');
 self.importScripts("/typescript.js");
 
 self.onmessage = (e) => {
   const code = e.data;
-  // @ts-ignore: typescript is loaded globally
+  // @ts-expect-error: typescript is loaded globally
   const ts = self.ts;
   const transpiled = ts.transpileModule(code, {
     compilerOptions: {
