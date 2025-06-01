@@ -1,42 +1,6 @@
 import React, { useEffect, useState } from "react";
+import styles from "./ControlApp.module.css";
 import { MonacoEditorComponent } from "./MonacoEditorComponent";
-
-// Styles for the App
-export const styles = {
-  appContainer: {},
-  header: {
-    textAlign: "center" as React.CSSProperties["textAlign"],
-    color: "#333",
-    marginBottom: "30px",
-    fontSize: "2rem",
-  },
-  editorSection: {
-    marginBottom: "30px",
-    padding: "20px",
-    backgroundColor: "#fff",
-    borderRadius: "8px",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-  },
-  codePreview: {
-    marginTop: "15px",
-    padding: "10px",
-    backgroundColor: "#282c34", // Dark background for code
-    color: "#abb2bf", // Light text for dark background
-    borderRadius: "4px",
-    overflowX: "auto" as React.CSSProperties["overflowX"],
-    fontSize: "0.9em",
-    whiteSpace: "pre-wrap" as React.CSSProperties["whiteSpace"],
-  },
-  errorMessage: {
-    backgroundColor: "#ffebee",
-    color: "#c62828",
-    padding: "10px 15px",
-    borderRadius: "4px",
-    marginBottom: "20px",
-    border: "1px solid #ef9a9a",
-    textAlign: "center" as React.CSSProperties["textAlign"],
-  },
-};
 
 const initialTsCode = `
 // TypeScript Example
@@ -56,7 +20,7 @@ console.log(getUserName(user));
 // to see TypeScript's error checking in action.
 `;
 
-function ControlApp() {
+export default function ControlApp() {
   const [tsCode, setTsCode] = useState<string>(initialTsCode);
   const [workerError, setWorkerError] = useState<string | null>(null);
   const [jsCode, setJsCode] = useState<string>("");
@@ -105,9 +69,9 @@ function ControlApp() {
   }, []);
 
   return (
-    <div style={styles.appContainer}>
+    <div>
       {workerError && (
-        <div style={styles.errorMessage}>
+        <div className={styles.errorMessage}>
           <strong>Warning:</strong> {workerError}
         </div>
       )}
@@ -115,7 +79,7 @@ function ControlApp() {
         language="typescript"
         value={tsCode}
         onChange={transpileTsCode}
-        theme="vs-dark" // Options: 'vs-dark', 'vs-light', 'hc-black'
+        theme="vs-light" // Options: 'vs-dark', 'vs-light', 'hc-black'
       />
       <details>
         <summary
@@ -123,22 +87,20 @@ function ControlApp() {
         >
           View TypeScript Code
         </summary>
-        <pre style={styles.codePreview}>
+        <pre className={styles.codePreview}>
           <code>{tsCode}</code>
         </pre>
       </details>
-      <details>
+      <details open>
         <summary
           style={{ cursor: "pointer", marginTop: "10px", color: "#43a047" }}
         >
           View Transpiled JavaScript
         </summary>
-        <pre style={styles.codePreview}>
+        <pre className={styles.codePreview}>
           <code>{jsCode}</code>
         </pre>
       </details>
     </div>
   );
 }
-
-export default ControlApp;

@@ -1,0 +1,32 @@
+.header {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 2rem;
+}
+.editorSection {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.codePreview {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #282c34;
+  color: #abb2bf;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.9em;
+  white-space: pre-wrap;
+}
+.errorMessage {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border: 1px solid #ef9a9a;
+  text-align: center;
+}
