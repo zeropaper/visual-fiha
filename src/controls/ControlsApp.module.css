@@ -9,8 +9,21 @@
   aspect-ratio: var(--control-display-aspect-ratio, 3 / 2);
 }
 
-.editorContainer {
+.main {
   flex-grow: 1;
+  position: relative;
+}
+
+.flow {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.editorContainer {
+  inset: 5%;
+  position: absolute;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .errorMessage {

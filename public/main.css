@@ -1,3 +1,23 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  --spacing-xs: 2px;
+  --spacing-sm: 5px;
+  --spacing-md: 10px;
+  --spacing-lg: 20px;
+  --spacing-xl: 40px;
+  --spacing-xxl: 80px;
+  --button-bg: #007bff42;
+  --button-bg-hover: #0057b33f;
+  --button-bg-disabled: #cccccc23;
+  --button-color: currentColor;
+  --button-border-radius: 4px;
+  --button-padding: 5px 10px;
+  --button-border-color: #ffffff40;
+}
+
 html, body {
   height: 100%;
   margin: 0;
