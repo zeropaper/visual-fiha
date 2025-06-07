@@ -18,7 +18,8 @@
     "test:watch": "vitest --reporter=verbose --watch",
     "test:coverage": "vitest run --reporter=verbose --coverage",
     "copy-typescript": "cp node_modules/typescript/lib/typescript.js public/typescript.js",
-    "prepare": "husky install && pnpm run copy-typescript"
+    "copy-flow-styles": "cp node_modules/@xyflow/react/dist/style.css public/flow.css",
+    "prepare": "husky install && pnpm run copy-typescript && pnpm run copy-flow-styles"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -49,6 +50,7 @@
   },
   "homepage": "https://github.com/zeropaper/visual-fiha",
   "dependencies": {
+    "@xyflow/react": "^12.6.4",
     "lodash": "^4.17.21",
     "monaco-editor": "^0.52.2",
     "react": "^18.3.1",

@@ -1,0 +1,7 @@
+.graph {
+  .input-node__audio-channels {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
