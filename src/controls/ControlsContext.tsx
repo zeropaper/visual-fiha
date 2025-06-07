@@ -1,27 +1,47 @@
 import type { Prettify } from "../types";
 import createFastContext from "./createFastContext";
 
+export type AudioInputValue = Record<
+  string, // track number as string
+  Record<
+    string, // channel number as string
+    Record<"data" | "min" | "max" | "average" | "median" | (string & {}), any>
+  >
+>;
+
+export type AudioInputMode = "file" | "files" | "mic";
+
+export interface AudioInputConfig {
+  minDecibels: number;
+  maxDecibels: number;
+  smoothingTimeConstant: number;
+  fftSize: number;
+}
+
+export interface AudioInputStruct {
+  name: "Audio";
+  type: "audio";
+  mode: AudioInputMode;
+  value: AudioInputValue | null;
+  config: AudioInputConfig;
+}
+
 type Input =
+  | AudioInputStruct
   | {
-      name: "time";
+      name: "Time";
       type: "time";
       value: number;
       config: { type: "absolute" | "relative" };
     }
   | {
-      name: "bpm";
+      name: "BPM";
       type: "bpm";
       value: number;
       config: { min: number; max: number; startAt: number };
     }
   | {
-      name: "audio";
-      type: "audio";
-      value: null;
-      config: { sampleRate: number };
-    }
-  | {
-      name: "midi";
+      name: "MIDI";
       type: "midi";
       value: { type: "device"; name: string; values: Record<string, number> }[];
       config?: Record<string, any>;
@@ -63,21 +83,27 @@ export const {
   useFastContextFields: useAppFastContextFields,
 } = createFastContext({
   inputs: [
-    { name: "time", type: "time", value: 0, config: { type: "absolute" } },
+    { name: "Time", type: "time", value: 0, config: { type: "absolute" } },
     {
-      name: "bpm",
+      name: "BPM",
       type: "bpm",
       value: 120,
       config: { min: 30, max: 300, startAt: 0 },
     },
     {
-      name: "audio",
+      name: "Audio",
       type: "audio",
       value: null,
-      config: { sampleRate: 44100 },
+      mode: "mic",
+      config: {
+        minDecibels: -120,
+        maxDecibels: 80,
+        smoothingTimeConstant: 0.85,
+        fftSize: 1024,
+      },
     },
-    { name: "midi", type: "midi", value: [], config: {} },
-  ],
+    { name: "MIDI", type: "midi", value: [], config: {} },
+  ] as Input[],
   signals: [],
   layers: [],
 } satisfies Context);
