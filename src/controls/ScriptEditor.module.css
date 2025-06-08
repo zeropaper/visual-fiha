@@ -1,0 +1,17 @@
+.root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.info {
+  padding: 0 10px;
+  display: flex;
+
+  gap: 30px;
+}
+
+.editor {
+  flex-grow: 1;
+}
