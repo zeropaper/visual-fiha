@@ -1,29 +1,28 @@
-import VFWorker, {
-  isDisplayState,
-  type OffscreenCanvas,
-} from "./DisplayWorker";
+/**
+ * VisualFiha Display Worker
+ *
+ * This worker is responsible for rendering visual content in a web worker environment.
+ * It handles communication with the main thread, manages layers, and executes scripts.
+ */
+import VFWorker, { type OffscreenCanvas } from "./VFWorker";
 
-import type {
-  AppState,
-  ReadFunction,
-  ScriptInfo,
-  ScriptingData,
-} from "../types";
+import type { Context as AppState, ScriptInfo } from "../types";
 
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
 import type { ScriptRunnerEventListener } from "../utils/ScriptRunner";
 import type { ComActionHandlers } from "../utils/com";
+import { makeRead } from "../utils/make-read";
+import { isDisplayState } from "./isDisplayState";
 
 type LayerType = Canvas2DLayer | ThreeJSLayer;
 
 interface WebWorker extends Worker {
   location: Location;
+  name: string;
 }
 
-// scripting
-
-const data: ScriptingData = {
+const data = {
   iterationCount: 0,
   now: 0,
   deltaNow: 0,
@@ -42,13 +41,9 @@ const onCompilationError: ScriptRunnerEventListener = (err: any) => {
 
 const worker: WebWorker = self as any;
 
-const read: ReadFunction = (key, defaultVal) =>
-  typeof data[key] !== "undefined" ? data[key] : defaultVal;
+const read = makeRead(data);
 
-const idFromWorkerHash = worker.location.hash.replace("#", "");
-if (!idFromWorkerHash) throw new Error("[worker] worker is not ready");
-
-const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
+const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   scriptchange: async (
     payload: ScriptInfo & {
       script: string;
@@ -59,7 +54,6 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     if (type === "worker") {
       vfWorker.scriptable[role].code = script;
       if (role === "setup") {
-        // data = { ...data, ...((await scriptable.execSetup()) || {}) };
         Object.assign(data, (await vfWorker.scriptable.execSetup()) || {});
       }
     } else {
@@ -96,7 +90,6 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
               onExecutionError,
             };
             switch (options.type) {
-              // case 'canvas2d':
               case "canvas":
                 return new Canvas2DLayer(completeOptions);
               case "threejs":
@@ -106,7 +99,7 @@ const socketHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
             }
           })
           .filter(Boolean)
-          .map((layer) => vfWorker.resizeLayer(layer as LayerType))
+          .map((layer) => layer && vfWorker.resizeLayer(layer))
       : state.layers;
     const updated = {
       ...state,
@@ -149,7 +142,7 @@ const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     vfWorker.registerDisplay();
   },
   resize: ({ width, height }: { width: number; height: number }) => {
-    const { canvas, socketCom, state } = vfWorker;
+    const { canvas, broadcastChannelCom, state } = vfWorker;
     vfWorker.state = {
       ...state,
       width: width || state.width,
@@ -160,8 +153,8 @@ const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     state.layers?.forEach((l) => vfWorker.resizeLayer(l));
 
     if (!state.control) {
-      socketCom.post("resizedisplay", {
-        id: idFromWorkerHash,
+      broadcastChannelCom.post("resizedisplay", {
+        id: worker.name,
         width: state.width,
         height: state.height,
       });
@@ -169,6 +162,10 @@ const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   },
 });
 
-const displayWorker = new VFWorker(worker, socketHandlers, messageHandlers);
+const displayWorker = new VFWorker(
+  worker,
+  broadcastChannelHandlers,
+  messageHandlers,
+);
 
 console.info("displayWorker", displayWorker);

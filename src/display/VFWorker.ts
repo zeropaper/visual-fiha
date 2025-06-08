@@ -1,7 +1,9 @@
-import { io } from "socket.io-client";
-
-import type { Socket } from "node:dgram";
-import type { ScriptingData } from "../types";
+/**
+ * VisualFiha Display Worker Rendering Class
+ *
+ * This class is designed to render visual content in a web worker environment.
+ *
+ */
 import { autoBind } from "../utils/com";
 import type {
   ChannelBindings,
@@ -9,12 +11,13 @@ import type {
   ComEventData,
 } from "../utils/com";
 
-import type { DisplayState } from "./Display";
+import type { DisplayState } from "./types";
 
 import type Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import canvasTools, { type Canvas2DAPI } from "../layers/Canvas2D/canvasTools";
 import type ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
 import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
+import { makeRead } from "../utils/make-read";
 import * as mathTools from "../utils/mathTools";
 
 export interface OffscreenCanvas extends HTMLCanvasElement {}
@@ -22,9 +25,8 @@ interface OffscreenCanvasRenderingContext2D extends CanvasRenderingContext2D {}
 
 interface WebWorker extends Worker {
   location: Location;
+  name: string;
 }
-
-// scripting
 
 const defaultStage = {
   width: 600,
@@ -32,18 +34,30 @@ const defaultStage = {
   autoScale: true,
 };
 
-const data: ScriptingData = {
+const data: DisplayState & {
+  iterationCount: number;
+  now: number;
+  deltaNow: number;
+} = {
+  id: "display-worker",
+  control: false,
   iterationCount: 0,
   now: 0,
   deltaNow: 0,
-  frequency: [],
-  volume: [],
+  inputs: [] as DisplayState["inputs"],
+  layers: [] as DisplayState["layers"],
+  signals: [] as DisplayState["signals"],
+  width: defaultStage.width,
+  height: defaultStage.height,
+  worker: {
+    setup: "/* worker setup script */",
+    animation: "/* worker animation script */",
+  },
 };
 
 const worker: WebWorker = self as any;
 
-const read = (/* Worker read */ key: string, defaultVal?: any) =>
-  typeof data[key] !== "undefined" ? data[key] : defaultVal;
+const read = makeRead(data);
 const makeErrorHandler =
   (type: string) =>
   (event: any): any => {
@@ -56,46 +70,28 @@ const scriptableOptions: ScriptableOptions = {
   onCompilationError: makeErrorHandler("compilation"),
   onExecutionError: makeErrorHandler("execution"),
 };
-
-const idFromWorkerHash = worker.location.hash.replace("#", "");
-if (!idFromWorkerHash) throw new Error("[worker] worker is not ready");
-
-export function isDisplayState(data: any): data is DisplayState {
-  return (
-    data &&
-    typeof data === "object" &&
-    "layers" in data &&
-    Array.isArray(data.layers) &&
-    "stage" in data &&
-    typeof data.stage === "object" &&
-    "width" in data.stage &&
-    "height" in data.stage
-  );
-}
+const workerName = worker.name;
+if (!workerName) throw new Error("[worker] worker is not ready");
 
 export default class VFWorker {
   constructor(
     workerSelf: WebWorker,
-    socketHandlers: (instance: VFWorker) => ComActionHandlers,
+    broadcastChannelHandlers: (instance: VFWorker) => ComActionHandlers,
     messageHandlers: (instance: VFWorker) => ComActionHandlers,
   ) {
     this.#worker = workerSelf;
 
     this.state = {
-      bpm: { count: 120, start: Date.now() },
-      server: { host: "localhost", port: 9999 },
-      control: !!this.#worker.location.hash?.startsWith("#control"),
-      id: idFromWorkerHash,
+      control: !!this.#worker.name.startsWith("controls-"),
+      id: workerName,
       width: defaultStage.width,
       height: defaultStage.height,
-      layers: [],
-      stage: { ...defaultStage },
-      worker: {
-        setup: "",
-        animation: "",
-      },
+      layers: data.layers,
+      inputs: data.inputs,
+      signals: data.signals,
+      worker: data.worker,
     };
-
+    console.info("[worker] VFWorker created", this.state);
     this.scriptable = new Scriptable(scriptableOptions);
 
     // @ts-ignore
@@ -106,39 +102,32 @@ export default class VFWorker {
 
     this.#tools = canvasTools(this.#context);
 
-    this.#socket = io() as unknown as Socket;
+    this.#broadcastChannel = new BroadcastChannel(`display-${workerName}`);
 
-    this.socketCom = autoBind(
+    this.broadcastChannelCom = autoBind(
       {
         postMessage: (message: any) => {
-          this.#socket.emit("message", message);
+          console.info("broadcastChannelCom postMessage", message);
+          // this.#broadcastChannel.emit("message", message);
         },
       },
-      `display-${idFromWorkerHash}-socket`,
-      socketHandlers(this),
+      `display-${workerName}-broadcastChannel`,
+      broadcastChannelHandlers(this),
     );
 
-    this.#socket.on("message", (message: ComEventData) => {
-      // if (message.type === 'updatestate') {
-      //   console.info('[worker] updatestate', message)
+    this.#broadcastChannel.onmessage = (message: ComEventData) => {
+      // const before = isDisplayState(this.state);
+      this.broadcastChannelCom.listener({ data: message });
+      // const after = isDisplayState(this.state);
+      // if (before !== after) {
+      //   console.error("[worker] state is not a DisplayState", message);
+      //   throw new Error("state is not a DisplayState");
       // }
-      const before = isDisplayState(this.state);
-      this.socketCom.listener({ data: message });
-      const after = isDisplayState(this.state);
-      if (before !== after) {
-        console.error("[worker] state is not a DisplayState", message);
-        throw new Error("state is not a DisplayState");
-      }
-    });
-
-    this.#socket.on("reconnect", (attempt: number) => {
-      console.info("[worker] reconnect", attempt);
-      this.registerDisplay();
-    });
+    };
 
     this.workerCom = autoBind(
       this.#worker,
-      `display-${idFromWorkerHash}-worker`,
+      `display-${workerName}-worker`,
       messageHandlers(this),
     );
     worker.addEventListener("message", this.workerCom.listener);
@@ -159,9 +148,9 @@ export default class VFWorker {
 
   #worker: WebWorker;
 
-  #socket: Socket;
+  #broadcastChannel: BroadcastChannel;
 
-  socketCom: ChannelBindings;
+  broadcastChannelCom: ChannelBindings;
 
   workerCom: ChannelBindings;
 
@@ -179,10 +168,13 @@ export default class VFWorker {
 
   registerDisplay() {
     if (this.onScreenCanvas == null) return;
-    this.#socket.emit("registerdisplay", {
-      id: idFromWorkerHash,
-      width: this.onScreenCanvas.width,
-      height: this.onScreenCanvas.height,
+    this.#broadcastChannel.postMessage({
+      type: "registerdisplay",
+      payload: {
+        id: workerName,
+        width: this.onScreenCanvas.width,
+        height: this.onScreenCanvas.height,
+      },
     });
   }
 
@@ -210,7 +202,8 @@ export default class VFWorker {
       // console.error('DisplayWorker.state.layers is not an array', this.state.layers)
       return;
     }
-    this.state.layers?.forEach((layer) => {
+    // console.info('rendering layers', this.state.layers.length);
+    this.state.layers.forEach((layer) => {
       if (!layer.active) return;
       layer.execAnimation();
       this.#tools.pasteContain(layer.canvas as any);
@@ -247,3 +240,6 @@ export default class VFWorker {
     });
   }
 }
+
+// // biome-ignore lint/complexity/noUselessEmptyExport: <explanation>
+// export { };

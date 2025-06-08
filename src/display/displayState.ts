@@ -1,4 +1,4 @@
-import type { LayerInfo } from "../types";
+import type { LayerConfig } from "../types";
 
 export interface DisplayState {
   meta: {
@@ -11,10 +11,10 @@ export interface DisplayState {
     setup: string;
     animate: string;
   };
-  layers: LayerInfo[];
+  layers: LayerConfig[];
 }
 
-const defaultState: DisplayState = {
+export const defaultState: DisplayState = {
   meta: {
     displayId: `display${(Math.random() * 10000).toFixed()}`,
     connected: false,
@@ -26,5 +26,3 @@ const defaultState: DisplayState = {
   },
   layers: [],
 };
-
-export default defaultState;

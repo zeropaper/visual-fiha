@@ -1,28 +1,14 @@
-import type Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
-import type ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
-import type { AppState } from "../types";
 import {
   type ChannelPost,
   type ComActionHandlers,
   type ComMessageEventListener,
   autoBind,
 } from "../utils/com";
+// @ts-expect-error
+import makeDisplayWorker from "./Display.worker.ts?worker";
+import type { DisplayOptions, DisplayState } from "./types";
 
 interface OffscreenCanvas extends HTMLCanvasElement {}
-
-export interface DisplayOptions {
-  id?: string;
-  canvas?: HTMLCanvasElement;
-}
-
-export interface DisplayState
-  extends Omit<Omit<AppState, "layers">, "displays"> {
-  id: string;
-  readonly control: boolean;
-  width: number;
-  height: number;
-  layers?: Array<Canvas2DLayer | ThreeJSLayer>;
-}
 
 const handlers: ComActionHandlers = {};
 
@@ -58,18 +44,16 @@ export default class Display {
   constructor(options?: DisplayOptions) {
     const { id, canvas = Display.ensureCanvas() } = options ?? {};
 
-    this.#id = id || `display${(Math.random() * 10000).toFixed()}`;
+    this.#id = id || `display${Date.now()}`;
 
     canvas.width = canvas.parentElement?.clientWidth ?? canvas.width;
     canvas.height = canvas.parentElement?.clientHeight ?? canvas.height;
     this.#canvas = canvas;
 
-    this.#worker = new Worker(`/Display.worker.js#${this.#id}`);
-    const { post, listener } = autoBind(
-      this.#worker,
-      `display-${this.#id}-browser`,
-      handlers,
-    );
+    this.#worker = makeDisplayWorker({
+      name: this.#id,
+    });
+    const { post, listener } = autoBind(this.#worker, this.#id, handlers);
     this.#post = post;
     this.#listener = listener;
     this.#worker.addEventListener("message", this.#listener);
@@ -81,7 +65,6 @@ export default class Display {
         type: "offscreencanvas",
         payload: { canvas: this.#offscreen },
       },
-      // @ts-expect-error
       [this.#offscreen],
     );
     requestAnimationFrame(() => this.resize());
