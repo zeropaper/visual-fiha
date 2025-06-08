@@ -19,19 +19,3 @@
   height: 100%;
   position: relative;
 }
-
-.editorContainer {
-  inset: 5%;
-  position: absolute;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.errorMessage {
-  background: #ffebee;
-  color: #c62828;
-  padding: 10px 15px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  border: 1px solid #ef9a9a;
-  text-align: center;
-}
