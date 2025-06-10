@@ -172,3 +172,51 @@ export const coverBox = (box1: Box, box2: Box) => {
   const y = (box1Height / box2Height) * height;
   return { width: x, height: y };
 };
+
+/* 
+declare global {
+  const abs: typeof abs;
+  const acos: typeof acos;
+  const acosh: typeof acosh;
+  const asin: typeof asin;
+  const asinh: typeof asinh;
+  const atan: typeof atan;
+  const atanh: typeof atanh;
+  const atan2: typeof atan2;
+  const ceil: typeof ceil;
+  const cbrt: typeof cbrt;
+  const expm1: typeof expm1;
+  const clz32: typeof clz32;
+  const cos: typeof cos;
+  const cosh: typeof cosh;
+  const exp: typeof exp;
+  const floor: typeof floor;
+  const fround: typeof fround;
+  const hypot: typeof hypot;
+  const imul: typeof imul;
+  const log: typeof log;
+  const log1p: typeof log1p;
+  const log2: typeof log2;
+  const log10: typeof log10;
+  const max: typeof max;
+  const min: typeof min;
+  const pow: typeof pow;
+  const random: typeof random;
+  const round: typeof round;
+  const sign: typeof sign;
+  const sin: typeof sin;
+  const sinh: typeof sinh;
+  const sqrt: typeof sqrt;
+  const tan: typeof tan;
+  const tanh: typeof tanh;
+  const trunc: typeof trunc;
+  const E: typeof E;
+  const LN10: typeof LN10;
+  const LN2: typeof LN2;
+  const LOG10E: typeof LOG10E;
+  const LOG2E: typeof LOG2E;
+  const PI: typeof PI;
+  const SQRT1_2: typeof SQRT1_2;
+  const SQRT2: typeof SQRT2;
+}
+*/

@@ -738,7 +738,7 @@ export default function canvasTools(ctx: CTX) {
     centeredGrid,
   };
 
-  const tools = { ...baseTools } as Canvas2DAPI;
+  const tools = { ...baseTools };
 
   const instKeys = Object.keys(ctx).filter(
     (key) => !["function", "object"].includes(key),
@@ -763,4 +763,31 @@ export default function canvasTools(ctx: CTX) {
     });
 
   return tools;
+}
+
+declare global {
+  const ctx: OffscreenCanvasRenderingContext2D;
+  const canvas: OffscreenCanvas;
+  const width: width;
+  const height: height;
+  const vw: vw;
+  const vh: vh;
+  const vmin: vmin;
+  const vmax: vmax;
+  const textLines: textLines;
+  const mirror: mirror;
+  const mediaType: mediaType;
+  const clear: clear;
+  const copy: copy;
+  const pasteImage: pasteImage;
+  const pasteContain: pasteContain;
+  const pasteCover: pasteCover;
+  const fontSize: fontSize;
+  const fontFamily: fontFamily;
+  const fontWeight: fontWeight;
+  const plot: plot;
+  const circle: circle;
+  const polygon: polygon;
+  const grid: grid;
+  const centeredGrid: centeredGrid;
 }

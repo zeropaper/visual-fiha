@@ -19,7 +19,13 @@
     "test:coverage": "vitest run --reporter=verbose --coverage",
     "copy-typescript": "cp node_modules/typescript/lib/typescript.js public/typescript.js",
     "copy-flow-styles": "cp node_modules/@xyflow/react/dist/style.css public/flow.css",
-    "prepare": "husky install && pnpm run copy-typescript && pnpm run copy-flow-styles"
+    "gen-editor-types:scriptable": "tsc ./src/utils/Scriptable.editor.types.ts --lib dom,esnext -d --emitDeclarationOnly",
+    "gen-editor-types:canvas": "tsc ./src/layers/Canvas2D/canvasTools.ts --lib dom,esnext -d --emitDeclarationOnly",
+    "gen-editor-types:threejs": "tsc ./src/layers/ThreeJS/threeTools.ts --lib dom,esnext -d --emitDeclarationOnly",
+    "gen-editor-types:misc": "tsc ./src/utils/miscTools.ts --lib dom,esnext -d --emitDeclarationOnly",
+    "gen-editor-types:math": "tsc ./src/utils/mathTools.ts --lib dom,esnext -d --emitDeclarationOnly",
+    "gen-editor-types": "pnpm gen-editor-types:scriptable && pnpm gen-editor-types:canvas && pnpm gen-editor-types:threejs && pnpm gen-editor-types:misc && pnpm gen-editor-types:math",
+    "prepare": "husky install && pnpm run copy-typescript && pnpm run copy-flow-styles && pnpm run gen-editor-types"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
