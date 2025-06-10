@@ -46,11 +46,15 @@ export const removeExportCrutch = (str: string) =>
 class EmptyScope {}
 
 const forbidden = new Set<string>([
+  ...Object.keys(typeof navigator !== "undefined" ? navigator : {}),
+  ...Object.keys(typeof document !== "undefined" ? document : {}),
   ...Object.keys(typeof window !== "undefined" ? window : {}),
   ...Object.keys(typeof global !== "undefined" ? global : {}),
   ...Object.keys(typeof self !== "undefined" ? self : {}),
   ...Object.keys(typeof globalThis !== "undefined" ? globalThis : {}),
 ]);
+
+export { forbidden as forbiddenScriptValues };
 
 class ScriptRunnerLintingError extends Error {
   constructor(details: object[]) {

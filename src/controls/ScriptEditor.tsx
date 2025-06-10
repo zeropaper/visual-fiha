@@ -1,7 +1,116 @@
 import type * as _monaco from "monaco-editor";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+// @ts-expect-error "?" suffix
+import canvasTypes from "../layers/Canvas2D/canvasTools.d.ts?raw";
+// @ts-expect-error "?" suffix
+import threeTypes from "../layers/ThreeJS/threeTools.d.ts?raw";
+import type { LayerConfig } from "../types";
+// @ts-expect-error "?" suffix
+import scriptableTypes from "../utils/Scriptable.editor.types.d.ts?raw";
+// @ts-expect-error "?" suffix
+import mathTypes from "../utils/Scriptable.utils.math.d.ts?raw";
 import { useAppFastContextFields } from "./ControlsContext";
 import styles from "./ScriptEditor.module.css";
+// // @ts-expect-error "?" suffix
+// import TranspilationWorker from "./tsTranspile.worker?worker";
+
+const extraLibs: Record<
+  LayerConfig["type"],
+  Record<"setup" | "animation", [string, string][]>
+> = {
+  canvas: {
+    setup: [[canvasTypes, "ts:canvas.d.ts"]],
+    animation: [[canvasTypes, "ts:canvas.d.ts"]],
+  },
+  threejs: {
+    setup: [[threeTypes, "ts:three.d.ts"]],
+    animation: [[threeTypes, "ts:three.d.ts"]],
+  },
+};
+
+function useCode(
+  role: "setup" | "animation",
+  type: "worker" | "layer",
+  id: string,
+): [
+  { code: string; layerType: "canvas" | "threejs" | null },
+  (code: string) => void,
+] {
+  const {
+    layers: { get: layers, set: setLayers },
+    worker: { get: worker, set: setWorker },
+  } = useAppFastContextFields(["layers", "worker"]);
+  if (type === "worker") {
+    return [
+      {
+        code:
+          worker[role] || `// No code available for worker with role ${role}`,
+        layerType: null,
+      },
+      (code: string) =>
+        setWorker({
+          ...worker,
+          [role]: code,
+        }),
+    ];
+  }
+
+  const layer = layers.find((l) => l.id === id);
+  if (layer) {
+    return [
+      {
+        code:
+          layer[role] ||
+          `// No code available for layer ${id} with role ${role}`,
+        layerType: layer.type,
+      },
+      (code: string) =>
+        setLayers(
+          layers.map((l) => (l.id === id ? { ...l, [role]: code } : l)),
+        ),
+    ];
+  }
+
+  return [
+    {
+      code: `// No code available for layer ${id} with role ${role}`,
+      layerType: null,
+    },
+    (code: string) => {
+      console.warn(
+        `[ScriptEditor] Cannot set code for layer ${id} with role ${role} because it does not exist.`,
+      );
+    },
+  ];
+}
+
+function useTranspile() {
+  const [isReady, setIsReady] = useState(false);
+  const transpilationWorkerRef = useRef<Worker | null>(null);
+
+  useEffect(() => {
+    // @ts-ignore
+    const worker = new Worker(
+      new URL("./tsTranspile.worker.ts", import.meta.url),
+      { type: "classic" },
+    );
+    if (transpilationWorkerRef.current) {
+      transpilationWorkerRef.current.terminate();
+    }
+    transpilationWorkerRef.current = worker;
+    return () => {
+      worker.terminate();
+    };
+  }, []);
+
+  return (code: string, type: string, role: string, id: string) => {
+    if (!transpilationWorkerRef.current) {
+      console.warn("[ScriptEditor] Transpilation worker is not initialized.");
+      return;
+    }
+    transpilationWorkerRef.current.postMessage({ code, type, role, id });
+  };
+}
 
 let monacoInstance: typeof _monaco | null = null;
 export function ScriptEditor({
@@ -15,49 +124,13 @@ export function ScriptEditor({
 }) {
   const language = "typescript";
   const theme = "vs-light"; // Options: 'vs-dark', 'vs-light', 'hc-black'
-  const [tsCode, setTsCode] = useState<string>("");
-  const transpilationWorkerRef = React.useRef<Worker | null>(null);
-  const {
-    layers: { set: setLayers, get: layers },
-    worker: { set: setWorker, get: worker },
-  } = useAppFastContextFields(["layers", "worker"]);
+  const [{ code: rawTSCode, layerType }] = useCode(role, type, id);
+  const transpile = useTranspile();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  useEffect(() => {
-    // Dynamically import the worker as classic (not module)
-    // @ts-ignore
-    const worker = new Worker(
-      new URL("./tsTranspile.worker.ts", import.meta.url),
-      { type: "classic" },
-    );
-    if (transpilationWorkerRef.current)
-      transpilationWorkerRef.current.terminate();
-    transpilationWorkerRef.current = worker;
-    worker.onmessage = (e) => {
-      if (type === "worker") {
-        setWorker({ [role]: e.data as string } as any);
-      } else {
-        const layer = layers.find((l) => l.id === id);
-        if (layer) {
-          setLayers(
-            layers.map((l) => (l.id === id ? { ...l, [role]: e.data } : l)),
-          );
-        }
-      }
-    };
-    // Initial transpile
-    worker.postMessage(tsCode);
-    return () => {
-      worker.terminate();
-    };
-  }, []);
-
-  const onChange = useCallback((code: string) => {
-    setTsCode(code);
-    if (transpilationWorkerRef.current) {
-      transpilationWorkerRef.current.postMessage(code);
-    }
-  }, []);
+  const onChange = useCallback(
+    (code: string) => transpile(code, type, role, id),
+    [type, role, id, transpile],
+  );
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<_monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -99,7 +172,6 @@ export function ScriptEditor({
           );
           monacoInstance.languages.typescript.typescriptDefaults.setCompilerOptions(
             {
-              jsx: monacoInstance.languages.typescript.JsxEmit.React,
               esModuleInterop: true,
               target: monacoInstance.languages.typescript.ScriptTarget.ES2020,
               moduleResolution:
@@ -110,16 +182,6 @@ export function ScriptEditor({
 
           monacoInstance.languages.typescript.javascriptDefaults.setEagerModelSync(
             true,
-          );
-          monacoInstance.languages.typescript.javascriptDefaults.setCompilerOptions(
-            {
-              jsx: monacoInstance.languages.typescript.JsxEmit.React,
-              esModuleInterop: true,
-              target: monacoInstance.languages.typescript.ScriptTarget.ES2020,
-              moduleResolution:
-                monacoInstance.languages.typescript.ModuleResolutionKind.NodeJs,
-              allowNonTsExtensions: true,
-            },
           );
 
           setIsMonacoReady(true);
@@ -156,7 +218,7 @@ export function ScriptEditor({
     ) {
       // Create editor instance only when Monaco is ready and container is available
       const editor = monacoInstance.editor.create(editorContainerRef.current, {
-        value: tsCode,
+        value: rawTSCode,
         language,
         theme,
         automaticLayout: true, // Ensures editor resizes with container
@@ -176,16 +238,16 @@ export function ScriptEditor({
     isMonacoReady,
     // language,
     // theme,
-    tsCode,
+    rawTSCode,
     onChange,
   ]);
 
   // Update editor value if the prop changes from outside
   useEffect(() => {
-    if (editorRef.current && tsCode !== editorRef.current.getValue()) {
-      editorRef.current.setValue(tsCode);
+    if (editorRef.current && rawTSCode !== editorRef.current.getValue()) {
+      editorRef.current.setValue(rawTSCode);
     }
-  }, [tsCode]);
+  }, [rawTSCode]);
 
   // Update editor language if the prop changes
   useEffect(
@@ -214,18 +276,37 @@ export function ScriptEditor({
     ],
   );
 
-  // Set initial code based on type and role
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // Set extra libs for the current layer type and role
   useEffect(() => {
-    if (type === "worker") {
-      setTsCode(worker[role]);
-      return;
+    if (!monacoInstance || !isMonacoReady) return;
+    if (!layerType) return;
+
+    let extraLibsForTypeRole: [string, string][] = [
+      [mathTypes, "ts:math.d.ts"],
+      [scriptableTypes, "ts:scriptable.d.ts"],
+    ];
+
+    // Add extra libs for canvas and threejs
+    const extraLibsForType = extraLibs[layerType];
+    if (extraLibsForType) {
+      if (extraLibsForType[role]) {
+        extraLibsForTypeRole = [
+          ...extraLibsForTypeRole,
+          ...extraLibsForType[role],
+        ];
+      }
     }
-    const layer = layers.find((l) => l.id === id);
-    if (layer) {
-      setTsCode(layer[role]);
-    }
-  }, [role, type, id]);
+
+    const typeRoleLibs = [...extraLibsForTypeRole].map(
+      ([content, filePath]) => ({
+        content: content.trim(),
+        filePath,
+      }),
+    );
+    monacoInstance.languages.typescript.typescriptDefaults.setExtraLibs(
+      typeRoleLibs,
+    );
+  }, [role, layerType, isMonacoReady]);
 
   if (!isMonacoReady) {
     return <div>Loading Editor...</div>;
@@ -243,7 +324,9 @@ export function ScriptEditor({
         {id !== "worker" && <div>{id}</div>}
       </div>
 
-      <div ref={editorContainerRef} className={styles.editor} />
+      <div className={styles.editorContainer}>
+        <div ref={editorContainerRef} className={styles.editor} />
+      </div>
     </div>
   );
 }

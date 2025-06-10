@@ -6,8 +6,9 @@
  */
 import VFWorker, { type OffscreenCanvas } from "./VFWorker";
 
-import type { Context as AppState, ScriptInfo } from "../types";
+import type { AppState, RuntimeData } from "../types";
 
+import type { TranspilePayload } from "../controls/types";
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
 import type { ScriptRunnerEventListener } from "../utils/ScriptRunner";
@@ -15,27 +16,19 @@ import type { ComActionHandlers } from "../utils/com";
 import { makeRead } from "../utils/make-read";
 import { isDisplayState } from "./isDisplayState";
 
-type LayerType = Canvas2DLayer | ThreeJSLayer;
-
 interface WebWorker extends Worker {
   location: Location;
   name: string;
 }
 
-const data = {
-  iterationCount: 0,
-  now: 0,
-  deltaNow: 0,
-  frequency: [],
-  volume: [],
-};
+const data = {} as RuntimeData;
 
 const onExecutionError: ScriptRunnerEventListener = (err: any) => {
-  console.error("onExecutionError", err);
+  // console.error("onExecutionError", err);
   return false;
 };
 const onCompilationError: ScriptRunnerEventListener = (err: any) => {
-  console.error("onCompilationError", err);
+  // console.error("onCompilationError", err);
   return false;
 };
 
@@ -43,63 +36,69 @@ const worker: WebWorker = self as any;
 
 const read = makeRead(data);
 
-const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
-  scriptchange: async (
-    payload: ScriptInfo & {
-      script: string;
-    },
-  ) => {
-    const { id, type, role, script } = payload;
+function processLayers(vfWorker: VFWorker, updateLayers: AppState["layers"]) {
+  return updateLayers
+    .map((options) => {
+      const found = vfWorker.findStateLayer(options.id);
+      if (found) {
+        found.active = !!options.active;
 
+        if (found.type !== options.type) {
+          console.warn(
+            `[display worker] Layer type mismatch for ${found.id}: expected "${found.type}", got "${options.type}"`,
+          );
+          return null;
+        }
+        return found;
+      }
+      const completeOptions = {
+        ...options,
+        read,
+        onCompilationError,
+        onExecutionError,
+      };
+      switch (options.type) {
+        case "canvas":
+          return new Canvas2DLayer(completeOptions);
+        case "threejs":
+          return new ThreeJSLayer(completeOptions);
+        default:
+          return null;
+      }
+    })
+    .filter(Boolean)
+    .map((layer) => layer && vfWorker.resizeLayer(layer)) as Array<
+    Canvas2DLayer | ThreeJSLayer
+  >;
+}
+
+const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
+  transpiled: async (payload: TranspilePayload) => {
+    const { id, type, role, code } = payload;
     if (type === "worker") {
-      vfWorker.scriptable[role].code = script;
+      vfWorker.scriptable[role].code = code;
       if (role === "setup") {
         Object.assign(data, (await vfWorker.scriptable.execSetup()) || {});
       }
-    } else {
-      void vfWorker.workerCom.post("scriptchange", payload);
-      if (type === "layer") {
-        const found = vfWorker.findStateLayer(id);
-        if (found != null) {
-          found[role].code = script;
+      return;
+    }
 
-          if (role === "setup") {
-            void found.execSetup();
-          }
-        } else {
-          console.error("scriptchange layer not found", id);
-        }
-      }
+    const found = vfWorker.findStateLayer(id);
+    if (!found) {
+      console.warn("[display worker] transpiled layer not found", id);
+      return;
+    }
+    found[role].code = code;
+
+    if (role === "setup") {
+      void found.execSetup();
     }
   },
-  updatestate: (update: Partial<AppState>) => {
-    const { scriptable, state } = vfWorker;
 
+  updateconfig: (update: Partial<AppState>) => {
+    const { scriptable, state } = vfWorker;
     const layers = Array.isArray(update.layers)
-      ? update.layers
-          .map((options) => {
-            const found = vfWorker.findStateLayer(options.id);
-            if (found != null) {
-              found.active = !!options.active;
-              return found;
-            }
-            const completeOptions = {
-              ...options,
-              read,
-              onCompilationError,
-              onExecutionError,
-            };
-            switch (options.type) {
-              case "canvas":
-                return new Canvas2DLayer(completeOptions);
-              case "threejs":
-                return new ThreeJSLayer(completeOptions);
-              default:
-                return null;
-            }
-          })
-          .filter(Boolean)
-          .map((layer) => layer && vfWorker.resizeLayer(layer))
+      ? processLayers(vfWorker, update.layers)
       : state.layers;
     const updated = {
       ...state,
@@ -107,9 +106,10 @@ const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
       layers,
     };
     if (!isDisplayState(updated)) {
-      throw new Error("updatestate: invalid state");
+      throw new Error("updateconfig: invalid state");
     }
     vfWorker.state = updated;
+    state.worker = state.worker || {};
     if (
       typeof update.worker?.setup !== "undefined" &&
       update.worker.setup !== scriptable.setup.code
@@ -128,9 +128,19 @@ const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
       state.worker.animation = scriptable.animation.code;
     }
   },
-  updatedata: (payload: typeof data) => {
+
+  runtimedata: (payload: RuntimeData) => {
     Object.assign(data, payload);
-    // workerCom.post('updatedata', data);
+  },
+
+  registerdisplaycallback: (payload: { id: string; config: AppState }) => {
+    if (payload.id !== worker.name) {
+      return;
+    }
+    vfWorker.state.layers = processLayers(
+      vfWorker,
+      payload.config.layers || [],
+    );
   },
 });
 
@@ -145,18 +155,21 @@ const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     const { canvas, broadcastChannelCom, state } = vfWorker;
     vfWorker.state = {
       ...state,
-      width: width || state.width,
-      height: height || state.height,
+      stage: {
+        ...state.stage,
+        width: width || state.stage.width,
+        height: height || state.stage.height,
+      },
     };
-    canvas.width = state.width;
-    canvas.height = state.height;
+    canvas.width = state.stage.width;
+    canvas.height = state.stage.height;
     state.layers?.forEach((l) => vfWorker.resizeLayer(l));
 
     if (!state.control) {
       broadcastChannelCom.post("resizedisplay", {
         id: worker.name,
-        width: state.width,
-        height: state.height,
+        width: state.stage.width,
+        height: state.stage.height,
       });
     }
   },
@@ -167,5 +180,3 @@ const displayWorker = new VFWorker(
   broadcastChannelHandlers,
   messageHandlers,
 );
-
-console.info("displayWorker", displayWorker);

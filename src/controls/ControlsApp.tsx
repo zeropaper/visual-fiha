@@ -6,6 +6,8 @@ import { Inputs } from "./Inputs";
 import { Layers } from "./Layers";
 import { ScriptEditor } from "./ScriptEditor";
 import { Signals } from "./Signals";
+import { Stage } from "./Stage";
+import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 
 export default function ControlsApp() {
   const [currentScript, setCurrentScript] = useState<{
@@ -13,14 +15,16 @@ export default function ControlsApp() {
     role: "animation" | "setup";
     type: "worker" | "layer";
   }>({
-    id: "worker",
-    type: "worker",
+    id: "default-canvas",
+    type: "layer",
     role: "animation",
   });
   return (
     <AppFastContextProvider>
       <div className={styles.sidebar}>
         <ControlDisplay />
+        <Stage />
+        <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
         <Layers setCurrentScript={setCurrentScript} />
         <Signals />
         <Inputs />
@@ -30,7 +34,10 @@ export default function ControlsApp() {
         {/*
         <Graph className={styles.flow} />
         */}
-        <ScriptEditor {...currentScript} />
+        <ScriptEditor
+          {...currentScript}
+          key={`${currentScript.type}-${currentScript.id}-${currentScript.role}`}
+        />
       </div>
     </AppFastContextProvider>
   );

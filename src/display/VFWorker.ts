@@ -5,16 +5,11 @@
  *
  */
 import { autoBind } from "../utils/com";
-import type {
-  ChannelBindings,
-  ComActionHandlers,
-  ComEventData,
-} from "../utils/com";
+import type { ChannelBindings, ComActionHandlers } from "../utils/com";
 
 import type { DisplayState } from "./types";
 
 import type Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
-import canvasTools, { type Canvas2DAPI } from "../layers/Canvas2D/canvasTools";
 import type ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
 import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
 import { makeRead } from "../utils/make-read";
@@ -31,33 +26,18 @@ interface WebWorker extends Worker {
 const defaultStage = {
   width: 600,
   height: 400,
-  autoScale: true,
+  backgroundColor: "#000000",
 };
 
-const data: DisplayState & {
-  iterationCount: number;
-  now: number;
-  deltaNow: number;
-} = {
+const displayState = {
   id: "display-worker",
   control: false,
-  iterationCount: 0,
-  now: 0,
-  deltaNow: 0,
-  inputs: [] as DisplayState["inputs"],
   layers: [] as DisplayState["layers"],
-  signals: [] as DisplayState["signals"],
-  width: defaultStage.width,
-  height: defaultStage.height,
-  worker: {
-    setup: "/* worker setup script */",
-    animation: "/* worker animation script */",
-  },
-};
+} as DisplayState;
 
 const worker: WebWorker = self as any;
 
-const read = makeRead(data);
+const read = makeRead(displayState);
 const makeErrorHandler =
   (type: string) =>
   (event: any): any => {
@@ -82,32 +62,29 @@ export default class VFWorker {
     this.#worker = workerSelf;
 
     this.state = {
+      stage: defaultStage,
       control: !!this.#worker.name.startsWith("controls-"),
       id: workerName,
-      width: defaultStage.width,
-      height: defaultStage.height,
-      layers: data.layers,
-      inputs: data.inputs,
-      signals: data.signals,
-      worker: data.worker,
-    };
-    console.info("[worker] VFWorker created", this.state);
+      layers: displayState.layers,
+    } as DisplayState;
     this.scriptable = new Scriptable(scriptableOptions);
 
     // @ts-ignore
-    this.canvas = new OffscreenCanvas(this.state.width, this.state.height);
+    this.canvas = new OffscreenCanvas(
+      this.state.stage.width || 300,
+      this.state.stage.height || 200,
+    );
     this.#context = this.canvas.getContext(
       "2d",
     ) as OffscreenCanvasRenderingContext2D;
 
-    this.#tools = canvasTools(this.#context);
-
-    this.#broadcastChannel = new BroadcastChannel(`display-${workerName}`);
+    // this.#broadcastChannel = new BroadcastChannel(`display-${workerName}`);
+    this.#broadcastChannel = new BroadcastChannel("core");
 
     this.broadcastChannelCom = autoBind(
       {
         postMessage: (message: any) => {
-          console.info("broadcastChannelCom postMessage", message);
+          // console.info("broadcastChannelCom postMessage", message);
           // this.#broadcastChannel.emit("message", message);
         },
       },
@@ -115,15 +92,7 @@ export default class VFWorker {
       broadcastChannelHandlers(this),
     );
 
-    this.#broadcastChannel.onmessage = (message: ComEventData) => {
-      // const before = isDisplayState(this.state);
-      this.broadcastChannelCom.listener({ data: message });
-      // const after = isDisplayState(this.state);
-      // if (before !== after) {
-      //   console.error("[worker] state is not a DisplayState", message);
-      //   throw new Error("state is not a DisplayState");
-      // }
-    };
+    this.#broadcastChannel.onmessage = this.broadcastChannelCom.listener;
 
     this.workerCom = autoBind(
       this.#worker,
@@ -162,8 +131,6 @@ export default class VFWorker {
 
   #context: OffscreenCanvasRenderingContext2D;
 
-  #tools: Canvas2DAPI;
-
   state: DisplayState;
 
   registerDisplay() {
@@ -199,22 +166,29 @@ export default class VFWorker {
     if (!context) return;
     context.clearRect(0, 0, canvas.width, canvas.height);
     if (!Array.isArray(this.state.layers)) {
-      // console.error('DisplayWorker.state.layers is not an array', this.state.layers)
       return;
     }
-    // console.info('rendering layers', this.state.layers.length);
     this.state.layers.forEach((layer) => {
       if (!layer.active) return;
       layer.execAnimation();
-      this.#tools.pasteContain(layer.canvas as any);
+      context.drawImage(
+        layer.canvas,
+        0,
+        0,
+        layer.canvas.width,
+        layer.canvas.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
     });
   };
 
   render() {
-    Object.assign(data, this.scriptable.execAnimation() || {});
+    Object.assign(displayState, this.scriptable.execAnimation() || {});
 
     if (this.#context && this.onScreenCanvas != null) {
-      // console.info('[worker] render isDisplayState', isDisplayState(this.state))
       this.renderLayers();
 
       this.onScreenCanvas.height = this.canvas.height;
@@ -240,6 +214,3 @@ export default class VFWorker {
     });
   }
 }
-
-// // biome-ignore lint/complexity/noUselessEmptyExport: <explanation>
-// export { };

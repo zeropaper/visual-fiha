@@ -4,9 +4,7 @@
 }
 
 .controlDisplay {
-  background: #000;
   width: 100%;
-  aspect-ratio: var(--control-display-aspect-ratio, 3 / 2);
 }
 
 .main {

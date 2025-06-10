@@ -105,7 +105,6 @@ export default class Display {
         width: canvas.parentElement?.clientWidth ?? this.#canvas.width,
         height: canvas.parentElement?.clientHeight ?? this.#canvas.height,
       };
-      console.info("[display] resize", !!canvas.parentElement, size);
       void this.post("resize", size);
     });
 }

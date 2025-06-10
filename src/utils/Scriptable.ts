@@ -2,6 +2,7 @@ import ScriptRunner, {
   type ScriptRunnerEventListener,
   type API,
 } from "./ScriptRunner";
+import { makeRead } from "./make-read";
 
 export type Cache = Record<string, any>;
 export type ReadInterface = (name: string, defaultValue?: any) => any;
@@ -21,7 +22,8 @@ export interface ScriptableOptions {
 
 export default class Scriptable {
   constructor(options: ScriptableOptions = { id: `scriptable${Date.now()}` }) {
-    this.read = typeof options.read === "function" ? options.read : this.read;
+    this.#read =
+      typeof options.read === "function" ? options.read : makeRead(this.cache);
     this.#id = options.id;
     this.#runners = {
       setup: new ScriptRunner(options.scope, `${this.#id}_S`),
@@ -47,11 +49,11 @@ export default class Scriptable {
   // TODO: make it private?
   cache: Cache = {};
 
-  read: ReadInterface = (key, fb) => {
-    /* Scriptable read */
-    console.info("[Scriptable] read", key, fb, this.cache[key], this.cache);
-    return typeof this.cache[key] === "undefined" ? fb : this.cache[key];
-  };
+  #read: ReadInterface;
+
+  get read() {
+    return this.#read;
+  }
 
   #debug = (...args: any[]) => {
     console.info("[script] debug %s", this.#id, ...args);
