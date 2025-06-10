@@ -1,0 +1,23 @@
+.button {
+  display: inline-block;
+  padding: var(--button-padding);
+  font-size: 1rem;
+  color: var(--button-color);
+  background-color: var(--button-bg);
+  border: 1px solid var(--button-border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+.button:hover {
+  background-color: var(--button-bg-hover);
+}
+.button:disabled {
+  background-color: var(--button-bg-disabled);
+  cursor: not-allowed;
+}
+
+.icon {
+  padding: 5px;
+  aspect-ratio: 1;
+}
