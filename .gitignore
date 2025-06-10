@@ -2,3 +2,4 @@ node_modules
 coverage
 public/typescript.js
 public/flow.css
+src/**/*.d.ts
