@@ -8,6 +8,8 @@ import Layer, { type LayerOptions } from "../Layer";
 export interface ThreeJSLayerOptions extends LayerOptions {}
 
 export default class ThreeJSLayer extends Layer {
+  readonly type = "threejs";
+
   constructor(options: ThreeJSLayerOptions) {
     super(options);
 
