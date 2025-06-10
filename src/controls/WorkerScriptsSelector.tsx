@@ -1,3 +1,5 @@
+import { Button } from "./Button";
+
 export function WorkerScriptsSelector({
   setCurrentScript,
 }: {
@@ -10,7 +12,7 @@ export function WorkerScriptsSelector({
   return (
     <details open>
       <summary>Worker</summary>
-      <button
+      <Button
         type="button"
         onClick={() =>
           setCurrentScript({
@@ -21,8 +23,8 @@ export function WorkerScriptsSelector({
         }
       >
         Setup
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         onClick={() =>
           setCurrentScript({
@@ -33,7 +35,7 @@ export function WorkerScriptsSelector({
         }
       >
         Animation
-      </button>
+      </Button>
     </details>
   );
 }

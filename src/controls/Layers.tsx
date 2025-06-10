@@ -1,3 +1,4 @@
+import { Button } from "./Button";
 import { useAppFastContextFields, useLayerConfig } from "./ControlsContext";
 
 function Layer({
@@ -17,11 +18,11 @@ function Layer({
   }
   return (
     <li>
-      <button type="button" title="Remove layer" onClick={() => setLayer(null)}>
+      <Button type="button" title="Remove layer" onClick={() => setLayer(null)}>
         <strong>X</strong>
-      </button>
+      </Button>
 
-      <button
+      <Button
         type="button"
         onClick={() =>
           setCurrentScript({
@@ -32,9 +33,9 @@ function Layer({
         }
       >
         Setup
-      </button>
+      </Button>
 
-      <button
+      <Button
         type="button"
         onClick={() =>
           setCurrentScript({
@@ -45,7 +46,7 @@ function Layer({
         }
       >
         {layer.id}
-      </button>
+      </Button>
     </li>
   );
 }

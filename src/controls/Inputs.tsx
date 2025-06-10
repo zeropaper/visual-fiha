@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect } from "react";
 import type { AudioInputMode } from "../types";
 import AudioFileAnalyzer from "./AudioFileAnalyzer";
+import { Button } from "./Button";
 import { postMessageToWorker } from "./ControlsContext";
 import MicrophoneAnalyzer from "./MicrophoneAnalyzer";
 
@@ -50,14 +51,14 @@ export function Inputs() {
         <li>Time</li>
         <li>
           Audio {audioMode}{" "}
-          <button
+          <Button
             type="button"
             onClick={() =>
               setAudioMode((current) => (current === "mic" ? "file" : "mic"))
             }
           >
             Toggle mode
-          </button>
+          </Button>
         </li>
         <li>MIDI</li>
       </ul>
