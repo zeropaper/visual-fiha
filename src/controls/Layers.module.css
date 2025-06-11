@@ -1,0 +1,17 @@
+.layers {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.layer {
+  display: flex;
+  gap: 5px;
+}
+
+.setupButton {
+  margin-left: auto;
+}

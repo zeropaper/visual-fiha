@@ -1,5 +1,8 @@
 import { Button } from "./Button";
+import buttonStyles from "./Button.module.css";
+import sectionStyles from "./ControlsApp.module.css";
 import { useAppFastContextFields, useLayerConfig } from "./ControlsContext";
+import styles from "./Layers.module.css";
 
 function Layer({
   id,
@@ -17,13 +20,25 @@ function Layer({
     return null;
   }
   return (
-    <li>
-      <Button type="button" title="Remove layer" onClick={() => setLayer(null)}>
+    <li className={styles.layer}>
+      <Button title="Remove layer" onClick={() => setLayer(null)}>
         <strong>X</strong>
       </Button>
 
       <Button
-        type="button"
+        title="Toggle"
+        onClick={() =>
+          setLayer({
+            ...layer,
+            active: !layer.active,
+          })
+        }
+      >
+        {layer.active ? "On" : "Off"}
+      </Button>
+
+      <Button
+        className={[buttonStyles.button, styles.setupButton].join(" ")}
         onClick={() =>
           setCurrentScript({
             id: layer.id,
@@ -36,7 +51,6 @@ function Layer({
       </Button>
 
       <Button
-        type="button"
         onClick={() =>
           setCurrentScript({
             id: layer.id,
@@ -65,10 +79,10 @@ export function Layers({
   } = useAppFastContextFields(["layers"]);
 
   return (
-    <details open>
+    <details open className={sectionStyles.details}>
       <summary>Layers</summary>
 
-      <ul id="layers">
+      <ul id="layers" className={styles.layers}>
         {layers.map((layer) => (
           <Layer
             key={layer.id}

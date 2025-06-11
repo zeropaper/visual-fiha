@@ -1,3 +1,4 @@
+import sectionStyles from "./ControlsApp.module.css";
 import { useAppFastContextFields } from "./ControlsContext";
 
 export function Signals() {
@@ -6,7 +7,7 @@ export function Signals() {
   } = useAppFastContextFields(["signals"]);
 
   return (
-    <details open>
+    <details open className={sectionStyles.details}>
       <summary>Signals</summary>
       <ul id="signals">
         {signals.map((signal) => (

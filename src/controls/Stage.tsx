@@ -1,5 +1,8 @@
 import React, { useCallback } from "react";
+import sectionStyles from "./ControlsApp.module.css";
 import { useStageConfig } from "./ControlsContext";
+import { Input } from "./Input";
+import styles from "./Stage.module.css";
 
 export function Stage() {
   const [stageAspectRatioLock, setStageAspectRatioLock] =
@@ -32,44 +35,50 @@ export function Stage() {
     [setStage, stage, stageAspectRatioLock],
   );
   return (
-    <details open>
+    <details open className={sectionStyles.details}>
       <summary>Stage</summary>
-      <div>
-        <label htmlFor="aspectRatioLock">Aspect Ratio</label>
-        <input
+      <div className={styles.aspectRatioLock}>
+        <label htmlFor="aspectRatioLock">Lock Aspect Ratio</label>
+        <Input
           type="checkbox"
           id="aspectRatioLock"
           onChange={() => setStageAspectRatioLock((current) => !current)}
           checked={stageAspectRatioLock}
         />
       </div>
-      <div>
-        <input
-          type="number"
-          min={0}
-          step={1}
-          id="width"
-          value={stage.width.toString()}
-          onChange={(evt) => updateWidth(Number(evt.target.value))}
-          onBlur={(evt) => updateWidth(Number(evt.target.value))}
-        />
-        <input
-          type="number"
-          min={0}
-          step={1}
-          id="height"
-          value={stage.height.toString()}
-          onChange={(evt) => updateHeight(Number(evt.target.value))}
-          onBlur={(evt) => updateHeight(Number(evt.target.value))}
-        />
-      </div>
-      <div>
-        <input
-          type="color"
-          id="backgroundColor"
-          value={stage.backgroundColor}
-          onChange={(evt) => setStage({ backgroundColor: evt.target.value })}
-        />
+      <div className={styles.widthHeightButtons}>
+        <label htmlFor="width">
+          <span>Width</span>
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            id="width"
+            value={stage.width.toString()}
+            onChange={(evt) => updateWidth(Number(evt.target.value))}
+            onBlur={(evt) => updateWidth(Number(evt.target.value))}
+          />
+        </label>
+        <label htmlFor="backgroundColor">
+          <Input
+            type="color"
+            id="backgroundColor"
+            value={stage.backgroundColor}
+            onChange={(evt) => setStage({ backgroundColor: evt.target.value })}
+          />
+        </label>
+        <label htmlFor="height">
+          <span>Height</span>
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            id="height"
+            value={stage.height.toString()}
+            onChange={(evt) => updateHeight(Number(evt.target.value))}
+            onBlur={(evt) => updateHeight(Number(evt.target.value))}
+          />
+        </label>
       </div>
     </details>
   );

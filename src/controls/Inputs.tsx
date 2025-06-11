@@ -2,7 +2,9 @@ import React, { useCallback, useEffect } from "react";
 import type { AudioInputMode } from "../types";
 import AudioFileAnalyzer from "./AudioFileAnalyzer";
 import { Button } from "./Button";
+import sectionStyles from "./ControlsApp.module.css";
 import { postMessageToWorker } from "./ControlsContext";
+import styles from "./Inputs.module.css";
 import MicrophoneAnalyzer from "./MicrophoneAnalyzer";
 
 function inputValuesToObject(values: Record<string, any>) {
@@ -45,11 +47,11 @@ export function Inputs() {
   }, []);
 
   return (
-    <details open>
+    <details open className={sectionStyles.details}>
       <summary>Inputs</summary>
-      <ul id="inputs">
-        <li>Time</li>
-        <li>
+      <ul id="inputs" className={styles.inputs}>
+        <li className={styles.input}>Time</li>
+        <li className={styles.input}>
           Audio {audioMode}{" "}
           <Button
             type="button"
@@ -59,14 +61,14 @@ export function Inputs() {
           >
             Toggle mode
           </Button>
+          {audioMode === "mic" ? (
+            <MicrophoneAnalyzer writeInputValues={writeInputValues} />
+          ) : (
+            <AudioFileAnalyzer writeInputValues={writeInputValues} />
+          )}
         </li>
-        <li>MIDI</li>
+        <li className={styles.input}>MIDI</li>
       </ul>
-      {audioMode === "mic" ? (
-        <MicrophoneAnalyzer writeInputValues={writeInputValues} />
-      ) : (
-        <AudioFileAnalyzer writeInputValues={writeInputValues} />
-      )}
     </details>
   );
 }

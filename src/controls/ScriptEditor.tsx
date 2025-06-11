@@ -80,7 +80,6 @@ function useCode(
 }
 
 function useTranspile() {
-  const [isReady, setIsReady] = useState(false);
   const transpilationWorkerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -117,7 +116,7 @@ export function ScriptEditor({
   id?: string | "worker";
 }) {
   const language = "typescript";
-  const theme = "vs-light"; // Options: 'vs-dark', 'vs-light', 'hc-black'
+  const theme = "vs-dark"; // Options: 'vs-dark', 'vs-light', 'hc-black'
   const [{ code: rawTSCode, layerType }] = useCode(role, type, id);
   const transpile = useTranspile();
 
