@@ -4,7 +4,7 @@ import {
   type ComMessageEventListener,
   autoBind,
 } from "../utils/com";
-import makeDisplayWorker from "./Display.worker.ts?worker";
+import DisplayWorker from "./Display.worker.ts?worker";
 import type { DisplayOptions, DisplayState } from "./types";
 
 interface OffscreenCanvas extends HTMLCanvasElement {}
@@ -49,7 +49,7 @@ export default class Display {
     canvas.height = canvas.parentElement?.clientHeight ?? canvas.height;
     this.#canvas = canvas;
 
-    this.#worker = makeDisplayWorker({
+    this.#worker = new DisplayWorker({
       name: this.#id,
     });
     const { post, listener } = autoBind(this.#worker, this.#id, handlers);
