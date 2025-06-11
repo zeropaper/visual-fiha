@@ -88,8 +88,6 @@ export default class Display {
   get state(): Partial<DisplayState> {
     return {
       id: this.#id,
-      width: this.#canvas.width,
-      height: this.#canvas.height,
     };
   }
 
