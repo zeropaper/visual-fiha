@@ -12,6 +12,8 @@ This third version of Visual Fiha is, again, a browser-based version of the syst
 
 ## Architecture
 
+See the [architecture](architecture.md) for a high-level overview of the messaging and worker architecture.
+
 ### Scriptables
 
 Scriptables are objects that have 2 code properties (and some methods):
