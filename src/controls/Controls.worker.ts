@@ -2,6 +2,7 @@
 /// <reference lib="webworker" />
 
 import type { AppState, LayerConfig, RuntimeData } from "../types";
+import { autoBind } from "../utils/com";
 import type { TranspilePayload } from "./types";
 
 const broadcastChannel = new BroadcastChannel("core");
@@ -55,104 +56,99 @@ const defaultRuntimeData: RuntimeData = {
 let runtimeData: RuntimeData = JSON.parse(JSON.stringify(defaultRuntimeData));
 let started = Date.now();
 
-self.addEventListener("message", (event) => {
-  switch (event.data.type) {
-    case "start":
-      runtimeData.time.started = Date.now();
-      runtimeData.time.isRunning = true;
-      runtimeData.bpm.started = runtimeData.time.started;
-      runtimeData.bpm.isRunning = true;
-      break;
-    case "stop":
-      runtimeData.bpm.isRunning = false;
-      runtimeData.time.isRunning = false;
-      break;
-    case "bpm":
-      runtimeData.bpm.bpm = event.data.value;
-      runtimeData.bpm.cycleDuration = 60000 / runtimeData.bpm.bpm; // Calculate cycle duration in milliseconds
-      runtimeData.bpm.cycleElapsed = 0; // Reset cycle elapsed time
-      runtimeData.bpm.started = Date.now();
-      runtimeData.bpm.percent = 0; // Reset percent
-      break;
-    case "inputsdata":
-      runtimeData = {
-        ...runtimeData,
-        ...event.data.payload,
-      };
-      break;
-    case "updateconfig":
-      const { field, value } = event.data.payload as {
-        field: keyof AppState;
-        value: any;
-      };
-      configData[field] = value;
-      switch (field) {
-        case "layers":
-          runtimeData.layers = (value as LayerConfig[]).map((layer, l) => ({
-            ...layer,
-            ...(runtimeData.layers[l] || {}),
-            active: layer.active !== false,
-          }));
-      }
-      broadcastChannel.postMessage({
-        type: "updateconfig",
-        payload: configData,
-      });
-      break;
-    case "init":
-      configData = event.data.payload;
-      runtimeData = JSON.parse(JSON.stringify(defaultRuntimeData));
-      runtimeData.layers = configData.layers.map((layer, l) => ({
+const handlers = {
+  start: () => {
+    runtimeData.time.started = Date.now();
+    runtimeData.time.isRunning = true;
+    runtimeData.bpm.started = runtimeData.time.started;
+    runtimeData.bpm.isRunning = true;
+  },
+  stop: () => {
+    runtimeData.bpm.isRunning = false;
+    runtimeData.time.isRunning = false;
+  },
+  bpm: (value: number) => {
+    runtimeData.bpm.bpm = value;
+    runtimeData.bpm.cycleDuration = 60000 / runtimeData.bpm.bpm;
+    runtimeData.bpm.cycleElapsed = 0;
+    runtimeData.bpm.started = Date.now();
+    runtimeData.bpm.percent = 0;
+  },
+  inputsdata: (payload: any) => {
+    runtimeData = {
+      ...runtimeData,
+      ...payload,
+    };
+  },
+  updateconfig: ({ field, value }: { field: keyof AppState; value: any }) => {
+    configData[field] = value;
+    if (field === "layers") {
+      runtimeData.layers = (value as LayerConfig[]).map((layer, l) => ({
         ...layer,
+        ...(runtimeData.layers[l] || {}),
+        active: layer.active !== false,
       }));
-      if (refreshInterval !== null) {
-        clearInterval(refreshInterval);
-      }
-      refreshInterval = setInterval(() => {
-        brodastRuntimeData();
-      }, 1000 / 60);
-      break;
-    default:
-      console.warn("[controls worker] Unknown message type:", event.data.type);
-      break;
-  }
-});
+    }
+    broadcastChannel.postMessage({
+      type: "updateconfig",
+      payload: configData,
+    });
+  },
+  init: (payload: AppState) => {
+    configData = payload;
+    runtimeData = JSON.parse(JSON.stringify(defaultRuntimeData));
+    runtimeData.layers = configData.layers.map((layer, l) => ({ ...layer }));
+    if (refreshInterval !== null) {
+      clearInterval(refreshInterval);
+    }
+    refreshInterval = setInterval(() => {
+      brodastRuntimeData();
+    }, 1000 / 60);
+  },
+};
 
-broadcastChannel.addEventListener("message", (event) => {
-  switch (event.data.type) {
-    case "runtimedata":
-      break;
-    case "registerdisplay":
-      broadcastChannel.postMessage({
-        type: "registerdisplaycallback",
-        payload: {
-          id: event.data.payload.id,
-          config: configData,
-        },
-      });
-      break;
-    case "transpiled":
-      const { role, type, id, code } = event.data.payload as TranspilePayload;
-      if (type === "worker") {
-        // TODO: run script
-        runtimeData.worker[role] = code;
-        break;
+const broadcastHandlers = {
+  runtimedata: () => {},
+  registerdisplay: (payload: { id: string }) => {
+    broadcastChannel.postMessage({
+      type: "registerdisplaycallback",
+      payload: {
+        id: payload.id,
+        config: configData,
+      },
+    });
+  },
+  transpiled: (payload: TranspilePayload) => {
+    const { role, type, id, code } = payload;
+    if (type === "worker") {
+      runtimeData.worker[role] = code;
+      return;
+    }
+    runtimeData.layers = runtimeData.layers.map((layer) => {
+      if (layer.id === id) {
+        layer[role] = code;
       }
-      runtimeData.layers = runtimeData.layers.map((layer) => {
-        if (layer.id === id) {
-          layer[role] = code;
-        }
-        return layer;
-      });
-      break;
-    default:
-      console.warn(
-        "[controls worker] Unknown broadcast message type:",
-        event.data.type,
-      );
-      break;
-  }
-});
+      return layer;
+    });
+  },
+};
+
+const { listener: mainListener } = autoBind(
+  {
+    postMessage: (msg) => self.postMessage(msg),
+  },
+  "controls-worker",
+  handlers,
+);
+
+const { listener: bcListener } = autoBind(
+  broadcastChannel,
+  "controls-worker-bc",
+  broadcastHandlers,
+);
+
+self.addEventListener("message", mainListener);
+broadcastChannel.addEventListener("message", bcListener);
 
 function processRuntimeData() {
   const now = Date.now();
