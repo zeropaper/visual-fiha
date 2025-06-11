@@ -4,7 +4,6 @@ import {
   type ComMessageEventListener,
   autoBind,
 } from "../utils/com";
-// @ts-expect-error
 import makeDisplayWorker from "./Display.worker.ts?worker";
 import type { DisplayOptions, DisplayState } from "./types";
 

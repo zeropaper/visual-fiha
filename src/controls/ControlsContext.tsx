@@ -7,7 +7,6 @@ import type {
 import createFastContext from "./createFastContext";
 
 import { useEffect } from "react";
-// @ts-expect-error
 import ControlsWorker from "./Controls.worker?worker";
 
 declare global {

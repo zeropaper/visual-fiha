@@ -1,18 +1,13 @@
 import type * as _monaco from "monaco-editor";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-// @ts-expect-error "?" suffix
-import canvasTypes from "../layers/Canvas2D/canvasTools.d.ts?raw";
-// @ts-expect-error "?" suffix
-import threeTypes from "../layers/ThreeJS/threeTools.d.ts?raw";
-import type { LayerConfig } from "../types";
-// @ts-expect-error "?" suffix
-import scriptableTypes from "../utils/Scriptable.editor.types.d.ts?raw";
-// @ts-expect-error "?" suffix
-import mathTypes from "../utils/Scriptable.utils.math.d.ts?raw";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppFastContextFields } from "./ControlsContext";
 import styles from "./ScriptEditor.module.css";
-// // @ts-expect-error "?" suffix
-// import TranspilationWorker from "./tsTranspile.worker?worker";
+
+import canvasTypes from "../layers/Canvas2D/canvasTools.d.ts?raw";
+import threeTypes from "../layers/ThreeJS/threeTools.d.ts?raw";
+import type { LayerConfig } from "../types";
+import scriptableTypes from "../utils/Scriptable.editor.types.d.ts?raw";
+import mathTypes from "../utils/Scriptable.utils.math.d.ts?raw";
 
 const extraLibs: Record<
   LayerConfig["type"],
@@ -89,7 +84,6 @@ function useTranspile() {
   const transpilationWorkerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
-    // @ts-ignore
     const worker = new Worker(
       new URL("./tsTranspile.worker.ts", import.meta.url),
       { type: "classic" },
@@ -149,9 +143,7 @@ export function ScriptEditor({
         try {
           const [monaco, editorWorker, tsWorker] = await Promise.all([
             import("monaco-editor"),
-            // @ts-ignore
             import("monaco-editor/esm/vs/editor/editor.worker?worker"),
-            // @ts-ignore
             import("monaco-editor/esm/vs/language/typescript/ts.worker?worker"),
           ]);
 
