@@ -1,13 +1,22 @@
-/**
- * @file threeTools.ts
- * This file is aimed at being used in the Monaco editor for the typescript extraLibs
- */
-import type * as THREE from "three";
+import type {
+  AxesHelper,
+  GridHelper,
+  PerspectiveCamera,
+  Scene,
+  SpotLightHelper,
+  WebGLRenderer,
+} from "three";
+import type * as OG from "three";
 
 declare global {
-  // make the THREE namespace available globally
-  // const THREE: typeof import("three");
-  const scene: THREE.Scene;
-  const camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
-  const renderer: THREE.WebGLRenderer;
+  const scene: Scene;
+  const camera: PerspectiveCamera;
+  const renderer: WebGLRenderer;
+
+  // // @ts-expect-error
+  // const THREE: {
+  //   GridHelper: typeof OG.GridHelper;
+  //   SpotLightHelper: typeof OG.SpotLightHelper;
+  //   AxesHelper: typeof OG.AxesHelper;
+  // }
 }
