@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ControlDisplay } from "./ControlDisplay";
 import styles from "./ControlsApp.module.css";
 import { AppFastContextProvider } from "./ControlsContext";
+import { DisplaysControl } from "./DisplaysControl";
 import { Inputs } from "./Inputs";
 import { Layers } from "./Layers";
 import { ScriptEditor } from "./ScriptEditor";
@@ -45,6 +46,7 @@ export default function ControlsApp() {
         <div className={styles.sidebar}>
           <ControlDisplay />
           <Stage />
+          <DisplaysControl />
           <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
           <Layers setCurrentScript={setCurrentScript} />
           <Signals />

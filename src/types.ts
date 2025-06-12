@@ -157,11 +157,26 @@ export type LayerConfig = Prettify<
     LayerConfigBase
 >;
 
+export interface DisplayConfig {
+  id: string;
+  width: number;
+  height: number;
+  stagePosition: {
+    x: number;
+    y: number;
+  };
+  stageSize: {
+    width: number;
+    height: number;
+  };
+}
+
 export type AppState = {
   stage: StageConfig;
   inputs: InputConfig[];
   signals: SignalConfig[];
   layers: LayerConfig[];
+  displays: DisplayConfig[];
   worker: {
     setup: string;
     animation: string;

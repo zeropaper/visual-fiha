@@ -17,6 +17,7 @@ let configData: AppState = {
   inputs: [],
   signals: [],
   layers: [],
+  displays: [],
   worker: {
     setup: "",
     animation: "",

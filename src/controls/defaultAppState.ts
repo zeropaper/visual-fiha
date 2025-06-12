@@ -1,5 +1,6 @@
 import type {
   AppState,
+  DisplayConfig,
   InputConfig,
   LayerConfig,
   SignalConfig,
@@ -32,6 +33,7 @@ const defaultAppState: AppState = {
     width: 600,
     height: 400,
   },
+  displays: [] as DisplayConfig[],
   inputs: [
     { name: "Time", type: "time", config: { type: "absolute" } },
     {
