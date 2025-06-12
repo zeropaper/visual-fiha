@@ -117,12 +117,15 @@ export function ScriptEditor({
 }) {
   const language = "typescript";
   const theme = "vs-dark"; // Options: 'vs-dark', 'vs-light', 'hc-black'
-  const [{ code: rawTSCode, layerType }] = useCode(role, type, id);
+  const [{ code: rawTSCode, layerType }, setCode] = useCode(role, type, id);
   const transpile = useTranspile();
 
   const onChange = useCallback(
-    (code: string) => transpile(code, type, role, id),
-    [type, role, id, transpile],
+    (code: string) => {
+      setCode(code);
+      transpile(code, type, role, id);
+    },
+    [type, role, id, transpile, setCode],
   );
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
