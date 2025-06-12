@@ -63,9 +63,19 @@ export function useLayerConfig(id: string) {
   return [
     layers.find((layer) => layer.id === id),
     (value: LayerConfig | null) => {
-      const updated: LayerConfig[] = layers
-        .filter((layer) => layer.id !== id)
-        .map((layer) => (layer.id === id ? { ...layer, ...value } : layer));
+      const updated = layers
+        .map((layer) =>
+          layer.id === id ? (value ? { ...layer, ...value } : null) : layer,
+        )
+        .filter(Boolean) as LayerConfig[];
+      console.info("[layer] update", layers, value, updated);
+      worker.postMessage({
+        type: "updateconfig",
+        payload: {
+          field: "layers",
+          value: updated,
+        },
+      });
       set(updated);
     },
   ] as const;
