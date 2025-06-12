@@ -37,16 +37,26 @@ export function Stage() {
   return (
     <details open className={sectionStyles.details}>
       <summary>Stage</summary>
-      <div className={styles.aspectRatioLock}>
-        <label htmlFor="aspectRatioLock">Lock Aspect Ratio</label>
-        <Input
-          type="checkbox"
-          id="aspectRatioLock"
-          onChange={() => setStageAspectRatioLock((current) => !current)}
-          checked={stageAspectRatioLock}
-        />
+      <div className={styles.row}>
+        <label htmlFor="aspectRatioLock" className={styles.aspectRatioLock}>
+          <span>Lock Aspect Ratio</span>
+          <Input
+            type="checkbox"
+            id="aspectRatioLock"
+            onChange={() => setStageAspectRatioLock((current) => !current)}
+            checked={stageAspectRatioLock}
+          />
+        </label>
+        <label htmlFor="backgroundColor">
+          <Input
+            type="color"
+            id="backgroundColor"
+            value={stage.backgroundColor}
+            onChange={(evt) => setStage({ backgroundColor: evt.target.value })}
+          />
+        </label>
       </div>
-      <div className={styles.widthHeightButtons}>
+      <div className={styles.row}>
         <label htmlFor="width">
           <span>Width</span>
           <Input
@@ -57,14 +67,6 @@ export function Stage() {
             value={stage.width.toString()}
             onChange={(evt) => updateWidth(Number(evt.target.value))}
             onBlur={(evt) => updateWidth(Number(evt.target.value))}
-          />
-        </label>
-        <label htmlFor="backgroundColor">
-          <Input
-            type="color"
-            id="backgroundColor"
-            value={stage.backgroundColor}
-            onChange={(evt) => setStage({ backgroundColor: evt.target.value })}
           />
         </label>
         <label htmlFor="height">
