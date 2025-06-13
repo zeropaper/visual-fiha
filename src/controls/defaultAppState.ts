@@ -12,14 +12,14 @@ import demoDefaultThreeJSSetup from "../../demos/default/threejs-setup?raw";
 
 const defaultLayers: LayerConfig[] = [
   {
-    id: "canvas",
+    id: "canvas 2D context",
     active: true,
     setup: `/* Canvas setup code */`,
     animation: demoDefaultCanvasAnimation,
     type: "canvas",
   },
   {
-    id: "threejs",
+    id: "ThreeJS",
     active: true,
     setup: demoDefaultThreeJSSetup,
     animation: demoDefaultThreeJSAnimation,
