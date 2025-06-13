@@ -1,14 +1,19 @@
 // Web Worker for transpiling TypeScript to JavaScript in-browser
 /// <reference lib="webworker" />
 
-import type { AppState, LayerConfig, RuntimeData } from "../types";
+import type {
+  AppState,
+  DisplayRegistrationPayload,
+  LayerConfig,
+  RuntimeData,
+} from "../types";
 import { autoBind } from "../utils/com";
 import type { TranspilePayload } from "./types";
 
 const broadcastChannel = new BroadcastChannel("core");
 let refreshInterval: NodeJS.Timeout | null = null;
 
-let configData: AppState = {
+const defaultConfigData: AppState = {
   stage: {
     width: 600,
     height: 400,
@@ -23,6 +28,8 @@ let configData: AppState = {
     animation: "",
   },
 };
+
+let configData: AppState = JSON.parse(JSON.stringify(defaultConfigData));
 
 const defaultRuntimeData: RuntimeData = {
   stage: {
@@ -112,8 +119,39 @@ const handlers = {
 };
 
 const broadcastHandlers = {
-  runtimedata: () => {},
-  registerdisplay: (payload: { id: string }) => {
+  registerdisplay: (payload: DisplayRegistrationPayload) => {
+    console.info('[controls-worker] Registering "%s" display', payload.id);
+
+    configData = JSON.parse(JSON.stringify(configData || defaultConfigData));
+    const foundDisplay = configData.displays.find(
+      (display) => display.id === payload.id,
+    );
+    if (foundDisplay) {
+      console.info(
+        '[controls-worker] Display "%s" already registered, skipping',
+        payload.id,
+      );
+      // return;
+    } else {
+      console.info(
+        '[controls-worker] Display "%s" not found, adding to config',
+        payload.id,
+      );
+      configData.displays.push({
+        id: payload.id,
+        width: payload.width,
+        height: payload.height,
+        stagePosition: {
+          x: 0,
+          y: 0,
+        },
+        stageSize: {
+          width: payload.width,
+          height: payload.height,
+        },
+      });
+    }
+
     broadcastChannel.postMessage({
       type: "registerdisplaycallback",
       payload: {
@@ -193,4 +231,5 @@ function brodastRuntimeData() {
   });
 }
 
-refreshInterval = setInterval(brodastRuntimeData, 1000 / 60);
+// refreshInterval = setInterval(brodastRuntimeData, 1000 / 60);
+refreshInterval = setInterval(brodastRuntimeData, 1);

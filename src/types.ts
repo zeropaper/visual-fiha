@@ -2,6 +2,12 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
+export interface DisplayRegistrationPayload {
+  id: string;
+  width: number;
+  height: number;
+}
+
 export interface StageConfig {
   width: number;
   height: number;
