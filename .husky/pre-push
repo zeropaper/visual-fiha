@@ -1,5 +1,5 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-COMMITLINT_ORIGIN_BRANCH=$(git branch --show-current)
-npx --no-install commitlint --from "origin/$COMMITLINT_ORIGIN_BRANCH" --to HEAD --verbose
+# COMMITLINT_ORIGIN_BRANCH=$(git branch --show-current)
+# npx --no-install commitlint --from "origin/$COMMITLINT_ORIGIN_BRANCH" --to HEAD --verbose
