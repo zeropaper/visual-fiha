@@ -3,3 +3,4 @@ coverage
 public/typescript.js
 public/flow.css
 src/**/*.d.ts
+dist

@@ -1,0 +1,21 @@
+{
+  "name": "Visual Fiha",
+  "short_name": "Fiha",
+  "description": "Browser-based creative coding platform for interactive visuals.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#181818",
+  "theme_color": "#181818",
+  "icons": [
+    {
+      "src": "/vf.icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/vf.icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
