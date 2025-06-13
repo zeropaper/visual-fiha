@@ -2,9 +2,14 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import monacoEditorPlugin from 'vite-plugin-monaco-editor';
 import { VitePWA } from 'vite-plugin-pwa';
+import vercel from 'vite-plugin-vercel';
 
 export default defineConfig({
+  server: {
+    port: process.env.PORT,
+  },
   plugins: [
+    vercel(),
     react(),
     monacoEditorPlugin({
       languageWorkers: ['typescript', 'editorWorkerService'] // 'javascript' worker is usually covered by 'typescript'
