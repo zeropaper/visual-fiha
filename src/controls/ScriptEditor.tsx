@@ -302,6 +302,19 @@ export function ScriptEditor({
     );
   }, [role, layerType, isMonacoReady]);
 
+  // Handle resize of the editor container
+  useEffect(() => {
+    const handleResize = () => {
+      if (editorRef.current) {
+        editorRef.current.layout();
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   if (!isMonacoReady) {
     return <div>Loading Editor...</div>;
   }
