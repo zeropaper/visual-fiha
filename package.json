@@ -25,6 +25,7 @@
     "gen-editor-types:misc": "tsc ./src/utils/miscTools.ts --lib dom,esnext -d --emitDeclarationOnly",
     "gen-editor-types:math": "tsc ./src/utils/mathTools.ts --lib dom,esnext -d --emitDeclarationOnly",
     "gen-editor-types": "pnpm gen-editor-types:scriptable && pnpm gen-editor-types:canvas && pnpm gen-editor-types:threejs && pnpm gen-editor-types:misc && pnpm gen-editor-types:math",
+    "postgen-editor-types": "find ./src -name '*.d.ts' -exec bash -c 'mv \"$0\" \"${0%.d.ts}.editor-types.txt\"' {} \\;",
     "prepare": "husky install && pnpm run copy-typescript && pnpm run copy-flow-styles && pnpm run gen-editor-types"
   },
   "devDependencies": {

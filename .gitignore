@@ -3,4 +3,7 @@ coverage
 public/typescript.js
 public/flow.css
 src/**/*.d.ts
+src/**/*.editor-types.txt
+src/**/*.editor-types.ts
 dist
+.vercel

@@ -3,11 +3,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppFastContextFields } from "./ControlsContext";
 import styles from "./ScriptEditor.module.css";
 
-import canvasTypes from "../layers/Canvas2D/canvasTools.d.ts?raw";
-import threeTypes from "../layers/ThreeJS/threeTools.d.ts?raw";
+import canvasTypes from "../layers/Canvas2D/canvasTools.editor-types.txt?raw";
+import threeTypes from "../layers/ThreeJS/threeTools.editor-types.txt?raw";
 import type { LayerConfig } from "../types";
-import scriptableTypes from "../utils/Scriptable.editor.types.d.ts?raw";
-import mathTypes from "../utils/Scriptable.utils.math.d.ts?raw";
+import scriptableTypes from "../utils/Scriptable.editor.types.editor-types.txt?raw";
+import mathTypes from "../utils/mathTools.editor-types.txt?raw";
 
 const extraLibs: Record<
   LayerConfig["type"],
