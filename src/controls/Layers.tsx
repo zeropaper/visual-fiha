@@ -1,12 +1,26 @@
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  EyeIcon,
+  EyeOffIcon,
+  XIcon,
+} from "lucide-react";
+import { useCallback } from "react";
 import { Button } from "./Button";
 import buttonStyles from "./Button.module.css";
 import sectionStyles from "./ControlsApp.module.css";
 import { useAppFastContextFields, useLayerConfig } from "./ControlsContext";
+import { Input } from "./Input";
 import styles from "./Layers.module.css";
+import { Select } from "./Select";
 
 function Layer({
   id,
   setCurrentScript,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
 }: {
   id: string;
   setCurrentScript: (script: {
@@ -14,6 +28,10 @@ function Layer({
     role: "animation" | "setup";
     type: "layer" | "worker";
   }) => void;
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }) {
   const [layer, setLayer] = useLayerConfig(id);
   if (!layer) {
@@ -21,46 +39,77 @@ function Layer({
   }
   return (
     <li className={styles.layer}>
-      <Button title="Remove layer" onClick={() => setLayer(null)}>
-        <strong>X</strong>
-      </Button>
+      <div>
+        <Button
+          variant="icon"
+          title="Remove layer"
+          onClick={() => setLayer(null)}
+        >
+          <XIcon />
+        </Button>
 
-      <Button
-        title="Toggle"
-        onClick={() =>
-          setLayer({
-            ...layer,
-            active: !layer.active,
-          })
-        }
-      >
-        {layer.active ? "On" : "Off"}
-      </Button>
+        <span className={styles.type}>{layer.id}</span>
 
-      <Button
-        className={[buttonStyles.button, styles.setupButton].join(" ")}
-        onClick={() =>
-          setCurrentScript({
-            id: layer.id,
-            role: "setup",
-            type: "layer",
-          })
-        }
-      >
-        Setup
-      </Button>
+        <Button
+          variant="icon"
+          title="Toggle layer visibility"
+          onClick={() =>
+            setLayer({
+              ...layer,
+              active: !layer.active,
+            })
+          }
+        >
+          {layer.active ? <EyeIcon /> : <EyeOffIcon />}
+        </Button>
+      </div>
 
-      <Button
-        onClick={() =>
-          setCurrentScript({
-            id: layer.id,
-            role: "animation",
-            type: "layer",
-          })
-        }
-      >
-        {layer.id}
-      </Button>
+      <div>
+        <Button
+          variant="icon"
+          title="Move layer up"
+          onClick={onMoveUp}
+          disabled={isFirst}
+        >
+          <ArrowUpIcon />
+        </Button>
+
+        <Button
+          variant="icon"
+          title="Move layer down"
+          onClick={onMoveDown}
+          disabled={isLast}
+        >
+          <ArrowDownIcon />
+        </Button>
+      </div>
+
+      <div>
+        <Button
+          className={[buttonStyles.button, styles.setupButton].join(" ")}
+          onClick={() =>
+            setCurrentScript({
+              id: layer.id,
+              role: "setup",
+              type: "layer",
+            })
+          }
+        >
+          Setup
+        </Button>
+
+        <Button
+          onClick={() =>
+            setCurrentScript({
+              id: layer.id,
+              role: "animation",
+              type: "layer",
+            })
+          }
+        >
+          {layer.type}
+        </Button>
+      </div>
     </li>
   );
 }
@@ -75,19 +124,80 @@ export function Layers({
   }) => void;
 }) {
   const {
-    layers: { get: layers },
+    layers: { get: layers, set: setLayers },
   } = useAppFastContextFields(["layers"]);
+
+  const moveLayerUp = useCallback(
+    (index: number) => () => {
+      if (index <= 0 || index >= layers.length) return;
+      const updatedLayers = [...layers];
+      [updatedLayers[index - 1], updatedLayers[index]] = [
+        updatedLayers[index],
+        updatedLayers[index - 1],
+      ];
+      setLayers(updatedLayers);
+    },
+    [layers, setLayers],
+  );
+
+  const moveLayerDown = useCallback(
+    (index: number) => () => {
+      if (index < 0 || index >= layers.length - 1) return;
+      const updatedLayers = [...layers];
+      [updatedLayers[index + 1], updatedLayers[index]] = [
+        updatedLayers[index],
+        updatedLayers[index + 1],
+      ];
+      setLayers(updatedLayers);
+    },
+    [layers, setLayers],
+  );
 
   return (
     <details open className={sectionStyles.details}>
       <summary>Layers</summary>
-
+      <form
+        className={styles.addLayerForm}
+        onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          const id = formData.get("id") as string;
+          const type = formData.get("type") as "canvas" | "threejs";
+          if (id) {
+            setLayers([
+              ...layers,
+              {
+                id,
+                type,
+                active: true,
+                setup: "",
+                animation: "",
+              },
+            ]);
+            e.currentTarget.reset();
+          }
+        }}
+      >
+        <Input name="id" placeholder="Layer ID" />
+        <Select name="type">
+          <option value="" disabled>
+            Select type
+          </option>
+          <option value="canvas">Canvas</option>
+          <option value="threejs">ThreeJS</option>
+        </Select>
+        <Button type="submit">Add Layer</Button>
+      </form>
       <ul id="layers" className={styles.layers}>
-        {layers.map((layer) => (
+        {layers.map((layer, l) => (
           <Layer
             key={layer.id}
             id={layer.id}
             setCurrentScript={setCurrentScript}
+            isFirst={l === 0}
+            isLast={l === layers.length - 1}
+            onMoveUp={moveLayerUp(l)}
+            onMoveDown={moveLayerDown(l)}
           />
         ))}
       </ul>

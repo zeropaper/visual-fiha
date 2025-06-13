@@ -8,10 +8,33 @@
 }
 
 .layer {
-  display: flex;
-  gap: 5px;
+  display: grid;
+  grid-template-columns: 2fr auto 1fr;
+  gap: 20px;
+  > div {
+    display: flex;
+    gap: 5px;
+    > span {
+      flex-grow: 1;
+    }
+  }
 }
 
 .setupButton {
   margin-left: auto;
+}
+
+.addLayerForm {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  input {
+    flex-grow: 1;
+  }
+}
+
+.type {
+  padding: var(--button-padding);
+  font-size: 1rem;
+  color: var(--button-color);
 }
