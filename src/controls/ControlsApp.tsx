@@ -1,11 +1,14 @@
 import { useState } from "react";
+import { Suspense, lazy } from "react";
 import { ControlDisplay } from "./ControlDisplay";
 import styles from "./ControlsApp.module.css";
 import { AppFastContextProvider } from "./ControlsContext";
 import { DisplaysControl } from "./DisplaysControl";
 import { Inputs } from "./Inputs";
 import { Layers } from "./Layers";
-import { ScriptEditor } from "./ScriptEditor";
+const ScriptEditor = lazy(() =>
+  import("./ScriptEditor").then((module) => ({ default: module.ScriptEditor })),
+);
 import { Signals } from "./Signals";
 import { Stage } from "./Stage";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
@@ -54,13 +57,15 @@ export default function ControlsApp() {
         </div>
 
         <div className={styles.main}>
-          {/*
+          <Suspense fallback={<div>Loading...</div>}>
+            {/*
           <Graph className={styles.flow} />
           */}
-          <ScriptEditor
-            {...currentScript}
-            key={`${currentScript.type}-${currentScript.id}-${currentScript.role}`}
-          />
+            <ScriptEditor
+              {...currentScript}
+              key={`${currentScript.type}-${currentScript.id}-${currentScript.role}`}
+            />
+          </Suspense>
         </div>
       </div>
     </AppFastContextProvider>
