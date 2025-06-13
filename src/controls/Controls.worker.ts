@@ -81,15 +81,18 @@ const handlers = {
       ...payload,
     };
   },
-  updateconfig: ({ field, value }: { field: keyof AppState; value: any }) => {
-    configData[field] = value;
-    if (field === "layers") {
-      runtimeData.layers = (value as LayerConfig[]).map((layer, l) => ({
-        ...layer,
-        ...(runtimeData.layers[l] || {}),
-        active: layer.active !== false,
-      }));
+  updateconfig: (payload: Partial<AppState>) => {
+    configData = { ...configData, ...payload };
+    if ("layers" in payload) {
+      runtimeData.layers = (payload.layers as LayerConfig[]).map(
+        (layer, l) => ({
+          ...layer,
+          ...(runtimeData.layers[l] || {}),
+          active: !!layer.active,
+        }),
+      );
     }
+    // propagate to displays
     broadcastChannel.postMessage({
       type: "updateconfig",
       payload: configData,

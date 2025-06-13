@@ -9,6 +9,17 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import { useEffect } from "react";
+import type { DisplayRegistrationPayload } from "../types";
+import { type ChannelPost, autoBind } from "../utils/com";
+import ControlsWorker from "./Controls.worker?worker";
+
+declare global {
+  interface Window {
+    _controlsWorker?: Worker;
+  }
+}
+
 export default function createFastContext<FastContext>(
   initialState: FastContext,
 ) {
@@ -16,14 +27,18 @@ export default function createFastContext<FastContext>(
     get: () => FastContext;
     set: (value: Partial<FastContext>) => void;
     subscribe: (callback: () => void) => () => void;
+    post: ChannelPost | null;
   } {
     const store = useRef(initialState);
+    const workerRef = useRef<Worker | null>(null);
+    const postRef = useRef<ChannelPost | null>(null);
 
     const get = useCallback(() => store.current, []);
 
     const subscribers = useRef(new Set<() => void>());
 
     const set = useCallback((value: Partial<FastContext>) => {
+      postRef.current?.("updateconfig", value);
       store.current = { ...store.current, ...value };
       subscribers.current.forEach((callback) => callback());
     }, []);
@@ -33,10 +48,44 @@ export default function createFastContext<FastContext>(
       return () => subscribers.current.delete(callback);
     }, []);
 
+    const post = useCallback<ChannelPost>(
+      (type, payload, options) =>
+        postRef.current
+          ? postRef.current(type, payload, options)
+          : Promise.resolve(),
+      [],
+    );
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+    useEffect(() => {
+      workerRef.current = workerRef.current || new ControlsWorker();
+      const worker = workerRef.current;
+
+      const { listener, post: _post } = autoBind(worker, "controls-app", {
+        registerdisplay: (payload: DisplayRegistrationPayload) => {
+          console.info("[controls] registerdisplay", payload);
+        },
+      });
+      postRef.current = _post;
+      worker.addEventListener("message", listener);
+      _post("init", store.current);
+
+      return () => {
+        worker.removeEventListener("message", listener);
+        worker.terminate();
+        workerRef.current = null;
+        postRef.current = null;
+        subscribers.current.clear();
+        store.current = initialState;
+        console.info("[controls] worker terminated");
+      };
+    }, []);
+
     return {
       get,
       set,
       subscribe,
+      post,
     };
   }
 
@@ -97,8 +146,17 @@ export default function createFastContext<FastContext>(
     return result;
   }
 
+  function useContextWorkerPost(): ChannelPost | null {
+    const fastContext = useContext(FastContext);
+    if (!fastContext) {
+      throw new Error("Store not found");
+    }
+    return fastContext.post;
+  }
+
   return {
     FastContextProvider,
     useFastContextFields,
+    useContextWorkerPost,
   };
 }

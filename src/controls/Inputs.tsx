@@ -3,7 +3,7 @@ import type { AudioInputMode } from "../types";
 import AudioFileAnalyzer from "./AudioFileAnalyzer";
 import { Button } from "./Button";
 import sectionStyles from "./ControlsApp.module.css";
-import { postMessageToWorker } from "./ControlsContext";
+import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Inputs.module.css";
 import MicrophoneAnalyzer from "./MicrophoneAnalyzer";
 
@@ -30,14 +30,13 @@ export function Inputs() {
   const writeInputValues = useCallback((path: string, value: any) => {
     inputValuesRef.current[path] = value;
   }, []);
+  const post = useContextWorkerPost();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     function update() {
       const obj = inputValuesToObject(inputValuesRef.current);
-      postMessageToWorker({
-        type: "inputsdata",
-        payload: obj,
-      });
+      post?.("inputsdata", obj);
       request = requestAnimationFrame(update);
     }
     let request = requestAnimationFrame(update);

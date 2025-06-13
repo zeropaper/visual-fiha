@@ -5,57 +5,27 @@ import type {
   LayerConfig,
   SignalConfig,
 } from "../types";
-import ControlsWorker from "./Controls.worker?worker";
 import createFastContext from "./createFastContext";
 import { defaultAppState } from "./defaultAppState";
 
-declare global {
-  interface Window {
-    _controlsWorker?: Worker;
-  }
-}
-
-const exists = typeof window._controlsWorker !== "undefined";
-const worker = new ControlsWorker() as Worker;
-if (!exists) {
-  window._controlsWorker = worker;
-  worker.addEventListener("message", (event) => {
-    console.info(
-      "[controls app] incoming worker message:",
-      event.data,
-      event.source,
-    );
-  });
-}
-
-export function postMessageToWorker(message: any) {
-  worker.postMessage(message);
-}
-
-const { FastContextProvider, useFastContextFields } =
+const { FastContextProvider, useFastContextFields, useContextWorkerPost } =
   createFastContext(defaultAppState);
 
-export function useAppFastContextFields<T extends keyof AppState>(fields: T[]) {
-  const original = useFastContextFields(fields);
-  type OG = typeof original;
-  return Object.entries(original).reduce((acc, [key, value]) => {
-    acc[key as T] = {
-      get: (value as OG[keyof OG]).get,
-      set: (val) => {
-        (value as OG[keyof OG]).set(val);
-        worker.postMessage({
-          type: "updateconfig",
-          payload: {
-            field: key,
-            value: val,
-          },
-        });
-      },
-    } as OG[T];
-    return acc;
-  }, {} as OG);
-}
+export { useContextWorkerPost };
 
+/**
+ * Custom hook to access fields (and setters) from the AppState in a fast context.
+ * @param fields - An array of field names from the AppState to access.
+ * @returns - An object with getters and setters for the specified fields.
+ */
+export const useAppFastContextFields = useFastContextFields;
+
+/**
+ * Convenience hook to access the layer configuration by its ID.
+ * It returns the layer configuration and a setter function to update it.
+ * @param id
+ * @returns - An array containing the layer configuration and a setter function.
+ */
 export function useLayerConfig(id: string) {
   const {
     layers: { get: layers, set },
@@ -68,19 +38,17 @@ export function useLayerConfig(id: string) {
           layer.id === id ? (value ? { ...layer, ...value } : null) : layer,
         )
         .filter(Boolean) as LayerConfig[];
-      console.info("[layer] update", layers, value, updated);
-      worker.postMessage({
-        type: "updateconfig",
-        payload: {
-          field: "layers",
-          value: updated,
-        },
-      });
       set(updated);
     },
   ] as const;
 }
 
+/**
+ * Custom hook to access the input configuration by its name.
+ * It returns the input configuration and a setter function to update it.
+ * @param name
+ * @returns - An array containing the input configuration and a setter function.
+ */
 export function useInputConfig(name: string) {
   const {
     inputs: { get: inputs, set },
@@ -97,6 +65,12 @@ export function useInputConfig(name: string) {
   ] as const;
 }
 
+/**
+ * Custom hook to access the signal configuration by its name.
+ * It returns the signal configuration and a setter function to update it.
+ * @param name
+ * @returns - An array containing the signal configuration and a setter function.
+ */
 export function useSignalConfig(name: string) {
   const {
     signals: { get: signals, set },
@@ -113,6 +87,11 @@ export function useSignalConfig(name: string) {
   ] as const;
 }
 
+/**
+ * Custom hook to access the stage configuration.
+ * It returns the stage configuration and a setter function to update it.
+ * @returns - An array containing the stage configuration and a setter function.
+ */
 export function useStageConfig() {
   const {
     stage: { get: stage, set },
@@ -130,11 +109,6 @@ export function AppFastContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  useEffect(() => {
-    postMessageToWorker({
-      type: "init",
-      payload: defaultAppState,
-    });
-  }, []);
+  useEffect(() => {}, []);
   return <FastContextProvider>{children}</FastContextProvider>;
 }
