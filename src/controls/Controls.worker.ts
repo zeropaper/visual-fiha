@@ -13,6 +13,15 @@ import type { TranspilePayload } from "./types";
 const broadcastChannel = new BroadcastChannel("core");
 let refreshInterval: NodeJS.Timeout | null = null;
 
+const tsTranspileWorker = new Worker(
+  new URL("./tsTranspile.worker.ts", import.meta.url),
+  { type: "classic" },
+);
+
+function tsTranspile(code: string, type: string, role: string, id: string) {
+  tsTranspileWorker.postMessage({ code, type, role, id });
+}
+
 const defaultConfigData: AppState = {
   stage: {
     width: 600,
@@ -109,8 +118,15 @@ const handlers = {
   init: (payload: AppState) => {
     configData = payload;
     runtimeData = JSON.parse(JSON.stringify(defaultRuntimeData));
-    runtimeData.layers = configData.layers.map((layer, l) => ({ ...layer }));
-    if (refreshInterval !== null) {
+    runtimeData.layers = configData.layers.map((layer) => {
+      tsTranspile(layer.setup, layer.type, "setup", layer.id);
+      tsTranspile(layer.animation, layer.type, "animation", layer.id);
+      return layer;
+    });
+    tsTranspile(configData.worker.setup, "worker", "setup", "worker");
+    tsTranspile(configData.worker.animation, "worker", "animation", "worker");
+
+    if (refreshInterval) {
       clearInterval(refreshInterval);
     }
     refreshInterval = setInterval(() => {
