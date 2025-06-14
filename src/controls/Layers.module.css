@@ -18,6 +18,10 @@
       flex-grow: 1;
     }
   }
+
+  [type="number"] {
+    width: 30px;
+  }
 }
 
 .setupButton {

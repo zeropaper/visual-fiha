@@ -17,6 +17,7 @@ const defaultLayers: LayerConfig[] = [
     setup: `/* Canvas setup code */`,
     animation: demoDefaultCanvasAnimation,
     type: "canvas",
+    opacity: 100,
   },
   {
     id: "ThreeJS",
@@ -24,6 +25,7 @@ const defaultLayers: LayerConfig[] = [
     setup: demoDefaultThreeJSSetup,
     animation: demoDefaultThreeJSAnimation,
     type: "threejs",
+    opacity: 100,
   },
 ];
 

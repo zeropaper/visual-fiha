@@ -171,6 +171,7 @@ export default class VFWorker {
     this.state.layers.forEach((layer) => {
       if (!layer.active) return;
       layer.execAnimation();
+      context.globalAlpha = Math.max(0, Math.min(1, layer.opacity * 0.01));
       context.drawImage(
         layer.canvas,
         0,

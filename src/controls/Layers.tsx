@@ -5,7 +5,7 @@ import {
   EyeOffIcon,
   XIcon,
 } from "lucide-react";
-import { useCallback } from "react";
+import { type ChangeEventHandler, useCallback } from "react";
 import { Button } from "./Button";
 import buttonStyles from "./Button.module.css";
 import sectionStyles from "./ControlsApp.module.css";
@@ -21,6 +21,7 @@ function Layer({
   isLast,
   onMoveUp,
   onMoveDown,
+  onChangeOpacity,
 }: {
   id: string;
   setCurrentScript: (script: {
@@ -32,6 +33,7 @@ function Layer({
   isLast: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onChangeOpacity: ChangeEventHandler<HTMLInputElement>;
 }) {
   const [layer, setLayer] = useLayerConfig(id);
   if (!layer) {
@@ -62,6 +64,14 @@ function Layer({
         >
           {layer.active ? <EyeIcon /> : <EyeOffIcon />}
         </Button>
+        <Input
+          type="number"
+          min={0}
+          max={100}
+          step={1}
+          value={layer.opacity}
+          onChange={onChangeOpacity}
+        />
       </div>
 
       <div>
@@ -153,6 +163,21 @@ export function Layers({
     [layers, setLayers],
   );
 
+  const changeOpacity = useCallback<
+    (id: string) => ChangeEventHandler<HTMLInputElement>
+  >(
+    (id) => (evt) => {
+      const opacity = Number(evt.currentTarget.value);
+      if (Number.isNaN(opacity) || opacity < 0 || opacity > 100) return;
+      setLayers(
+        layers.map((layer) =>
+          layer.id === id ? { ...layer, opacity } : layer,
+        ),
+      );
+    },
+    [layers, setLayers],
+  );
+
   return (
     <details open className={sectionStyles.details}>
       <summary>Layers</summary>
@@ -198,6 +223,7 @@ export function Layers({
             isLast={l === layers.length - 1}
             onMoveUp={moveLayerUp(l)}
             onMoveDown={moveLayerDown(l)}
+            onChangeOpacity={changeOpacity(layer.id)}
           />
         ))}
       </ul>

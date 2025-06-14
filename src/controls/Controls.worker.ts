@@ -95,6 +95,7 @@ const handlers = {
         (layer, l) => ({
           ...layer,
           ...(runtimeData.layers[l] || {}),
+          opacity: layer.opacity ?? 100,
           active: !!layer.active,
         }),
       );

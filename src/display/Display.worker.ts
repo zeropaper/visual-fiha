@@ -42,6 +42,7 @@ function processLayers(vfWorker: VFWorker, updateLayers: AppState["layers"]) {
       const found = vfWorker.findStateLayer(options.id);
       if (found) {
         found.active = !!options.active;
+        found.opacity = options.opacity ?? 100;
 
         if (found.type !== options.type) {
           console.warn(

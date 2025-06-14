@@ -149,6 +149,7 @@ export type LayerConfigBase = {
   active: boolean;
   setup: string;
   animation: string;
+  opacity?: number;
 };
 
 export type LayerConfig = Prettify<
