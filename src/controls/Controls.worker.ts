@@ -38,7 +38,7 @@ const defaultConfigData: AppState = {
   },
 };
 
-let configData: AppState = JSON.parse(JSON.stringify(defaultConfigData));
+let configData: AppState = structuredClone(defaultConfigData);
 
 const defaultRuntimeData: RuntimeData = {
   stage: {
@@ -70,7 +70,7 @@ const defaultRuntimeData: RuntimeData = {
     animation: "",
   },
 };
-let runtimeData: RuntimeData = JSON.parse(JSON.stringify(defaultRuntimeData));
+let runtimeData: RuntimeData = structuredClone(defaultRuntimeData);
 let started = Date.now();
 
 const handlers = {
@@ -117,7 +117,7 @@ const handlers = {
   },
   init: (payload: AppState) => {
     configData = payload;
-    runtimeData = JSON.parse(JSON.stringify(defaultRuntimeData));
+    runtimeData = structuredClone(defaultRuntimeData);
     runtimeData.layers = configData.layers.map((layer) => {
       tsTranspile(layer.setup, layer.type, "setup", layer.id);
       tsTranspile(layer.animation, layer.type, "animation", layer.id);
@@ -139,7 +139,7 @@ const broadcastHandlers = {
   registerdisplay: (payload: DisplayRegistrationPayload) => {
     console.info('[controls-worker] Registering "%s" display', payload.id);
 
-    configData = JSON.parse(JSON.stringify(configData || defaultConfigData));
+    configData = structuredClone(configData || defaultConfigData);
     const foundDisplay = configData.displays.find(
       (display) => display.id === payload.id,
     );
