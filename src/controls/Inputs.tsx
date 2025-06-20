@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import type { AudioInputMode } from "../types";
-import AudioFileAnalyzer from "./AudioFileAnalyzer";
+import AudioFilesAnalyzer from "./AudioFilesAnalyzer";
 import { Button } from "./Button";
 import sectionStyles from "./ControlsApp.module.css";
 import { useContextWorkerPost } from "./ControlsContext";
@@ -63,7 +63,7 @@ export function Inputs() {
           {audioMode === "mic" ? (
             <MicrophoneAnalyzer writeInputValues={writeInputValues} />
           ) : (
-            <AudioFileAnalyzer writeInputValues={writeInputValues} />
+            <AudioFilesAnalyzer writeInputValues={writeInputValues} />
           )}
         </li>
         <li className={styles.input}>MIDI</li>

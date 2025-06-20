@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import styles from "./AudioFileAnalyzer.module.css";
+import styles from "./AudioFilesAnalyzer.module.css";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
 
 const audioConfig = {
