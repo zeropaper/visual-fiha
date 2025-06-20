@@ -509,14 +509,6 @@ export default function canvasTools(ctx: CTX) {
       ctx.strokeStyle = color;
     }
 
-    ctx.setLineDash([3, 5]);
-    ctx.beginPath();
-    ctx.moveTo(left, bottom - h * (floor - min));
-    ctx.lineTo(right, bottom - h * (floor - min));
-    ctx.stroke();
-    ctx.closePath();
-    ctx.setLineDash([]);
-
     ctx.beginPath();
 
     let val: number;
@@ -536,6 +528,14 @@ export default function canvasTools(ctx: CTX) {
     ctx.closePath();
 
     if (!legend) return;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.moveTo(left, bottom - h * (floor - min));
+    ctx.lineTo(right, bottom - h * (floor - min));
+    ctx.stroke();
+    ctx.closePath();
+    ctx.setLineDash([]);
+
     let ptop: number;
     let pleft: number;
     switch (legend) {
