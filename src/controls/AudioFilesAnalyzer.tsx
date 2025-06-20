@@ -12,14 +12,18 @@ const audioConfig = {
 
 function AudioFileAnalyzer({
   audioUrl,
+  fileName,
   track,
   writeInputValues,
   setAudioState,
+  forwardedAudioRef,
 }: {
   audioUrl: string;
+  fileName: string;
   track: string;
   writeInputValues: (path: string, value: any) => void;
   setAudioState: (state: string) => void;
+  forwardedAudioRef?: (el: HTMLAudioElement | null) => void;
 }) {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -46,7 +50,6 @@ function AudioFileAnalyzer({
   useEffect(() => {
     // Clean up when component unmounts or audioUrl changes
     return () => {
-      console.log("Cleaning up audio with URL:", audioUrl);
       cleanupAudio();
       // Do NOT revokeObjectURL here; it's handled in handleFileChange
     };
@@ -71,7 +74,6 @@ function AudioFileAnalyzer({
       analyserRef.current = analyser;
       sourceRef.current = source;
       setAudioState("ready");
-      console.log("Audio context and analyser set up for:", audioUrl);
     } catch (error) {
       console.error("Error creating MediaElementSourceNode:", error);
       setAudioState("error");
@@ -102,13 +104,17 @@ function AudioFileAnalyzer({
   }
 
   return (
-    <div>
+    <details open>
+      <summary>{`${track} - ${fileName}`}</summary>
       <audio
         key={audioUrl}
-        ref={audioElemRef}
+        ref={(el) => {
+          audioElemRef.current = el;
+          if (forwardedAudioRef) forwardedAudioRef(el);
+        }}
         src={audioUrl}
         controls
-        style={{ width: "100%" }}
+        style={{ display: "none" }}
         onError={() => {
           console.error("Error loading audio file:", audioUrl);
           setAudioState("error");
@@ -120,7 +126,7 @@ function AudioFileAnalyzer({
 
       <div className={styles.visualizers}>
         <div>
-          <strong>Frequency</strong>
+          {/* <strong>Frequency</strong> */}
           <Frequency
             analyser={analyserRef.current}
             drawExtras={makeDrawExtras("frequency")}
@@ -128,14 +134,14 @@ function AudioFileAnalyzer({
         </div>
 
         <div>
-          <strong>Time Domain</strong>
+          {/* <strong>Time Domain</strong> */}
           <TimeDomain
             analyser={analyserRef.current}
             drawExtras={makeDrawExtras("timeDomain")}
           />
         </div>
       </div>
-    </div>
+    </details>
   );
 }
 
@@ -145,38 +151,206 @@ export default function AudioFilesAnalyzer({
   writeInputValues: (path: string, value: any) => void;
 }) {
   const [audioState, setAudioState] = useState<string>("no file");
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  // Store array of { url, name }
+  const [audioFiles, setAudioFiles] = useState<{ url: string; name: string }[]>(
+    [],
+  );
+
+  // Keep track of previous blob URLs to revoke them on change/unmount
+  const prevBlobUrlsRef = useRef<string[]>([]);
+  // Store refs to all audio elements
+  const audioElemsRef = useRef<(HTMLAudioElement | null)[]>([]);
+
+  // Unified control state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [seeking, setSeeking] = useState(false);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setAudioState("loading");
 
-    // Generate a new blob URL for the selected file
-    const newBlobUrl = URL.createObjectURL(file);
-    setAudioUrl((prev) => {
-      if (prev) {
-        console.log("Revoking previous blob URL:", prev);
-        URL.revokeObjectURL(prev); // Revoke the previous blob URL
-      }
-      return newBlobUrl;
+    // Revoke previous blob URLs
+    prevBlobUrlsRef.current.forEach((url) => {
+      URL.revokeObjectURL(url);
     });
+
+    // Generate new blob URLs and names for all selected files
+    const newAudioFiles = Array.from(files).map((file) => ({
+      url: URL.createObjectURL(file),
+      name: file.name,
+    }));
+    setAudioFiles(newAudioFiles);
+    prevBlobUrlsRef.current = newAudioFiles.map((f) => f.url);
+    // Reset audio element refs
+    audioElemsRef.current = [];
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      prevBlobUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      prevBlobUrlsRef.current = [];
+    };
+  }, []);
+
+  // Sync play/pause/stop
+  function playAll() {
+    audioElemsRef.current.forEach((audio) => {
+      if (audio) {
+        audio.currentTime = currentTime;
+        audio.volume = volume;
+        audio.play();
+      }
+    });
+    setIsPlaying(true);
+  }
+  function pauseAll() {
+    audioElemsRef.current.forEach((audio) => {
+      if (audio) audio.pause();
+    });
+    setIsPlaying(false);
+  }
+  function stopAll() {
+    audioElemsRef.current.forEach((audio) => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    });
+    setIsPlaying(false);
+    setCurrentTime(0);
+  }
+  function seekAll(time: number) {
+    audioElemsRef.current.forEach((audio) => {
+      if (audio) audio.currentTime = time;
+    });
+    setCurrentTime(time);
+  }
+  function setAllVolume(vol: number) {
+    audioElemsRef.current.forEach((audio) => {
+      if (audio) audio.volume = vol;
+    });
+    setVolume(vol);
+  }
+
+  // Update currentTime and duration from the first audio element
+  useEffect(() => {
+    const first = audioElemsRef.current[0];
+    if (!first) return;
+    function update() {
+      if (first) {
+        if (!seeking) setCurrentTime(first.currentTime);
+        setDuration(first.duration || 0);
+      }
+    }
+    first.addEventListener("timeupdate", update);
+    first.addEventListener("durationchange", update);
+    return () => {
+      if (first) {
+        first.removeEventListener("timeupdate", update);
+        first.removeEventListener("durationchange", update);
+      }
+    };
+  }, [seeking]);
+
+  // When seeking, update all
+  function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
+    const t = Number.parseFloat(e.target.value);
+    setSeeking(true);
+    seekAll(t);
+  }
+  function handleSeekEnd() {
+    setSeeking(false);
+  }
+
+  // When volume changes
+  function handleVolume(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = Number.parseFloat(e.target.value);
+    setAllVolume(v);
   }
 
   return (
     <div>
-      <input type="file" accept="audio/*" onChange={handleFileChange} />
-      <div>{audioState}</div>
-
-      {audioUrl && (
-        <AudioFileAnalyzer
-          writeInputValues={writeInputValues}
-          track="0"
-          audioUrl={audioUrl}
-          setAudioState={setAudioState}
+      <input
+        type="file"
+        accept="audio/*"
+        multiple
+        onChange={handleFileChange}
+      />
+      <div
+        style={{
+          display: audioFiles.length ? "block" : "none",
+          margin: "1em 0",
+        }}
+      >
+        <button
+          type="button"
+          onClick={playAll}
+          disabled={isPlaying || audioFiles.length === 0}
+        >
+          Play
+        </button>
+        <button type="button" onClick={pauseAll} disabled={!isPlaying}>
+          Pause
+        </button>
+        <button
+          type="button"
+          onClick={stopAll}
+          disabled={audioFiles.length === 0}
+        >
+          Stop
+        </button>
+        <input
+          type="range"
+          min={0}
+          max={duration || 1}
+          step={0.01}
+          value={currentTime}
+          onChange={handleSeek}
+          onMouseUp={handleSeekEnd}
+          onTouchEnd={handleSeekEnd}
+          style={{ width: 200, margin: "0 1em" }}
+          disabled={audioFiles.length === 0}
         />
-      )}
+        <span>
+          {Math.floor(currentTime)} / {Math.floor(duration)}s
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={volume}
+          onChange={handleVolume}
+          style={{ width: 100, margin: "0 1em" }}
+          disabled={audioFiles.length === 0}
+        />
+        <span>Vol: {Math.round(volume * 100)}%</span>
+      </div>
+      <div>{audioState}</div>
+      {audioFiles.map((audioFile, idx) => (
+        <AudioFileAnalyzer
+          key={audioFile.url}
+          writeInputValues={writeInputValues}
+          track={String(idx)}
+          audioUrl={audioFile.url}
+          fileName={audioFile.name}
+          setAudioState={setAudioState}
+          forwardedAudioRef={(el: HTMLAudioElement | null) => {
+            audioElemsRef.current[idx] = el;
+          }}
+        />
+      ))}
     </div>
   );
 }
