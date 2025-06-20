@@ -22,6 +22,7 @@ declare global {
 
 export default function createFastContext<FastContext>(
   initialState: FastContext,
+  onUpdate: (value: FastContext) => void = () => {},
 ) {
   function useFastContextData(): {
     get: () => FastContext;
@@ -37,10 +38,12 @@ export default function createFastContext<FastContext>(
 
     const subscribers = useRef(new Set<() => void>());
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
     const set = useCallback((value: Partial<FastContext>) => {
       postRef.current?.("updateconfig", value);
       store.current = { ...store.current, ...value };
       subscribers.current.forEach((callback) => callback());
+      onUpdate(store.current);
     }, []);
 
     const subscribe = useCallback((callback: () => void) => {

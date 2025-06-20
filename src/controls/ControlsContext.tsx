@@ -9,7 +9,14 @@ import createFastContext from "./createFastContext";
 import { defaultAppState } from "./defaultAppState";
 
 const { FastContextProvider, useFastContextFields, useContextWorkerPost } =
-  createFastContext(defaultAppState);
+  createFastContext<AppState>(
+    localStorage.getItem("config")
+      ? JSON.parse(localStorage.getItem("config") || "null") || defaultAppState
+      : defaultAppState,
+    (value: AppState) => {
+      localStorage.setItem("config", JSON.stringify(value));
+    },
+  );
 
 export { useContextWorkerPost };
 
