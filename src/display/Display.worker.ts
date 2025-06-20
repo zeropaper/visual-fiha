@@ -37,21 +37,11 @@ const worker: WebWorker = self as any;
 const read = makeRead(data);
 
 function processLayers(vfWorker: VFWorker, updateLayers: AppState["layers"]) {
-  return updateLayers
-    .map((options) => {
-      const found = vfWorker.findStateLayer(options.id);
-      if (found) {
-        found.active = !!options.active;
-        found.opacity = options.opacity ?? 100;
-
-        if (found.type !== options.type) {
-          console.warn(
-            `[display worker] Layer type mismatch for ${found.id}: expected "${found.type}", got "${options.type}"`,
-          );
-          return null;
-        }
-        return found;
-      }
+  console.info("[display worker] processing layers", updateLayers);
+  for (const options of updateLayers) {
+    const found = vfWorker.findStateLayer(options.id);
+    let layer: Canvas2DLayer | ThreeJSLayer | null = null;
+    if (!found) {
       const completeOptions = {
         ...options,
         read,
@@ -60,17 +50,42 @@ function processLayers(vfWorker: VFWorker, updateLayers: AppState["layers"]) {
       };
       switch (options.type) {
         case "canvas":
-          return new Canvas2DLayer(completeOptions);
+          layer = new Canvas2DLayer(completeOptions);
+          break;
         case "threejs":
-          return new ThreeJSLayer(completeOptions);
+          layer = new ThreeJSLayer(completeOptions);
+
+          break;
         default:
-          return null;
+          console.warn(`[display worker] Layer type is not supported`, options);
+          break;
       }
-    })
-    .filter(Boolean)
-    .map((layer) => layer && vfWorker.resizeLayer(layer)) as Array<
-    Canvas2DLayer | ThreeJSLayer
-  >;
+      if (layer) {
+        vfWorker.state.layers.push(layer);
+        vfWorker.resizeLayer(layer);
+      }
+    } else {
+      layer = found;
+    }
+    if (!layer) {
+      continue;
+    }
+    if (layer.type !== options.type) {
+      console.warn(
+        `[display worker] Layer type mismatch for ${layer.id}: expected "${layer.type}", got "${options.type}"`,
+      );
+      return null;
+    }
+    layer.active = !!options.active;
+    layer.opacity = options.opacity ?? 100;
+  }
+
+  // sort the vfWorker.state.layers based on the order in updateLayers
+  vfWorker.state.layers.sort((a, b) => {
+    const indexA = updateLayers.findIndex((l) => l.id === a.id);
+    const indexB = updateLayers.findIndex((l) => l.id === b.id);
+    return indexA - indexB;
+  });
 }
 
 const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
@@ -98,14 +113,14 @@ const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
 
   updateconfig: (update: Partial<AppState>) => {
     const { scriptable, state } = vfWorker;
-    const layers = Array.isArray(update.layers)
-      ? processLayers(vfWorker, update.layers)
-      : state.layers;
     const updated = {
       ...state,
       ...update,
-      layers,
+      layers: state.layers || update.layers || [],
     };
+    if (Array.isArray(update.layers)) {
+      processLayers(vfWorker, update.layers);
+    }
     if (!isDisplayState(updated)) {
       throw new Error("updateconfig: invalid state");
     }
@@ -138,10 +153,7 @@ const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     if (payload.id !== worker.name) {
       return;
     }
-    vfWorker.state.layers = processLayers(
-      vfWorker,
-      payload.config.layers || [],
-    );
+    processLayers(vfWorker, payload.config.layers || []);
   },
 });
 
