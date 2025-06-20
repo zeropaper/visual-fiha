@@ -1,5 +1,6 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import styles from "./AudioFileAnalyzer.module.css";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
 
 const audioConfig = {
@@ -136,15 +137,24 @@ export default function AudioFileAnalyzer({
           </audio>
         </div>
       )}
-      <Frequency
-        analyser={analyserRef.current}
-        drawExtras={makeDrawExtras("frequency")}
-      />
 
-      <TimeDomain
-        analyser={analyserRef.current}
-        drawExtras={makeDrawExtras("timeDomain")}
-      />
+      <div className={styles.visualizers}>
+        <div>
+          <strong>Frequency</strong>
+          <Frequency
+            analyser={analyserRef.current}
+            drawExtras={makeDrawExtras("frequency")}
+          />
+        </div>
+
+        <div>
+          <strong>Time Domain</strong>
+          <TimeDomain
+            analyser={analyserRef.current}
+            drawExtras={makeDrawExtras("timeDomain")}
+          />
+        </div>
+      </div>
     </div>
   );
 }

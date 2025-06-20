@@ -69,7 +69,7 @@ function Layer({
           min={0}
           max={100}
           step={1}
-          value={layer.opacity}
+          defaultValue={layer.opacity || 100}
           onChange={onChangeOpacity}
         />
       </div>

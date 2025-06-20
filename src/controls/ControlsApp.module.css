@@ -27,16 +27,28 @@
 }
 
 .sidebar {
-  min-width: 250px;
-  width: 35%;
+  min-width: 680px;
   display: flex;
   flex-direction: column;
   background-color: var(--vscode-editorGutter-background, #fafafa);
   border-right: 1px solid #ffffff66;
 }
+.sidebarScrollable {
+  flex-grow: 1;
+  overflow-y: auto;
+  position: relative;
+}
+.sidebarScrollableInner {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  width: 100%;
+}
 
 .controlDisplay {
-  width: 100%;
+  width: auto;
+  max-height: 350px;
+  margin: 0 auto;
 }
 
 .main {

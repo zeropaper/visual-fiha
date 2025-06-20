@@ -9,7 +9,6 @@ import { Layers } from "./Layers";
 const ScriptEditor = lazy(() =>
   import("./ScriptEditor").then((module) => ({ default: module.ScriptEditor })),
 );
-import { Signals } from "./Signals";
 import { Stage } from "./Stage";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 
@@ -48,12 +47,15 @@ export default function ControlsApp() {
       <div className={styles.app}>
         <div className={styles.sidebar}>
           <ControlDisplay />
-          <Stage />
-          <DisplaysControl />
-          <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
-          <Layers setCurrentScript={setCurrentScript} />
-          <Signals />
-          <Inputs />
+          <div className={styles.sidebarScrollable}>
+            <div className={styles.sidebarScrollableInner}>
+              <Stage />
+              <DisplaysControl />
+              <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
+              <Layers setCurrentScript={setCurrentScript} />
+              <Inputs />
+            </div>
+          </div>
         </div>
 
         <div className={styles.main}>

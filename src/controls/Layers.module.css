@@ -14,8 +14,12 @@
   > div {
     display: flex;
     gap: 5px;
+
     > span {
       flex-grow: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
