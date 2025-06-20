@@ -7,6 +7,7 @@ import type {
 } from "../types";
 
 import demoDefaultCanvasAnimation from "../../demos/default/canvas-animation?raw";
+import demoStatsAnimation from "../../demos/default/stats-animation?raw";
 import demoDefaultThreeJSAnimation from "../../demos/default/threejs-animation?raw";
 import demoDefaultThreeJSSetup from "../../demos/default/threejs-setup?raw";
 
@@ -18,6 +19,14 @@ const defaultLayers: LayerConfig[] = [
     animation: demoDefaultCanvasAnimation,
     type: "canvas",
     opacity: 100,
+  },
+  {
+    id: "stats",
+    active: true,
+    setup: `/* Stats setup code */`,
+    animation: demoStatsAnimation,
+    type: "canvas",
+    opacity: 60,
   },
   {
     id: "ThreeJS",

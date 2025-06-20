@@ -10,13 +10,13 @@ export { };
 
 clear();
 
-const samples = 200;
+const samples = 60;
 cache.lastValues = cache.lastValues || [];
 cache.lastValues = (cache.lastValues as any[]).slice(0 - samples);
 
 const now = read('time.elapsed', 0) * 0.001;
 const tdMax = read('audio.0.0.timeDomain.max', 127) - 127;
-const fAvg = read('audio.0.0.frequency.average', 90) - 90;
+const fAvg = read('audio.0.0.frequency.average', 60) - 60;
 
 /*
 fontSize(30);
@@ -32,11 +32,13 @@ cache.lastValues.push([
 ]);
 
 cache.lastValues.forEach((val, v) => {
+  lineWidth(val[1] * 0.275);
   circle({
     stroke: rgba(val[1] * 0.001, val[1] * 0.01, 1, v / samples),
     fill: 'transparent',
-    radius: width(val[0] * 0.1),
+    radius: width(val[0] * 0.5),
     x: width(2),
     y: height(2),
+
   });
 });
