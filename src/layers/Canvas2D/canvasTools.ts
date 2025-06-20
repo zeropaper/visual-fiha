@@ -88,7 +88,16 @@ export type plot = (opts?: {
   bottom?: number;
   left?: number;
   right?: number;
-  legend?: string;
+  legend?:
+    | "center"
+    | "top"
+    | "bottom"
+    | "left"
+    | "right"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
   color?: string;
   fontSize?: number;
   flipped?: boolean;
@@ -494,7 +503,7 @@ export default function canvasTools(ctx: CTX) {
     bottom = canvas.height,
     left = 0,
     right = canvas.width,
-    legend = "top-left",
+    legend,
     color = "",
     fontSize: fs = vmin(3),
     flipped = false,
