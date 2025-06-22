@@ -4,8 +4,8 @@ import { ControlDisplay } from "./ControlDisplay";
 import styles from "./ControlsApp.module.css";
 import { AppFastContextProvider } from "./ControlsContext";
 import { DisplaysControl } from "./DisplaysControl";
-import { Inputs } from "./Inputs";
 import { Layers } from "./Layers";
+import { Inputs } from "./inputs/Inputs";
 const ScriptEditor = lazy(() =>
   import("./ScriptEditor").then((module) => ({ default: module.ScriptEditor })),
 );
