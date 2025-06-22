@@ -1,6 +1,6 @@
-import { Button } from "./Button";
 import sectionStyles from "./ControlsApp.module.css";
 import { useAppFastContextFields } from "./ControlsContext";
+import { Button } from "./base/Button";
 
 export function DisplaysControl() {
   const {

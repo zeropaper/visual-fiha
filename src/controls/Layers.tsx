@@ -1,18 +1,12 @@
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  EyeIcon,
-  EyeOffIcon,
-  XIcon,
-} from "lucide-react";
+import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
-import { Button } from "./Button";
-import buttonStyles from "./Button.module.css";
 import sectionStyles from "./ControlsApp.module.css";
 import { useAppFastContextFields, useLayerConfig } from "./ControlsContext";
-import { Input } from "./Input";
 import styles from "./Layers.module.css";
-import { Select } from "./Select";
+import { Button } from "./base/Button";
+import buttonStyles from "./base/Button.module.css";
+import { Input } from "./base/Input";
+import { Select } from "./base/Select";
 
 function Layer({
   id,

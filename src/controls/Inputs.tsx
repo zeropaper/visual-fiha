@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect } from "react";
 import type { AudioInputMode } from "../types";
 import AudioFilesAnalyzer from "./AudioFilesAnalyzer";
-import { Button } from "./Button";
 import sectionStyles from "./ControlsApp.module.css";
 import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Inputs.module.css";
 import { MIDIBridge } from "./MIDIBridge";
 import MicrophoneAnalyzer from "./MicrophoneAnalyzer";
+import { Button } from "./base/Button";
 
 function inputValuesToObject(values: Record<string, any>) {
   const obj: Record<string, any> = {};

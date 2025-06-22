@@ -1,6 +1,6 @@
-import { Button } from "./Button";
 import sectionStyles from "./ControlsApp.module.css";
 import styles from "./WorkerScriptsSelector.module.css";
+import { Button } from "./base/Button";
 
 export function WorkerScriptsSelector({
   setCurrentScript,
