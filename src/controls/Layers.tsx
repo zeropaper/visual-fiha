@@ -5,7 +5,7 @@ import {
   EyeOffIcon,
   XIcon,
 } from "lucide-react";
-import { type ChangeEventHandler, useCallback } from "react";
+import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
 import { Button } from "./Button";
 import buttonStyles from "./Button.module.css";
 import sectionStyles from "./ControlsApp.module.css";
@@ -17,10 +17,6 @@ import { Select } from "./Select";
 function Layer({
   id,
   setCurrentScript,
-  isFirst,
-  isLast,
-  onMoveUp,
-  onMoveDown,
   onChangeOpacity,
 }: {
   id: string;
@@ -29,10 +25,6 @@ function Layer({
     role: "animation" | "setup";
     type: "layer" | "worker";
   }) => void;
-  isFirst: boolean;
-  isLast: boolean;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onChangeOpacity: ChangeEventHandler<HTMLInputElement>;
 }) {
   const [layer, setLayer] = useLayerConfig(id);
@@ -40,7 +32,7 @@ function Layer({
     return null;
   }
   return (
-    <li className={styles.layer}>
+    <>
       <div>
         <Button
           variant="icon"
@@ -51,7 +43,9 @@ function Layer({
         </Button>
 
         <span className={styles.type}>{layer.id}</span>
+      </div>
 
+      <div>
         <Button
           variant="icon"
           title="Toggle layer visibility"
@@ -64,6 +58,7 @@ function Layer({
         >
           {layer.active ? <EyeIcon /> : <EyeOffIcon />}
         </Button>
+
         <Input
           type="number"
           min={0}
@@ -72,29 +67,7 @@ function Layer({
           defaultValue={layer.opacity || 100}
           onChange={onChangeOpacity}
         />
-      </div>
 
-      <div>
-        <Button
-          variant="icon"
-          title="Move layer up"
-          onClick={onMoveUp}
-          disabled={isFirst}
-        >
-          <ArrowUpIcon />
-        </Button>
-
-        <Button
-          variant="icon"
-          title="Move layer down"
-          onClick={onMoveDown}
-          disabled={isLast}
-        >
-          <ArrowDownIcon />
-        </Button>
-      </div>
-
-      <div>
         <Button
           className={[buttonStyles.button, styles.setupButton].join(" ")}
           onClick={() =>
@@ -120,7 +93,7 @@ function Layer({
           {layer.type}
         </Button>
       </div>
-    </li>
+    </>
   );
 }
 
@@ -137,31 +110,9 @@ export function Layers({
     layers: { get: layers, set: setLayers },
   } = useAppFastContextFields(["layers"]);
 
-  const moveLayerUp = useCallback(
-    (index: number) => () => {
-      if (index <= 0 || index >= layers.length) return;
-      const updatedLayers = [...layers];
-      [updatedLayers[index - 1], updatedLayers[index]] = [
-        updatedLayers[index],
-        updatedLayers[index - 1],
-      ];
-      setLayers(updatedLayers);
-    },
-    [layers, setLayers],
-  );
-
-  const moveLayerDown = useCallback(
-    (index: number) => () => {
-      if (index < 0 || index >= layers.length - 1) return;
-      const updatedLayers = [...layers];
-      [updatedLayers[index + 1], updatedLayers[index]] = [
-        updatedLayers[index],
-        updatedLayers[index + 1],
-      ];
-      setLayers(updatedLayers);
-    },
-    [layers, setLayers],
-  );
+  // Drag-and-drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const dragOverIndex = useRef<number | null>(null);
 
   const changeOpacity = useCallback<
     (id: string) => ChangeEventHandler<HTMLInputElement>
@@ -177,6 +128,36 @@ export function Layers({
     },
     [layers, setLayers],
   );
+
+  // Drag-and-drop handlers
+  const handleDragStart = (index: number) => () => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    dragOverIndex.current = index;
+  };
+
+  const handleDrop = () => {
+    if (
+      draggedIndex !== null &&
+      dragOverIndex.current !== null &&
+      draggedIndex !== dragOverIndex.current
+    ) {
+      const updatedLayers = [...layers];
+      const [removed] = updatedLayers.splice(draggedIndex, 1);
+      updatedLayers.splice(dragOverIndex.current, 0, removed);
+      setLayers(updatedLayers);
+    }
+    setDraggedIndex(null);
+    dragOverIndex.current = null;
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    dragOverIndex.current = null;
+  };
 
   return (
     <details open className={sectionStyles.details}>
@@ -215,16 +196,25 @@ export function Layers({
       </form>
       <ul id="layers" className={styles.layers}>
         {layers.map((layer, l) => (
-          <Layer
+          <li
             key={layer.id}
-            id={layer.id}
-            setCurrentScript={setCurrentScript}
-            isFirst={l === 0}
-            isLast={l === layers.length - 1}
-            onMoveUp={moveLayerUp(l)}
-            onMoveDown={moveLayerDown(l)}
-            onChangeOpacity={changeOpacity(layer.id)}
-          />
+            draggable
+            onDragStart={handleDragStart(l)}
+            onDragOver={handleDragOver(l)}
+            onDrop={handleDrop}
+            onDragEnd={handleDragEnd}
+            style={{
+              opacity: draggedIndex === l ? 0.5 : 1,
+              cursor: "move",
+            }}
+            className={styles.layer}
+          >
+            <Layer
+              id={layer.id}
+              setCurrentScript={setCurrentScript}
+              onChangeOpacity={changeOpacity(layer.id)}
+            />
+          </li>
         ))}
       </ul>
     </details>

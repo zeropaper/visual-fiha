@@ -9,7 +9,7 @@
 
 .layer {
   display: grid;
-  grid-template-columns: 2fr auto 1fr;
+  grid-template-columns: 2fr auto;
   gap: 20px;
   > div {
     display: flex;
