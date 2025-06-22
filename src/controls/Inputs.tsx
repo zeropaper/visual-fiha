@@ -5,6 +5,7 @@ import { Button } from "./Button";
 import sectionStyles from "./ControlsApp.module.css";
 import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Inputs.module.css";
+import { MIDIBridge } from "./MIDIBridge";
 import MicrophoneAnalyzer from "./MicrophoneAnalyzer";
 
 function inputValuesToObject(values: Record<string, any>) {
@@ -66,7 +67,9 @@ export function Inputs() {
             <AudioFilesAnalyzer writeInputValues={writeInputValues} />
           )}
         </li>
-        <li className={styles.input}>MIDI</li>
+        <li className={styles.input}>
+          <MIDIBridge writeInputValues={writeInputValues} />
+        </li>
       </ul>
     </details>
   );
