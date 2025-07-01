@@ -22,7 +22,9 @@
 }
 
 .app {
-  display: flex;
+  display: grid;
+  grid-template-columns: 680px 1fr;
+  grid-template-rows: 1fr auto;
   flex-grow: 1;
 }
 
@@ -74,4 +76,12 @@
 }
 .details[open] summary {
   margin-bottom: 10px;
+}
+
+.timeline {
+  display: flex;
+  grid-column: span 2;
+  min-height: 120px;
+  border-top: 1px solid #ffffff66;
+  background-color: var(--vscode-editorGutter-background, #fafafa);
 }

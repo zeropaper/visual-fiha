@@ -10,6 +10,7 @@ const ScriptEditor = lazy(() =>
   import("./ScriptEditor").then((module) => ({ default: module.ScriptEditor })),
 );
 import { Stage } from "./Stage";
+import { Timeline } from "./Timeline";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 
 export default function ControlsApp() {
@@ -45,30 +46,29 @@ export default function ControlsApp() {
         </div>
       </header>
       <div className={styles.app}>
-        <div className={styles.sidebar}>
-          <ControlDisplay />
-          <div className={styles.sidebarScrollable}>
-            <div className={styles.sidebarScrollableInner}>
-              <Stage />
-              <DisplaysControl />
-              <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
-              <Layers setCurrentScript={setCurrentScript} />
-              <Inputs />
+        <Suspense fallback={<div>Loading...</div>}>
+          <div className={styles.sidebar}>
+            <ControlDisplay />
+            <div className={styles.sidebarScrollable}>
+              <div className={styles.sidebarScrollableInner}>
+                <Stage />
+                <DisplaysControl />
+                <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
+                <Layers setCurrentScript={setCurrentScript} />
+                <Inputs />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className={styles.main}>
-          <Suspense fallback={<div>Loading...</div>}>
-            {/*
-          <Graph className={styles.flow} />
-          */}
+          <div className={styles.main}>
             <ScriptEditor
               {...currentScript}
               key={`${currentScript.type}-${currentScript.id}-${currentScript.role}`}
             />
-          </Suspense>
-        </div>
+          </div>
+
+          <Timeline className={styles.timeline} />
+        </Suspense>
       </div>
     </AppFastContextProvider>
   );
