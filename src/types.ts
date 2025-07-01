@@ -106,7 +106,6 @@ export interface TimeInputConfig {
  * @property {number} started - Timestamp (in ms) when the BPM input was started
  * @property {number} percent - The percentage (0-1) of the current BPM cycle completed
  * @property {number} cycleDuration - Duration of one complete BPM cycle in milliseconds
- * @property {number} cycleElapsed - Time in milliseconds elapsed in the current BPM cycle
  */
 export interface BPMInputValue {
   bpm: number;
@@ -115,7 +114,6 @@ export interface BPMInputValue {
   isRunning: boolean;
   percent: number;
   cycleDuration: number;
-  cycleElapsed: number;
 }
 
 export interface BPMInputConfig {
