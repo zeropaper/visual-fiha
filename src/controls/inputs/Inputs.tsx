@@ -4,6 +4,7 @@ import sectionStyles from "../ControlsApp.module.css";
 import { useContextWorkerPost } from "../ControlsContext";
 import { Button } from "../base/Button";
 import AudioFilesAnalyzer from "./AudioFilesAnalyzer";
+import { useAudioSetup } from "./AudioSetupContext";
 import styles from "./Inputs.module.css";
 import { MIDIBridge } from "./MIDIBridge";
 import MicrophoneAnalyzer from "./MicrophoneAnalyzer";
@@ -27,7 +28,9 @@ function inputValuesToObject(values: Record<string, any>) {
 }
 export function Inputs() {
   const inputValuesRef = React.useRef<Record<string, any>>({});
-  const [audioMode, setAudioMode] = React.useState<AudioInputMode>("mic");
+  // const [audioMode, setAudioMode] = React.useState<AudioInputMode>("mic");
+  const { mode: audioMode, setMode: setAudioMode } = useAudioSetup();
+
   const writeInputValues = useCallback((path: string, value: any) => {
     inputValuesRef.current[path] = value;
   }, []);
@@ -55,9 +58,7 @@ export function Inputs() {
           Audio {audioMode}{" "}
           <Button
             type="button"
-            onClick={() =>
-              setAudioMode((current) => (current === "mic" ? "file" : "mic"))
-            }
+            onClick={() => setAudioMode(audioMode === "mic" ? "file" : "mic")}
           >
             Toggle mode
           </Button>

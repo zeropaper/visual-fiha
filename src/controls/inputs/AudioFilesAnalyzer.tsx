@@ -1,6 +1,7 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import styles from "./AudioFilesAnalyzer.module.css";
+import { useAudioSetup } from "./AudioSetupContext";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
 
 const audioConfig = {
@@ -151,10 +152,7 @@ export default function AudioFilesAnalyzer({
   writeInputValues: (path: string, value: any) => void;
 }) {
   const [audioState, setAudioState] = useState<string>("no file");
-  // Store array of { url, name }
-  const [audioFiles, setAudioFiles] = useState<{ url: string; name: string }[]>(
-    [],
-  );
+  const { files: audioFiles, setFiles: setAudioFiles } = useAudioSetup();
 
   // Keep track of previous blob URLs to revoke them on change/unmount
   const prevBlobUrlsRef = useRef<string[]>([]);

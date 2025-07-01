@@ -12,6 +12,7 @@ const ScriptEditor = lazy(() =>
 import { Stage } from "./Stage";
 import { Timeline } from "./Timeline";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
+import { AudioSetupProvider } from "./inputs/AudioSetupContext";
 
 export default function ControlsApp() {
   const [currentScript, setCurrentScript] = useState<{
@@ -47,27 +48,29 @@ export default function ControlsApp() {
       </header>
       <div className={styles.app}>
         <Suspense fallback={<div>Loading...</div>}>
-          <div className={styles.sidebar}>
-            <ControlDisplay />
-            <div className={styles.sidebarScrollable}>
-              <div className={styles.sidebarScrollableInner}>
-                <Stage />
-                <DisplaysControl />
-                <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
-                <Layers setCurrentScript={setCurrentScript} />
-                <Inputs />
+          <AudioSetupProvider>
+            <div className={styles.sidebar}>
+              <ControlDisplay />
+              <div className={styles.sidebarScrollable}>
+                <div className={styles.sidebarScrollableInner}>
+                  <Stage />
+                  <DisplaysControl />
+                  <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
+                  <Layers setCurrentScript={setCurrentScript} />
+                  <Inputs />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className={styles.main}>
-            <ScriptEditor
-              {...currentScript}
-              key={`${currentScript.type}-${currentScript.id}-${currentScript.role}`}
-            />
-          </div>
+            <div className={styles.main}>
+              <ScriptEditor
+                {...currentScript}
+                key={`${currentScript.type}-${currentScript.id}-${currentScript.role}`}
+              />
+            </div>
 
-          <Timeline className={styles.timeline} />
+            <Timeline className={styles.timeline} />
+          </AudioSetupProvider>
         </Suspense>
       </div>
     </AppFastContextProvider>
