@@ -66,6 +66,12 @@ export default function ControlsApp() {
               <ScriptEditor
                 {...currentScript}
                 key={`${currentScript.type}-${currentScript.id}-${currentScript.role}`}
+                onSwitchRole={() =>
+                  setCurrentScript((prev) => ({
+                    ...prev,
+                    role: prev.role === "animation" ? "setup" : "animation",
+                  }))
+                }
               />
             </div>
 

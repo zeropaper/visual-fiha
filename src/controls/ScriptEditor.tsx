@@ -8,6 +8,7 @@ import threeTypes from "../layers/ThreeJS/threeTools.editor-types.txt?raw";
 import type { LayerConfig } from "../types";
 import scriptableTypes from "../utils/Scriptable.editor.types.editor-types.txt?raw";
 import mathTypes from "../utils/mathTools.editor-types.txt?raw";
+import { Button } from "./base/Button";
 
 const extraLibs: Record<
   LayerConfig["type"],
@@ -110,10 +111,12 @@ export function ScriptEditor({
   role = "animation",
   type = "worker",
   id = "worker",
+  onSwitchRole,
 }: {
   role?: "setup" | "animation";
   type?: "worker" | "layer";
   id?: string | "worker";
+  onSwitchRole: () => void;
 }) {
   const language = "typescript";
   const theme = "vs-dark"; // Options: 'vs-dark', 'vs-light', 'hc-black'
@@ -326,7 +329,10 @@ export function ScriptEditor({
           <strong>Type</strong> {type}
         </div>
         <div>
-          <strong>Role</strong> {role}
+          <Button onClick={onSwitchRole} title="Switch script role">
+            Role
+          </Button>{" "}
+          {role}
         </div>
         {id !== "worker" && <div>{id}</div>}
       </div>

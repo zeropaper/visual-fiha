@@ -9,6 +9,13 @@
   padding: 0 10px;
   display: flex;
   gap: 30px;
+  border-bottom: 1px solid var(--vscode-editorWidget-border);
+  & > div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 0;
+  }
 }
 
 .editorContainer {
