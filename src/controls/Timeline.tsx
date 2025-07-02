@@ -12,15 +12,65 @@ interface TimelineProps {
 
 const minTimelineDuration = 30000; // Minimum duration for absolute time display (30 seconds)
 
+function useRuntimeMonitor() {
+  const runtimeDataRef = useRef<RuntimeData | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [bpm, setBpm] = useState(80); // Default BPM
+
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      // Only handle messages of type "
+      if (event.data.type !== "runtimedata") {
+        return;
+      }
+
+      if (
+        runtimeDataRef.current?.time.isRunning &&
+        !event.data.payload.time.isRunning
+      ) {
+        console.info("[controls-worker] Worker stopped running");
+        // If the worker stopped running, reset the elapsed time
+        setIsRunning(false);
+      } else if (
+        !runtimeDataRef.current?.time.isRunning &&
+        event.data.payload.time.isRunning
+      ) {
+        console.info("[controls-worker] Worker started running");
+        // If the worker started running, update the state
+        setIsRunning(true);
+      }
+
+      if (
+        event.data.payload.bpm.bpm &&
+        event.data.payload.bpm.bpm !== runtimeDataRef.current?.bpm.bpm
+      ) {
+        setBpm(event.data.payload.bpm.bpm);
+      }
+
+      runtimeDataRef.current = event.data.payload as RuntimeData;
+    }
+
+    const broadcastChannel = new BroadcastChannel("core");
+    broadcastChannel.addEventListener("message", handleMessage);
+
+    return () => {
+      broadcastChannel.removeEventListener("message", handleMessage);
+      broadcastChannel.close();
+    };
+  }, []);
+  return { isRunning, bpm };
+}
+
 /**
  * Timeline component that renders a visual timeline with time ticks and a playhead
  * that shows the current position in time. Supports clicking to seek to a specific time.
  */
-export function Timeline({ className, bpm = 80 }: TimelineProps) {
+export function Timeline({ className }: TimelineProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const [timeData, setTimeData] = useState<TimeInputValue | null>(null);
   const post = useContextWorkerPost();
+  const { isRunning, bpm } = useRuntimeMonitor();
   const [hoveredTime, setHoveredTime] = useState<number | null>(null);
 
   // Listen to runtime data broadcasts from the worker
@@ -45,13 +95,9 @@ export function Timeline({ className, bpm = 80 }: TimelineProps) {
   // Stub function that will be called when clicking on the timeline
   const handleTimelineClick = useCallback(
     (timeValue: number) => {
-      console.log(`Timeline clicked at time: ${timeValue}ms`);
-      if (timeData && timeData.duration === 0) {
-        const isCurrentlyRunning = timeData.isRunning;
-        post?.(isCurrentlyRunning ? "stop" : "start");
-      }
+      post?.("setTime", timeValue);
     },
-    [timeData, post],
+    [post],
   );
 
   // Handle canvas click events
@@ -148,7 +194,8 @@ export function Timeline({ className, bpm = 80 }: TimelineProps) {
     ctx.lineWidth = 1;
     ctx.strokeRect(0, 0, width, height);
 
-    if (timeData && (timeData.isRunning || timeData.elapsed > 0)) {
+    // if (timeData && (timeData.isRunning || timeData.elapsed > 0)) {
+    if (timeData) {
       // For absolute time (no duration), show elapsed time with reasonable scale
       if (timeData.duration === 0) {
         // Draw timeline for absolute time (using elapsed time for scale)
@@ -213,13 +260,18 @@ export function Timeline({ className, bpm = 80 }: TimelineProps) {
   return (
     <div className={[styles.timeline, className].filter(Boolean).join(" ")}>
       <div className={styles.controls}>
-        <Button name="play_pause">
-          {timeData?.isRunning ? "Pause" : "Play"}
+        <Button
+          name="play_pause"
+          onClick={() => {
+            post?.(isRunning ? "pause" : "resume");
+          }}
+        >
+          {isRunning ? "Pause" : "Resume"}
         </Button>
         <Button
           name="reset"
           onClick={() => {
-            post?.("stop");
+            post?.("reset");
             handleTimelineClick(0);
           }}
         >
