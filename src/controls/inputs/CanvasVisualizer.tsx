@@ -194,7 +194,7 @@ export function CanvasVisualizer({
     };
   }, [analyser]);
 
-  return <canvas style={{ background: "#000" }} ref={canvasRef} />;
+  return <canvas width="277" ref={canvasRef} />;
 }
 
 export function Frequency(props: VisualizerProps) {

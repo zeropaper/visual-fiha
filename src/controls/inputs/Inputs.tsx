@@ -52,7 +52,6 @@ export function Inputs() {
     <details open className={sectionStyles.details}>
       <summary>Inputs</summary>
       <ul id="inputs" className={styles.inputs}>
-        <li className={styles.input}>Time</li>
         <li className={styles.input}>
           Audio {audioMode}{" "}
           <Button

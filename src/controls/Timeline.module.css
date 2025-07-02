@@ -19,3 +19,11 @@
   outline: 2px solid var(--vscode-focusBorder, #007acc);
   outline-offset: -2px;
 }
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3px 10px;
+  gap: 5px;
+}

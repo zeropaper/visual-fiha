@@ -1,4 +1,9 @@
+.track {
+  margin-bottom: 10px;
+}
+
 .visualizers {
   display: flex;
   justify-content: center;
+  gap: 10px;
 }

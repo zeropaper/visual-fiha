@@ -37,7 +37,7 @@ const worker: WebWorker = self as any;
 const read = makeRead(data);
 
 function processLayers(vfWorker: VFWorker, updateLayers: AppState["layers"]) {
-  console.info("[display worker] processing layers", updateLayers);
+  // console.info("[display worker] processing layers", updateLayers);
   for (const options of updateLayers) {
     const found = vfWorker.findStateLayer(options.id);
     let layer: Canvas2DLayer | ThreeJSLayer | null = null;

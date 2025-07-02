@@ -105,7 +105,7 @@ function AudioFileAnalyzer({
   }
 
   return (
-    <details open>
+    <details open className={styles.track}>
       <summary>{`${track} - ${fileName}`}</summary>
       <audio
         key={audioUrl}
@@ -126,21 +126,15 @@ function AudioFileAnalyzer({
       </audio>
 
       <div className={styles.visualizers}>
-        <div>
-          {/* <strong>Frequency</strong> */}
-          <Frequency
-            analyser={analyserRef.current}
-            drawExtras={makeDrawExtras("frequency")}
-          />
-        </div>
+        <Frequency
+          analyser={analyserRef.current}
+          drawExtras={makeDrawExtras("frequency")}
+        />
 
-        <div>
-          {/* <strong>Time Domain</strong> */}
-          <TimeDomain
-            analyser={analyserRef.current}
-            drawExtras={makeDrawExtras("timeDomain")}
-          />
-        </div>
+        <TimeDomain
+          analyser={analyserRef.current}
+          drawExtras={makeDrawExtras("timeDomain")}
+        />
       </div>
     </details>
   );

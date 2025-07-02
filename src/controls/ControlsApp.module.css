@@ -23,13 +23,12 @@
 
 .app {
   display: grid;
-  grid-template-columns: 680px 1fr;
+  grid-template-columns: 580px 1fr;
   grid-template-rows: 1fr auto;
   flex-grow: 1;
 }
 
 .sidebar {
-  min-width: 680px;
   display: flex;
   flex-direction: column;
   background-color: var(--vscode-editorGutter-background, #fafafa);
@@ -88,8 +87,8 @@
 
 .menu {
   display: flex;
-  gap: 10px;
-  padding: 10px;
+  gap: 5px;
+  padding: 3px 0;
   background-color: var(--vscode-editor-background, #f0f0f0);
   border: 1px solid var(--vscode-editorGutter-background, #d0d0d0);
 }

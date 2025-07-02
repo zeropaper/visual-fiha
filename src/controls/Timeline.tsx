@@ -211,7 +211,7 @@ export function Timeline({ className }: TimelineProps) {
 
   return (
     <div className={[styles.timeline, className].filter(Boolean).join(" ")}>
-      <div>
+      <div className={styles.controls}>
         <Button name="play_pause">
           {timeData?.isRunning ? "Pause" : "Play"}
         </Button>
