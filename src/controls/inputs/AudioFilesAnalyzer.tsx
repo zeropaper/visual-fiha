@@ -220,88 +220,14 @@ export default function AudioFilesAnalyzer({
     };
   }, []);
 
-  // Sync play/pause/stop
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [seeking, setSeeking] = useState(false);
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setAudioState("loading");
-
-    // Revoke previous blob URLs
-    prevBlobUrlsRef.current.forEach((url) => {
-      URL.revokeObjectURL(url);
-    });
-
-    // Generate new blob URLs and names for all selected files
-    const newAudioFiles = Array.from(files).map((file) => ({
-      url: URL.createObjectURL(file),
-      name: file.name,
-    }));
-    setAudioFiles(newAudioFiles);
-    prevBlobUrlsRef.current = newAudioFiles.map((f) => f.url);
-    // Reset audio element refs and durations
-    audioElemsRef.current = [];
-    audioDurationsRef.current = [];
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setDuration(0);
-  }
-
-  // Cleanup blob URLs on unmount
-  useEffect(() => {
-    return () => {
-      prevBlobUrlsRef.current.forEach((url) => {
-        URL.revokeObjectURL(url);
-      });
-      prevBlobUrlsRef.current = [];
-    };
-  }, []);
-
-  // Sync play/pause/stop
-  function playAll() {
-    audioElemsRef.current.forEach((audio) => {
-      if (audio) {
-        audio.currentTime = currentTime;
-        audio.volume = volume;
-        audio.play();
-      }
-    });
-    setIsPlaying(true);
-  }
-  function pauseAll() {
-    audioElemsRef.current.forEach((audio) => {
-      if (audio) audio.pause();
-    });
-    setIsPlaying(false);
-  }
-  function stopAll() {
-    audioElemsRef.current.forEach((audio) => {
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    });
-    setIsPlaying(false);
-    setCurrentTime(0);
-  }
-  function seekAll(time: number) {
-    audioElemsRef.current.forEach((audio) => {
-      if (audio) audio.currentTime = time;
-    });
-    setCurrentTime(time);
-  }
-  function setAllVolume(vol: number) {
-    audioElemsRef.current.forEach((audio) => {
-      if (audio) audio.volume = vol;
-    });
-    setVolume(vol);
-  }
+  const {
+    playbackState: { isPlaying, currentTime, duration, volume },
+    playAll,
+    pauseAll,
+    stopAll,
+    seekAll,
+    setAllVolume,
+  } = useAudioSetup();
 
   // Update currentTime and duration from the first audio element
   useEffect(() => {
@@ -309,8 +235,8 @@ export default function AudioFilesAnalyzer({
     if (!first) return;
     function update() {
       if (first) {
-        if (!seeking) setCurrentTime(first.currentTime);
-        setDuration(first.duration || 0);
+        seekAll(first.currentTime);
+        setAllVolume(first.volume);
       }
     }
     first.addEventListener("timeupdate", update);
@@ -321,22 +247,23 @@ export default function AudioFilesAnalyzer({
         first.removeEventListener("durationchange", update);
       }
     };
-  }, [seeking]);
+  }, [seekAll, setAllVolume]);
 
   // When seeking, update all
   function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
     const t = Number.parseFloat(e.target.value);
-    setSeeking(true);
     seekAll(t);
   }
-  function handleSeekEnd() {
-    setSeeking(false);
-  }
 
-  // When volume changes
-  function handleVolume(e: React.ChangeEvent<HTMLInputElement>) {
-    const v = Number.parseFloat(e.target.value);
-    setAllVolume(v);
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newAudioFiles = Array.from(files).map((file) => ({
+      url: URL.createObjectURL(file),
+      name: file.name,
+    }));
+    setAudioFiles(newAudioFiles);
   }
 
   return (
@@ -377,8 +304,6 @@ export default function AudioFilesAnalyzer({
           step={0.01}
           value={currentTime}
           onChange={handleSeek}
-          onMouseUp={handleSeekEnd}
-          onTouchEnd={handleSeekEnd}
           style={{ width: 200, margin: "0 1em" }}
           disabled={audioFiles.length === 0}
         />
@@ -391,7 +316,7 @@ export default function AudioFilesAnalyzer({
           max={1}
           step={0.01}
           value={volume}
-          onChange={handleVolume}
+          onChange={(e) => setAllVolume(Number.parseFloat(e.target.value))}
           style={{ width: 100, margin: "0 1em" }}
           disabled={audioFiles.length === 0}
         />
