@@ -7,6 +7,7 @@ import { Button } from "./base/Button";
 
 interface TimelineProps {
   className?: string;
+  bpm?: number;
 }
 
 const minTimelineDuration = 30000; // Minimum duration for absolute time display (30 seconds)
@@ -15,7 +16,7 @@ const minTimelineDuration = 30000; // Minimum duration for absolute time display
  * Timeline component that renders a visual timeline with time ticks and a playhead
  * that shows the current position in time. Supports clicking to seek to a specific time.
  */
-export function Timeline({ className }: TimelineProps) {
+export function Timeline({ className, bpm = 80 }: TimelineProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const [timeData, setTimeData] = useState<TimeInputValue | null>(null);
@@ -151,7 +152,7 @@ export function Timeline({ className }: TimelineProps) {
       // For absolute time (no duration), show elapsed time with reasonable scale
       if (timeData.duration === 0) {
         // Draw timeline for absolute time (using elapsed time for scale)
-        drawAbsoluteTimeline(ctx, width, height, timeData);
+        drawAbsoluteTimeline(ctx, width, height, timeData, bpm);
       } else {
         // Draw time ticks for relative time (with known duration)
         drawTimeTicks(ctx, width, height, timeData);
@@ -191,7 +192,7 @@ export function Timeline({ className }: TimelineProps) {
       ctx.textBaseline = "bottom";
       ctx.fillText(formatTime(hoveredTime), hoverX, height - 5);
     }
-  }, [timeData, hoveredTime]);
+  }, [timeData, hoveredTime, bpm]);
 
   // Animation loop
   useEffect(() => {
@@ -248,6 +249,7 @@ function drawAbsoluteTimeline(
   width: number,
   height: number,
   timeData: TimeInputValue,
+  bpm?: number, // Add bpm as an optional parameter
 ) {
   const { elapsed } = timeData;
 
@@ -276,8 +278,8 @@ function drawAbsoluteTimeline(
     ctx.stroke();
   }
 
-  // Draw playhead at the current time (rightmost position)
-  const playheadX = width; // Always at the right edge for absolute time
+  // Adjust playhead position based on elapsed time within the time window
+  const playheadX = ((elapsed - startTime) / timeWindow) * width; // Calculate relative position
 
   ctx.strokeStyle = "#ff6b6b";
   ctx.lineWidth = 2;
@@ -302,7 +304,7 @@ function drawAbsoluteTimeline(
   ctx.fillStyle = "#ffffff88";
   ctx.font = "10px monospace";
   ctx.textAlign = "center";
-  ctx.textBaseline = "top";
+  ctx.textBaseline = "bottom";
 
   for (let i = 0; i <= numLabels; i++) {
     const time = startTime + i * labelInterval;
@@ -311,13 +313,41 @@ function drawAbsoluteTimeline(
 
     // Only draw label if there's enough space
     if (x > 20 && x < width - 20) {
-      ctx.fillText(timeLabel, x, height - 20);
+      ctx.fillText(timeLabel, x, height - 8);
     }
   }
 
   // Always show current time
   ctx.textAlign = "left";
-  ctx.fillText(`${formatTime(elapsed)}`, 8, 8);
+  ctx.fillText(`${formatTime(elapsed)}`, 8, height - 8);
+
+  if (bpm) {
+    ctx.fillStyle = "#00ff00";
+    ctx.textBaseline = "top";
+    ctx.fillText(`${bpm} bpm`, 8, 8);
+
+    const bpmInterval = 60000 / bpm; // Calculate interval in ms based on BPM
+    const numBpmTicks = Math.floor(
+      Math.max(timeData.elapsed, timeWindow) / bpmInterval,
+    );
+
+    ctx.strokeStyle = "#00ff00"; // Green color for BPM ticks
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= numBpmTicks; i++) {
+      const time = startTime + i * bpmInterval;
+      const x =
+        ((time - startTime) / Math.max(timeData.elapsed, timeWindow)) * width;
+
+      // Draw sawtooth-like pattern
+      const sawtoothHeight = i % 2 === 0 ? height * 0.1 : height * 0.2;
+
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, sawtoothHeight);
+      ctx.stroke();
+    }
+  }
 }
 
 /**
