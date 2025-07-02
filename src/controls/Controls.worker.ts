@@ -47,12 +47,11 @@ const defaultRuntimeData: RuntimeData = {
     backgroundColor: "#000000",
   },
   bpm: {
-    bpm: 0,
+    bpm: 80,
     started: 0,
     elapsed: 0,
     isRunning: false,
     percent: 0,
-    cycleDuration: 0,
   },
   time: {
     started: Date.now(),
@@ -70,7 +69,6 @@ const defaultRuntimeData: RuntimeData = {
   },
 };
 let runtimeData: RuntimeData = structuredClone(defaultRuntimeData);
-// let started = Date.now();
 
 const handlers = {
   start: () => {
@@ -80,15 +78,54 @@ const handlers = {
     runtimeData.bpm.started = runtimeData.time.started;
     runtimeData.bpm.isRunning = true;
   },
-  stop: () => {
-    console.info("[controls-worker] Stopping controls worker");
-    runtimeData.bpm.isRunning = false;
+  pause: () => {
+    console.info("[controls-worker] Pausing controls worker");
     runtimeData.time.isRunning = false;
+    runtimeData.bpm.isRunning = false;
+  },
+  resume: () => {
+    console.info("[controls-worker] Resuming controls worker");
+    runtimeData.time.started = Date.now() - runtimeData.time.elapsed;
+    runtimeData.time.isRunning = true;
+    runtimeData.bpm.started = Date.now() - runtimeData.bpm.elapsed;
+    runtimeData.bpm.isRunning = true;
+  },
+  reset: () => {
+    console.info("[controls-worker] Resetting controls worker");
+    runtimeData.time.started = Date.now();
+    runtimeData.time.elapsed = 0;
+    runtimeData.time.duration = 0;
+    runtimeData.time.percent = 0;
+    runtimeData.time.isRunning = false;
+    runtimeData.bpm.started = Date.now();
+    runtimeData.bpm.elapsed = 0;
+    runtimeData.bpm.percent = 0;
+    runtimeData.bpm.isRunning = false;
+  },
+  setTime: (value: number) => {
+    console.info("[controls-worker] Setting time to %d", value);
+    runtimeData.time.started = Date.now() - value;
+    runtimeData.time.elapsed = value;
+    runtimeData.time.percent = value / (runtimeData.time.duration || 1);
+    runtimeData.time.isRunning = false;
+    runtimeData.bpm.bpm = runtimeData.bpm.bpm || 120;
+    runtimeData.bpm.elapsed = value % (60000 / runtimeData.bpm.bpm);
+    runtimeData.bpm.percent =
+      runtimeData.bpm.elapsed / (60000 / runtimeData.bpm.bpm);
+    runtimeData.bpm.isRunning = false;
+  },
+  timeDuration: (value: number) => {
+    console.info("[controls-worker] Setting time duration to %d", value);
+    runtimeData.time.duration = value;
+    runtimeData.time.elapsed = 0;
+    runtimeData.time.started = Date.now();
+    runtimeData.time.percent = 0;
+    runtimeData.time.isRunning = false;
+    runtimeData.bpm.isRunning = false;
   },
   bpm: (value: number) => {
     console.info("[controls-worker] Setting BPM to %d", value);
     runtimeData.bpm.bpm = value;
-    runtimeData.bpm.cycleDuration = 60000 / runtimeData.bpm.bpm;
     runtimeData.bpm.started = Date.now();
     runtimeData.bpm.percent = 0;
   },
@@ -99,7 +136,6 @@ const handlers = {
     };
   },
   updateconfig: (payload: Partial<AppState>) => {
-    console.info("[controls-worker] Updating config with payload", payload);
     configData = { ...configData, ...payload };
     if ("layers" in payload) {
       runtimeData.layers = (payload.layers as LayerConfig[]).map(
@@ -133,7 +169,7 @@ const handlers = {
     }
     refreshInterval = setInterval(() => {
       brodastRuntimeData();
-    }, 1000 / 60);
+    }, 8);
   },
 };
 
@@ -214,13 +250,19 @@ broadcastChannel.addEventListener("message", bcListener);
 function processRuntimeData() {
   const deltaNow = Date.now() - runtimeData.time.started;
 
-  runtimeData.time.elapsed = deltaNow;
-  runtimeData.time.duration = runtimeData.time.duration || 0;
+  if (runtimeData.time.isRunning) {
+    runtimeData.time.elapsed = deltaNow;
+    runtimeData.time.percent = runtimeData.time.duration
+      ? deltaNow / runtimeData.time.duration
+      : 0;
+  }
 
-  runtimeData.bpm.bpm = runtimeData.bpm.bpm || 120;
-  runtimeData.bpm.elapsed = deltaNow % (60000 / runtimeData.bpm.bpm);
-  runtimeData.bpm.percent =
-    runtimeData.bpm.elapsed / (60000 / runtimeData.bpm.bpm);
+  if (runtimeData.bpm.isRunning) {
+    runtimeData.bpm.bpm = runtimeData.bpm.bpm || 120;
+    runtimeData.bpm.elapsed = deltaNow % (60000 / runtimeData.bpm.bpm);
+    runtimeData.bpm.percent =
+      runtimeData.bpm.elapsed / (60000 / runtimeData.bpm.bpm);
+  }
 
   // Update other runtime data as needed
   runtimeData.layers = configData.layers.map((layer, l) => {
