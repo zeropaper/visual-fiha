@@ -7,8 +7,7 @@
   "author": "Valentin Vago <zeropaper@irata.ch> (https://zeropaper.style/)",
   "license": "MIT",
   "engines": {
-    "node": "v22.16.0",
-    "pnpm": "10.11.0"
+    "node": "v22.16.0"
   },
   "scripts": {
     "dev": "vite",
@@ -72,7 +71,7 @@
       "biome check --files-ignore-unknown=true --diagnostic-level=error --apply --no-errors-on-unmatched"
     ]
   },
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.12.4",
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
