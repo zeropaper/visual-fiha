@@ -1,5 +1,6 @@
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useContextWorkerPost } from "../ControlsContext";
 import styles from "./AudioFilesAnalyzer.module.css";
 import { useAudioSetup } from "./AudioSetupContext";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
@@ -18,6 +19,7 @@ function AudioFileAnalyzer({
   writeInputValues,
   setAudioState,
   forwardedAudioRef,
+  onAudioDurationChange,
 }: {
   audioUrl: string;
   fileName: string;
@@ -25,6 +27,7 @@ function AudioFileAnalyzer({
   writeInputValues: (path: string, value: any) => void;
   setAudioState: (state: string) => void;
   forwardedAudioRef?: (el: HTMLAudioElement | null) => void;
+  onAudioDurationChange: (duration: number) => void;
 }) {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -104,6 +107,22 @@ function AudioFileAnalyzer({
     };
   }
 
+  // Notify parent of audio duration changes
+  useEffect(() => {
+    if (audioElemRef.current) {
+      const handleDurationChange = () => {
+        onAudioDurationChange(audioElemRef.current?.duration || 0);
+      };
+
+      const currentEl = audioElemRef.current;
+      currentEl.addEventListener("loadedmetadata", handleDurationChange);
+
+      return () => {
+        currentEl.removeEventListener("loadedmetadata", handleDurationChange);
+      };
+    }
+  }, [onAudioDurationChange]);
+
   return (
     <details open className={styles.track}>
       <summary>{`${track} - ${fileName}`}</summary>
@@ -147,13 +166,61 @@ export default function AudioFilesAnalyzer({
 }) {
   const [audioState, setAudioState] = useState<string>("no file");
   const { files: audioFiles, setFiles: setAudioFiles } = useAudioSetup();
+  const post = useContextWorkerPost();
 
   // Keep track of previous blob URLs to revoke them on change/unmount
   const prevBlobUrlsRef = useRef<string[]>([]);
   // Store refs to all audio elements
   const audioElemsRef = useRef<(HTMLAudioElement | null)[]>([]);
+  // Track durations of all audio files
+  const audioDurationsRef = useRef<number[]>([]);
 
-  // Unified control state
+  const setTimeDuration = useCallback(
+    (duration: number) => {
+      post?.("timeDuration", duration);
+    },
+    [post],
+  );
+
+  // Check if all audio files have the same duration
+  const checkDurationMatch = useCallback(() => {
+    const durations = audioDurationsRef.current.filter(
+      (d) => !Number.isNaN(d) && d > 0,
+    );
+    if (durations.length === audioFiles.length && durations.length > 0) {
+      // Check if all durations are the same (with small tolerance for floating point differences)
+      const firstDuration = durations[0];
+      const tolerance = 0.01; // 10ms tolerance
+      const allSame = durations.every(
+        (d) => Math.abs(d - firstDuration) <= tolerance,
+      );
+
+      if (allSame) {
+        setTimeDuration(firstDuration * 1000);
+      }
+    }
+  }, [audioFiles.length, setTimeDuration]);
+
+  // Callback for individual audio files to report their duration
+  const onAudioDurationChange = useCallback(
+    (index: number, duration: number) => {
+      audioDurationsRef.current[index] = duration;
+      checkDurationMatch();
+    },
+    [checkDurationMatch],
+  );
+
+  // Clean up blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      prevBlobUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      prevBlobUrlsRef.current = [];
+    };
+  }, []);
+
+  // Sync play/pause/stop
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -178,8 +245,9 @@ export default function AudioFilesAnalyzer({
     }));
     setAudioFiles(newAudioFiles);
     prevBlobUrlsRef.current = newAudioFiles.map((f) => f.url);
-    // Reset audio element refs
+    // Reset audio element refs and durations
     audioElemsRef.current = [];
+    audioDurationsRef.current = [];
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
@@ -341,6 +409,9 @@ export default function AudioFilesAnalyzer({
           forwardedAudioRef={(el: HTMLAudioElement | null) => {
             audioElemsRef.current[idx] = el;
           }}
+          onAudioDurationChange={(duration: number) =>
+            onAudioDurationChange(idx, duration)
+          }
         />
       ))}
     </div>
