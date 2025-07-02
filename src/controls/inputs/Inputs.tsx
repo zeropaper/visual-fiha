@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect } from "react";
-import type { AudioInputMode } from "../../types";
 import sectionStyles from "../ControlsApp.module.css";
 import { useContextWorkerPost } from "../ControlsContext";
 import { Button } from "../base/Button";

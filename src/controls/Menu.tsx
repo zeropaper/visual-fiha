@@ -1,0 +1,25 @@
+import type { FC } from "react";
+import styles from "./ControlsApp.module.css";
+import { useFileSystem } from "./FileSystemContext";
+import { Button } from "./base/Button";
+
+const Menu: FC = () => {
+  const { saveFiles, loadFiles, selectDirectory, selectedDirectory } =
+    useFileSystem();
+
+  return (
+    <div className={styles.menu}>
+      <Button type="button" onClick={selectDirectory}>
+        Select Directory
+      </Button>
+      <Button type="button" onClick={saveFiles} disabled={!selectedDirectory}>
+        Export
+      </Button>
+      <Button type="button" onClick={loadFiles} disabled={!selectedDirectory}>
+        Load
+      </Button>
+    </div>
+  );
+};
+
+export default Menu;
