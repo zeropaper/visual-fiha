@@ -319,6 +319,7 @@ export function Timeline({ className }: TimelineProps) {
         onMouseMove={handleCanvasMouseMove}
         onMouseLeave={handleCanvasMouseLeave}
         tabIndex={0}
+        height="60"
         style={{ cursor: "pointer" }}
         aria-label="Timeline - click to seek, use arrow keys to navigate"
       />
