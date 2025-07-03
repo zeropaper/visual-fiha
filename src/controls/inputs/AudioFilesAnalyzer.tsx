@@ -259,10 +259,16 @@ export default function AudioFilesAnalyzer({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const newAudioFiles = Array.from(files).map((file) => ({
-      url: URL.createObjectURL(file),
-      name: file.name,
-    }));
+    const newAudioFiles = Array.from(files)
+      .sort(({ name: a }, { name: b }) => {
+        if (a < b) return -1;
+        if (a > b) return 1;
+        return 0;
+      })
+      .map((file) => ({
+        url: URL.createObjectURL(file),
+        name: file.name,
+      }));
     setAudioFiles(newAudioFiles);
   }
 
