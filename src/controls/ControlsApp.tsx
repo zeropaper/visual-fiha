@@ -50,6 +50,9 @@ export default function ControlsApp() {
 
               <h1>Visual Fiha</h1>
             </div>
+
+            <Stage />
+
             <Menu />
           </header>
           <div className={styles.app}>
@@ -58,7 +61,6 @@ export default function ControlsApp() {
                 <ControlDisplay />
                 <div className={styles.sidebarScrollable}>
                   <div className={styles.sidebarScrollableInner}>
-                    <Stage />
                     <DisplaysControl />
                     <WorkerScriptsSelector
                       setCurrentScript={setCurrentScript}

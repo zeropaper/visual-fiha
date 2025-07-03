@@ -1,5 +1,4 @@
 import React, { useCallback } from "react";
-import sectionStyles from "./ControlsApp.module.css";
 import { useStageConfig } from "./ControlsContext";
 import styles from "./Stage.module.css";
 import { Input } from "./base/Input";
@@ -35,53 +34,44 @@ export function Stage() {
     [setStage, stage, stageAspectRatioLock],
   );
   return (
-    <details open className={sectionStyles.details}>
-      <summary>Stage</summary>
-      <div className={styles.row}>
-        <label htmlFor="aspectRatioLock" className={styles.aspectRatioLock}>
-          <span>Lock Aspect Ratio</span>
-          <Input
-            type="checkbox"
-            id="aspectRatioLock"
-            onChange={() => setStageAspectRatioLock((current) => !current)}
-            checked={stageAspectRatioLock}
-          />
-        </label>
-        <label htmlFor="backgroundColor">
-          <Input
-            type="color"
-            id="backgroundColor"
-            value={stage.backgroundColor}
-            onChange={(evt) => setStage({ backgroundColor: evt.target.value })}
-          />
-        </label>
-      </div>
-      <div className={styles.row}>
-        <label htmlFor="width">
-          <span>Width</span>
-          <Input
-            type="number"
-            min={0}
-            step={1}
-            id="width"
-            value={stage.width.toString()}
-            onChange={(evt) => updateWidth(Number(evt.target.value))}
-            onBlur={(evt) => updateWidth(Number(evt.target.value))}
-          />
-        </label>
-        <label htmlFor="height">
-          <span>Height</span>
-          <Input
-            type="number"
-            min={0}
-            step={1}
-            id="height"
-            value={stage.height.toString()}
-            onChange={(evt) => updateHeight(Number(evt.target.value))}
-            onBlur={(evt) => updateHeight(Number(evt.target.value))}
-          />
-        </label>
-      </div>
-    </details>
+    <div className={styles.root}>
+      <Input
+        type="color"
+        id="backgroundColor"
+        value={stage.backgroundColor}
+        onChange={(evt) => setStage({ backgroundColor: evt.target.value })}
+        title="Stage Background Color"
+      />
+      <Input
+        type="number"
+        min={0}
+        step={1}
+        style={{ width: "5ch" }}
+        id="width"
+        value={stage.width.toString()}
+        onChange={(evt) => updateWidth(Number(evt.target.value))}
+        onBlur={(evt) => updateWidth(Number(evt.target.value))}
+        title="Stage Width"
+      />
+      x
+      <Input
+        type="number"
+        min={0}
+        step={1}
+        style={{ width: "5ch" }}
+        id="height"
+        value={stage.height.toString()}
+        onChange={(evt) => updateHeight(Number(evt.target.value))}
+        onBlur={(evt) => updateHeight(Number(evt.target.value))}
+        title="Stage Height"
+      />
+      <Input
+        type="checkbox"
+        id="aspectRatioLock"
+        onChange={() => setStageAspectRatioLock((current) => !current)}
+        checked={stageAspectRatioLock}
+        title="Lock Aspect Ratio"
+      />
+    </div>
   );
 }
