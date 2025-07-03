@@ -4,6 +4,7 @@ import type { RuntimeData, TimeInputValue } from "../types";
 import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Timeline.module.css";
 import { Button } from "./base/Button";
+import { Input } from "./base/Input";
 import { useAudioSetup } from "./inputs/AudioSetupContext";
 
 interface TimelineProps {
@@ -16,7 +17,7 @@ const minTimelineDuration = 30000; // Minimum duration for absolute time display
 function useRuntimeMonitor() {
   const runtimeDataRef = useRef<RuntimeData | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [bpm, setBpm] = useState(80); // Default BPM
+  const [bpm, setBpm] = useState(80); // Default Bpm
   const [timeData, setTimeData] = useState<TimeInputValue | null>(null);
 
   useEffect(() => {
@@ -264,6 +265,29 @@ export function Timeline({ className }: TimelineProps) {
     }
   }, [isRunning, post, playAll, pauseAll]);
 
+  const [lastBpmClick, setLastBpmClick] = useState<number | null>(null);
+  // measures the interval between clicks to set Bpm
+  const handleBpmClick = useCallback(() => {
+    const now = Date.now();
+    // If last click was within 1 second, calculate BPM
+    if (lastBpmClick && now - lastBpmClick < 1000) {
+      // Calculate BPM based on time difference
+      const bpmValue = Math.round(60000 / (now - lastBpmClick));
+      post?.("setBpm", bpmValue);
+    }
+    setLastBpmClick(now);
+  }, [lastBpmClick, post]);
+
+  const handleBpmChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const newBpm = Number.parseInt(event.target.value, 10);
+      if (!Number.isNaN(newBpm) && newBpm > 0) {
+        post?.("setBpm", newBpm);
+      }
+    },
+    [post],
+  );
+
   return (
     <div className={[styles.timeline, className].filter(Boolean).join(" ")}>
       <div className={styles.controls}>
@@ -272,6 +296,19 @@ export function Timeline({ className }: TimelineProps) {
         </Button>
         <Button name="reset" onClick={handleReset}>
           Reset
+        </Button>
+
+        <Input
+          type="number"
+          value={bpm}
+          onChange={handleBpmChange}
+          style={{ width: "4ch" }}
+        />
+        <Button
+          title="Click several times to set the Bpm"
+          onClick={handleBpmClick}
+        >
+          {`${bpm} bpm`}
         </Button>
       </div>
       <canvas
@@ -374,12 +411,12 @@ function drawAbsoluteTimeline(
     ctx.textBaseline = "top";
     ctx.fillText(`${bpm} bpm`, 8, 8);
 
-    const bpmInterval = 60000 / bpm; // Calculate interval in ms based on BPM
+    const bpmInterval = 60000 / bpm; // Calculate interval in ms based on Bpm
     const numBpmTicks = Math.floor(
       Math.max(timeData.elapsed, timeWindow) / bpmInterval,
     );
 
-    ctx.strokeStyle = "#00ff00"; // Green color for BPM ticks
+    ctx.strokeStyle = "#00ff00"; // Green color for Bpm ticks
     ctx.lineWidth = 1;
 
     for (let i = 0; i <= numBpmTicks; i++) {

@@ -123,7 +123,7 @@ const handlers = {
     runtimeData.time.isRunning = false;
     runtimeData.bpm.isRunning = false;
   },
-  bpm: (value: number) => {
+  setBpm: (value: number) => {
     console.info("[controls-worker] Setting BPM to %d", value);
     runtimeData.bpm.bpm = value;
     runtimeData.bpm.started = Date.now();
