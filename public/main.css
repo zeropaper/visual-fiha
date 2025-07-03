@@ -13,8 +13,8 @@
   --button-bg-hover: #0057b33f;
   --button-bg-disabled: #cccccc23;
   --button-color: currentColor;
-  --button-border-radius: 4px;
-  --button-padding: 5px 10px;
+  --button-border-radius: 2px;
+  --button-padding: 0 5px;
   --button-border-color: #ffffff40;
   
   --vscode-foreground: #cccccc;
