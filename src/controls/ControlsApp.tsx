@@ -52,6 +52,7 @@ export default function ControlsApp() {
             </div>
 
             <Stage />
+            <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
 
             <Menu />
           </header>
@@ -62,9 +63,7 @@ export default function ControlsApp() {
                 <div className={styles.sidebarScrollable}>
                   <div className={styles.sidebarScrollableInner}>
                     <DisplaysControl />
-                    <WorkerScriptsSelector
-                      setCurrentScript={setCurrentScript}
-                    />
+
                     <Layers setCurrentScript={setCurrentScript} />
                     <Inputs />
                   </div>
