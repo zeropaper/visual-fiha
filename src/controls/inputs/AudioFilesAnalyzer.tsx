@@ -17,7 +17,6 @@ function AudioFileAnalyzer({
   fileName,
   track,
   writeInputValues,
-  setAudioState,
   forwardedAudioRef,
   onAudioDurationChange,
 }: {
@@ -25,7 +24,6 @@ function AudioFileAnalyzer({
   fileName: string;
   track: string;
   writeInputValues: (path: string, value: any) => void;
-  setAudioState: (state: string) => void;
   forwardedAudioRef?: (el: HTMLAudioElement | null) => void;
   onAudioDurationChange: (duration: number) => void;
 }) {
@@ -57,7 +55,6 @@ function AudioFileAnalyzer({
       cleanupAudio();
       // Do NOT revokeObjectURL here; it's handled in handleFileChange
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioUrl]);
 
   // Setup audio context and analyser only after audio is loaded
@@ -77,10 +74,8 @@ function AudioFileAnalyzer({
       analyser.connect(audioCtx.destination);
       analyserRef.current = analyser;
       sourceRef.current = source;
-      setAudioState("ready");
     } catch (error) {
       console.error("Error creating MediaElementSourceNode:", error);
-      setAudioState("error");
     }
   }
 
@@ -137,7 +132,6 @@ function AudioFileAnalyzer({
         style={{ display: "none" }}
         onError={() => {
           console.error("Error loading audio file:", audioUrl);
-          setAudioState("error");
         }}
         onLoadedMetadata={handleLoadedMetadata}
       >
@@ -164,7 +158,6 @@ export default function AudioFilesAnalyzer({
 }: {
   writeInputValues: (path: string, value: any) => void;
 }) {
-  const [audioState, setAudioState] = useState<string>("no file");
   const { files: audioFiles, setFiles: setAudioFiles } = useAudioSetup();
   const post = useContextWorkerPost();
 
@@ -220,14 +213,7 @@ export default function AudioFilesAnalyzer({
     };
   }, []);
 
-  const {
-    playbackState: { isPlaying, currentTime, duration, volume },
-    playAll,
-    pauseAll,
-    stopAll,
-    seekAll,
-    setAllVolume,
-  } = useAudioSetup();
+  const { seekAll, setAllVolume } = useAudioSetup();
 
   // Update currentTime and duration from the first audio element
   useEffect(() => {
@@ -248,12 +234,6 @@ export default function AudioFilesAnalyzer({
       }
     };
   }, [seekAll, setAllVolume]);
-
-  // When seeking, update all
-  function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
-    const t = Number.parseFloat(e.target.value);
-    seekAll(t);
-  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -280,55 +260,6 @@ export default function AudioFilesAnalyzer({
         multiple
         onChange={handleFileChange}
       />
-      <div
-        style={{
-          display: audioFiles.length ? "block" : "none",
-          margin: "1em 0",
-        }}
-      >
-        <button
-          type="button"
-          onClick={playAll}
-          disabled={isPlaying || audioFiles.length === 0}
-        >
-          Play
-        </button>
-        <button type="button" onClick={pauseAll} disabled={!isPlaying}>
-          Pause
-        </button>
-        <button
-          type="button"
-          onClick={stopAll}
-          disabled={audioFiles.length === 0}
-        >
-          Stop
-        </button>
-        <input
-          type="range"
-          min={0}
-          max={duration || 1}
-          step={0.01}
-          value={currentTime}
-          onChange={handleSeek}
-          style={{ width: 200, margin: "0 1em" }}
-          disabled={audioFiles.length === 0}
-        />
-        <span>
-          {Math.floor(currentTime)} / {Math.floor(duration)}s
-        </span>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={volume}
-          onChange={(e) => setAllVolume(Number.parseFloat(e.target.value))}
-          style={{ width: 100, margin: "0 1em" }}
-          disabled={audioFiles.length === 0}
-        />
-        <span>Vol: {Math.round(volume * 100)}%</span>
-      </div>
-      <div>{audioState}</div>
       {audioFiles.map((audioFile, idx) => (
         <AudioFileAnalyzer
           key={audioFile.url}
@@ -336,7 +267,6 @@ export default function AudioFilesAnalyzer({
           track={String(idx)}
           audioUrl={audioFile.url}
           fileName={audioFile.name}
-          setAudioState={setAudioState}
           forwardedAudioRef={(el: HTMLAudioElement | null) => {
             audioElemsRef.current[idx] = el;
           }}

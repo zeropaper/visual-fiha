@@ -4,6 +4,7 @@ import type { RuntimeData, TimeInputValue } from "../types";
 import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Timeline.module.css";
 import { Button } from "./base/Button";
+import { useAudioSetup } from "./inputs/AudioSetupContext";
 
 interface TimelineProps {
   className?: string;
@@ -16,6 +17,7 @@ function useRuntimeMonitor() {
   const runtimeDataRef = useRef<RuntimeData | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [bpm, setBpm] = useState(80); // Default BPM
+  const [timeData, setTimeData] = useState<TimeInputValue | null>(null);
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
@@ -23,6 +25,8 @@ function useRuntimeMonitor() {
       if (event.data.type !== "runtimedata") {
         return;
       }
+
+      setTimeData(event.data.payload.time);
 
       if (
         runtimeDataRef.current?.time.isRunning &&
@@ -58,7 +62,11 @@ function useRuntimeMonitor() {
       broadcastChannel.close();
     };
   }, []);
-  return { isRunning, bpm };
+  return {
+    isRunning,
+    bpm,
+    timeData,
+  };
 }
 
 /**
@@ -68,36 +76,19 @@ function useRuntimeMonitor() {
 export function Timeline({ className }: TimelineProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const [timeData, setTimeData] = useState<TimeInputValue | null>(null);
   const post = useContextWorkerPost();
-  const { isRunning, bpm } = useRuntimeMonitor();
+  const { isRunning, bpm, timeData } = useRuntimeMonitor();
   const [hoveredTime, setHoveredTime] = useState<number | null>(null);
 
-  // Listen to runtime data broadcasts from the worker
-  useEffect(() => {
-    const broadcastChannel = new BroadcastChannel("core");
-
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === "runtimedata") {
-        const runtimeData = event.data.payload as RuntimeData;
-        setTimeData(runtimeData.time);
-      }
-    };
-
-    broadcastChannel.addEventListener("message", handleMessage);
-
-    return () => {
-      broadcastChannel.removeEventListener("message", handleMessage);
-      broadcastChannel.close();
-    };
-  }, []);
+  const { playAll, pauseAll, seekAll, stopAll } = useAudioSetup();
 
   // Stub function that will be called when clicking on the timeline
   const handleTimelineClick = useCallback(
     (timeValue: number) => {
       post?.("setTime", timeValue);
+      seekAll(timeValue);
     },
-    [post],
+    [post, seekAll],
   );
 
   // Handle canvas click events
@@ -257,24 +248,29 @@ export function Timeline({ className }: TimelineProps) {
     };
   }, [render]);
 
+  const handleReset = useCallback(() => {
+    post?.("reset");
+    stopAll();
+    seekAll(0);
+  }, [post, stopAll, seekAll]);
+
+  const handlePlayPause = useCallback(() => {
+    if (isRunning) {
+      post?.("pause");
+      pauseAll();
+    } else {
+      post?.("resume");
+      playAll();
+    }
+  }, [isRunning, post, playAll, pauseAll]);
+
   return (
     <div className={[styles.timeline, className].filter(Boolean).join(" ")}>
       <div className={styles.controls}>
-        <Button
-          name="play_pause"
-          onClick={() => {
-            post?.(isRunning ? "pause" : "resume");
-          }}
-        >
+        <Button name="play_pause" onClick={handlePlayPause}>
           {isRunning ? "Pause" : "Resume"}
         </Button>
-        <Button
-          name="reset"
-          onClick={() => {
-            post?.("reset");
-            handleTimelineClick(0);
-          }}
-        >
+        <Button name="reset" onClick={handleReset}>
           Reset
         </Button>
       </div>
