@@ -1,3 +1,4 @@
+import { ChevronFirstIcon, PauseIcon, PlayIcon } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RuntimeData, TimeInputValue } from "../types";
@@ -291,11 +292,11 @@ export function Timeline({ className }: TimelineProps) {
   return (
     <div className={[styles.timeline, className].filter(Boolean).join(" ")}>
       <div className={styles.controls}>
-        <Button name="play_pause" onClick={handlePlayPause}>
-          {isRunning ? "Pause" : "Resume"}
+        <Button variant="icon" name="play_pause" onClick={handlePlayPause}>
+          {isRunning ? <PauseIcon /> : <PlayIcon />}
         </Button>
-        <Button name="reset" onClick={handleReset}>
-          Reset
+        <Button variant="icon" name="reset" onClick={handleReset}>
+          <ChevronFirstIcon />
         </Button>
 
         <Input
