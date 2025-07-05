@@ -5,20 +5,42 @@
   flex-direction: column;
 }
 
+.loading,
+.noScript {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  font-size: 1.2em;
+  color: var(--vscode-editorWidget-foreground);
+}
+
 .info {
   padding: 0 10px;
   display: flex;
+  justify-content: space-between;
   gap: 30px;
   border-bottom: 1px solid var(--vscode-editorWidget-border);
-  & > div {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 0;
-  }
+}
+.script {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 3px 0;
+}
+.help {
+  display: flex;
+  padding: 3px 0;
+}
+
+.editorHelpContainer {
+  display: flex;
+  flex-grow: 1;
 }
 
 .editorContainer {
+  flex-grow: 1;
   width: 100%;
   height: 100%;
   display: flex;
@@ -28,4 +50,15 @@
 
 .editor {
   flex-grow: 1;
+}
+
+.helpContent {
+  width: 0;
+  overflow: hidden;
+  transition: width 0.25s ease-in-out;
+}
+
+.helpContentOpen {
+  width: 45%;
+  border-left: 1px solid var(--vscode-editorWidget-border);
 }

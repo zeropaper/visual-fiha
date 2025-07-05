@@ -3,11 +3,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppFastContextFields } from "./ControlsContext";
 import styles from "./ScriptEditor.module.css";
 
+import { HelpCircleIcon } from "lucide-react";
 import canvasTypes from "../layers/Canvas2D/canvasTools.editor-types.txt?raw";
 import threeTypes from "../layers/ThreeJS/threeTools.editor-types.txt?raw";
 import type { LayerConfig } from "../types";
 import scriptableTypes from "../utils/Scriptable.editor.types.editor-types.txt?raw";
 import mathTypes from "../utils/mathTools.editor-types.txt?raw";
+import { Help } from "./Help";
 import { Button } from "./base/Button";
 
 const extraLibs: Record<
@@ -112,11 +114,15 @@ export function ScriptEditor({
   type = "worker",
   id = "worker",
   onSwitchRole,
+  onToggleHelp = () => {},
+  showHelp = false,
 }: {
   role?: "setup" | "animation";
   type?: "worker" | "layer";
   id?: string | "worker";
   onSwitchRole: () => void;
+  onToggleHelp?: () => void;
+  showHelp?: boolean;
 }) {
   const language = "typescript";
   const theme = "vs-dark"; // Options: 'vs-dark', 'vs-light', 'hc-black'
@@ -319,26 +325,59 @@ export function ScriptEditor({
   }, []);
 
   if (!isMonacoReady) {
-    return <div>Loading Editor...</div>;
+    return (
+      <div className={styles.root}>
+        <div className={styles.loading}>Loading</div>
+      </div>
+    );
   }
 
   return (
     <div className={styles.root}>
       <div className={styles.info}>
-        <div>
-          <strong>Type</strong> {type}
+        {id ? (
+          <>
+            <div className={styles.script}>
+              <div>
+                <strong>Type</strong> {type === "layer" ? layerType : "worker"}
+              </div>
+              <div>
+                <Button onClick={onSwitchRole} title="Switch script role">
+                  Role
+                </Button>{" "}
+                {role}
+              </div>
+              {id !== "worker" && <div>{id}</div>}
+            </div>
+          </>
+        ) : (
+          <div />
+        )}
+        <div className={styles.help}>
+          <Button variant="icon" title="Help" onClick={onToggleHelp}>
+            <HelpCircleIcon />
+          </Button>
         </div>
-        <div>
-          <Button onClick={onSwitchRole} title="Switch script role">
-            Role
-          </Button>{" "}
-          {role}
-        </div>
-        {id !== "worker" && <div>{id}</div>}
       </div>
 
-      <div className={styles.editorContainer}>
-        <div ref={editorContainerRef} className={styles.editor} />
+      <div className={styles.editorHelpContainer}>
+        <div className={styles.editorContainer}>
+          {id ? (
+            <div ref={editorContainerRef} className={styles.editor} />
+          ) : (
+            <div className={styles.noScript}>pick</div>
+          )}
+        </div>
+        <div
+          className={[
+            styles.helpContent,
+            showHelp ? styles.helpContentOpen : "",
+          ]
+            .join(" ")
+            .trim()}
+        >
+          <Help docTopic={layerType} />
+        </div>
       </div>
     </div>
   );

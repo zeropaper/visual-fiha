@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Suspense, lazy } from "react";
 import { ControlDisplay } from "./ControlDisplay";
 import styles from "./ControlsApp.module.css";
@@ -22,10 +22,13 @@ export default function ControlsApp() {
     role: "animation" | "setup";
     type: "worker" | "layer";
   }>({
-    id: "default-canvas",
-    type: "layer",
-    role: "animation",
+    id: "",
+    type: "worker",
+    role: "setup",
   });
+
+  const [showHelp, setShowHelp] = useState<boolean>(false);
+  const toggleHelp = useCallback(() => setShowHelp((prev) => !prev), []);
 
   return (
     <AppFastContextProvider>
@@ -80,6 +83,8 @@ export default function ControlsApp() {
                       role: prev.role === "animation" ? "setup" : "animation",
                     }))
                   }
+                  onToggleHelp={toggleHelp}
+                  showHelp={showHelp}
                 />
               </div>
 
