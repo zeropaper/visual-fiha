@@ -4,27 +4,11 @@ import { useAppFastContextFields } from "./ControlsContext";
 import styles from "./ScriptEditor.module.css";
 
 import { HelpCircleIcon } from "lucide-react";
-import canvasTypes from "../layers/Canvas2D/canvasTools.editor-types.txt?raw";
-import threeTypes from "../layers/ThreeJS/threeTools.editor-types.txt?raw";
-import type { LayerConfig } from "../types";
 import scriptableTypes from "../utils/Scriptable.editor.types.editor-types.txt?raw";
 import mathTypes from "../utils/mathTools.editor-types.txt?raw";
 import { Help } from "./Help";
+import { extraLibs } from "./ScriptEditor.extraLibs";
 import { Button } from "./base/Button";
-
-const extraLibs: Record<
-  LayerConfig["type"],
-  Record<"setup" | "animation", [string, string][]>
-> = {
-  canvas: {
-    setup: [[canvasTypes, "ts:canvas.d.ts"]],
-    animation: [[canvasTypes, "ts:canvas.d.ts"]],
-  },
-  threejs: {
-    setup: [[threeTypes, "ts:three.d.ts"]],
-    animation: [[threeTypes, "ts:three.d.ts"]],
-  },
-};
 
 function useCode(
   role: "setup" | "animation",

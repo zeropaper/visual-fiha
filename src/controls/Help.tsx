@@ -44,7 +44,7 @@ export function Help({
         rehypePlugins={[rehypeRaw]}
         components={{
           a(props) {
-            console.log("Anchor component props:", props);
+            // console.log("Anchor component props:", props);
             const { href, children, ...rest } = props;
             if (
               href?.[0] === "#" &&
