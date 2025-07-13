@@ -97,8 +97,6 @@ export default function MicrophoneAnalyzer({
 
   return (
     <div>
-      <div>{micState}</div>
-
       <div className={styles.visualizers}>
         <div>
           <strong>Frequency</strong>

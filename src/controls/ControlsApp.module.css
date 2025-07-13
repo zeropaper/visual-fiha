@@ -72,6 +72,10 @@
   font-weight: bold;
   outline: none;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: space-between;
 }
 .details[open] summary {
   margin-bottom: 10px;

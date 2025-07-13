@@ -2,6 +2,27 @@
   margin-bottom: 10px;
 }
 
+.fileInput {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  input {
+    display: none;
+  }
+  button {
+    width: 100%;
+  }
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  gap: 10px;
+  strong {
+    flex-grow: 1;
+  }
+}
+
 .visualizers {
   display: flex;
   justify-content: center;

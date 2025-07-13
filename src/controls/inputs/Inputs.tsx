@@ -50,16 +50,17 @@ export function Inputs() {
 
   return (
     <details open className={sectionStyles.details}>
-      <summary>Inputs</summary>
+      <summary>
+        <span>Inputs</span>
+        <Button
+          type="button"
+          onClick={() => setAudioMode(audioMode === "mic" ? "file" : "mic")}
+        >
+          Toggle mode
+        </Button>
+      </summary>
       <ul id="inputs" className={styles.inputs}>
         <li className={styles.input}>
-          Audio {audioMode}{" "}
-          <Button
-            type="button"
-            onClick={() => setAudioMode(audioMode === "mic" ? "file" : "mic")}
-          >
-            Toggle mode
-          </Button>
           {audioMode === "mic" ? (
             <MicrophoneAnalyzer writeInputValues={writeInputValues} />
           ) : (

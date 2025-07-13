@@ -163,6 +163,7 @@ export default function AudioFilesAnalyzer({
 }) {
   const { files: audioFiles, setFiles: setAudioFiles } = useAudioSetup();
   const post = useContextWorkerPost();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Keep track of previous blob URLs to revoke them on change/unmount
   const prevBlobUrlsRef = useRef<string[]>([]);
@@ -240,8 +241,7 @@ export default function AudioFilesAnalyzer({
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
-
+    if (!files?.length) return;
     const newAudioFiles = Array.from(files)
       .sort(({ name: a }, { name: b }) => {
         if (a < b) return -1;
@@ -268,12 +268,27 @@ export default function AudioFilesAnalyzer({
 
   return (
     <div>
-      <input
-        type="file"
-        accept="audio/*"
-        multiple
-        onChange={handleFileChange}
-      />
+      <div className={styles.fileInput}>
+        <input
+          type="file"
+          accept="audio/*"
+          multiple
+          onChange={handleFileChange}
+          ref={fileInputRef}
+        />
+        <Button
+          type="button"
+          onClick={() => {
+            fileInputRef.current?.click();
+          }}
+        >
+          Select Audio Files
+        </Button>
+      </div>
+      <div className={styles.labels}>
+        <strong>Time Domain</strong>
+        <strong>Frequency</strong>
+      </div>
       {audioFiles.map((audioFile, idx) => (
         <AudioFileAnalyzer
           key={audioFile.url}
