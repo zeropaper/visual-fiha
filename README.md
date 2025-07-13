@@ -40,6 +40,8 @@ They can be anything from MIDI controllers, microphone, audio line-in, key press
 
 #### Signals
 
+**Not implemented yet.**
+
 Signals are [scriptables](#scriptables) charged of processing the data from inputs.
 
 #### Layers
@@ -49,6 +51,8 @@ Like signals, layers are also [scriptables](#scriptables) and come (for now) in 
 - **ThreeJS layers**: These are used to render 3D graphics using the Three.js library.
 
 #### Graph view
+
+**Not implemented yet.**
 
 The graph view is a visual representation of the inputs, signals, and layers in the system.
 

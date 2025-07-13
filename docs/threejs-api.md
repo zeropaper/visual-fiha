@@ -1,6 +1,6 @@
 # ThreeJS layer API
 
-## Global objects
+## Global objects and functions
 
 - `THREE`: The main Three.js namespace containing all classes and functions.
 - `scene`: The main scene object where all objects are added.
@@ -10,7 +10,7 @@
 
 ## Usage
 
-In your <kbd>animation</kbd> script, call the `renderer.render(scene, camera)` method, at the end of the script, to render the scene.
+In your `animation` script, call the `renderer.render(scene, camera)` method, at the end of the script, to render the scene.
 
 
 ## Snippets

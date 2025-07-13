@@ -6,19 +6,19 @@ import rehypeRaw from "rehype-raw";
 import canvasDocs from "../../docs/canvas-api.md?raw";
 import inputsDocs from "../../docs/inputs.md?raw";
 import noscriptDocs from "../../docs/noscript.md?raw";
+import workerDocs from "../../docs/runtime-worker.md?raw";
 import threejsDocs from "../../docs/threejs-api.md?raw";
-import workerDocs from "../../docs/worker.md?raw";
 import type { LayerConfig } from "../types";
 import styles from "./Help.module.css";
 
-type DocTopic = LayerConfig["type"] | "worker" | "noscript" | "inputs";
+type DocTopic = LayerConfig["type"] | "runtimeWorker" | "noscript" | "inputs";
 
 const docs: Record<DocTopic, string> = {
   canvas: canvasDocs,
   threejs: threejsDocs,
-  worker: `# Worker Script Editor`,
+  runtimeWorker: workerDocs,
   inputs: inputsDocs,
-  noscript: `# No Script Editor`,
+  noscript: noscriptDocs,
 };
 
 export function Help({
@@ -36,7 +36,7 @@ export function Help({
 
   const [helpContent, setHelpContent] = useState<string>("");
   useEffect(() => {
-    setHelpContent(docs[docTopic || "worker"] || "");
+    setHelpContent(docs[docTopic || "runtimeWorker"] || "");
   }, [docTopic]);
   return (
     <section className={className}>
