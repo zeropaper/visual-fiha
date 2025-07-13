@@ -1,6 +1,7 @@
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useContextWorkerPost } from "../ControlsContext";
+import { Button } from "../base/Button";
 import styles from "./AudioFilesAnalyzer.module.css";
 import { useAudioSetup } from "./AudioSetupContext";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
@@ -155,8 +156,10 @@ function AudioFileAnalyzer({
 
 export default function AudioFilesAnalyzer({
   writeInputValues,
+  defaultAudioFiles = [],
 }: {
   writeInputValues: (path: string, value: any) => void;
+  defaultAudioFiles?: string[];
 }) {
   const { files: audioFiles, setFiles: setAudioFiles } = useAudioSetup();
   const post = useContextWorkerPost();
@@ -251,6 +254,17 @@ export default function AudioFilesAnalyzer({
       }));
     setAudioFiles(newAudioFiles);
   }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    if (!defaultAudioFiles?.length) return;
+    setAudioFiles(
+      defaultAudioFiles.map((url) => ({
+        url,
+        name: url.split("/").pop() || "unknown",
+      })),
+    );
+  }, []);
 
   return (
     <div>

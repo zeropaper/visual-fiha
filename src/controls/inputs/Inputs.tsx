@@ -63,7 +63,26 @@ export function Inputs() {
           {audioMode === "mic" ? (
             <MicrophoneAnalyzer writeInputValues={writeInputValues} />
           ) : (
-            <AudioFilesAnalyzer writeInputValues={writeInputValues} />
+            <AudioFilesAnalyzer
+              writeInputValues={writeInputValues}
+              defaultAudioFiles={[
+                // "/audio/bas_traps_inst_mix_ab_oz_150/bs_24.mp3",
+                // "/audio/bas_traps_inst_mix_ab_oz_150/dr1_01.mp3",
+                // "/audio/bas_traps_inst_mix_ab_oz_150/dr2_28.mp3",
+                // "/audio/bas_traps_inst_mix_ab_oz_150/dr3_07.mp3",
+                // "/audio/bas_traps_inst_mix_ab_oz_150/noise_01.mp3",
+                // "/audio/bas_traps_inst_mix_ab_oz_150/syn1_52.mp3",
+                // "/audio/bas_traps_inst_mix_ab_oz_150/syn2_39.mp3",
+                "/audio/brass_fire_150/bs_88.mp3",
+                "/audio/brass_fire_150/dr1_84.mp3",
+                "/audio/brass_fire_150/dr2_60-01.mp3",
+                "/audio/brass_fire_150/dr3_24.mp3",
+                "/audio/brass_fire_150/syn1_167.mp3",
+                "/audio/brass_fire_150/syn2_142.mp3",
+                "/audio/brass_fire_150/syn3_111.mp3",
+                "/audio/brass_fire_150/syn4_60.mp3",
+              ]}
+            />
           )}
         </li>
         <li className={styles.input}>
