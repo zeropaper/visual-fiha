@@ -22,6 +22,11 @@ module.exports = {
       'demo',
       'canvas',
       'three',
+      'hooks',
+      'inputs',
+      'utils',
+      'types',
+      'config',
     ]],
   },
 };
