@@ -27,4 +27,8 @@
   display: flex;
   justify-content: center;
   gap: 10px;
+  > div {
+    flex-grow: 1;
+    width: 50%;
+  }
 }

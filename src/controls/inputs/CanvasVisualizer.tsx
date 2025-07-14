@@ -1,4 +1,5 @@
-import React, { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
+import styles from "./CanvasVisualizer.module.css";
 
 const minColor = "#8ff"; // cyan for min
 const maxColor = "#f8f"; // magenta for max
@@ -194,7 +195,37 @@ export function CanvasVisualizer({
     };
   }, [analyser]);
 
-  return <canvas width="277" ref={canvasRef} />;
+  function handleResize() {
+    if (canvasRef.current) {
+      canvasRef.current.style.display = "none";
+      canvasRef.current.width = (
+        canvasRef.current.parentNode as HTMLElement
+      ).clientWidth;
+      canvasRef.current.height = (
+        canvasRef.current.parentNode as HTMLElement
+      ).clientHeight;
+      canvasRef.current.style.display = "unset";
+    }
+  }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(handleResize);
+    if (canvasRef.current) {
+      resizeObserver.observe(canvasRef.current.parentNode as Element);
+      handleResize();
+      render();
+    }
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  return (
+    <div className={styles.root}>
+      <canvas ref={canvasRef} style={{ display: "none" }} />
+    </div>
+  );
 }
 
 export function Frequency(props: VisualizerProps) {
