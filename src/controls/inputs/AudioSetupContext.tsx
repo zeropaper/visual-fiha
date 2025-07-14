@@ -75,7 +75,7 @@ const AudioSetupContext = createContext<AudioSetupContextValue>({
 
 export function AudioSetupProvider({ children }: { children: ReactNode }) {
   const [files, setFiles] = useState<AudioFileInfo[]>([]);
-  const [mode, setMode] = useState<AudioInputMode>("mic");
+  const [mode, setMode] = useState<AudioInputMode>("files");
   const [playbackState, setPlaybackState] = useState<PlaybackState>({
     isPlaying: false,
     currentTime: 0,
