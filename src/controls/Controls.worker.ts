@@ -52,6 +52,7 @@ const defaultRuntimeData: RuntimeData = {
     elapsed: 0,
     isRunning: false,
     percent: 0,
+    count: 0,
   },
   time: {
     started: Date.now(),
@@ -100,6 +101,7 @@ const handlers = {
     runtimeData.bpm.started = Date.now();
     runtimeData.bpm.elapsed = 0;
     runtimeData.bpm.percent = 0;
+    runtimeData.bpm.count = 0;
     runtimeData.bpm.isRunning = false;
   },
   setTime: (value: number) => {
@@ -107,12 +109,11 @@ const handlers = {
     runtimeData.time.started = Date.now() - value;
     runtimeData.time.elapsed = value;
     runtimeData.time.percent = value / (runtimeData.time.duration || 1);
-    runtimeData.time.isRunning = false;
     runtimeData.bpm.bpm = runtimeData.bpm.bpm || 120;
     runtimeData.bpm.elapsed = value % (60000 / runtimeData.bpm.bpm);
     runtimeData.bpm.percent =
       runtimeData.bpm.elapsed / (60000 / runtimeData.bpm.bpm);
-    runtimeData.bpm.isRunning = false;
+    runtimeData.bpm.count = Math.floor(value / (60000 / runtimeData.bpm.bpm));
   },
   timeDuration: (value: number) => {
     console.info("[controls-worker] Setting time duration to %d", value);
@@ -128,6 +129,9 @@ const handlers = {
     runtimeData.bpm.bpm = value;
     runtimeData.bpm.started = Date.now();
     runtimeData.bpm.percent = 0;
+    runtimeData.bpm.elapsed = 0;
+    runtimeData.bpm.isRunning = true;
+    runtimeData.bpm.count = 0;
   },
   inputsdata: (payload: any) => {
     runtimeData = {
@@ -255,6 +259,14 @@ function processRuntimeData() {
     runtimeData.time.percent = runtimeData.time.duration
       ? deltaNow / runtimeData.time.duration
       : 0;
+    if (
+      runtimeData.time.duration &&
+      runtimeData.time.elapsed >= runtimeData.time.duration
+    ) {
+      runtimeData.time.isRunning = false;
+      runtimeData.time.elapsed = runtimeData.time.duration;
+      runtimeData.time.percent = 1;
+    }
   }
 
   if (runtimeData.bpm.isRunning) {
@@ -262,6 +274,9 @@ function processRuntimeData() {
     runtimeData.bpm.elapsed = deltaNow % (60000 / runtimeData.bpm.bpm);
     runtimeData.bpm.percent =
       runtimeData.bpm.elapsed / (60000 / runtimeData.bpm.bpm);
+    runtimeData.bpm.count = Math.floor(
+      deltaNow / (60000 / runtimeData.bpm.bpm),
+    );
   }
 
   // Update other runtime data as needed
