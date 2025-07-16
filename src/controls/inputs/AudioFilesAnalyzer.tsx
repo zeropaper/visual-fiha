@@ -6,13 +6,6 @@ import { AudioAnalyzer } from "./AudioAnalyzer";
 import styles from "./AudioFilesAnalyzer.module.css";
 import { useAudioSetup } from "./AudioSetupContext";
 
-const audioConfig = {
-  minDecibels: -120,
-  maxDecibels: 80,
-  smoothingTimeConstant: 0.85,
-  fftSize: 1024,
-};
-
 export default function AudioFilesAnalyzer({
   writeInputValues,
   defaultAudioFiles = [],
@@ -20,16 +13,16 @@ export default function AudioFilesAnalyzer({
   writeInputValues: (path: string, value: any) => void;
   defaultAudioFiles?: string[];
 }) {
-  const { files: audioFiles, setFiles: setAudioFiles } = useAudioSetup();
+  const {
+    files: audioFiles,
+    setFiles: setAudioFiles,
+    getAudioElements,
+  } = useAudioSetup();
   const post = useContextWorkerPost();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Keep track of previous blob URLs to revoke them on change/unmount
   const prevBlobUrlsRef = useRef<string[]>([]);
-  // Store refs to all audio elements
-  const audioElemsRef = useRef<(HTMLAudioElement | null)[]>([]);
-  // Track durations of all audio files
-  const audioDurationsRef = useRef<number[]>([]);
 
   const setTimeDuration = useCallback(
     (duration: number) => {
@@ -40,14 +33,20 @@ export default function AudioFilesAnalyzer({
 
   // Check if all audio files have the same duration
   const checkDurationMatch = useCallback(() => {
-    const durations = audioDurationsRef.current.filter(
-      (d) => !Number.isNaN(d) && d > 0,
-    );
-    if (durations.length === audioFiles.length && durations.length > 0) {
+    const managedElements = getAudioElements();
+    if (managedElements.length === 0) return;
+
+    const durations = managedElements.map(({ element }) => element.duration);
+    const validDurations = durations.filter((d) => !Number.isNaN(d) && d > 0);
+
+    if (
+      validDurations.length === audioFiles.length &&
+      validDurations.length > 0
+    ) {
       // Check if all durations are the same (with small tolerance for floating point differences)
-      const firstDuration = durations[0];
+      const firstDuration = validDurations[0];
       const tolerance = 0.01; // 10ms tolerance
-      const allSame = durations.every(
+      const allSame = validDurations.every(
         (d) => Math.abs(d - firstDuration) <= tolerance,
       );
 
@@ -55,16 +54,25 @@ export default function AudioFilesAnalyzer({
         setTimeDuration(firstDuration * 1000);
       }
     }
-  }, [audioFiles.length, setTimeDuration]);
+  }, [audioFiles.length, setTimeDuration, getAudioElements]);
 
-  // Callback for individual audio files to report their duration
-  const onAudioDurationChange = useCallback(
-    (index: number, duration: number) => {
-      audioDurationsRef.current[index] = duration;
-      checkDurationMatch();
-    },
-    [checkDurationMatch],
-  );
+  // Check duration match when elements change
+  useEffect(() => {
+    const managedElements = getAudioElements();
+    if (managedElements.length === 0) return;
+
+    const handleLoadedMetadata = () => checkDurationMatch();
+
+    managedElements.forEach(({ element }) => {
+      element.addEventListener("loadedmetadata", handleLoadedMetadata);
+    });
+
+    return () => {
+      managedElements.forEach(({ element }) => {
+        element.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      });
+    };
+  }, [checkDurationMatch, getAudioElements]);
 
   // Clean up blob URLs on unmount
   useEffect(() => {
@@ -76,31 +84,15 @@ export default function AudioFilesAnalyzer({
     };
   }, []);
 
-  const { seekAll, setAllVolume } = useAudioSetup();
-
-  // Update currentTime and duration from the first audio element
-  useEffect(() => {
-    const first = audioElemsRef.current[0];
-    if (!first) return;
-    function update() {
-      if (first) {
-        seekAll(first.currentTime);
-        setAllVolume(first.volume);
-      }
-    }
-    first.addEventListener("timeupdate", update);
-    first.addEventListener("durationchange", update);
-    return () => {
-      if (first) {
-        first.removeEventListener("timeupdate", update);
-        first.removeEventListener("durationchange", update);
-      }
-    };
-  }, [seekAll, setAllVolume]);
-
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files?.length) return;
+
+    // Revoke previous blob URLs
+    prevBlobUrlsRef.current.forEach((url) => {
+      URL.revokeObjectURL(url);
+    });
+
     const newAudioFiles = Array.from(files)
       .sort(({ name: a }, { name: b }) => {
         if (a < b) return -1;
@@ -111,6 +103,9 @@ export default function AudioFilesAnalyzer({
         url: URL.createObjectURL(file),
         name: file.name,
       }));
+
+    // Store new blob URLs for cleanup
+    prevBlobUrlsRef.current = newAudioFiles.map((file) => file.url);
     setAudioFiles(newAudioFiles);
   }
 
@@ -155,12 +150,6 @@ export default function AudioFilesAnalyzer({
           track={String(idx)}
           audioUrl={audioFile.url}
           fileName={audioFile.name}
-          forwardedAudioRef={(el: HTMLAudioElement | null) => {
-            audioElemsRef.current[idx] = el;
-          }}
-          onAudioDurationChange={(duration: number) =>
-            onAudioDurationChange(idx, duration)
-          }
         />
       ))}
     </div>
