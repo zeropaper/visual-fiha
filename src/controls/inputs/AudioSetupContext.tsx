@@ -295,12 +295,6 @@ export function AudioSetupProvider({ children }: { children: ReactNode }) {
         element.addEventListener("timeupdate", updatePlaybackState);
         element.addEventListener("durationchange", updatePlaybackState);
         element.addEventListener("volumechange", updatePlaybackState);
-        element.addEventListener("load", () => {
-          console.info(`Audio file loaded: %s`, fileInfo.name);
-        });
-        element.addEventListener("canplaythrough", () => {
-          console.info(`Audio file can play through: %s`, fileInfo.name);
-        });
 
         // Add duration checking for time.duration sync
         element.addEventListener("loadedmetadata", () => {
