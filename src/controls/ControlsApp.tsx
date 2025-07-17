@@ -18,15 +18,27 @@ import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 import { AudioSetupProvider } from "./inputs/AudioSetupContext";
 
 export default function ControlsApp() {
-  const [currentScript, setCurrentScript] = useState<{
+  const [currentScript, _setCurrentScript] = useState<{
     id: string;
     role: "animation" | "setup";
     type: "worker" | "layer";
-  }>({
-    id: "",
-    type: "worker",
-    role: "setup",
-  });
+  }>(
+    JSON.parse(
+      localStorage.getItem("currentScript") ||
+        '{"id": "default", "role": "animation", "type": "worker"}',
+    ),
+  );
+  const setCurrentScript = useCallback(
+    (updated: {
+      id: string;
+      role: "animation" | "setup";
+      type: "worker" | "layer";
+    }) => {
+      _setCurrentScript(updated);
+      localStorage.setItem("currentScript", JSON.stringify(updated));
+    },
+    [],
+  );
 
   const [showHelp, setShowHelp] = useState<boolean>(false);
   const toggleHelp = useCallback(() => setShowHelp((prev) => !prev), []);
@@ -93,11 +105,13 @@ export default function ControlsApp() {
                       {...currentScript}
                       key={`${currentScript.type}-${currentScript.id}-${currentScript.role}`}
                       onSwitchRole={() =>
-                        setCurrentScript((prev) => ({
-                          ...prev,
+                        setCurrentScript({
+                          ...currentScript,
                           role:
-                            prev.role === "animation" ? "setup" : "animation",
-                        }))
+                            currentScript.role === "animation"
+                              ? "setup"
+                              : "animation",
+                        })
                       }
                       onToggleHelp={toggleHelp}
                       showHelp={showHelp}
