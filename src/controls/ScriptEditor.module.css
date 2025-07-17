@@ -3,6 +3,9 @@
   inset: 0;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  /* background: lime; */
+  overflow: hidden;
 }
 
 .loading,
@@ -41,14 +44,16 @@
 
 .editorContainer {
   flex-grow: 1;
-  width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+}
+
+.editorAIWrapper {
+  /* background-color: lime; */
 }
 
 .editor {
+  position: relative;
   flex-grow: 1;
 }
 

@@ -1,0 +1,51 @@
+.filesList {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  font-size: 0.85em;
+}
+
+.fileTypeIcon {
+  width: 1lh;
+  height: 1lh;
+}
+
+.filesList button {
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out;
+  border-color: rgb(from var(--color-text) r g b / 0.5);
+}
+.filesList button:hover {
+  border-color: rgb(from var(--color-text) r g b / 0.75);
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.fileItem:hover {
+  background-color: hsl(from var(--color) h s calc(l * 0.95));
+  border-radius: 200px;
+}
+
+.fileName {
+  flex-grow: 1;
+}
+
+.fileRemove {
+  opacity: 0.25;
+  width: auto;
+  padding: var(--spacing-sm-xs);
+}
+
+.fileItem:hover .fileRemove {
+  opacity: 0.75;
+}
+
+.fileItem:hover .fileRemove:hover {
+  opacity: 1;
+}

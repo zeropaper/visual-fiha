@@ -1,70 +1,15 @@
 import type * as _monaco from "monaco-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAppFastContextFields } from "./ControlsContext";
 import styles from "./ScriptEditor.module.css";
 
 import { HelpCircleIcon } from "lucide-react";
 import scriptableTypes from "../utils/Scriptable.editor.types.editor-types.txt?raw";
 import mathTypes from "../utils/mathTools.editor-types.txt?raw";
+import { AIAssistant } from "./AIAssistant/AIAssistant";
 import { Help } from "./Help";
 import { extraLibs } from "./ScriptEditor.extraLibs";
 import { Button } from "./base/Button";
-
-function useCode(
-  role: "setup" | "animation",
-  type: "worker" | "layer",
-  id: string,
-): [
-  { code: string; layerType: "canvas" | "threejs" | null },
-  (code: string) => void,
-] {
-  const {
-    layers: { get: layers, set: setLayers },
-    worker: { get: worker, set: setWorker },
-  } = useAppFastContextFields(["layers", "worker"]);
-  if (type === "worker") {
-    return [
-      {
-        code:
-          worker[role] || `// No code available for worker with role ${role}`,
-        layerType: null,
-      },
-      (code: string) =>
-        setWorker({
-          ...worker,
-          [role]: code,
-        }),
-    ];
-  }
-
-  const layer = layers.find((l) => l.id === id);
-  if (layer) {
-    return [
-      {
-        code:
-          layer[role] ||
-          `// No code available for layer ${id} with role ${role}`,
-        layerType: layer.type,
-      },
-      (code: string) =>
-        setLayers(
-          layers.map((l) => (l.id === id ? { ...l, [role]: code } : l)),
-        ),
-    ];
-  }
-
-  return [
-    {
-      code: `// No code available for layer ${id} with role ${role}`,
-      layerType: null,
-    },
-    (code: string) => {
-      console.warn(
-        `[ScriptEditor] Cannot set code for layer ${id} with role ${role} because it does not exist.`,
-      );
-    },
-  ];
-}
+import { useCode } from "./useCode";
 
 function useTranspile() {
   const transpilationWorkerRef = useRef<Worker | null>(null);
@@ -125,6 +70,12 @@ export function ScriptEditor({
   const editorRef = useRef<_monaco.editor.IStandaloneCodeEditor | null>(null);
   const subscriptionRef = useRef<_monaco.IDisposable | null>(null);
   const [isMonacoReady, setIsMonacoReady] = useState(false);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  const handleResize = () => {
+    if (editorRef.current) {
+      editorRef.current.layout();
+    }
+  };
 
   useEffect(() => {
     // Initialize Monaco Environment and Workers
@@ -220,6 +171,7 @@ export function ScriptEditor({
       });
 
       editorRef.current = editor;
+      setIsEditorReady(true);
     }
   }, [
     isMonacoReady,
@@ -296,12 +248,8 @@ export function ScriptEditor({
   }, [role, layerType, isMonacoReady]);
 
   // Handle resize of the editor container
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    const handleResize = () => {
-      if (editorRef.current) {
-        editorRef.current.layout();
-      }
-    };
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -347,7 +295,21 @@ export function ScriptEditor({
       <div className={styles.editorHelpContainer}>
         <div className={styles.editorContainer}>
           {id ? (
-            <div ref={editorContainerRef} className={styles.editor} />
+            <>
+              <div ref={editorContainerRef} className={styles.editor} />
+              <div className={styles.editorAIWrapper}>
+                {isEditorReady ? (
+                  <AIAssistant
+                    editor={editorRef.current!}
+                    role={role}
+                    type={type}
+                    layerType={layerType}
+                    id={id}
+                    onSwitchRole={onSwitchRole}
+                  />
+                ) : null}
+              </div>
+            </>
           ) : (
             <div className={styles.noScript}>pick</div>
           )}
