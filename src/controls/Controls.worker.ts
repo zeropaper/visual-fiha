@@ -12,6 +12,7 @@ import type { TranspilePayload } from "./types";
 
 const broadcastChannel = new BroadcastChannel("core");
 let refreshInterval: NodeJS.Timeout | null = null;
+const defaultBPM = 120;
 
 const tsTranspileWorker = new Worker(
   new URL("./tsTranspile.worker.ts", import.meta.url),
@@ -47,7 +48,7 @@ const defaultRuntimeData: RuntimeData = {
     backgroundColor: "#000000",
   },
   bpm: {
-    bpm: 80,
+    bpm: defaultBPM,
     started: 0,
     elapsed: 0,
     isRunning: false,
@@ -95,7 +96,6 @@ const handlers = {
     console.info("[controls-worker] Resetting controls worker");
     runtimeData.time.started = Date.now();
     runtimeData.time.elapsed = 0;
-    runtimeData.time.duration = 0;
     runtimeData.time.percent = 0;
     runtimeData.time.isRunning = false;
     runtimeData.bpm.started = Date.now();
@@ -109,7 +109,7 @@ const handlers = {
     runtimeData.time.started = Date.now() - value;
     runtimeData.time.elapsed = value;
     runtimeData.time.percent = value / (runtimeData.time.duration || 1);
-    runtimeData.bpm.bpm = runtimeData.bpm.bpm || 120;
+    runtimeData.bpm.bpm = runtimeData.bpm.bpm || defaultBPM;
     runtimeData.bpm.elapsed = value % (60000 / runtimeData.bpm.bpm);
     runtimeData.bpm.percent =
       runtimeData.bpm.elapsed / (60000 / runtimeData.bpm.bpm);
@@ -167,6 +167,11 @@ const handlers = {
     });
     tsTranspile(configData.worker.setup, "worker", "setup", "worker");
     tsTranspile(configData.worker.animation, "worker", "animation", "worker");
+    handlers.reset();
+    handlers.timeDuration(
+      runtimeData.time.duration || defaultRuntimeData.time.duration,
+    );
+    brodastRuntimeData();
 
     if (refreshInterval) {
       clearInterval(refreshInterval);
@@ -259,24 +264,23 @@ function processRuntimeData() {
     runtimeData.time.percent = runtimeData.time.duration
       ? deltaNow / runtimeData.time.duration
       : 0;
+    if (runtimeData.bpm.isRunning) {
+      runtimeData.bpm.bpm = runtimeData.bpm.bpm || defaultBPM;
+      runtimeData.bpm.elapsed = deltaNow % (60000 / runtimeData.bpm.bpm);
+      runtimeData.bpm.percent =
+        runtimeData.bpm.elapsed / (60000 / runtimeData.bpm.bpm);
+      runtimeData.bpm.count = Math.floor(
+        deltaNow / (60000 / runtimeData.bpm.bpm),
+      );
+    }
+
     if (
       runtimeData.time.duration &&
       runtimeData.time.elapsed >= runtimeData.time.duration
     ) {
-      runtimeData.time.isRunning = false;
-      runtimeData.time.elapsed = runtimeData.time.duration;
-      runtimeData.time.percent = 1;
+      console.info("[controls-worker] Time duration reached, resetting");
+      handlers.reset();
     }
-  }
-
-  if (runtimeData.bpm.isRunning) {
-    runtimeData.bpm.bpm = runtimeData.bpm.bpm || 120;
-    runtimeData.bpm.elapsed = deltaNow % (60000 / runtimeData.bpm.bpm);
-    runtimeData.bpm.percent =
-      runtimeData.bpm.elapsed / (60000 / runtimeData.bpm.bpm);
-    runtimeData.bpm.count = Math.floor(
-      deltaNow / (60000 / runtimeData.bpm.bpm),
-    );
   }
 
   // Update other runtime data as needed

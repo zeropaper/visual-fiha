@@ -122,6 +122,7 @@ export interface BPMInputConfig {
   name: "BPM";
   type: "bpm";
   config: { min: number; max: number; startAt: number };
+  value: BPMInputValue;
 }
 
 export type MIDIInputValue = Record<string, Record<string, number>>;
