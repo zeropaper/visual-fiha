@@ -8,8 +8,8 @@ In the sidebar, layers can be tuned on or off, their opacity can be adjusted, an
 
 ## Types of Layers
 
-- [**Canvas layers**][#canvas-api]: These are used to draw graphics onto a canvas element.
-- [**ThreeJS layers**][#threejs-api]: These are used to render 3D graphics using the Three.js library.
+- [**Canvas layers**](#canvas-api): These are used to draw graphics onto a canvas element.
+- [**ThreeJS layers**](#threejs-api): These are used to render 3D graphics using the Three.js library.
 
 ## Commnon API
 
