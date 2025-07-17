@@ -16,7 +16,7 @@ export default function AudioFilesAnalyzer({
   const {
     files: audioFiles,
     setFiles: setAudioFiles,
-    getAudioElements,
+    setTimeDurationCallback,
   } = useAudioSetup();
   const post = useContextWorkerPost();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -31,48 +31,10 @@ export default function AudioFilesAnalyzer({
     [post],
   );
 
-  // Check if all audio files have the same duration
-  const checkDurationMatch = useCallback(() => {
-    const managedElements = getAudioElements();
-    if (managedElements.length === 0) return;
-
-    const durations = managedElements.map(({ element }) => element.duration);
-    const validDurations = durations.filter((d) => !Number.isNaN(d) && d > 0);
-
-    if (
-      validDurations.length === audioFiles.length &&
-      validDurations.length > 0
-    ) {
-      // Check if all durations are the same (with small tolerance for floating point differences)
-      const firstDuration = validDurations[0];
-      const tolerance = 0.01; // 10ms tolerance
-      const allSame = validDurations.every(
-        (d) => Math.abs(d - firstDuration) <= tolerance,
-      );
-
-      if (allSame) {
-        setTimeDuration(firstDuration * 1000);
-      }
-    }
-  }, [audioFiles.length, setTimeDuration, getAudioElements]);
-
-  // Check duration match when elements change
+  // Set up the duration callback when component mounts
   useEffect(() => {
-    const managedElements = getAudioElements();
-    if (managedElements.length === 0) return;
-
-    const handleLoadedMetadata = () => checkDurationMatch();
-
-    managedElements.forEach(({ element }) => {
-      element.addEventListener("loadedmetadata", handleLoadedMetadata);
-    });
-
-    return () => {
-      managedElements.forEach(({ element }) => {
-        element.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      });
-    };
-  }, [checkDurationMatch, getAudioElements]);
+    setTimeDurationCallback(setTimeDuration);
+  }, [setTimeDurationCallback, setTimeDuration]);
 
   // Clean up blob URLs on unmount
   useEffect(() => {

@@ -62,6 +62,8 @@ interface AudioSetupContextValue {
   getMicrophoneAnalyser: () => AnalyserNode | null;
   getMicrophoneState: () => AudioContextState;
   audioContext: AudioContext | null;
+  // Duration management
+  setTimeDurationCallback: (callback: (duration: number) => void) => void;
 }
 
 const AudioSetupContext = createContext<AudioSetupContextValue>({
@@ -108,6 +110,9 @@ const AudioSetupContext = createContext<AudioSetupContextValue>({
     throw new Error("getMicrophoneState is not implemented");
   },
   audioContext: null,
+  setTimeDurationCallback: () => {
+    throw new Error("setTimeDurationCallback is not implemented");
+  },
 });
 
 export function AudioSetupProvider({ children }: { children: ReactNode }) {
@@ -127,6 +132,11 @@ export function AudioSetupProvider({ children }: { children: ReactNode }) {
   const microphoneAudioRef = useRef<MicrophoneAudio | null>(null);
   const [microphoneState, setMicrophoneState] =
     useState<AudioContextState>("closed");
+
+  // Duration callback management
+  const timeDurationCallbackRef = useRef<((duration: number) => void) | null>(
+    null,
+  );
 
   // Initialize audio context when needed
   const getOrCreateAudioContext = useCallback(() => {
@@ -213,6 +223,9 @@ export function AudioSetupProvider({ children }: { children: ReactNode }) {
       };
 
       setMicrophoneState(audioCtx.state);
+
+      // Set duration to 0 for microphone mode (infinite duration)
+      timeDurationCallbackRef.current?.(0);
     } catch (error) {
       console.error("Error setting up microphone:", error);
       setMicrophoneState("closed");
@@ -282,10 +295,37 @@ export function AudioSetupProvider({ children }: { children: ReactNode }) {
         element.addEventListener("timeupdate", updatePlaybackState);
         element.addEventListener("durationchange", updatePlaybackState);
         element.addEventListener("volumechange", updatePlaybackState);
+        element.addEventListener("load", () => {
+          console.info(`Audio file loaded: %s`, fileInfo.name);
+        });
+        element.addEventListener("canplaythrough", () => {
+          console.info(`Audio file can play through: %s`, fileInfo.name);
+        });
+
+        // Add duration checking for time.duration sync
+        element.addEventListener("loadedmetadata", () => {
+          checkAudioFilesDuration();
+        });
       });
     },
     [getOrCreateAudioContext],
   );
+
+  // Check if all audio files have the same duration and notify callback
+  const checkAudioFilesDuration = useCallback(() => {
+    const elements = managedAudioElementsRef.current;
+    if (!elements.length) return;
+
+    const durations = elements.map(({ element }) => element.duration);
+    const validDurations = durations.filter((d) => !Number.isNaN(d) && d > 0);
+
+    const maxDuration = Math.max(...validDurations);
+    timeDurationCallbackRef.current?.(maxDuration * 1000);
+    setPlaybackState((prev) => ({
+      ...prev,
+      duration: maxDuration * 1000, // Convert to ms
+    }));
+  }, []);
 
   // Update audio files when files change
   useEffect(() => {
@@ -389,6 +429,13 @@ export function AudioSetupProvider({ children }: { children: ReactNode }) {
     return microphoneState;
   }, [microphoneState]);
 
+  const setTimeDurationCallback = useCallback(
+    (callback: (duration: number) => void) => {
+      timeDurationCallbackRef.current = callback;
+    },
+    [],
+  );
+
   const value = useMemo<AudioSetupContextValue>(
     () => ({
       files,
@@ -408,6 +455,7 @@ export function AudioSetupProvider({ children }: { children: ReactNode }) {
       getMicrophoneAnalyser,
       getMicrophoneState,
       audioContext: audioContextRef.current,
+      setTimeDurationCallback,
     }),
     [
       files,
@@ -421,29 +469,9 @@ export function AudioSetupProvider({ children }: { children: ReactNode }) {
       getAudioElements,
       getMicrophoneAnalyser,
       getMicrophoneState,
+      setTimeDurationCallback,
     ],
   );
-
-  // Remove the old sync checking effect since we now manage elements directly
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     const audioElements = document.querySelectorAll("audio");
-  //     const currentTimes = Array.from(audioElements).map(
-  //       (audio) => audio.currentTime,
-  //     );
-  //     const deviations = currentTimes.reduce(
-  //       (acc, time) => acc + Math.abs(time - currentTimes[0]),
-  //       0,
-  //     );
-  //     console.info(
-  //       "[AudioSetupContext] Checking audio elements",
-  //       deviations > 0.01,
-  //       deviations,
-  //       currentTimes,
-  //     );
-  //   }, 1000);
-  //   return () => clearInterval(interval);
-  // }, []);
 
   return (
     <AudioSetupContext.Provider value={value}>
