@@ -1,6 +1,12 @@
 import { ChevronFirstIcon, PauseIcon, PlayIcon } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type MouseEventHandler,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { RuntimeData, TimeInputValue } from "../types";
 import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Timeline.module.css";
@@ -18,7 +24,7 @@ const minTimelineDuration = 30000; // Minimum duration for absolute time display
 function useRuntimeMonitor() {
   const runtimeDataRef = useRef<RuntimeData | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [bpm, setBpm] = useState(80); // Default Bpm
+  const [bpm, setBpm] = useState(120);
   const [timeData, setTimeData] = useState<TimeInputValue | null>(null);
 
   useEffect(() => {
@@ -50,6 +56,10 @@ function useRuntimeMonitor() {
         event.data.payload.bpm.bpm &&
         event.data.payload.bpm.bpm !== runtimeDataRef.current?.bpm.bpm
       ) {
+        console.info(
+          "[timeline] BPM changed to %d",
+          event.data.payload.bpm.bpm,
+        );
         setBpm(event.data.payload.bpm.bpm);
       }
 
@@ -84,72 +94,43 @@ export function Timeline({ className }: TimelineProps) {
 
   const { playAll, pauseAll, seekAll, stopAll } = useAudioSetup();
 
-  // Stub function that will be called when clicking on the timeline
-  const handleTimelineClick = useCallback(
-    (timeValue: number) => {
+  const getTimelineTime = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>): number => {
+      const canvas = canvasRef.current;
+      if (!canvas) return 0;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const mousePercent = x / canvas.width;
+
+      // For relative time, calculate based on duration
+      if (timeData?.duration) {
+        return mousePercent * timeData.duration;
+      }
+
+      const clickedTime =
+        mousePercent * Math.max(timeData?.elapsed || 0, minTimelineDuration);
+      return clickedTime;
+    },
+    [timeData?.elapsed, timeData?.duration],
+  );
+
+  const handleCanvasClick = useCallback<MouseEventHandler<HTMLCanvasElement>>(
+    (event) => {
+      const timeValue = getTimelineTime(event);
       post?.("setTime", timeValue);
       seekAll(timeValue);
     },
-    [post, seekAll],
+    [getTimelineTime, post, seekAll],
   );
 
-  // Handle canvas click events
-  const handleCanvasClick = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const clickPercent = x / canvas.width;
-      const clickedTime =
-        clickPercent * Math.max(timeData?.elapsed || 0, minTimelineDuration);
-
-      handleTimelineClick(clickedTime);
+  const handleCanvasMouseMove = useCallback<
+    MouseEventHandler<HTMLCanvasElement>
+  >(
+    (event) => {
+      setHoveredTime(getTimelineTime(event));
     },
-    [timeData?.elapsed, handleTimelineClick],
-  );
-
-  // Handle keyboard events for accessibility
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLCanvasElement>) => {
-      if (!timeData?.duration) return;
-
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        // Click at current position or beginning if not running
-        const clickedTime = timeData.isRunning ? timeData.elapsed : 0;
-        handleTimelineClick(clickedTime);
-      } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-        event.preventDefault();
-        // Seek by 1% of duration
-        const seekAmount = timeData.duration * 0.01;
-        const currentTime = timeData.elapsed;
-        const newTime =
-          event.key === "ArrowLeft"
-            ? Math.max(0, currentTime - seekAmount)
-            : Math.min(timeData.duration, currentTime + seekAmount);
-        handleTimelineClick(newTime);
-      }
-    },
-    [timeData, handleTimelineClick],
-  );
-
-  const handleCanvasMouseMove = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const hoverPercent = x / canvas.width;
-      const hoverTime = timeData?.elapsed
-        ? hoverPercent * Math.max(timeData.elapsed, minTimelineDuration)
-        : null;
-
-      setHoveredTime(hoverTime);
-    },
-    [timeData?.elapsed],
+    [getTimelineTime],
   );
 
   const handleCanvasMouseLeave = useCallback(() => {
@@ -187,21 +168,14 @@ export function Timeline({ className }: TimelineProps) {
     ctx.lineWidth = 1;
     ctx.strokeRect(0, 0, width, height);
 
-    // if (timeData && (timeData.isRunning || timeData.elapsed > 0)) {
     if (timeData) {
       // For absolute time (no duration), show elapsed time with reasonable scale
-      if (timeData.duration === 0) {
+      if (!timeData.duration) {
         // Draw timeline for absolute time (using elapsed time for scale)
         drawAbsoluteTimeline(ctx, width, height, timeData, bpm);
       } else {
-        // Draw time ticks for relative time (with known duration)
-        drawTimeTicks(ctx, width, height, timeData);
-
-        // Draw playhead (current position)
-        drawPlayhead(ctx, width, height, timeData);
-
-        // Draw time labels
-        drawTimeLabels(ctx, width, height, timeData);
+        // Draw timeline for relative time (with known duration)
+        drawRelativeTimeline(ctx, width, height, timeData, bpm);
       }
     } else {
       // Draw placeholder text when no time data is available
@@ -214,8 +188,10 @@ export function Timeline({ className }: TimelineProps) {
     }
 
     if (hoveredTime && timeData) {
-      const hoverX =
-        (hoveredTime / Math.max(timeData.elapsed, minTimelineDuration)) * width;
+      const hoverX = timeData.duration
+        ? (hoveredTime / timeData.duration) * width
+        : (hoveredTime / Math.max(timeData.elapsed, minTimelineDuration)) *
+          width;
 
       // Draw vertical line at hovered position
       ctx.strokeStyle = "#ffffff88";
@@ -316,7 +292,7 @@ export function Timeline({ className }: TimelineProps) {
         ref={canvasRef}
         className={styles.canvas}
         onClick={handleCanvasClick}
-        onKeyDown={handleKeyDown}
+        onKeyDown={() => {}}
         onMouseMove={handleCanvasMouseMove}
         onMouseLeave={handleCanvasMouseLeave}
         tabIndex={0}
@@ -344,96 +320,73 @@ function drawAbsoluteTimeline(
   const timeWindow = minTimelineDuration; // 30 seconds in ms
   const startTime = Math.max(0, elapsed - timeWindow);
 
-  // Draw time tick marks for the visible window
-  const tickInterval = getTickInterval(timeWindow);
-  const numTicks = Math.floor(timeWindow / tickInterval);
+  drawTimeTicks(ctx, width, height, timeData);
+  drawPlayhead(ctx, width, height, timeData);
+  drawTimeLabels(ctx, width, height, timeData);
+  drawBpmTicks(ctx, width, height, bpm || 0, timeData, timeWindow, startTime);
+}
 
-  ctx.strokeStyle = "#ffffff44";
+/**
+ * Draw timeline for relative time (with known duration)
+ */
+export function drawRelativeTimeline(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  timeData: TimeInputValue,
+  bpm?: number, // Add bpm as an optional parameter
+) {
+  drawTimeTicks(ctx, width, height, timeData);
+  drawPlayhead(ctx, width, height, timeData);
+  drawTimeLabels(ctx, width, height, timeData);
+  drawBpmTicks(
+    ctx,
+    width,
+    height,
+    bpm || 0,
+    timeData,
+    timeData.duration,
+    timeData.started,
+  );
+}
+
+/**
+ * Draw BPM ticks as a sawtooth pattern along the timeline
+ */
+function drawBpmTicks(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  bpm: number,
+  timeData: TimeInputValue,
+  timeWindow: number,
+  startTime: number,
+) {
+  if (!bpm || !timeData || !timeWindow || !startTime) return;
+  ctx.fillStyle = "#00ff00";
+  ctx.textBaseline = "top";
+  ctx.fillText(`${bpm} bpm`, 8, 8);
+
+  const bpmInterval = 60000 / bpm; // Calculate interval in ms based on Bpm
+  const numBpmTicks = Math.floor(
+    Math.max(timeData.elapsed, timeWindow) / bpmInterval,
+  );
+
+  ctx.strokeStyle = "#00ff00"; // Green color for Bpm ticks
   ctx.lineWidth = 1;
 
-  for (let i = 0; i <= numTicks; i++) {
-    const time = startTime + i * tickInterval;
-    const x = ((time - startTime) / timeWindow) * width;
+  for (let i = 0; i <= numBpmTicks; i++) {
+    const time = startTime + i * bpmInterval;
+    const x =
+      ((time - startTime) / Math.max(timeData.elapsed, timeWindow)) * width;
 
-    // Draw major ticks (every 5th tick is taller)
-    const isMajorTick = i % 5 === 0;
-    const tickHeight = isMajorTick ? height * 0.4 : height * 0.2;
+    // Draw sawtooth-like pattern
+    const sawtoothHeight = i % 2 === 0 ? height * 0.1 : height * 0.2;
 
     ctx.beginPath();
-    ctx.moveTo(x, height);
-    ctx.lineTo(x, height - tickHeight);
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, sawtoothHeight);
     ctx.stroke();
-  }
-
-  // Adjust playhead position based on elapsed time within the time window
-  const playheadX = ((elapsed - startTime) / timeWindow) * width; // Calculate relative position
-
-  ctx.strokeStyle = "#ff6b6b";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(playheadX, 0);
-  ctx.lineTo(playheadX, height);
-  ctx.stroke();
-
-  // Draw playhead triangle at top
-  ctx.fillStyle = "#ff6b6b";
-  ctx.beginPath();
-  ctx.moveTo(playheadX, 0);
-  ctx.lineTo(playheadX - 6, 12);
-  ctx.lineTo(playheadX + 6, 12);
-  ctx.closePath();
-  ctx.fill();
-
-  // Draw time labels for the visible window
-  const labelInterval = tickInterval * 5; // Labels every 5 ticks
-  const numLabels = Math.floor(timeWindow / labelInterval);
-
-  ctx.fillStyle = "#ffffff88";
-  ctx.font = "10px monospace";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "bottom";
-
-  for (let i = 0; i <= numLabels; i++) {
-    const time = startTime + i * labelInterval;
-    const x = ((time - startTime) / timeWindow) * width;
-    const timeLabel = formatTime(time);
-
-    // Only draw label if there's enough space
-    if (x > 20 && x < width - 20) {
-      ctx.fillText(timeLabel, x, height - 8);
-    }
-  }
-
-  // Always show current time
-  ctx.textAlign = "left";
-  ctx.fillText(`${formatTime(elapsed)}`, 8, height - 8);
-
-  if (bpm) {
-    ctx.fillStyle = "#00ff00";
-    ctx.textBaseline = "top";
-    ctx.fillText(`${bpm} bpm`, 8, 8);
-
-    const bpmInterval = 60000 / bpm; // Calculate interval in ms based on Bpm
-    const numBpmTicks = Math.floor(
-      Math.max(timeData.elapsed, timeWindow) / bpmInterval,
-    );
-
-    ctx.strokeStyle = "#00ff00"; // Green color for Bpm ticks
-    ctx.lineWidth = 1;
-
-    for (let i = 0; i <= numBpmTicks; i++) {
-      const time = startTime + i * bpmInterval;
-      const x =
-        ((time - startTime) / Math.max(timeData.elapsed, timeWindow)) * width;
-
-      // Draw sawtooth-like pattern
-      const sawtoothHeight = i % 2 === 0 ? height * 0.1 : height * 0.2;
-
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, sawtoothHeight);
-      ctx.stroke();
-    }
   }
 }
 
