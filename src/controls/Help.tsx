@@ -1,8 +1,4 @@
 import { useEffect, useState } from "react";
-import Markdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import rehypeRaw from "rehype-raw";
 import canvasDocs from "../../docs/canvas-api.md?raw";
 import inputsDocs from "../../docs/inputs.md?raw";
 import noscriptDocs from "../../docs/noscript.md?raw";
@@ -10,6 +6,7 @@ import workerDocs from "../../docs/runtime-worker.md?raw";
 import threejsDocs from "../../docs/threejs-api.md?raw";
 import type { LayerConfig } from "../types";
 import styles from "./Help.module.css";
+import { AdvancedMarkdown } from "./base/AdvancedMarkdown";
 
 type DocTopic = LayerConfig["type"] | "runtimeWorker" | "noscript" | "inputs";
 
@@ -40,65 +37,35 @@ export function Help({
   }, [docTopic]);
   return (
     <section className={className}>
-      <Markdown
-        rehypePlugins={[rehypeRaw]}
-        components={{
-          a(props) {
-            // console.log("Anchor component props:", props);
-            const { href, children, ...rest } = props;
-            if (
-              href?.[0] === "#" &&
-              Object.keys(docs).includes(href.slice(1))
-            ) {
-              // If the href is a local link to another doc topic
-              return (
-                <a
-                  href={href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setDocTopic(href.slice(1) as DocTopic);
-                  }}
-                  {...rest}
-                >
-                  {children}
-                </a>
-              );
-            }
-
+      <AdvancedMarkdown
+        a={(props) => {
+          // console.log("Anchor component props:", props);
+          const { href, children, ...rest } = props;
+          if (href?.[0] === "#" && Object.keys(docs).includes(href.slice(1))) {
+            // If the href is a local link to another doc topic
             return (
               <a
                 href={href}
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setDocTopic(href.slice(1) as DocTopic);
+                }}
                 {...rest}
               >
                 {children}
               </a>
             );
-          },
-          code(props) {
-            // console.log("Code component props:", props);
-            const { children, className, node, ref, ...rest } = props;
-            const match = /language-(\w+)/.exec(className || "");
-            return match ? (
-              <SyntaxHighlighter
-                {...rest}
-                PreTag="div"
-                language={match[1]}
-                style={vscDarkPlus}
-              >
-                {String(children).replace(/\n$/, "")}
-              </SyntaxHighlighter>
-            ) : (
-              <code {...rest} className={className}>
-                {children}
-              </code>
-            );
-          },
+          }
+
+          return (
+            <a href={href} target="_blank" rel="noopener noreferrer" {...rest}>
+              {children}
+            </a>
+          );
         }}
       >
         {helpContent}
-      </Markdown>
+      </AdvancedMarkdown>
     </section>
   );
 }
