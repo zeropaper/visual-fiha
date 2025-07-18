@@ -18,3 +18,5 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   },
 );
 Button.displayName = "Button";
+
+export const buttonStyles = styles; // Export styles for custom styling if needed
