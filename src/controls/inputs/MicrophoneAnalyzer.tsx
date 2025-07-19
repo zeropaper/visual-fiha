@@ -1,13 +1,11 @@
+import { useWriteInputValues } from "../ControlsContext";
 import styles from "./AudioFilesAnalyzer.module.css";
 import { useAudioSetup } from "./AudioSetupContext";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
 
-export default function MicrophoneAnalyzer({
-  writeInputValues,
-}: {
-  writeInputValues: (path: string, value: any) => void;
-}) {
+export default function MicrophoneAnalyzer() {
   const { getMicrophoneAnalyser, getMicrophoneState } = useAudioSetup();
+  const writeInputValues = useWriteInputValues();
 
   const analyser = getMicrophoneAnalyser();
   const micState = getMicrophoneState();

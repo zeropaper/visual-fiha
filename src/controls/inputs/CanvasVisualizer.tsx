@@ -118,7 +118,6 @@ export function CanvasVisualizer({
     data: number[],
     h: number,
   ) => void;
-  // writeInputValues: (path: string, value: any) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRequestRef = useRef<number | null>(null);

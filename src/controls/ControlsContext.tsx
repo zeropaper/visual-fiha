@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type {
   AppState,
   InputConfig,
@@ -109,6 +109,52 @@ export function useStageConfig() {
       set({ ...stage, ...value });
     },
   ] as const;
+}
+
+/**
+ * Custom hook to manage and write input values.
+ * It provides a function to write input values and updates the worker with the data.
+ */
+const inputValuesRef: Record<string, any> = {};
+let request: number;
+export function useWriteInputValues() {
+  const post = useContextWorkerPost();
+
+  const writeInputValues = useCallback((path: string, value: any) => {
+    inputValuesRef[path] = value;
+  }, []);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    function update() {
+      if (!post) {
+        request = requestAnimationFrame(update);
+        return;
+      }
+      cancelAnimationFrame(request);
+      const obj = Object.entries(inputValuesRef).reduce(
+        (acc: Record<string, any>, [key, value]) => {
+          const parts = key.split(".");
+          let current = acc;
+          for (let i = 0; i < parts.length - 1; i++) {
+            if (!current[parts[i]]) {
+              current[parts[i]] = {};
+            }
+            current = current[parts[i]] as Record<string, any>;
+          }
+          current[parts[parts.length - 1]] = value;
+          return acc;
+        },
+        {},
+      );
+      post?.("inputsdata", obj);
+      request = requestAnimationFrame(update);
+    }
+    request = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(request);
+  }, []);
+
+  return writeInputValues;
 }
 
 export function AppFastContextProvider({

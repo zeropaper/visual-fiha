@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useWriteInputValues } from "../ControlsContext";
 import * as akaiLPD8 from "./MIDIBridge.akai-lpd8";
 
 declare global {
@@ -8,11 +9,8 @@ declare global {
   }
 }
 
-export function MIDIBridge({
-  writeInputValues,
-}: {
-  writeInputValues: (path: string, value: any) => void;
-}) {
+export function MIDIBridge() {
+  const writeInputValues = useWriteInputValues();
   const [midiState, setMidiState] = useState<
     "connecting" | "connected" | "disconnected"
   >("connecting");
@@ -72,12 +70,10 @@ export function MIDIBridge({
 
   // Request MIDI access and set up statechange listener
   useEffect(() => {
-    let midiAccess: MIDIAccess | null = null;
     let cleanup = () => {};
     if (!window._midiAccess) {
       navigator.requestMIDIAccess().then(
         (ma) => {
-          midiAccess = ma;
           window._midiAccess = ma;
           setMidiState("connected");
           ma.addEventListener("statechange", handleInputsChange);

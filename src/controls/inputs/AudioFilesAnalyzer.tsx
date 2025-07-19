@@ -1,22 +1,18 @@
 import type React from "react";
 import { useCallback, useEffect, useRef } from "react";
-import { useContextWorkerPost } from "../ControlsContext";
+import { useWriteInputValues } from "../ControlsContext";
 import { Button } from "../base/Button";
 import { AudioAnalyzer } from "./AudioAnalyzer";
 import styles from "./AudioFilesAnalyzer.module.css";
 import { useAudioSetup } from "./AudioSetupContext";
 
-export default function AudioFilesAnalyzer({
-  writeInputValues,
-}: {
-  writeInputValues: (path: string, value: any) => void;
-}) {
+export default function AudioFilesAnalyzer() {
   const {
     files: audioFiles,
     setFiles: setAudioFiles,
     setTimeDurationCallback,
   } = useAudioSetup();
-  const post = useContextWorkerPost();
+  const writeInputValues = useWriteInputValues();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Keep track of previous blob URLs to revoke them on change/unmount
@@ -24,9 +20,9 @@ export default function AudioFilesAnalyzer({
 
   const setTimeDuration = useCallback(
     (duration: number) => {
-      post?.("timeDuration", duration);
+      writeInputValues("timeDuration", duration);
     },
-    [post],
+    [writeInputValues],
   );
 
   // Set up the duration callback when component mounts
@@ -95,7 +91,6 @@ export default function AudioFilesAnalyzer({
       {audioFiles.map((audioFile, idx) => (
         <AudioAnalyzer
           key={audioFile.url}
-          writeInputValues={writeInputValues}
           track={String(idx)}
           audioUrl={audioFile.url}
           fileName={audioFile.name}

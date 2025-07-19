@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+import { useWriteInputValues } from "../ControlsContext";
 import styles from "./AudioFilesAnalyzer.module.css";
 import { useAudioSetup } from "./AudioSetupContext";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
@@ -5,42 +7,43 @@ import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
 export function AudioAnalyzer({
   fileName,
   track,
-  writeInputValues,
 }: {
   audioUrl: string;
   fileName: string;
   track: string;
-  writeInputValues: (path: string, value: any) => void;
 }) {
-  const { getAudioElements } = useAudioSetup();
+  const { getAudioAnalyzers } = useAudioSetup();
+  const writeInputValues = useWriteInputValues();
 
-  function makeDrawExtras(type: "frequency" | "timeDomain") {
-    return function drawExtras(
-      canvasCtx: CanvasRenderingContext2D,
-      dataArray: number[],
-    ) {
-      const sorted = [...dataArray].sort((a, b) => a - b);
-      const info = {
-        average: dataArray.reduce((a, b) => a + b, 0) / dataArray.length,
-        median: sorted[Math.floor(sorted.length / 2)],
-        min: Math.min(...dataArray),
-        max: Math.max(...dataArray),
+  const makeDrawExtras = useCallback(
+    (type: "frequency" | "timeDomain") => {
+      return function drawExtras(
+        canvasCtx: CanvasRenderingContext2D,
+        dataArray: number[],
+      ) {
+        const sorted = [...dataArray].sort((a, b) => a - b);
+        const info = {
+          average: dataArray.reduce((a, b) => a + b, 0) / dataArray.length,
+          median: sorted[Math.floor(sorted.length / 2)],
+          min: Math.min(...dataArray),
+          max: Math.max(...dataArray),
+        };
+
+        drawInfo(canvasCtx, info);
+
+        writeInputValues(`audio.${track}.0.${type}.average`, info.average);
+        writeInputValues(`audio.${track}.0.${type}.median`, info.median);
+        writeInputValues(`audio.${track}.0.${type}.min`, info.min);
+        writeInputValues(`audio.${track}.0.${type}.max`, info.max);
+        writeInputValues(`audio.${track}.0.${type}.data`, dataArray);
       };
-
-      drawInfo(canvasCtx, info);
-
-      writeInputValues(`audio.${track}.0.${type}.average`, info.average);
-      writeInputValues(`audio.${track}.0.${type}.median`, info.median);
-      writeInputValues(`audio.${track}.0.${type}.min`, info.min);
-      writeInputValues(`audio.${track}.0.${type}.max`, info.max);
-      writeInputValues(`audio.${track}.0.${type}.data`, dataArray);
-    };
-  }
+    },
+    [track, writeInputValues],
+  );
 
   // Get the analyser for this track from the managed audio elements
-  const managedElements = getAudioElements();
   const trackIndex = Number.parseInt(track, 10);
-  const analyser = managedElements[trackIndex]?.analyser || null;
+  const analyser = getAudioAnalyzers()[trackIndex]?.analyser || null;
 
   return (
     <details open className={styles.track}>
