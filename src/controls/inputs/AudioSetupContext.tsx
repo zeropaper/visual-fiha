@@ -115,8 +115,19 @@ const AudioSetupContext = createContext<AudioSetupContextValue>({
   },
 });
 
-export function AudioSetupProvider({ children }: { children: ReactNode }) {
-  const [files, setFiles] = useState<AudioFileInfo[]>([]);
+export function AudioSetupProvider({
+  children,
+  defaultAudioFiles = [],
+}: {
+  children: ReactNode;
+  defaultAudioFiles?: string[];
+}) {
+  const [files, setFiles] = useState<AudioFileInfo[]>(
+    defaultAudioFiles.map((url) => ({
+      url,
+      name: url.split("/").pop() || "unknown",
+    })),
+  );
   const [mode, setMode] = useState<AudioInputMode>("files");
   const [playbackState, setPlaybackState] = useState<PlaybackState>({
     isPlaying: false,

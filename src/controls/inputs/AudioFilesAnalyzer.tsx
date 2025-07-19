@@ -8,10 +8,8 @@ import { useAudioSetup } from "./AudioSetupContext";
 
 export default function AudioFilesAnalyzer({
   writeInputValues,
-  defaultAudioFiles = [],
 }: {
   writeInputValues: (path: string, value: any) => void;
-  defaultAudioFiles?: string[];
 }) {
   const {
     files: audioFiles,
@@ -70,17 +68,6 @@ export default function AudioFilesAnalyzer({
     prevBlobUrlsRef.current = newAudioFiles.map((file) => file.url);
     setAudioFiles(newAudioFiles);
   }
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  useEffect(() => {
-    if (!defaultAudioFiles?.length) return;
-    setAudioFiles(
-      defaultAudioFiles.map((url) => ({
-        url,
-        name: url.split("/").pop() || "unknown",
-      })),
-    );
-  }, []);
 
   return (
     <div>
