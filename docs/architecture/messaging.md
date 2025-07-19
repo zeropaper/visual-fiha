@@ -119,19 +119,21 @@ flowchart TD
     AudioCapture["Audio Capture"]
     MidiCapture["MIDI Capture"]
 
-    MainThreadGroup --|postMessage:updateconfig|--> ControlsWorker
-    ControlsWorker --|postMessage:updateconfig|--> BroadcastChannel
-    BroadcastChannel --|updateconfig|--> DisplayWorker
-    ControlsWorker --|postMessage:runtimedata|--> BroadcastChannel
-    BroadcastChannel --|runtimedata|--> DisplayWorker
-    MainThreadGroup --|postMessage:offscreencanvas/resize|--> DisplayWorker
-    MonacoEditor --|code change|--> TsTranspileWorker
-    TsTranspileWorker --|postMessage:transpiled|--> MonacoEditor
-    TsTranspileWorker --|postMessage:transpiled|--> BroadcastChannel
-    BroadcastChannel --|transpiled|--> ControlsWorker
-    BroadcastChannel --|transpiled|--> DisplayWorker
-    AudioCapture --|socket.emit:audioupdate|--> MainThreadGroup
-    MidiCapture --|midimessage|--> MainThreadGroup
+    MainThreadGroup -- postMessage:updateconfig --> ControlsWorker
+    ControlsWorker -- postMessage:updateconfig --> BroadcastChannel
+    BroadcastChannel -- updateconfig --> DisplayWorker
+    ControlsWorker -- postMessage:runtimedata --> BroadcastChannel
+    BroadcastChannel -- runtimedata --> DisplayWorker
+    MainThreadGroup -- postMessage:offscreencanvas/resize --> DisplayWorker
+    MonacoEditor -- code change --> TsTranspileWorker
+    TsTranspileWorker -- postMessage:transpiled --> MonacoEditor
+    TsTranspileWorker -- postMessage:transpiled --> BroadcastChannel
+    BroadcastChannel -- transpiled --> ControlsWorker
+    BroadcastChannel -- transpiled --> DisplayWorker
+    DisplayWorker -- postMessage:registerdisplay --> BroadcastChannel
+    BroadcastChannel -- registerdisplaycallback --> DisplayWorker
+    AudioCapture -- audioupdate --> MainThreadGroup
+    MidiCapture -- midimessage --> MainThreadGroup
 ```
 
 This diagram shows the main message flows between the main thread, workers, and channels. Solid arrows represent direct `postMessage` or API calls; arrows through `BroadcastChannel` represent cross-context broadcasts.
@@ -140,22 +142,22 @@ This diagram shows the main message flows between the main thread, workers, and 
 The following table summarizes the key message types, their senders, receivers, and payload structures. This is not an exhaustive list but covers the main communication patterns in Visual-Fiha.
 
 
-| Message Type         | Sender                | Receiver(s)            | Payload Structure / Notes                                  |
-|---------------------|-----------------------|------------------------|------------------------------------------------------------|
-| updateconfig        | Main Thread           | Controls Worker        | `{ field: string, value: any }`                            |
-| updateconfig        | Controls Worker       | BroadcastChannel       | `AppState` (full config)                                   |
-| updateconfig        | BroadcastChannel      | Display Worker         | `AppState` (full config)                                   |
-| runtimedata         | Controls Worker       | BroadcastChannel       | `RuntimeData`                                              |
-| runtimedata         | BroadcastChannel      | Display Worker         | `RuntimeData`                                              |
-| offscreencanvas     | Main Thread           | Display Worker         | `{ canvas: OffscreenCanvas }`                              |
-| resize              | Main Thread           | Display Worker         | `{ width: number, height: number }`                        |
-| code change         | Monaco Editor         | TS Transpiler Worker   | `{ code: string, role: string, type: string, id: string }` |
-| transpiled          | TS Transpiler Worker  | Monaco Editor          | `TranspilePayload`                                         |
-| transpiled          | TS Transpiler Worker  | BroadcastChannel       | `TranspilePayload`                                         |
-| transpiled          | BroadcastChannel      | Controls/Display Worker| `TranspilePayload`                                         |
-| registerdisplay     | Display Worker        | BroadcastChannel       | `{ id: string, width: number, height: number }`            |
-| registerdisplaycallback | BroadcastChannel  | Display Worker         | `{ id: string, config: AppState }`                         |
-| audioupdate         | Audio Capture         | Main Thread            | `{ frequency: number[], volume: number[] }`                |
-| midimessage         | MIDI Capture          | Main Thread            | `MIDIMessageEvent`                                         |
+| Message Type        | Sender                | Receiver(s)            | Payload Structure / Notes                                  | Use COM lib | Location                                        |
+|---------------------|-----------------------|------------------------|------------------------------------------------------------|-------------|-------------------------------------------------|
+| updateconfig        | Main Thread           | Controls Worker        | `{ field: string, value: any }`                            | Yes         | `src/controls/Controls.worker.ts:130`           |
+| updateconfig        | Controls Worker       | BroadcastChannel       | `AppState` (full config)                                   | Yes         | `src/controls/Controls.worker.ts:233`           |
+| updateconfig        | BroadcastChannel      | Display Worker         | `AppState` (full config)                                   | Yes         | `src/display/Display.worker.ts:114`             |
+| runtimedata         | Controls Worker       | BroadcastChannel       | `RuntimeData`                                              | Yes         | `src/controls/Controls.worker.ts:301`           |
+| runtimedata         | BroadcastChannel      | Display Worker         | `RuntimeData`                                              | Yes         | `src/display/Display.worker.ts:148`             |
+| offscreencanvas     | Main Thread           | Display Worker         | `{ canvas: OffscreenCanvas }`                              | No          | `src/display/Display.ts:43`                     |
+| resize              | Main Thread           | Display Worker         | `{ width: number, height: number }`                        | No          | `src/display/Display.ts:78`                     |
+| code change         | Monaco Editor         | TS Transpiler Worker   | `{ code: string, role: string, type: string, id: string }` | No          | `src/controls/ScriptEditor.tsx`                 |
+| transpiled          | TS Transpiler Worker  | Monaco Editor          | `TranspilePayload`                                         | Yes         | `src/controls/tsTranspile.worker.ts`            |
+| transpiled          | TS Transpiler Worker  | BroadcastChannel       | `TranspilePayload`                                         | Yes         | `src/controls/tsTranspile.worker.ts`            |
+| transpiled          | BroadcastChannel      | Controls/Display Worker| `TranspilePayload`                                         | Yes         | `src/controls/Controls.worker.ts:193`           |
+| registerdisplay     | Display Worker        | BroadcastChannel       | `{ id: string, width: number, height: number }`            | Yes         | `src/display/VFWorker.ts:136`                   |
+| registerdisplaycallback | BroadcastChannel  | Display Worker         | `{ id: string, config: AppState }`                         | Yes         | `src/display/Display.worker.ts:148`             |
+| audioupdate         | Audio Capture         | Main Thread            | `{ frequency: number[], volume: number[] }`                | No          | `src/controls/inputs/AudioFilesAnalyzer.tsx:16` |
+| midimessage         | MIDI Capture          | Main Thread            | `MIDIMessageEvent`                                         | No          | `src/controls/inputs/MIDIBridge.tsx:39`         |
 
 > For full payload definitions, see the relevant TypeScript types in `src/types.ts`, `src/controls/types.ts`, and `src/utils/com.ts`.
