@@ -30,7 +30,7 @@ This component manages audio file playback and analysis. Users can upload multip
 A utility component for rendering frequency and time-domain visualizations on a canvas. It supports additional custom drawing via the `drawExtras` callback.
 
 ### 5. `Inputs`
-The `Inputs` component integrates microphone and audio file analyzers. It collects audio data and transmits it as part of the `inputsdata` message using the `writeInputValues` function.
+The `Inputs` component integrates microphone and audio file analyzers. It collects audio data and transmits it as part of the `inputsdata` message using the `useWriteInputValues` hook. This hook centralizes the logic for managing and transmitting input values, ensuring consistency across components like `MicrophoneAnalyzer`, `AudioFilesAnalyzer`, and `MIDIBridge`. By leveraging this hook, the application maintains a modular and efficient architecture for handling audio inputs.
 
 ## Audio Data in `inputsdata`
 The `inputsdata` message is a structured object that includes real-time audio data. The data is organized hierarchically based on the input source and type. Below is an example structure:
@@ -38,8 +38,8 @@ The `inputsdata` message is a structured object that includes real-time audio da
 ```json
 {
   "audio": {
-    "0": {
-      "0": {
+    "0": { // Microphone Input or first audio file
+      "0": { // Channel 0 of the first audio input
         "frequency": {
           "average": 128.5,
           "median": 130,
@@ -54,8 +54,33 @@ The `inputsdata` message is a structured object that includes real-time audio da
           "max": 255,
           "data": [128, 130, 127, ...]
         }
+      },
+      "1": { // Channel 1 of the first audio input
+        "frequency": {
+          "average": 130.2,
+          "median": 131,
+          "min": 1,
+          "max": 254,
+          "data": [1, 130, 254, ...]
+        },
+        "timeDomain": {
+          "average": 126.5,
+          "median": 127,
+          "min": 2,
+          "max": 253,
+          "data": [127, 129, 126, ...]
+        }
       }
-    }
+    },
+    "1": { // Second audio file
+      "0": { // Channel 0 of the second audio input
+        // Similar structure as above
+      },
+      "1": { // Channel 1 of the second audio input
+        // Similar structure as above
+      }
+    },
+    // Additional audio files can be added here
   }
 }
 ```
@@ -83,10 +108,3 @@ Additional information, such as average, median, min, and max values, is display
 
 ## Messaging
 The `inputsdata` message is sent periodically from the `Inputs` component to the main application thread. This message consolidates all input data, including audio, and ensures it is available for other components and workers.
-
-## Future Enhancements
-- **Signal Processing**: Introduce advanced signal processing for audio inputs.
-- **Graph View Integration**: Visualize audio data in the graph view.
-- **Performance Optimization**: Optimize `AnalyserNode` usage for large numbers of audio files.
-
-By leveraging the modular architecture and messaging system, Visual-Fiha ensures efficient and extensible audio handling for interactive visual experiences.
