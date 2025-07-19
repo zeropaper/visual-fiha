@@ -51,9 +51,43 @@ All messages include a `meta` object for tracing, error propagation, and operati
 
 ### 6. Monaco Editor (Main Thread)
 - **Posts messages:**
-  - On code changes, calls the TypeScript Transpiler Worker ([`src/controls/tsTranspile.worker.ts`](src/controls/tsTranspile.worker.ts)) to transpile user code. ([sending](src/controls/MonacoEditorComponent.tsx))
+  - On code changes, calls the TypeScript Transpiler Worker ([`src/controls/tsTranspile.worker.ts`](../../src/controls/tsTranspile.worker.ts)) to transpile user code. ([sending](../../src/controls/MonacoEditorComponent.tsx))
 - **Processes messages:**
-  - Receives transpile results from the worker ([receiving](src/controls/MonacoEditorComponent.tsx)) and can forward them to other components or workers as needed.
+  - Receives transpile results from the worker ([receiving](../../src/controls/MonacoEditorComponent.tsx)) and can forward them to other components or workers as needed.
+
+## Updated Messaging Architecture
+
+### `com` Library Usage
+The `com` library provides structured messaging utilities:
+- **`makeChannelPost`**: Sends typed messages, optionally awaiting responses (async request/response).
+- **`makeChannelListener`**: Handles incoming messages, dispatching to registered handlers (sync/async).
+- **`autoBind`**: Binds a channel (e.g., Worker, BroadcastChannel) to the above utilities for easy integration.
+
+#### Key Locations
+- **`src/utils/com.ts`**: Contains the definitions of `makeChannelPost`, `makeChannelListener`, and `autoBind`.
+- **`src/controls/Controls.worker.ts`**: Uses `autoBind` for message handling.
+- **`src/display/Display.ts` and `src/display/VFWorker.ts`**: Employ `autoBind` for worker and BroadcastChannel communication.
+- **`src/controls/createFastContext.tsx`**: Utilizes `autoBind` for worker communication.
+
+### `BroadcastChannel` Usage
+The `BroadcastChannel` API is used for cross-context communication.
+
+#### Key Locations
+- **`src/controls/tsTranspile.worker.ts`**: Posts transpile results to the BroadcastChannel.
+- **`src/controls/Timeline.tsx`**: Listens for messages via `BroadcastChannel.addEventListener`.
+- **`src/controls/Controls.worker.ts`**: Posts updates like `updateconfig` and `runtimedata` to the BroadcastChannel.
+- **`src/display/Display.worker.ts`**: Handles messages using `broadcastChannelCom`.
+
+### Worker Messaging
+Workers communicate using `postMessage`, `onmessage`, and `addEventListener`.
+
+#### Key Locations
+- **`src/controls/tsTranspile.worker.ts`**: Processes messages via `self.onmessage` and posts results using `self.postMessage`.
+- **`src/controls/ScriptEditor.tsx`**: Sends messages to the transpilation worker.
+- **`src/controls/Controls.worker.ts`**: Listens for messages from the main thread and BroadcastChannel.
+
+### Summary
+This document now includes detailed findings on the usage of the `com` library, `BroadcastChannel`, and worker messaging. These updates ensure the messaging architecture is accurately documented and aligned with the current implementation.
 
 ## Message Flow Example
 1. **Config Update:**
@@ -109,8 +143,8 @@ The following table summarizes the key message types, their senders, receivers, 
 | Message Type         | Sender                | Receiver(s)            | Payload Structure / Notes                                  |
 |---------------------|-----------------------|------------------------|------------------------------------------------------------|
 | updateconfig        | Main Thread           | Controls Worker        | `{ field: string, value: any }`                            |
-| updateconfig        | Controls Worker       | BroadcastChannel       | `AppState` (full config)
-| updateconfig        | BroadcastChannel      | Display Worker         | `AppState` (full config)
+| updateconfig        | Controls Worker       | BroadcastChannel       | `AppState` (full config)                                   |
+| updateconfig        | BroadcastChannel      | Display Worker         | `AppState` (full config)                                   |
 | runtimedata         | Controls Worker       | BroadcastChannel       | `RuntimeData`                                              |
 | runtimedata         | BroadcastChannel      | Display Worker         | `RuntimeData`                                              |
 | offscreencanvas     | Main Thread           | Display Worker         | `{ canvas: OffscreenCanvas }`                              |
