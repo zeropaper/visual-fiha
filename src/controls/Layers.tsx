@@ -20,6 +20,7 @@ function Layer({
     type: "layer" | "worker";
   }) => void;
   onChangeOpacity: ChangeEventHandler<HTMLInputElement>;
+  isCurrent?: boolean;
 }) {
   const [layer, setLayer] = useLayerConfig(id);
   if (!layer) {
@@ -91,14 +92,19 @@ function Layer({
   );
 }
 
+interface CurrentScript {
+  id: string;
+  role: "animation" | "setup";
+  type: "layer" | "worker";
+}
+
 export function Layers({
   setCurrentScript,
-}: {
-  setCurrentScript: (script: {
-    id: string;
-    role: "animation" | "setup";
-    type: "layer" | "worker";
-  }) => void;
+  id,
+  role,
+  type,
+}: CurrentScript & {
+  setCurrentScript: (script: CurrentScript) => void;
 }) {
   const {
     layers: { get: layers, set: setLayers },
@@ -201,12 +207,18 @@ export function Layers({
               opacity: draggedIndex === l ? 0.5 : 1,
               cursor: "move",
             }}
-            className={styles.layer}
+            className={[
+              styles.layer,
+              layer.id === id ? styles.currentLayer : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
           >
             <Layer
               id={layer.id}
               setCurrentScript={setCurrentScript}
               onChangeOpacity={changeOpacity(layer.id)}
+              isCurrent={id === layer.id && type === "layer"}
             />
           </li>
         ))}

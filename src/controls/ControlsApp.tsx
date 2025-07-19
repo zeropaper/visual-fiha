@@ -101,7 +101,10 @@ export default function ControlsApp() {
                         <div className={styles.sidebarScrollableInner}>
                           <DisplaysControl />
 
-                          <Layers setCurrentScript={setCurrentScript} />
+                          <Layers
+                            setCurrentScript={setCurrentScript}
+                            {...currentScript}
+                          />
                           <Inputs />
                         </div>
                       </div>

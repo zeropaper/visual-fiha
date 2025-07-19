@@ -28,6 +28,10 @@
   }
 }
 
+.currentLayer {
+  background-color: #ffffff22;
+}
+
 .setupButton {
   margin-left: auto;
 }
