@@ -125,10 +125,3 @@ The following table summarizes the key message types, their senders, receivers, 
 | midimessage         | MIDI Capture          | Main Thread            | `MIDIMessageEvent`                                         |
 
 > For full payload definitions, see the relevant TypeScript types in `src/types.ts`, `src/controls/types.ts`, and `src/utils/com.ts`.
-
-## Optimisation Recommendations
-- **Debounce or throttle high-frequency messages** (e.g., `runtimedata` at 60Hz) to reduce CPU and message overhead, especially if not all consumers need real-time updates.
-- **Use transferable objects** (e.g., `OffscreenCanvas`, ArrayBuffers) where possible to avoid data cloning overhead.
-- **Error handling:** Ensure all message handlers catch and propagate errors using the meta/error pattern in `com.ts`.
-- **Consider message batching** for bulk updates (e.g., layer changes) to reduce message count.
-- **Profile BroadcastChannel usage**: If many tabs/windows are open, consider using more granular channels or filtering messages by `meta.source`.
