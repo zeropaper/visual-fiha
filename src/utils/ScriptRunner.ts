@@ -218,6 +218,9 @@ class ScriptRunner {
 
   exec() {
     this.#logs = [];
+    if (this.#errors.execution || this.#errors.compilation) {
+      return undefined;
+    }
     try {
       this.#errors.execution = null;
 
