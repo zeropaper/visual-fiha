@@ -99,11 +99,6 @@ export default class Scriptable {
     onCompilationError,
     onExecutionError,
   }: ScriptableOptions) => {
-    // console.info(
-    //   "[Scriptable] initialize",
-    //   onCompilationError,
-    //   onExecutionError
-    // );
     if (onCompilationError != null) {
       this.setup.addEventListener("compilationerror", onCompilationError);
       this.animation.addEventListener("compilationerror", onCompilationError);
