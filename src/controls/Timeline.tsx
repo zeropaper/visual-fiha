@@ -59,10 +59,9 @@ export function Timeline({ className }: TimelineProps) {
   const handleCanvasClick = useCallback<MouseEventHandler<HTMLCanvasElement>>(
     (event) => {
       const timeValue = getTimelineTime(event);
-      post?.("setTime", timeValue);
       seekAll(timeValue);
     },
-    [getTimelineTime, post, seekAll],
+    [getTimelineTime, seekAll],
   );
 
   const handleCanvasMouseMove = useCallback<
@@ -167,21 +166,13 @@ export function Timeline({ className }: TimelineProps) {
     };
   }, [render]);
 
-  const handleReset = useCallback(() => {
-    post?.("reset");
-    stopAll();
-    seekAll(0);
-  }, [post, stopAll, seekAll]);
-
   const handlePlayPause = useCallback(() => {
     if (isRunning) {
-      post?.("pause");
       pauseAll();
     } else {
-      post?.("resume");
       playAll();
     }
-  }, [isRunning, post, playAll, pauseAll]);
+  }, [isRunning, playAll, pauseAll]);
 
   const [lastBpmClick, setLastBpmClick] = useState<number | null>(null);
   // measures the interval between clicks to set Bpm
@@ -212,7 +203,12 @@ export function Timeline({ className }: TimelineProps) {
         <Button variant="icon" name="play_pause" onClick={handlePlayPause}>
           {isRunning ? <PauseIcon /> : <PlayIcon />}
         </Button>
-        <Button variant="icon" name="reset" onClick={handleReset}>
+        <Button
+          variant="icon"
+          name="reset"
+          onClick={stopAll}
+          disabled={!isRunning || !timeData?.elapsed}
+        >
           <ChevronFirstIcon />
         </Button>
 
