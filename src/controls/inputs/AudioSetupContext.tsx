@@ -68,8 +68,6 @@ interface AudioSetupContextValue {
   getMicrophoneAnalyser: () => AnalyserNode | null;
   getMicrophoneState: () => AudioContextState;
   audioContext: AudioContext | null;
-  // Duration management
-  setTimeDurationCallback: (callback: (duration: number) => void) => void;
 }
 
 const AudioSetupContext = createContext<AudioSetupContextValue>({
@@ -113,9 +111,6 @@ const AudioSetupContext = createContext<AudioSetupContextValue>({
     throw new Error("getMicrophoneState is not implemented");
   },
   audioContext: null,
-  setTimeDurationCallback: () => {
-    throw new Error("setTimeDurationCallback is not implemented");
-  },
 });
 
 export function AudioSetupProvider({
@@ -298,7 +293,6 @@ export function AudioSetupProvider({
       const maxDuration = Math.max(
         ...sources.map((source) => source.buffer?.duration ?? 0),
       );
-      console.log("Max duration of audio files:", maxDuration);
       post?.("timeDuration", maxDuration * 1000); // Convert to milliseconds
     },
     [getOrCreateAudioContext, cleanupAudio, post],
@@ -393,7 +387,7 @@ export function AudioSetupProvider({
     [post, getOrCreateAudioContext, createAndWireSource],
   );
 
-  const setAllVolume = useCallback((volume: number) => {
+  const setAllVolume = useCallback(() => {
     throw new Error("setAllVolume is not implemented");
   }, []);
 
@@ -409,13 +403,6 @@ export function AudioSetupProvider({
   const getMicrophoneState = useCallback(() => {
     return microphoneState;
   }, [microphoneState]);
-
-  const setTimeDurationCallback = useCallback(
-    (callback: (duration: number) => void) => {
-      timeDurationCallbackRef.current = callback;
-    },
-    [],
-  );
 
   // Ensure setupMicrophone and setupAudioFiles are invoked based on mode
   useEffect(() => {
@@ -452,7 +439,6 @@ export function AudioSetupProvider({
       getMicrophoneAnalyser,
       getMicrophoneState,
       audioContext: audioContextRef.current,
-      setTimeDurationCallback,
     }),
     [
       files,
@@ -467,7 +453,6 @@ export function AudioSetupProvider({
       getAudioAnalyzers,
       getMicrophoneAnalyser,
       getMicrophoneState,
-      setTimeDurationCallback,
     ],
   );
 
