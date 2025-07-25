@@ -85,8 +85,8 @@ export default function AudioFilesAnalyzer() {
         </Button>
       </div>
       <div className={styles.labels}>
-        <strong>Time Domain</strong>
         <strong>Frequency</strong>
+        <strong>Time Domain</strong>
       </div>
       {audioFiles.map((audioFile, idx) => (
         <AudioAnalyzer
