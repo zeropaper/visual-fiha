@@ -27,6 +27,7 @@ module.exports = {
       'utils',
       'types',
       'config',
+      'scriptable',
     ]],
   },
 };
