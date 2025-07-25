@@ -24,11 +24,11 @@ interface WebWorker extends Worker {
 const data = {} as RuntimeData;
 
 const onExecutionError: ScriptRunnerEventListener = (err: any) => {
-  // console.error("onExecutionError", err);
+  console.warn("onExecutionError", err);
   return false;
 };
 const onCompilationError: ScriptRunnerEventListener = (err: any) => {
-  // console.error("onCompilationError", err);
+  console.warn("onCompilationError", err);
   return false;
 };
 
