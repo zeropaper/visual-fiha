@@ -18,6 +18,7 @@ import {
 } from "react";
 import type { AudioInputMode } from "../../types";
 import { useContextWorkerPost } from "../ControlsContext";
+import { useRuntimeMonitor } from "../useRuntimeMonitor";
 import { loadTrack } from "./syncAudio";
 
 const audioConfig = {
@@ -57,7 +58,6 @@ interface AudioSetupContextValue {
   files: Array<AudioFileInfo>;
   setFiles: (files: Array<AudioFileInfo>) => void;
   playbackState: PlaybackState;
-  setPlaybackState: (state: Partial<PlaybackState>) => void;
   playAll: () => void;
   pauseAll: () => void;
   stopAll: () => void;
@@ -87,9 +87,6 @@ const AudioSetupContext = createContext<AudioSetupContextValue>({
     duration: 0,
     volume: 1,
     seeking: false,
-  },
-  setPlaybackState: () => {
-    throw new Error("setPlaybackState is not implemented");
   },
   playAll: () => {
     throw new Error("playAll is not implemented");
@@ -128,20 +125,27 @@ export function AudioSetupProvider({
   children: ReactNode;
   defaultAudioFiles?: string[];
 }) {
+  const post = useContextWorkerPost();
+  const { isRunning, timeData } = useRuntimeMonitor();
   const [files, setFiles] = useState<AudioFileInfo[]>(
     defaultAudioFiles.map((url) => ({
       url,
       name: url.split("/").pop() || "unknown",
     })),
   );
-  const [mode, setMode] = useState<AudioInputMode>("files");
-  const [playbackState, setPlaybackState] = useState<PlaybackState>({
-    isPlaying: false,
-    currentTime: 0,
-    duration: 0,
-    volume: 1,
-    seeking: false,
-  });
+  const [mode, setModeState] = useState<AudioInputMode>("files");
+
+  const playbackState = useMemo<PlaybackState>(
+    () => ({
+      isPlaying: isRunning,
+      currentTime: timeData?.elapsed || 0,
+      duration: timeData?.duration || 0,
+      volume: 1,
+      seeking: false,
+    }),
+    [isRunning, timeData],
+  );
+
   const sourcesRef = useRef<AudioBufferSourceNode[]>([]);
 
   // Central audio management state
@@ -178,35 +182,45 @@ export function AudioSetupProvider({
     });
     managedAnalyzersRef.current = [];
 
-    // Cleanup microphone audio
-    if (microphoneAudioRef.current) {
+    sourcesRef.current.forEach((source) => {
       try {
-        microphoneAudioRef.current.source.disconnect();
-        microphoneAudioRef.current.analyser.disconnect();
-        microphoneAudioRef.current.stream
-          .getTracks()
-          .forEach((track) => track.stop());
+        if (source.buffer) {
+          source.stop();
+        }
       } catch (err) {
-        console.warn("Error cleaning up microphone audio:", err);
+        console.warn("Error stopping audio source:", err);
       }
-      microphoneAudioRef.current = null;
-    }
-
-    // Close audio context
-    if (audioContextRef.current) {
-      audioContextRef.current
-        .close()
-        .catch((err) => console.warn("Error closing audio context:", err));
-      audioContextRef.current = null;
-    }
-
-    setMicrophoneState("closed");
+    });
+    sourcesRef.current = [];
   }, []);
 
   // Setup microphone audio
   const setupMicrophone = useCallback(async () => {
     try {
       cleanupAudio();
+
+      // Cleanup microphone audio
+      if (microphoneAudioRef.current) {
+        try {
+          microphoneAudioRef.current.source.disconnect();
+          microphoneAudioRef.current.analyser.disconnect();
+          microphoneAudioRef.current.stream
+            .getTracks()
+            .forEach((track) => track.stop());
+        } catch (err) {
+          console.warn("Error cleaning up microphone audio:", err);
+        }
+        microphoneAudioRef.current = null;
+      }
+
+      // Close audio context
+      if (audioContextRef.current) {
+        audioContextRef.current
+          .close()
+          .catch((err) => console.warn("Error closing audio context:", err));
+        audioContextRef.current = null;
+      }
+      setMicrophoneState("closed");
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: false,
@@ -242,32 +256,24 @@ export function AudioSetupProvider({
       setMicrophoneState(audioCtx.state);
 
       // Set duration to 0 for microphone mode (infinite duration)
-      timeDurationCallbackRef.current?.(0);
+      post?.("timeDuration", 0);
     } catch (error) {
       console.error("Error setting up microphone:", error);
       setMicrophoneState("closed");
     }
-  }, [getOrCreateAudioContext, cleanupAudio]);
+  }, [getOrCreateAudioContext, cleanupAudio, post]);
 
   // Setup audio files
   const setupAudioFiles = useCallback(
     async (audioFiles: AudioFileInfo[]) => {
-      // Clean up existing analyzers
-      managedAnalyzersRef.current.forEach(({ analyser }) => {
-        try {
-          analyser.disconnect();
-        } catch (err) {
-          console.warn("Error cleaning up analyzer:", err);
-        }
-      });
-      managedAnalyzersRef.current = [];
+      cleanupAudio();
 
-      if (audioFiles.length === 0) return;
+      if (!audioFiles.length) return;
 
       const audioCtx = getOrCreateAudioContext();
-
-      sourcesRef.current = await Promise.all(
-        audioFiles.map(async (fileInfo) => {
+      // Load all tracks and setup analyzers
+      const sources = await Promise.all(
+        audioFiles.map(async (fileInfo, index) => {
           const source = await loadTrack(fileInfo.url, audioCtx);
 
           // Setup audio analysis
@@ -280,18 +286,22 @@ export function AudioSetupProvider({
           source.connect(analyser);
           analyser.connect(audioCtx.destination);
 
-          // Ensure 'index' is included when pushing to managedAnalyzersRef
-          managedAnalyzersRef.current.push({ analyser, index: 0 });
+          managedAnalyzersRef.current.push({ analyser, index });
 
           return source;
         }),
       );
 
-      // // Start playback with a slight delay for synchronization
-      // const startAt = audioCtx.currentTime + 0.15; // 150 ms safety
-      // sourcesRef.current.forEach((source) => source.start(startAt));
+      sourcesRef.current = sources;
+
+      // Determine maximal duration among loaded audio buffers
+      const maxDuration = Math.max(
+        ...sources.map((source) => source.buffer?.duration ?? 0),
+      );
+      console.log("Max duration of audio files:", maxDuration);
+      post?.("timeDuration", maxDuration * 1000); // Convert to milliseconds
     },
-    [getOrCreateAudioContext],
+    [getOrCreateAudioContext, cleanupAudio, post],
   );
 
   // Wrap createAndWireSource in useCallback to stabilize it
@@ -321,83 +331,70 @@ export function AudioSetupProvider({
   // Update playAll to recreate AudioBufferSourceNode for playback while re-wiring analyzers
   const playAll = useCallback(() => {
     console.log("Playing all audio sources");
-    setPlaybackState((prev) => {
-      const audioCtx = getOrCreateAudioContext();
+    const audioCtx = getOrCreateAudioContext();
 
-      sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
-        const analyser = managedAnalyzersRef.current[index].analyser;
-        return createAndWireSource(
-          oldSource,
-          analyser,
-          audioCtx,
-          prev.currentTime || 0,
-        );
-      });
-
-      return { ...prev, isPlaying: true };
+    post?.("resume");
+    sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
+      const analyser = managedAnalyzersRef.current[index]?.analyser;
+      if (!analyser) {
+        console.warn("No analyser found for source at index", index);
+        return oldSource;
+      }
+      return createAndWireSource(oldSource, analyser, audioCtx, 0);
     });
-  }, [getOrCreateAudioContext, createAndWireSource]);
+  }, [post, getOrCreateAudioContext, createAndWireSource]);
 
   const pauseAll = useCallback(() => {
     console.log("Pausing all audio sources");
-    setPlaybackState((prev) => {
-      sourcesRef.current.forEach((source) => {
-        if (source.buffer) {
-          try {
-            source.stop(prev.currentTime);
-          } catch (err) {
-            console.warn(err instanceof Error ? err.message : "");
-          }
-        } else {
-          console.warn("Source has no buffer to pause");
+    post?.("pause");
+    sourcesRef.current.forEach((source) => {
+      if (source.buffer) {
+        try {
+          source.stop(playbackState.currentTime);
+        } catch (err) {
+          console.warn(err instanceof Error ? err.message : "");
         }
-      });
-      return { ...prev, isPlaying: false };
+      } else {
+        console.warn("Source has no buffer to pause");
+      }
     });
-  }, []);
+  }, [post, playbackState.currentTime]);
 
   const stopAll = useCallback(() => {
-    console.log("Stopping all audio sources");
-    setPlaybackState((prev) => {
-      sourcesRef.current.forEach((source) => {
-        if (source.buffer) {
-          try {
-            source.stop();
-          } catch (err) {
-            console.warn(err instanceof Error ? err.message : "");
-          }
-        } else {
-          console.warn("Source has no buffer to stop");
+    console.log("Stopping all audio sources", sourcesRef.current.length);
+    post?.("pause");
+    post?.("reset");
+    sourcesRef.current.forEach((source) => {
+      if (source.buffer) {
+        try {
+          source.stop();
+        } catch (err) {
+          console.warn(err instanceof Error ? err.message : "");
         }
-      });
-      return { ...prev, isPlaying: false, currentTime: 0, seeking: false };
+      } else {
+        console.warn("Source has no buffer to stop");
+      }
     });
-  }, []);
+  }, [post]);
 
   // Re-wire analyzers when seekAll is called
   const seekAll = useCallback(
     (time: number) => {
       console.log("Seeking all audio sources");
-      setPlaybackState((prev) => {
-        const audioCtx = getOrCreateAudioContext();
+      const audioCtx = getOrCreateAudioContext();
 
-        sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
-          const analyser = managedAnalyzersRef.current[index].analyser;
-          return createAndWireSource(oldSource, analyser, audioCtx, time);
-        });
-
-        return {
-          ...prev,
-          currentTime: time,
-          seeking: false,
-        };
+      sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
+        const analyser = managedAnalyzersRef.current[index].analyser;
+        return createAndWireSource(oldSource, analyser, audioCtx, time);
       });
+
+      post?.("setTime", time);
     },
-    [getOrCreateAudioContext, createAndWireSource],
+    [post, getOrCreateAudioContext, createAndWireSource],
   );
 
   const setAllVolume = useCallback((volume: number) => {
-    setPlaybackState((prev) => ({ ...prev, volume }));
+    throw new Error("setAllVolume is not implemented");
   }, []);
 
   // New methods for providing audio resources to components
@@ -424,19 +421,20 @@ export function AudioSetupProvider({
   useEffect(() => {
     if (mode === "mic") {
       setupMicrophone();
-    } else if (mode === "files" || mode === "file") {
+    } else {
       setupAudioFiles(files);
     }
   }, [mode, files, setupMicrophone, setupAudioFiles]);
 
-  // Ensure setupMicrophone and setupAudioFiles are invoked based on mode
-  useEffect(() => {
-    if (mode === "mic") {
-      setupMicrophone();
-    } else if (mode === "files" || mode === "file") {
-      setupAudioFiles(files);
-    }
-  }, [mode, files, setupMicrophone, setupAudioFiles]);
+  const setMode = useCallback(
+    (newMode: AudioInputMode) => {
+      console.log("Setting audio input mode to:", newMode);
+      post?.("reset");
+      cleanupAudio();
+      setModeState(newMode);
+    },
+    [post, cleanupAudio],
+  );
 
   const value = useMemo<AudioSetupContextValue>(
     () => ({
@@ -445,9 +443,6 @@ export function AudioSetupProvider({
       mode,
       setMode,
       playbackState,
-      setPlaybackState: (state: Partial<PlaybackState>) => {
-        setPlaybackState((prev) => ({ ...prev, ...state }));
-      },
       playAll,
       pauseAll,
       stopAll,
@@ -462,6 +457,7 @@ export function AudioSetupProvider({
     [
       files,
       mode,
+      setMode,
       playbackState,
       playAll,
       pauseAll,
