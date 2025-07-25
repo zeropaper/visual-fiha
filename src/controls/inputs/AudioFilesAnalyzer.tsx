@@ -1,34 +1,16 @@
 import type React from "react";
-import { useCallback, useEffect, useRef } from "react";
-import { useWriteInputValues } from "../ControlsContext";
+import { useEffect, useRef } from "react";
 import { Button } from "../base/Button";
 import { AudioAnalyzer } from "./AudioAnalyzer";
 import styles from "./AudioFilesAnalyzer.module.css";
 import { useAudioSetup } from "./AudioSetupContext";
 
 export default function AudioFilesAnalyzer() {
-  const {
-    files: audioFiles,
-    setFiles: setAudioFiles,
-    setTimeDurationCallback,
-  } = useAudioSetup();
-  const writeInputValues = useWriteInputValues();
+  const { files: audioFiles, setFiles: setAudioFiles } = useAudioSetup();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Keep track of previous blob URLs to revoke them on change/unmount
   const prevBlobUrlsRef = useRef<string[]>([]);
-
-  const setTimeDuration = useCallback(
-    (duration: number) => {
-      writeInputValues("timeDuration", duration);
-    },
-    [writeInputValues],
-  );
-
-  // Set up the duration callback when component mounts
-  useEffect(() => {
-    setTimeDurationCallback(setTimeDuration);
-  }, [setTimeDurationCallback, setTimeDuration]);
 
   // Clean up blob URLs on unmount
   useEffect(() => {
