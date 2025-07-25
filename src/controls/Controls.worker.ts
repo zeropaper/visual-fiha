@@ -18,9 +18,33 @@ const tsTranspileWorker = new Worker(
   new URL("./tsTranspile.worker.ts", import.meta.url),
   { type: "classic" },
 );
+async function tsTranspile(
+  code: string,
+  type: string,
+  role: string,
+  id: string,
+) {
+  return new Promise<TranspilePayload>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      tsTranspileWorker.removeEventListener("message", listener);
+      reject(new Error("Transpile timeout"));
+    }, 1500);
 
-function tsTranspile(code: string, type: string, role: string, id: string) {
-  tsTranspileWorker.postMessage({ code, type, role, id });
+    function listener(event: MessageEvent<TranspilePayload>) {
+      if (
+        event.data.type !== type ||
+        event.data.role !== role ||
+        event.data.id !== id
+      ) {
+        return;
+      }
+      clearTimeout(timeout);
+      resolve(event.data);
+      tsTranspileWorker.removeEventListener("message", listener);
+    }
+    tsTranspileWorker.addEventListener("message", listener);
+    tsTranspileWorker.postMessage({ code, type, role, id });
+  });
 }
 
 const defaultConfigData: AppState = {
@@ -159,26 +183,42 @@ const handlers = {
   },
   init: (payload: AppState) => {
     configData = payload;
-    runtimeData = structuredClone(defaultRuntimeData);
-    runtimeData.layers = configData.layers.map((layer) => {
-      tsTranspile(layer.setup, layer.type, "setup", layer.id);
-      tsTranspile(layer.animation, layer.type, "animation", layer.id);
-      return layer;
-    });
-    tsTranspile(configData.worker.setup, "worker", "setup", "worker");
-    tsTranspile(configData.worker.animation, "worker", "animation", "worker");
-    handlers.reset();
-    handlers.timeDuration(
-      runtimeData.time.duration || defaultRuntimeData.time.duration,
-    );
-    brodastRuntimeData();
+    function finish(transpilation: TranspilePayload[]) {
+      runtimeData = structuredClone(defaultRuntimeData);
 
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
+      function getTranspiledCode(original: string) {
+        const transpiled = transpilation.find((t) => t.original === original);
+        return transpiled ? transpiled.code : "";
+      }
+      runtimeData.layers = configData.layers.map((layer, l) => ({
+        ...layer,
+        id: layer.id || `layer-${l}`,
+        type: layer.type || "canvas",
+        setup: getTranspiledCode(layer.setup),
+        animation: getTranspiledCode(layer.animation),
+      }));
+
+      handlers.reset();
+      handlers.timeDuration(
+        runtimeData.time.duration || defaultRuntimeData.time.duration,
+      );
+      broadcastRuntimeData();
     }
-    refreshInterval = setInterval(() => {
-      brodastRuntimeData();
-    }, 8);
+
+    Promise.all([
+      ...configData.layers.map((layer) =>
+        tsTranspile(layer.setup, layer.type, "setup", layer.id),
+      ),
+      ...configData.layers.map((layer) =>
+        tsTranspile(layer.animation, layer.type, "animation", layer.id),
+      ),
+      tsTranspile(configData.worker.setup, "worker", "setup", "worker"),
+      tsTranspile(configData.worker.animation, "worker", "animation", "worker"),
+    ])
+      .then(finish)
+      .catch((err) =>
+        console.error("[controls-worker] Initial transpilation error:", err),
+      );
   },
 };
 
@@ -220,7 +260,6 @@ const broadcastHandlers = {
       type: "registerdisplaycallback",
       payload: {
         id: payload.id,
-        config: configData,
       },
     });
   },
@@ -298,7 +337,7 @@ function processRuntimeData() {
   });
 }
 
-function brodastRuntimeData() {
+function broadcastRuntimeData() {
   processRuntimeData();
   broadcastChannel.postMessage({
     type: "runtimedata",
@@ -306,5 +345,4 @@ function brodastRuntimeData() {
   });
 }
 
-// refreshInterval = setInterval(brodastRuntimeData, 1000 / 60);
-refreshInterval = setInterval(brodastRuntimeData, 1);
+refreshInterval = setInterval(broadcastRuntimeData, 1);

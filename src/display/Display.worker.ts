@@ -149,11 +149,15 @@ const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     Object.assign(data, payload);
   },
 
-  registerdisplaycallback: (payload: { id: string; config: AppState }) => {
+  registerdisplaycallback: (payload: {
+    id: string;
+    config: AppState;
+    data: RuntimeData;
+  }) => {
     if (payload.id !== worker.name) {
       return;
     }
-    processLayers(vfWorker, payload.config.layers || []);
+    processLayers(vfWorker, data.layers || []);
   },
 });
 
