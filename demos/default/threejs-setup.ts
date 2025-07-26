@@ -1,15 +1,13 @@
+console.info('start threejs setup');
+
 cache.animationNow = 0;
 scene.clear();
 
 if (!cache.gltf) {
   const loader = new GLTFLoader();
-  // Load a glTF resource
   loader.load(
-    // resource URL
     '/gltf/fiha-explosion-1.gltf',
-    // called when the resource is loaded
     function (gltf) {
-      console.info('load GLTF')
       gltf.scene.name = 'fiha-explosion-1';
       scene.add(gltf.scene);
       // console.info('gltf', gltf);
@@ -26,18 +24,7 @@ if (!cache.gltf) {
           mixer.clipAction(clip).play();
         });
         cache.mixer = mixer;
-      } else {
-        // console.info('no animations found in gltf');
       }
-      // console.info('gltf loaded', gltf.scene.name);
-    },
-    // called while loading is progressing
-    function (xhr) {
-      // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-    },
-    // called when loading has errors
-    function (error) {
-      console.log('An error happened');
     }
   );
 } else if (!scene.getObjectByName(cache.gltf.scene.name)) {
@@ -45,11 +32,11 @@ if (!cache.gltf) {
 }
 
 camera.position.x = 10;
-camera.position.y = 10;
+camera.position.y = 0.4;
 camera.position.z = 10;
 camera.setFocalLength(47);
 
-camera.lookAt(0, 0, 0);
+camera.lookAt(0, 0.4, 0);
 
 const ambientLight = new THREE.AmbientLight(0x666666);
 ambientLight.name = 'ambientLight';
@@ -64,7 +51,7 @@ directionalLight.angle = 40;
 cache.directionalLight = directionalLight;
 
 directionalLight.position.x = 5;
-directionalLight.position.y = 7;
+directionalLight.position.y = 12;
 directionalLight.position.z = 7;
 
 directionalLight.target.position.x = 0;
@@ -76,8 +63,11 @@ const grid = new THREE.GridHelper(20, 20);
 const axes = new THREE.AxesHelper(3);
 const directionalLightHelper = new THREE.SpotLightHelper(directionalLight);
 cache.directionalLightHelper = directionalLightHelper;
+
 /*
 scene.add(directionalLightHelper);
 scene.add(grid);
 scene.add(axes);
 */
+
+console.info('done threejs setup');
