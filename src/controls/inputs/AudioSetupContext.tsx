@@ -304,7 +304,7 @@ export function AudioSetupProvider({
       oldSource: AudioBufferSourceNode,
       analyser: AnalyserNode,
       audioCtx: AudioContext,
-      startTime: number,
+      bufferOffset = 0,
     ) => {
       const newSource = audioCtx.createBufferSource();
       newSource.buffer = oldSource.buffer;
@@ -312,7 +312,8 @@ export function AudioSetupProvider({
       analyser.connect(audioCtx.destination);
 
       try {
-        newSource.start(audioCtx.currentTime + startTime);
+        // Start immediately at the current time, but from the specified offset in the buffer
+        newSource.start(audioCtx.currentTime, bufferOffset);
       } catch (err) {
         console.warn(err instanceof Error ? err.message : "");
       }
@@ -328,15 +329,28 @@ export function AudioSetupProvider({
     const audioCtx = getOrCreateAudioContext();
 
     post?.("resume");
+    // Convert current time from milliseconds to seconds for Web Audio API
+    const currentTimeInSeconds = (playbackState.currentTime || 0) / 1000;
+
     sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
       const analyser = managedAnalyzersRef.current[index]?.analyser;
       if (!analyser) {
         console.warn("No analyser found for source at index", index);
         return oldSource;
       }
-      return createAndWireSource(oldSource, analyser, audioCtx, 0);
+      return createAndWireSource(
+        oldSource,
+        analyser,
+        audioCtx,
+        currentTimeInSeconds,
+      );
     });
-  }, [post, getOrCreateAudioContext, createAndWireSource]);
+  }, [
+    post,
+    getOrCreateAudioContext,
+    createAndWireSource,
+    playbackState.currentTime,
+  ]);
 
   const pauseAll = useCallback(() => {
     console.log("Pausing all audio sources");
@@ -344,7 +358,7 @@ export function AudioSetupProvider({
     sourcesRef.current.forEach((source) => {
       if (source.buffer) {
         try {
-          source.stop(playbackState.currentTime);
+          source.stop();
         } catch (err) {
           console.warn(err instanceof Error ? err.message : "");
         }
@@ -352,7 +366,7 @@ export function AudioSetupProvider({
         console.warn("Source has no buffer to pause");
       }
     });
-  }, [post, playbackState.currentTime]);
+  }, [post]);
 
   const stopAll = useCallback(() => {
     console.log("Stopping all audio sources", sourcesRef.current.length);
@@ -377,9 +391,17 @@ export function AudioSetupProvider({
       console.log("Seeking all audio sources");
       const audioCtx = getOrCreateAudioContext();
 
+      // Convert time from milliseconds to seconds for Web Audio API
+      const timeInSeconds = time / 1000;
+
       sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
         const analyser = managedAnalyzersRef.current[index].analyser;
-        return createAndWireSource(oldSource, analyser, audioCtx, time);
+        return createAndWireSource(
+          oldSource,
+          analyser,
+          audioCtx,
+          timeInSeconds,
+        );
       });
 
       post?.("setTime", time);
