@@ -74,15 +74,23 @@ const context = canvas.getContext("2d");
 let onScreenCanvas: OffscreenCanvas | null = null;
 
 // Broadcast channel for communication
-const broadcastChannel = new BroadcastChannel("core");
+const coreChannel = new BroadcastChannel("core");
 
-// Scriptable setup
+// Scriptable setup and error handlers
 const read = makeRead(data);
-const makeErrorHandler =
-  (type: string) =>
-  (event: any): any => {
-    console.warn("[worker]", type, event);
-  };
+const makeErrorHandler = (type: string) => (event: any) => {
+  console.warn("[worker]", type, event);
+};
+
+const onExecutionError: ScriptableEventListener = (_event) => {
+  // console.warn("onExecutionError", event);
+};
+const onCompilationError: ScriptableEventListener = (_event) => {
+  // console.warn("onCompilationError", event);
+};
+const onCompilationSuccess: ScriptableEventListener = (_event) => {
+  // console.info("onCompilationSuccess", event);
+};
 
 const scriptableOptions: ScriptableOptions = {
   id: "worker",
@@ -94,18 +102,10 @@ const scriptableOptions: ScriptableOptions = {
 
 const scriptable = new Scriptable(scriptableOptions);
 
-const onExecutionError: ScriptableEventListener = (_event) => {
-  // console.warn("onExecutionError", event);
-};
-const onCompilationError: ScriptableEventListener = (_event) => {
-  // console.warn("onCompilationError", event);
-};
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
-const onCompilationSuccess: ScriptableEventListener = (_event) => {
-  // console.info("onCompilationSuccess", event);
-};
-
-// Helper functions (previously VFWorker methods)
 function findStateLayer(id: string) {
   return state.layers?.find((layer) => id === layer.id);
 }
@@ -121,7 +121,7 @@ function resizeLayer(layer: Canvas2DLayer | ThreeJSLayer) {
 
 function registerDisplay() {
   if (onScreenCanvas == null) return;
-  broadcastChannel.postMessage({
+  coreChannel.postMessage({
     type: "registerdisplay",
     payload: {
       id: workerName,
@@ -130,6 +130,10 @@ function registerDisplay() {
     },
   });
 }
+
+// =============================================================================
+// Layer Management
+// =============================================================================
 
 function processLayers(updateLayers: AppState["layers"]) {
   // console.info("[display worker] processing layers", updateLayers);
@@ -150,7 +154,6 @@ function processLayers(updateLayers: AppState["layers"]) {
           break;
         case "threejs":
           layer = new ThreeJSLayer(completeOptions);
-
           break;
         default:
           console.warn(`[display worker] Layer type is not supported`, options);
@@ -183,6 +186,10 @@ function processLayers(updateLayers: AppState["layers"]) {
     return indexA - indexB;
   });
 }
+
+// =============================================================================
+// Message Handlers
+// =============================================================================
 
 const broadcastChannelHandlers: ComActionHandlers = {
   transpiled: async (payload: TranspilePayload) => {
@@ -275,16 +282,22 @@ const messageHandlers: ComActionHandlers = {
     state.layers?.forEach((l) => resizeLayer(l));
 
     if (!state.control) {
-      broadcastChannelCom.post("resizedisplay", {
-        id: workerName,
-        width: state.stage.width,
-        height: state.stage.height,
+      coreChannel.postMessage({
+        type: "resizedisplay",
+        payload: {
+          id: workerName,
+          width: state.stage.width,
+          height: state.stage.height,
+        },
       });
     }
   },
 };
 
-// Rendering functions (previously VFWorker methods)
+// =============================================================================
+// Rendering Functions
+// =============================================================================
+
 function renderLayers() {
   if (!context) return;
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -338,19 +351,17 @@ function render() {
   });
 }
 
-// Initialize the worker (previously VFWorker constructor logic)
+// =============================================================================
+// Communication Setup & Initialization
+// =============================================================================
+
+// Initialize communication
 const broadcastChannelCom = autoBind(
-  {
-    postMessage: (_message: any) => {
-      // console.info("broadcastChannelCom postMessage", message);
-      // broadcastChannel.emit("message", message);
-    },
-  },
+  coreChannel,
   `display-${workerName}-broadcastChannel`,
   broadcastChannelHandlers,
 );
-
-broadcastChannel.onmessage = broadcastChannelCom.listener;
+coreChannel.onmessage = broadcastChannelCom.listener;
 
 const workerCom = autoBind(
   workerSelf,
@@ -358,6 +369,10 @@ const workerCom = autoBind(
   messageHandlers,
 );
 workerSelf.addEventListener("message", workerCom.listener);
+
+// =============================================================================
+// Worker Initialization
+// =============================================================================
 
 try {
   scriptable
