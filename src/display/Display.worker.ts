@@ -4,44 +4,137 @@
  * This worker is responsible for rendering visual content in a web worker environment.
  * It handles communication with the main thread, manages layers, and executes scripts.
  */
-import VFWorker, { type OffscreenCanvas } from "./VFWorker";
-
 import type { AppState, RuntimeData } from "../types";
 
 import type { TranspilePayload } from "../controls/types";
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
 import type { ScriptableEventListener } from "../utils/Scriptable";
+import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
 import type { ComActionHandlers } from "../utils/com";
+import { autoBind } from "../utils/com";
 import { makeRead } from "../utils/make-read";
+import * as mathTools from "../utils/mathTools";
 import { isDisplayState } from "./isDisplayState";
+import type { DisplayState } from "./types";
+
+export interface OffscreenCanvas extends HTMLCanvasElement {}
 
 interface WebWorker extends Worker {
   location: Location;
   name: string;
 }
 
+// Module-level state variables (previously VFWorker class properties)
+const defaultStage = {
+  width: 600,
+  height: 400,
+  backgroundColor: "#000000",
+};
+
+const workerSelf: WebWorker = self as any;
+const workerName = workerSelf.name;
+if (!workerName) throw new Error("[worker] worker is not ready");
+
+const displayState = {
+  id: "display-worker",
+  control: false,
+  layers: [] as DisplayState["layers"],
+} as DisplayState;
+
 const data = {} as RuntimeData;
 
-const onExecutionError: ScriptableEventListener = (event) => {
+// Worker state
+let state: DisplayState = {
+  stage: defaultStage,
+  control: !!workerSelf.name.startsWith("controls-"),
+  id: workerName,
+  layers: displayState.layers,
+  audio: {},
+  time: { started: 0, elapsed: 0, duration: 0, percent: 0, isRunning: false },
+  bpm: {
+    bpm: 120,
+    started: 0,
+    elapsed: 0,
+    isRunning: false,
+    percent: 0,
+    count: 0,
+  },
+  midi: {},
+  worker: { setup: "", animation: "" },
+};
+
+// Canvas and rendering context
+// @ts-ignore
+const canvas = new OffscreenCanvas(
+  state.stage.width || 300,
+  state.stage.height || 200,
+);
+const context = canvas.getContext("2d");
+let onScreenCanvas: OffscreenCanvas | null = null;
+
+// Broadcast channel for communication
+const broadcastChannel = new BroadcastChannel("core");
+
+// Scriptable setup
+const read = makeRead(data);
+const makeErrorHandler =
+  (type: string) =>
+  (event: any): any => {
+    console.warn("[worker]", type, event);
+  };
+
+const scriptableOptions: ScriptableOptions = {
+  id: "worker",
+  api: { ...mathTools, read },
+  read,
+  onCompilationError: makeErrorHandler("compilation"),
+  onExecutionError: makeErrorHandler("execution"),
+};
+
+const scriptable = new Scriptable(scriptableOptions);
+
+const onExecutionError: ScriptableEventListener = (_event) => {
   // console.warn("onExecutionError", event);
 };
-const onCompilationError: ScriptableEventListener = (event) => {
+const onCompilationError: ScriptableEventListener = (_event) => {
   // console.warn("onCompilationError", event);
 };
 
-const onCompilationSuccess: ScriptableEventListener = (event) => {
+const onCompilationSuccess: ScriptableEventListener = (_event) => {
   // console.info("onCompilationSuccess", event);
 };
 
-const worker: WebWorker = self as any;
+// Helper functions (previously VFWorker methods)
+function findStateLayer(id: string) {
+  return state.layers?.find((layer) => id === layer.id);
+}
 
-const read = makeRead(data);
+function resizeLayer(layer: Canvas2DLayer | ThreeJSLayer) {
+  layer.width = canvas.width;
+  layer.height = canvas.height;
+  layer.execSetup().catch((err) => {
+    console.error("resizeLayer execSetup error", err);
+  });
+  return layer;
+}
 
-function processLayers(vfWorker: VFWorker, updateLayers: AppState["layers"]) {
+function registerDisplay() {
+  if (onScreenCanvas == null) return;
+  broadcastChannel.postMessage({
+    type: "registerdisplay",
+    payload: {
+      id: workerName,
+      width: onScreenCanvas.width,
+      height: onScreenCanvas.height,
+    },
+  });
+}
+
+function processLayers(updateLayers: AppState["layers"]) {
   // console.info("[display worker] processing layers", updateLayers);
   for (const options of updateLayers) {
-    const found = vfWorker.findStateLayer(options.id);
+    const found = findStateLayer(options.id);
     let layer: Canvas2DLayer | ThreeJSLayer | null = null;
     if (!found) {
       const completeOptions = {
@@ -64,8 +157,8 @@ function processLayers(vfWorker: VFWorker, updateLayers: AppState["layers"]) {
           break;
       }
       if (layer) {
-        vfWorker.state.layers.push(layer);
-        vfWorker.resizeLayer(layer);
+        state.layers.push(layer);
+        resizeLayer(layer);
       }
     } else {
       layer = found;
@@ -83,26 +176,26 @@ function processLayers(vfWorker: VFWorker, updateLayers: AppState["layers"]) {
     layer.opacity = options.opacity ?? 100;
   }
 
-  // sort the vfWorker.state.layers based on the order in updateLayers
-  vfWorker.state.layers.sort((a, b) => {
+  // sort the state.layers based on the order in updateLayers
+  state.layers.sort((a, b) => {
     const indexA = updateLayers.findIndex((l) => l.id === a.id);
     const indexB = updateLayers.findIndex((l) => l.id === b.id);
     return indexA - indexB;
   });
 }
 
-const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
+const broadcastChannelHandlers: ComActionHandlers = {
   transpiled: async (payload: TranspilePayload) => {
     const { id, type, role, code } = payload;
     if (type === "worker") {
-      vfWorker.scriptable[role].code = code;
+      scriptable[role].code = code;
       if (role === "setup") {
-        Object.assign(data, (await vfWorker.scriptable.execSetup()) || {});
+        Object.assign(data, (await scriptable.execSetup()) || {});
       }
       return;
     }
 
-    const found = vfWorker.findStateLayer(id);
+    const found = findStateLayer(id);
     if (!found) {
       console.warn("[display worker] transpiled layer not found", id);
       return;
@@ -115,19 +208,18 @@ const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   },
 
   updateconfig: (update: Partial<AppState>) => {
-    const { scriptable, state } = vfWorker;
     const updated = {
       ...state,
       ...update,
       layers: state.layers || update.layers || [],
     };
     if (Array.isArray(update.layers)) {
-      processLayers(vfWorker, update.layers);
+      processLayers(update.layers);
     }
     if (!isDisplayState(updated)) {
       throw new Error("updateconfig: invalid state");
     }
-    vfWorker.state = updated;
+    state = updated;
     state.worker = state.worker || {};
     if (
       typeof update.worker?.setup !== "undefined" &&
@@ -155,23 +247,22 @@ const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
   registerdisplaycallback: (payload: {
     id: string;
   }) => {
-    if (payload.id !== worker.name) {
+    if (payload.id !== workerName) {
       return;
     }
-    processLayers(vfWorker, data.layers || []);
+    processLayers(data.layers || []);
   },
-});
+};
 
-const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
+const messageHandlers: ComActionHandlers = {
   offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
-    vfWorker.onScreenCanvas = onscreen;
+    onScreenCanvas = onscreen;
 
     // TODO: use autoBind
-    vfWorker.registerDisplay();
+    registerDisplay();
   },
   resize: ({ width, height }: { width: number; height: number }) => {
-    const { canvas, broadcastChannelCom, state } = vfWorker;
-    vfWorker.state = {
+    state = {
       ...state,
       stage: {
         ...state.stage,
@@ -181,20 +272,102 @@ const messageHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
     };
     canvas.width = state.stage.width;
     canvas.height = state.stage.height;
-    state.layers?.forEach((l) => vfWorker.resizeLayer(l));
+    state.layers?.forEach((l) => resizeLayer(l));
 
     if (!state.control) {
       broadcastChannelCom.post("resizedisplay", {
-        id: worker.name,
+        id: workerName,
         width: state.stage.width,
         height: state.stage.height,
       });
     }
   },
-});
+};
 
-const displayWorker = new VFWorker(
-  worker,
+// Rendering functions (previously VFWorker methods)
+function renderLayers() {
+  if (!context) return;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  if (!Array.isArray(state.layers)) {
+    return;
+  }
+  state.layers.forEach((layer) => {
+    if (!layer.active) return;
+    layer.execAnimation();
+    context.globalAlpha = Math.max(0, Math.min(1, layer.opacity * 0.01));
+    context.drawImage(
+      layer.canvas,
+      0,
+      0,
+      layer.canvas.width,
+      layer.canvas.height,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+  });
+}
+
+function render() {
+  Object.assign(displayState, scriptable.execAnimation() || {});
+
+  if (context && onScreenCanvas != null) {
+    renderLayers();
+
+    onScreenCanvas.height = canvas.height;
+    onScreenCanvas.width = canvas.width;
+    const ctx = onScreenCanvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(
+        canvas,
+        0,
+        0,
+        onScreenCanvas.width,
+        onScreenCanvas.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+    }
+  }
+
+  requestAnimationFrame(() => {
+    render();
+  });
+}
+
+// Initialize the worker (previously VFWorker constructor logic)
+const broadcastChannelCom = autoBind(
+  {
+    postMessage: (_message: any) => {
+      // console.info("broadcastChannelCom postMessage", message);
+      // broadcastChannel.emit("message", message);
+    },
+  },
+  `display-${workerName}-broadcastChannel`,
   broadcastChannelHandlers,
+);
+
+broadcastChannel.onmessage = broadcastChannelCom.listener;
+
+const workerCom = autoBind(
+  workerSelf,
+  `display-${workerName}-worker`,
   messageHandlers,
 );
+workerSelf.addEventListener("message", workerCom.listener);
+
+try {
+  scriptable
+    .execSetup()
+    .then(() => {
+      render();
+    })
+    .catch(() => {
+      console.error("Cannot run worker initial setup");
+    });
+} catch (e) {
+  console.error(e);
+}
