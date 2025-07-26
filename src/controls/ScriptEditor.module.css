@@ -57,6 +57,10 @@
   flex-grow: 1;
 }
 
+.editorHelpOpen {
+  width: 55%;
+}
+
 .helpContent {
   width: 0;
   overflow: hidden;

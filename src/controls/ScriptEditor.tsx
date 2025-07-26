@@ -293,7 +293,12 @@ export function ScriptEditor({
       </div>
 
       <div className={styles.editorHelpContainer}>
-        <div className={styles.editorContainer}>
+        <div
+          className={[
+            styles.editorContainer,
+            showHelp ? styles.editorHelpOpen : "",
+          ].join(" ")}
+        >
           {id ? (
             <>
               <div ref={editorContainerRef} className={styles.editor} />
