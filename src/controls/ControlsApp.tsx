@@ -13,6 +13,7 @@ import { useIsMobile } from "../utils/useIsMobile";
 import { customFetch } from "./AIAssistant/AiAssitant.utils";
 import { ChatsProvider, localStorageAdapter } from "./AIAssistant/ChatsContext";
 import { FileSystemProvider } from "./FileSystemContext";
+import type { DocTopic } from "./Help";
 import Menu from "./Menu";
 import { Stage } from "./Stage";
 import { Timeline } from "./Timeline";
@@ -27,7 +28,7 @@ export default function ControlsApp() {
   }>(
     JSON.parse(
       localStorage.getItem("currentScript") ||
-        '{"id": "worker", "role": "animation", "type": "worker"}',
+        '{"id": "", "role": "animation", "type": ""}',
     ),
   );
   const setCurrentScript = useCallback(
@@ -42,8 +43,11 @@ export default function ControlsApp() {
     [],
   );
 
-  const [showHelp, setShowHelp] = useState<boolean>(false);
-  const toggleHelp = useCallback(() => setShowHelp((prev) => !prev), []);
+  const [docTopic, setDocTopic] = useState<DocTopic | null>(null);
+  const toggleHelp = useCallback(
+    () => setDocTopic((prev) => (prev ? null : "noscript")),
+    [],
+  );
   const isMobile = useIsMobile();
 
   return (
@@ -142,7 +146,8 @@ export default function ControlsApp() {
                           })
                         }
                         onToggleHelp={toggleHelp}
-                        showHelp={showHelp}
+                        onSetDocTopic={setDocTopic}
+                        docTopic={docTopic}
                       />
                     </div>
 

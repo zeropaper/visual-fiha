@@ -6,7 +6,8 @@ import { HelpCircleIcon } from "lucide-react";
 import scriptableTypes from "../utils/Scriptable.editor.types.editor-types.txt?raw";
 import mathTypes from "../utils/mathTools.editor-types.txt?raw";
 import { AIAssistant } from "./AIAssistant/AIAssistant";
-import { Help } from "./Help";
+import { type DocTopic, Help } from "./Help";
+import { LandingContent } from "./LandingContent";
 import { extraLibs } from "./ScriptEditor.extraLibs";
 import { Button } from "./base/Button";
 import { useCode } from "./useCode";
@@ -44,14 +45,16 @@ export function ScriptEditor({
   id = "worker",
   onSwitchRole,
   onToggleHelp = () => {},
-  showHelp = false,
+  onSetDocTopic = () => {},
+  docTopic = null,
 }: {
   role?: "setup" | "animation";
   type?: "worker" | "layer";
   id?: string | "worker";
   onSwitchRole: () => void;
   onToggleHelp?: () => void;
-  showHelp?: boolean;
+  onSetDocTopic?: (topic: DocTopic | null) => void;
+  docTopic?: DocTopic | null;
 }) {
   const language = "typescript";
   const theme = "vs-dark"; // Options: 'vs-dark', 'vs-light', 'hc-black'
@@ -296,7 +299,7 @@ export function ScriptEditor({
         <div
           className={[
             styles.editorContainer,
-            showHelp ? styles.editorHelpOpen : "",
+            docTopic ? styles.editorHelpOpen : "",
           ].join(" ")}
         >
           {id ? (
@@ -316,18 +319,20 @@ export function ScriptEditor({
               </div>
             </>
           ) : (
-            <div className={styles.noScript}>pick</div>
+            <div className={styles.noScript}>
+              <LandingContent onSetDocTopic={onSetDocTopic} />
+            </div>
           )}
         </div>
         <div
           className={[
             styles.helpContent,
-            showHelp ? styles.helpContentOpen : "",
+            docTopic ? styles.helpContentOpen : "",
           ]
             .join(" ")
             .trim()}
         >
-          <Help docTopic={layerType} />
+          <Help docTopic={docTopic} />
         </div>
       </div>
     </div>

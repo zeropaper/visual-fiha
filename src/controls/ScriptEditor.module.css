@@ -40,6 +40,7 @@
 .editorHelpContainer {
   display: flex;
   flex-grow: 1;
+  overflow: hidden;
 }
 
 .editorContainer {
@@ -70,4 +71,5 @@
 .helpContentOpen {
   width: 45%;
   border-left: 1px solid var(--vscode-editorWidget-border);
+  overflow-y: auto;
 }
