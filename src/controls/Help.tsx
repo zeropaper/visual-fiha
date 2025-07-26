@@ -3,10 +3,10 @@ import canvasDocs from "../../docs/canvas-api.md?raw";
 import inputsDocs from "../../docs/inputs.md?raw";
 import knownBugsDocs from "../../docs/known-bugs.md?raw";
 import layersDocs from "../../docs/layers.md?raw";
-import noscriptDocs from "../../docs/noscript.md?raw";
 import plannedFeaturesDocs from "../../docs/planned-features.md?raw";
 import workerDocs from "../../docs/runtime-worker.md?raw";
 import threejsDocs from "../../docs/threejs-api.md?raw";
+import topicsDocs from "../../docs/topics.md?raw";
 import type { LayerConfig } from "../types";
 import styles from "./Help.module.css";
 import { AdvancedMarkdown } from "./base/AdvancedMarkdown";
@@ -17,7 +17,7 @@ export type DocTopic =
   | "runtime-worker"
   | "planned-features"
   | "known-bugs"
-  | "noscript"
+  | "topics"
   | "inputs";
 
 const docs: Record<DocTopic, string> = {
@@ -28,7 +28,7 @@ const docs: Record<DocTopic, string> = {
   "known-bugs": knownBugsDocs,
   inputs: inputsDocs,
   layers: layersDocs,
-  noscript: noscriptDocs,
+  topics: topicsDocs,
 };
 
 export const docTopics = Object.keys(docs) as DocTopic[];
@@ -42,7 +42,7 @@ export function Help({
     if (docTopicProp) {
       setDocTopic(docTopicProp);
     } else {
-      setDocTopic("noscript");
+      setDocTopic("topics");
     }
   }, [docTopicProp]);
 
@@ -51,8 +51,8 @@ export function Help({
     setHelpContent(docs[docTopic || "runtime-worker"] || "");
   }, [docTopic]);
   const allTopicLinks =
-    docTopic !== "noscript"
-      ? `<details><summary>All topics</summary>\n\n${noscriptDocs.split("\n").slice(2).join("\n")}\n\n</details>\n\n`
+    docTopic !== "topics"
+      ? `<details><summary>All topics</summary>\n\n${topicsDocs.split("\n").slice(2).join("\n")}\n\n</details>\n\n`
       : "";
   return (
     <section className={className}>
@@ -72,7 +72,7 @@ export function Help({
                     console.warn(
                       `No documentation found for topic: ${href.slice(1)}`,
                     );
-                    setDocTopic("noscript");
+                    setDocTopic("topics");
                   }
                 }}
                 {...rest}

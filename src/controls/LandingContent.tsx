@@ -1,4 +1,4 @@
-import content from "../../docs/noscript.md?raw";
+import content from "../../docs/topics.md?raw";
 import { type DocTopic, docTopics } from "./Help";
 import styles from "./LandingContent.module.css";
 import { AdvancedMarkdown } from "./base/AdvancedMarkdown";
@@ -25,7 +25,7 @@ export function LandingContent({
                     console.warn(
                       `No documentation found for topic: ${href.slice(1)}`,
                     );
-                    setDocTopic("noscript");
+                    setDocTopic("topics");
                   }
                 }}
                 {...rest}
