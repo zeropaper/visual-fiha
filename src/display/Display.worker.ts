@@ -154,8 +154,6 @@ const broadcastChannelHandlers = (vfWorker: VFWorker): ComActionHandlers => ({
 
   registerdisplaycallback: (payload: {
     id: string;
-    config: AppState;
-    data: RuntimeData;
   }) => {
     if (payload.id !== worker.name) {
       return;
