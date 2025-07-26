@@ -94,6 +94,7 @@ describe("animation script", () => {
     expect(logListener).toHaveBeenCalledWith({
       data: [["cache", { newData: "set", added: true }]],
       type: "log",
+      runnerId: expect.any(String),
     });
     layer.animation.removeEventListener("log", logListener);
   });
