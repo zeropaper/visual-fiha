@@ -1,6 +1,8 @@
 import ScriptRunner, {
-  type ScriptRunnerEventListener,
   type API,
+  type ScriptRunnerCompilationSuccessEvent,
+  type ScriptRunnerErrorEvent,
+  type ScriptRunnerLogEvent,
 } from "./ScriptRunner";
 import { makeRead } from "./make-read";
 
@@ -9,9 +11,42 @@ export type ReadInterface = (name: string, defaultValue?: any) => any;
 
 export type WriteInterface = (data: Record<string, any>) => void;
 
+export interface ScriptableEvent {
+  role: "setup" | "animation";
+  id: string;
+}
+
+export interface ScriptableErrorEvent
+  extends ScriptRunnerErrorEvent,
+    ScriptableEvent {}
+
+export interface ScriptableCompilationErrorEvent extends ScriptableErrorEvent {
+  readonly type: "compilationerror";
+}
+
+export interface ScriptableExecutionErrorEvent extends ScriptableErrorEvent {
+  readonly type: "executionerror";
+}
+
+export interface ScriptableLogEvent
+  extends ScriptRunnerLogEvent,
+    ScriptableEvent {}
+
+export interface ScriptableCompilationSuccessEvent
+  extends ScriptRunnerCompilationSuccessEvent,
+    ScriptableEvent {}
+
+export type ScriptableEventListener = (
+  event:
+    | ScriptableErrorEvent
+    | ScriptableLogEvent
+    | ScriptableCompilationSuccessEvent,
+) => void;
+
 export interface ScriptableOptions {
-  onCompilationError?: ScriptRunnerEventListener;
-  onExecutionError?: ScriptRunnerEventListener;
+  onCompilationError?: (event: ScriptableCompilationErrorEvent) => void;
+  onExecutionError?: (event: ScriptableExecutionErrorEvent) => void;
+  onCompilationSuccess?: (event: ScriptableCompilationSuccessEvent) => void;
   animation?: string;
   setup?: string;
   read?: ReadInterface;
@@ -98,18 +133,62 @@ export default class Scriptable {
     animation,
     onCompilationError,
     onExecutionError,
+    onCompilationSuccess,
   }: ScriptableOptions) => {
-    if (onCompilationError != null) {
-      this.setup.addEventListener("compilationerror", onCompilationError);
-      this.animation.addEventListener("compilationerror", onCompilationError);
+    if (onCompilationError) {
+      this.setup.addEventListener("compilationerror", (event) =>
+        onCompilationError({
+          ...event,
+          role: "setup",
+          id: this.#id,
+        }),
+      );
+      this.animation.addEventListener("compilationerror", (event) =>
+        onCompilationError({
+          ...event,
+          role: "animation",
+          id: this.#id,
+        }),
+      );
     }
-    if (onExecutionError != null) {
-      this.setup.addEventListener("executionerror", onExecutionError);
-      this.animation.addEventListener("executionerror", onExecutionError);
+    if (onExecutionError) {
+      this.setup.addEventListener("executionerror", (event) => {
+        onExecutionError({
+          ...event,
+          role: "setup",
+          id: this.#id,
+        });
+      });
+      this.animation.addEventListener("executionerror", (event) => {
+        onExecutionError({
+          ...event,
+          role: "animation",
+          id: this.#id,
+        });
+      });
     }
-    if (this.setup.code !== setup && setup != null) this.setup.code = setup;
-    if (this.animation.code !== animation && animation)
+    if (onCompilationSuccess) {
+      this.setup.addEventListener("compilationsuccess", (event) => {
+        onCompilationSuccess({
+          ...event,
+          role: "setup",
+          id: this.#id,
+        });
+      });
+      this.animation.addEventListener("compilationsuccess", (event) => {
+        onCompilationSuccess({
+          ...event,
+          role: "animation",
+          id: this.#id,
+        });
+      });
+    }
+    if (this.setup.code !== setup && setup) {
+      this.setup.code = setup;
+    }
+    if (this.animation.code !== animation && animation) {
       this.animation.code = animation;
+    }
   };
 
   execSetup = async () => {

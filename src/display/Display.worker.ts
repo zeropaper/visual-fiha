@@ -11,7 +11,7 @@ import type { AppState, RuntimeData } from "../types";
 import type { TranspilePayload } from "../controls/types";
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
-import type { ScriptRunnerEventListener } from "../utils/ScriptRunner";
+import type { ScriptableEventListener } from "../utils/Scriptable";
 import type { ComActionHandlers } from "../utils/com";
 import { makeRead } from "../utils/make-read";
 import { isDisplayState } from "./isDisplayState";
@@ -23,13 +23,15 @@ interface WebWorker extends Worker {
 
 const data = {} as RuntimeData;
 
-const onExecutionError: ScriptRunnerEventListener = (err: any) => {
-  console.warn("onExecutionError", err);
-  return false;
+const onExecutionError: ScriptableEventListener = (event) => {
+  // console.warn("onExecutionError", event);
 };
-const onCompilationError: ScriptRunnerEventListener = (err: any) => {
-  console.warn("onCompilationError", err);
-  return false;
+const onCompilationError: ScriptableEventListener = (event) => {
+  // console.warn("onCompilationError", event);
+};
+
+const onCompilationSuccess: ScriptableEventListener = (event) => {
+  // console.info("onCompilationSuccess", event);
 };
 
 const worker: WebWorker = self as any;
@@ -47,6 +49,7 @@ function processLayers(vfWorker: VFWorker, updateLayers: AppState["layers"]) {
         read,
         onCompilationError,
         onExecutionError,
+        onCompilationSuccess,
       };
       switch (options.type) {
         case "canvas":

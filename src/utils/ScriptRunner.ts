@@ -5,6 +5,7 @@ const asyncNoop = async () => {};
 export type ScriptLog = (...args: any[]) => void;
 
 export type ScriptRunnerEventTypes =
+  | "compilationsuccess"
   | "compilationerror"
   | "executionerror"
   | "log";
@@ -15,28 +16,47 @@ export interface ScriptRunnerCodeError extends Error {
   details?: object[];
 }
 
-export interface ScriptRunnerEvent {
+export interface ScriptRunnerEventBase {
   defaultPrevented?: boolean;
   readonly type: ScriptRunnerEventTypes;
 }
 
-export interface ScriptRunnerErrorEvent extends ScriptRunnerEvent {
-  error: ScriptRunnerCodeError | ScriptRunnerLintingError;
-  readonly type: "compilationerror" | "executionerror";
+export interface ScriptRunnerErrorEvent extends ScriptRunnerEventBase {
+  error: ScriptRunnerCodeError;
   builderStr?: string;
   code?: string;
   lineNumber?: number;
   columnNumber?: number;
 }
 
-export interface ScriptRunnerLogEvent extends ScriptRunnerEvent {
+export interface ScriptRunnerCompilationErrorEvent
+  extends ScriptRunnerErrorEvent {
+  readonly type: "compilationerror";
+}
+
+export interface ScriptRunnerExecutionErrorEvent
+  extends ScriptRunnerErrorEvent {
+  readonly type: "executionerror";
+}
+export interface ScriptRunnerLogEvent extends ScriptRunnerEventBase {
   data: any;
   readonly type: "log";
 }
 
-export type ScriptRunnerEventListener = (
-  event: ScriptRunnerErrorEvent | ScriptRunnerLogEvent,
-) => boolean | undefined;
+export interface ScriptRunnerCompilationSuccessEvent
+  extends ScriptRunnerEventBase {
+  readonly type: "compilationsuccess";
+}
+
+type ScriptRunnerEvent =
+  | ScriptRunnerCompilationSuccessEvent
+  | ScriptRunnerCompilationErrorEvent
+  | ScriptRunnerExecutionErrorEvent
+  | ScriptRunnerLogEvent;
+
+export type ScriptRunnerEventListener<T extends ScriptRunnerEventTypes> = (
+  event: Extract<ScriptRunnerEvent, { type: T }>,
+) => any;
 
 export type API = Record<string, any>;
 
@@ -56,24 +76,18 @@ const forbidden = new Set<string>([
 
 export { forbidden as forbiddenScriptValues };
 
-class ScriptRunnerLintingError extends Error {
-  constructor(details: object[]) {
-    super("ScriptRunnerLintingError");
-    this.details = details;
-  }
-
-  details: object[] = [];
-}
-
 class ScriptRunner {
   constructor(scope: any = null, name = `sr${Date.now()}`) {
     this.#scope = scope;
     this.#name = camelCase(name);
+    this.#runnerId = `sr${Math.random().toString(16).slice(2)}`;
   }
+
+  #runnerId: string;
 
   #name: string;
 
-  #listeners: Record<string, ScriptRunnerEventListener[]> = {};
+  #listeners: Record<string, Set<ScriptRunnerEventListener<any>>> = {};
 
   #errors: {
     compilation?: Error | null;
@@ -138,7 +152,6 @@ class ScriptRunner {
 
   set code(code: string) {
     this.#errors.compilation = null;
-    this.#errors.execution = null;
 
     const paramNames = Object.keys(this.api);
     const paramsStr = paramNames.join(", ");
@@ -164,6 +177,8 @@ class ScriptRunner {
         this.#code = code;
         this.#version += 1;
       }
+      this.#errors.execution = null;
+      this.dispatchEvent({ type: "compilationsuccess" });
     } catch (error) {
       const err = error as ScriptRunnerCodeError;
       this.#errors.compilation = err;
@@ -178,39 +193,38 @@ class ScriptRunner {
     }
   }
 
-  addEventListener(
-    type: ScriptRunnerEventTypes,
-    callback: ScriptRunnerEventListener,
+  addEventListener<T extends ScriptRunnerEventTypes>(
+    type: T,
+    callback: ScriptRunnerEventListener<T>,
   ) {
     /* istanbul ignore next */
-    if (!this.#listeners[type]) this.#listeners[type] = [];
+    if (!this.#listeners[type]) this.#listeners[type] = new Set();
 
-    this.#listeners[type].push(callback);
+    this.#listeners[type].add(callback);
   }
 
-  removeEventListener(
-    type: ScriptRunnerEventTypes,
-    callback: ScriptRunnerEventListener,
+  removeEventListener<T extends ScriptRunnerEventTypes>(
+    type: T,
+    callback: ScriptRunnerEventListener<T>,
   ) {
     /* istanbul ignore next */
     if (!this.#listeners[type]) return;
 
-    const stack = this.#listeners[type];
-    for (let i = 0, l = stack.length; i < l; i += 1) {
-      if (stack[i] === callback) {
-        stack.splice(i, 1);
-        return;
-      }
-    }
+    this.#listeners[type].delete(callback);
   }
 
-  dispatchEvent(event: ScriptRunnerErrorEvent | ScriptRunnerLogEvent) {
+  dispatchEvent(event: ScriptRunnerEvent) {
     if (!this.#listeners[event.type]) return undefined;
 
-    const stack = this.#listeners[event.type].slice();
+    const stack = Array.from(this.#listeners[event.type]);
+
+    const withInstanceId = {
+      ...event,
+      runnerId: this.#runnerId,
+    };
 
     for (let i = 0, l = stack.length; i < l; i += 1) {
-      stack[i].call(this, event);
+      stack[i].call(this, withInstanceId);
     }
 
     return !event.defaultPrevented;
@@ -218,12 +232,7 @@ class ScriptRunner {
 
   exec() {
     this.#logs = [];
-    if (this.#errors.execution || this.#errors.compilation) {
-      return undefined;
-    }
     try {
-      this.#errors.execution = null;
-
       const args = Object.values(this.api);
       const result = this.#fn.call(this.#scope, ...args);
       if (this.#logs.length > 0) {
@@ -236,6 +245,10 @@ class ScriptRunner {
       /* istanbul ignore next */
       return result instanceof EmptyScope ? undefined : result;
     } catch (error) {
+      // only report execution error once
+      if (this.#errors.execution) {
+        return undefined;
+      }
       const err = error as ScriptRunnerCodeError;
       this.#errors.execution = err;
       this.dispatchEvent({
