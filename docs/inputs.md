@@ -1,5 +1,7 @@
 # Inputs
 
+The [layers](#layers) and [runtime worker](#runtime-worker) can read various inputs to create dynamic visualizations. The `read` function is used to access these inputs.
+
 ```js
 const someVariable = read('variableName', 'some default value');
 ```
