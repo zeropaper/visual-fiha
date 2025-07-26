@@ -300,17 +300,20 @@ export function AudioSetupProvider({
       analyser: AnalyserNode,
       audioCtx: AudioContext,
       bufferOffset = 0,
+      shouldStart = true,
     ) => {
       const newSource = audioCtx.createBufferSource();
       newSource.buffer = oldSource.buffer;
       newSource.connect(analyser);
       analyser.connect(audioCtx.destination);
 
-      try {
-        // Start immediately at the current time, but from the specified offset in the buffer
-        newSource.start(audioCtx.currentTime, bufferOffset);
-      } catch (err) {
-        console.warn(err instanceof Error ? err.message : "");
+      if (shouldStart) {
+        try {
+          // Start immediately at the current time, but from the specified offset in the buffer
+          newSource.start(audioCtx.currentTime, bufferOffset);
+        } catch (err) {
+          console.warn(err instanceof Error ? err.message : "");
+        }
       }
 
       return newSource;
@@ -383,12 +386,25 @@ export function AudioSetupProvider({
   // Re-wire analyzers when seekAll is called
   const seekAll = useCallback(
     (time: number) => {
-      console.log("Seeking all audio sources");
+      console.log("Seeking all audio sources to time:", time);
       const audioCtx = getOrCreateAudioContext();
+      const wasPlaying = playbackState.isPlaying;
 
       // Convert time from milliseconds to seconds for Web Audio API
       const timeInSeconds = time / 1000;
 
+      // Stop all current sources first
+      sourcesRef.current.forEach((source) => {
+        if (source.buffer) {
+          try {
+            source.stop();
+          } catch (err) {
+            console.warn(err instanceof Error ? err.message : "");
+          }
+        }
+      });
+
+      // Create new sources at the seek position
       sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
         const analyser = managedAnalyzersRef.current[index].analyser;
         return createAndWireSource(
@@ -396,12 +412,18 @@ export function AudioSetupProvider({
           analyser,
           audioCtx,
           timeInSeconds,
+          wasPlaying, // Only start if audio was playing before seek
         );
       });
 
       post?.("setTime", time);
     },
-    [post, getOrCreateAudioContext, createAndWireSource],
+    [
+      post,
+      getOrCreateAudioContext,
+      createAndWireSource,
+      playbackState.isPlaying,
+    ],
   );
 
   const setAllVolume = useCallback(() => {
