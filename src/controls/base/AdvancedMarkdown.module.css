@@ -1,0 +1,5 @@
+.md {
+  a {
+    color: var(--link-color);
+  }
+}

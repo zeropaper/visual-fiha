@@ -2,6 +2,7 @@ import Markdown, { type Components } from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import rehypeRaw from "rehype-raw";
+import styles from "./AdvancedMarkdown.module.css";
 
 export function AdvancedMarkdown({
   children,
@@ -13,43 +14,14 @@ export function AdvancedMarkdown({
   a?: Components["a"];
 }) {
   return (
-    <section className={className}>
+    <section className={[styles.md, className].join(" ")}>
       <Markdown
         rehypePlugins={[rehypeRaw]}
         components={{
           a:
             AnchorComponent ||
             ((props) => {
-              const { href, children: text, ...rest } = props;
-              // if (
-              //   href?.[0] === "#" &&
-              //   Object.keys(docs).includes(href.slice(1))
-              // ) {
-              //   // If the href is a local link to another doc topic
-              //   return (
-              //     <a
-              //       href={href}
-              //       onClick={(e) => {
-              //         e.preventDefault();
-              //         setDocTopic(href.slice(1) as DocTopic);
-              //       }}
-              //       {...rest}
-              //     >
-              //       {text}
-              //     </a>
-              //   );
-              // }
-
-              // return (
-              //   <a
-              //     href={href}
-              //     target="_blank"
-              //     rel="noopener noreferrer"
-              //     {...rest}
-              //   >
-              //     {text}
-              //   </a>
-              // );
+              const { children: text } = props;
               return text;
             }),
           code(props) {
