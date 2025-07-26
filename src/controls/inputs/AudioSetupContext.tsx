@@ -152,11 +152,6 @@ export function AudioSetupProvider({
   const [microphoneState, setMicrophoneState] =
     useState<AudioContextState>("closed");
 
-  // Duration callback management
-  const timeDurationCallbackRef = useRef<((duration: number) => void) | null>(
-    null,
-  );
-
   // Initialize audio context when needed
   const getOrCreateAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
