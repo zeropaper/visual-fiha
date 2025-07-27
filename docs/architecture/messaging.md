@@ -20,7 +20,7 @@ All messages include a `meta` object for tracing, error propagation, and operati
   - Listens for messages from the main thread via `self.addEventListener('message', ...)`.
   - Listens for cross-context messages via `broadcastChannel.addEventListener('message', ...)`.
 
-### 2. Display Worker (`src/display/Display.worker.ts` & `src/display/VFWorker.ts`)
+### 2. Display Worker (`src/display/Display.worker.ts`)
 - **Posts messages:**
   - Uses `BroadcastChannel.postMessage` for cross-context communication.
   - Uses `worker.postMessage` for main thread communication.
@@ -29,7 +29,7 @@ All messages include a `meta` object for tracing, error propagation, and operati
   - Listens for cross-context messages via `BroadcastChannel.onmessage`.
   - Message handling is structured via `autoBind` and handler maps.
 
-### 3. TypeScript Transpiler Worker (`src/controls/tsTranspile.worker.ts`)
+### 3. TypeScript Transpiler Worker (`src/utils/tsTranspile.worker.ts`)
 - **Posts messages:**
   - Uses `self.postMessage` to return transpile results to the main thread.
   - Uses `broadcastChannel.postMessage` to broadcast transpile results to other contexts.
@@ -42,18 +42,13 @@ All messages include a `meta` object for tracing, error propagation, and operati
 - **Processes messages:**
   - Listens for messages from the worker via `worker.addEventListener('message', ...)`.
 
-### 5. Audio & MIDI Capture (`src/capture/audio.ts`, `src/capture/midi.ts`)
+### 5. Script Editor & Monaco Integration (`src/controls/features/ScriptEditor/`)
 - **Posts messages:**
-  - Audio: Uses `socket.emit` for network, but can be extended to use `ChannelPost` for worker communication.
-  - MIDI: Sets up event listeners for MIDI input, can be extended to post messages to workers or channels.
+  - On code changes, sends transpile requests to the TypeScript worker
+  - Communicates with the Controls Worker for script updates
 - **Processes messages:**
-  - MIDI: Listens for `midimessage` events from MIDI devices.
-
-### 6. Monaco Editor (Main Thread)
-- **Posts messages:**
-  - On code changes, calls the TypeScript Transpiler Worker ([`src/controls/tsTranspile.worker.ts`](../../src/controls/tsTranspile.worker.ts)) to transpile user code. ([sending](../../src/controls/MonacoEditorComponent.tsx))
-- **Processes messages:**
-  - Receives transpile results from the worker ([receiving](../../src/controls/MonacoEditorComponent.tsx)) and can forward them to other components or workers as needed.
+  - Receives transpile results and updates Monaco editor state
+  - Handles script compilation errors and success notifications
 
 ## Updated Messaging Architecture
 
@@ -66,15 +61,15 @@ The `com` library provides structured messaging utilities:
 #### Key Locations
 - **`src/utils/com.ts`**: Contains the definitions of `makeChannelPost`, `makeChannelListener`, and `autoBind`.
 - **`src/controls/Controls.worker.ts`**: Uses `autoBind` for message handling.
-- **`src/display/Display.ts` and `src/display/VFWorker.ts`**: Employ `autoBind` for worker and BroadcastChannel communication.
-- **`src/controls/createFastContext.tsx`**: Utilizes `autoBind` for worker communication.
+- **`src/display/Display.ts` and `src/display/Display.worker.ts`**: Employ `autoBind` for worker and BroadcastChannel communication.
+- **`src/controls/contexts/createFastContext.tsx`**: Utilizes `autoBind` for worker communication.
 
 ### `BroadcastChannel` Usage
 The `BroadcastChannel` API is used for cross-context communication.
 
 #### Key Locations
-- **`src/controls/tsTranspile.worker.ts`**: Posts transpile results to the BroadcastChannel.
-- **`src/controls/Timeline.tsx`**: Listens for messages via `BroadcastChannel.addEventListener`.
+- **`src/utils/tsTranspile.worker.ts`**: Posts transpile results to the BroadcastChannel.
+- **`src/controls/features/Timeline/`**: Timeline component implementation.
 - **`src/controls/Controls.worker.ts`**: Posts updates like `updateconfig` and `runtimedata` to the BroadcastChannel.
 - **`src/display/Display.worker.ts`**: Handles messages using `broadcastChannelCom`.
 
@@ -82,8 +77,8 @@ The `BroadcastChannel` API is used for cross-context communication.
 Workers communicate using `postMessage`, `onmessage`, and `addEventListener`.
 
 #### Key Locations
-- **`src/controls/tsTranspile.worker.ts`**: Processes messages via `self.onmessage` and posts results using `self.postMessage`.
-- **`src/controls/ScriptEditor.tsx`**: Sends messages to the transpilation worker.
+- **`src/utils/tsTranspile.worker.ts`**: Processes messages via `self.onmessage` and posts results using `self.postMessage`.
+- **`src/controls/features/ScriptEditor/`**: Sends messages to the transpilation worker.
 - **`src/controls/Controls.worker.ts`**: Listens for messages from the main thread and BroadcastChannel.
 
 ### Summary
@@ -151,13 +146,13 @@ The following table summarizes the key message types, their senders, receivers, 
 | runtimedata         | BroadcastChannel      | Display Worker         | `RuntimeData`                                              | Yes         | `src/display/Display.worker.ts:148`             |
 | offscreencanvas     | Main Thread           | Display Worker         | `{ canvas: OffscreenCanvas }`                              | No          | `src/display/Display.ts:43`                     |
 | resize              | Main Thread           | Display Worker         | `{ width: number, height: number }`                        | No          | `src/display/Display.ts:78`                     |
-| code change         | Monaco Editor         | TS Transpiler Worker   | `{ code: string, role: string, type: string, id: string }` | No          | `src/controls/ScriptEditor.tsx`                 |
-| transpiled          | TS Transpiler Worker  | Monaco Editor          | `TranspilePayload`                                         | Yes         | `src/controls/tsTranspile.worker.ts`            |
-| transpiled          | TS Transpiler Worker  | BroadcastChannel       | `TranspilePayload`                                         | Yes         | `src/controls/tsTranspile.worker.ts`            |
+| code change         | Monaco Editor         | TS Transpiler Worker   | `{ code: string, role: string, type: string, id: string }` | No          | `src/controls/features/ScriptEditor/ScriptEditor.tsx` |
+| transpiled          | TS Transpiler Worker  | Monaco Editor          | `TranspilePayload`                                         | Yes         | `src/utils/tsTranspile.worker.ts`            |
+| transpiled          | TS Transpiler Worker  | BroadcastChannel       | `TranspilePayload`                                         | Yes         | `src/utils/tsTranspile.worker.ts`            |
 | transpiled          | BroadcastChannel      | Controls/Display Worker| `TranspilePayload`                                         | Yes         | `src/controls/Controls.worker.ts:193`           |
 | registerdisplay     | Display Worker        | BroadcastChannel       | `{ id: string, width: number, height: number }`            | Yes         | `src/display/VFWorker.ts:136`                   |
 | registerdisplaycallback | BroadcastChannel  | Display Worker         | `{ id: string, config: AppState }`                         | Yes         | `src/display/Display.worker.ts:148`             |
-| audioupdate         | Audio Capture         | Main Thread            | `{ frequency: number[], volume: number[] }`                | No          | `src/controls/inputs/AudioFilesAnalyzer.tsx:16` |
-| midimessage         | MIDI Capture          | Main Thread            | `MIDIMessageEvent`                                         | No          | `src/controls/inputs/MIDIBridge.tsx:39`         |
+| audioupdate         | Audio Capture         | Main Thread            | `{ frequency: number[], volume: number[] }`                | No          | `src/controls/features/Inputs/` |
+| midimessage         | MIDI Capture          | Main Thread            | `MIDIMessageEvent`                                         | No          | `src/controls/features/Inputs/` |
 
 > For full payload definitions, see the relevant TypeScript types in `src/types.ts`, `src/controls/types.ts`, and `src/utils/com.ts`.
