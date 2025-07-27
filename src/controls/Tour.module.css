@@ -1,0 +1,8 @@
+.tour {
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+
+  .introjs-progressbar {
+    background: var(--button-bg);
+  }
+}

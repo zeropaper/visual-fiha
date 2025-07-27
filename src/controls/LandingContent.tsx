@@ -1,5 +1,6 @@
 import content from "../../docs/topics.md?raw";
 import { type DocTopic, docTopics } from "./Help";
+import { Intro } from "./Intro";
 import styles from "./LandingContent.module.css";
 import { AdvancedMarkdown } from "./base/AdvancedMarkdown";
 
@@ -44,6 +45,7 @@ export function LandingContent({
       >
         {`#${content.replaceAll(/\n#/g, "\n##").trim()}`}
       </AdvancedMarkdown>
+      <Intro />
     </div>
   );
 }
