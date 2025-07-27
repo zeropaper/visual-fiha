@@ -1,51 +1,20 @@
 // Web Worker for transpiling TypeScript to JavaScript in-browser
 /// <reference lib="webworker" />
 
-import { autoBind } from "@utils/com";
+// NOTE: path aliases like `@utils/tsTranspile.worker.ts` are not supported in workers.
+
 import type {
   AppState,
   DisplayRegistrationPayload,
   LayerConfig,
   RuntimeData,
 } from "../types";
-import type { TranspilePayload } from "./types";
+import { autoBind } from "../utils/com";
+import { type TranspilePayload, tsTranspile } from "../utils/tsTranspile";
 
 const broadcastChannel = new BroadcastChannel("core");
 let refreshInterval: NodeJS.Timeout | null = null;
 const defaultBPM = 120;
-
-const tsTranspileWorker = new Worker(
-  new URL("./tsTranspile.worker.ts", import.meta.url),
-  { type: "classic" },
-);
-async function tsTranspile(
-  code: string,
-  type: string,
-  role: string,
-  id: string,
-) {
-  return new Promise<TranspilePayload>((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      tsTranspileWorker.removeEventListener("message", listener);
-      reject(new Error("Transpile timeout"));
-    }, 1500);
-
-    function listener(event: MessageEvent<TranspilePayload>) {
-      if (
-        event.data.type !== type ||
-        event.data.role !== role ||
-        event.data.id !== id
-      ) {
-        return;
-      }
-      clearTimeout(timeout);
-      resolve(event.data);
-      tsTranspileWorker.removeEventListener("message", listener);
-    }
-    tsTranspileWorker.addEventListener("message", listener);
-    tsTranspileWorker.postMessage({ code, type, role, id });
-  });
-}
 
 const defaultConfigData: AppState = {
   stage: {

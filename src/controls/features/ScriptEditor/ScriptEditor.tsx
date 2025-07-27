@@ -2,41 +2,16 @@ import type * as _monaco from "monaco-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./ScriptEditor.module.css";
 
+import { useCode } from "@hooks/useCode";
 import { Button, buttonStyles } from "@ui/Button";
 import scriptableTypes from "@utils/Scriptable.editor.types.editor-types.txt?raw";
 import mathTypes from "@utils/mathTools.editor-types.txt?raw";
 import { HelpCircleIcon } from "lucide-react";
-import { useCode } from "../../hooks/useCode";
+import { useTranspile } from "../../hooks/useTranspile";
 import { AIAssistant } from "../AIAssistant/AIAssistant";
 import { type DocTopic, Help } from "../Help/Help";
 import { LandingContent } from "../Intro/LandingContent";
 import { extraLibs } from "./ScriptEditor.extraLibs";
-
-function useTranspile() {
-  const transpilationWorkerRef = useRef<Worker | null>(null);
-
-  useEffect(() => {
-    const worker = new Worker(
-      new URL("./tsTranspile.worker.ts", import.meta.url),
-      { type: "classic" },
-    );
-    if (transpilationWorkerRef.current) {
-      transpilationWorkerRef.current.terminate();
-    }
-    transpilationWorkerRef.current = worker;
-    return () => {
-      worker.terminate();
-    };
-  }, []);
-
-  return (code: string, type: string, role: string, id: string) => {
-    if (!transpilationWorkerRef.current) {
-      console.warn("[ScriptEditor] Transpilation worker is not initialized.");
-      return;
-    }
-    transpilationWorkerRef.current.postMessage({ code, type, role, id });
-  };
-}
 
 let monacoInstance: typeof _monaco | null = null;
 export function ScriptEditor({

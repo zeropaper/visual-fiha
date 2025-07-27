@@ -1,7 +1,7 @@
 // Web Worker for transpiling TypeScript to JavaScript in-browser
 /// <reference lib="webworker" />
 
-import type { TranspilePayload } from "./types";
+import type { TranspilePayload } from "./tsTranspile";
 
 self.importScripts("/typescript.js");
 
