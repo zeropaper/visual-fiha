@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 import type { LayerConfig } from "../../types";
-import { useCode } from "../useCode";
+import { useCode } from "../hooks/useCode";
 import styles from "./AIAssistant.module.css";
 import {
   type ToolsCall,

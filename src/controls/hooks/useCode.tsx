@@ -1,4 +1,4 @@
-import { useAppFastContextFields } from "./ControlsContext";
+import { useAppFastContextFields } from "../ControlsContext";
 
 export function useCode(
   role: "setup" | "animation",

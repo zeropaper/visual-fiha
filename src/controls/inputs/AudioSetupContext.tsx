@@ -18,7 +18,7 @@ import {
 } from "react";
 import type { AudioInputMode } from "../../types";
 import { useContextWorkerPost } from "../ControlsContext";
-import { useRuntimeMonitor } from "../useRuntimeMonitor";
+import { useRuntimeMonitor } from "../hooks/useRuntimeMonitor";
 import { loadTrack } from "./syncAudio";
 
 const audioConfig = {

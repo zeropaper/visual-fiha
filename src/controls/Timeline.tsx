@@ -12,8 +12,8 @@ import {
 import type { TimeInputValue } from "../types";
 import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Timeline.module.css";
+import { useRuntimeMonitor } from "./hooks/useRuntimeMonitor";
 import { useAudioSetup } from "./inputs/AudioSetupContext";
-import { useRuntimeMonitor } from "./useRuntimeMonitor";
 
 interface TimelineProps {
   className?: string;

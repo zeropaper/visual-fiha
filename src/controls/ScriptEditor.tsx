@@ -10,7 +10,7 @@ import { AIAssistant } from "./AIAssistant/AIAssistant";
 import { type DocTopic, Help } from "./Help";
 import { LandingContent } from "./LandingContent";
 import { extraLibs } from "./ScriptEditor.extraLibs";
-import { useCode } from "./useCode";
+import { useCode } from "./hooks/useCode";
 
 function useTranspile() {
   const transpilationWorkerRef = useRef<Worker | null>(null);
