@@ -2,7 +2,7 @@ import introJs from "intro.js";
 import "intro.js/introjs.css";
 import { buttonStyles } from "@ui/Button";
 import { useEffect, useRef } from "react";
-import type { Prettify } from "../types";
+import type { Prettify } from "../../../types";
 import styles from "./Tour.module.css";
 
 type Tour = ReturnType<typeof introJs.tour>;
