@@ -8,12 +8,12 @@ import { AppFastContextProvider } from "./ControlsContext";
 import { DisplaysControl } from "./DisplaysControl";
 import { EditorContextProvider } from "./EditorContext";
 import { FileSystemProvider } from "./FileSystemContext";
-import type { DocTopic } from "./Help";
 import { Layers } from "./Layers";
 import Menu from "./Menu";
 import { Stage } from "./Stage";
 import { Timeline } from "./Timeline";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
+import type { DocTopic } from "./features/Help/Help";
 import { AudioSetupProvider } from "./features/Inputs/AudioSetupContext";
 import { Inputs } from "./features/Inputs/Inputs";
 const ScriptEditor = lazy(() =>

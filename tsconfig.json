@@ -33,7 +33,8 @@
       "@layers/*": ["./src/layers/*"],
       "@controls/*": ["./src/controls/*"],
       "@inputs/*": ["./src/inputs/*"],
-      "@ui/*": ["./src/controls/base/*"]
+      "@ui/*": ["./src/controls/base/*"],
+      "@docs/*": ["./docs/*"],
     }
   }
 }

@@ -7,9 +7,9 @@ import scriptableTypes from "@utils/Scriptable.editor.types.editor-types.txt?raw
 import mathTypes from "@utils/mathTools.editor-types.txt?raw";
 import { HelpCircleIcon } from "lucide-react";
 import { AIAssistant } from "./AIAssistant/AIAssistant";
-import { type DocTopic, Help } from "./Help";
 import { LandingContent } from "./LandingContent";
 import { extraLibs } from "./ScriptEditor.extraLibs";
+import { type DocTopic, Help } from "./features/Help/Help";
 import { useCode } from "./hooks/useCode";
 
 function useTranspile() {
