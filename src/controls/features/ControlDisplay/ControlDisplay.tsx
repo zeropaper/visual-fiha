@@ -1,6 +1,6 @@
 import Display from "@display/Display";
 import { useEffect, useRef } from "react";
-import styles from "./ControlsApp.module.css";
+import styles from "../../ControlsApp.module.css";
 
 export function ControlDisplay() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
