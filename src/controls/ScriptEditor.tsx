@@ -9,7 +9,7 @@ import { AIAssistant } from "./AIAssistant/AIAssistant";
 import { type DocTopic, Help } from "./Help";
 import { LandingContent } from "./LandingContent";
 import { extraLibs } from "./ScriptEditor.extraLibs";
-import { Button } from "./base/Button";
+import { Button, buttonStyles } from "./base/Button";
 import { useCode } from "./useCode";
 
 function useTranspile() {
@@ -289,7 +289,16 @@ export function ScriptEditor({
           <div />
         )}
         <div className={styles.help}>
-          <Button variant="icon" title="Help" onClick={onToggleHelp}>
+          <Button
+            variant="icon"
+            title="Help"
+            onClick={onToggleHelp}
+            className={[
+              buttonStyles.button,
+              buttonStyles.icon,
+              "help-button",
+            ].join(" ")}
+          >
             <HelpCircleIcon />
           </Button>
         </div>
@@ -304,7 +313,10 @@ export function ScriptEditor({
         >
           {id ? (
             <>
-              <div ref={editorContainerRef} className={styles.editor} />
+              <div
+                ref={editorContainerRef}
+                className={["editor", styles.editor].join(" ")}
+              />
               <div className={styles.editorAIWrapper}>
                 {isEditorReady ? (
                   <AIAssistant

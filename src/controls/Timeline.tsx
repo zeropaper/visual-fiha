@@ -10,8 +10,8 @@ import {
 import type { TimeInputValue } from "../types";
 import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Timeline.module.css";
-import { Button } from "./base/Button";
-import { Input } from "./base/Input";
+import { Button, buttonStyles } from "./base/Button";
+import { Input, inputStyles } from "./base/Input";
 import { useAudioSetup } from "./inputs/AudioSetupContext";
 import { useRuntimeMonitor } from "./useRuntimeMonitor";
 
@@ -198,9 +198,22 @@ export function Timeline({ className }: TimelineProps) {
   );
 
   return (
-    <div className={[styles.timeline, className].filter(Boolean).join(" ")}>
+    <div
+      className={["timeline", styles.timeline, className]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className={styles.controls}>
-        <Button variant="icon" name="play_pause" onClick={handlePlayPause}>
+        <Button
+          variant="icon"
+          name="play_pause"
+          onClick={handlePlayPause}
+          className={[
+            "play-pause-button",
+            buttonStyles.button,
+            buttonStyles.icon,
+          ].join(" ")}
+        >
           {isRunning ? <PauseIcon /> : <PlayIcon />}
         </Button>
         <Button
@@ -208,6 +221,7 @@ export function Timeline({ className }: TimelineProps) {
           name="reset"
           onClick={stopAll}
           disabled={!isRunning || !timeData?.elapsed}
+          className={["reset-button", buttonStyles.button].join(" ")}
         >
           <ChevronFirstIcon />
         </Button>
@@ -217,17 +231,19 @@ export function Timeline({ className }: TimelineProps) {
           value={bpm}
           onChange={handleBpmChange}
           style={{ width: "4ch" }}
+          className={["bpm-input", inputStyles.input].join(" ")}
         />
         <Button
           title="Click several times to set the Bpm"
           onClick={handleBpmClick}
+          className={["bpm-button", buttonStyles.button].join(" ")}
         >
           {`${bpm} bpm`}
         </Button>
       </div>
       <canvas
         ref={canvasRef}
-        className={styles.canvas}
+        className={[styles.canvas, "timeline-canvas"].join(" ")}
         onClick={handleCanvasClick}
         onKeyDown={() => {}}
         onMouseMove={handleCanvasMouseMove}

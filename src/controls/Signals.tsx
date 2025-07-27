@@ -7,7 +7,7 @@ export function Signals() {
   } = useAppFastContextFields(["signals"]);
 
   return (
-    <details open className={sectionStyles.details}>
+    <details open className={["signales", sectionStyles.details].join(" ")}>
       <summary>Signals</summary>
       <ul id="signals">
         {signals.map((signal) => (

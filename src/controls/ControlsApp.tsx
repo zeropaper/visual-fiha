@@ -1,24 +1,23 @@
 import { useCallback, useState } from "react";
 import { Suspense, lazy } from "react";
+import { useIsMobile } from "../utils/useIsMobile";
+import { ChatsProvider, localStorageAdapter } from "./AIAssistant/ChatsContext";
 import { ControlDisplay } from "./ControlDisplay";
 import styles from "./ControlsApp.module.css";
 import { AppFastContextProvider } from "./ControlsContext";
 import { DisplaysControl } from "./DisplaysControl";
-import { Layers } from "./Layers";
-import { Inputs } from "./inputs/Inputs";
-const ScriptEditor = lazy(() =>
-  import("./ScriptEditor").then((module) => ({ default: module.ScriptEditor })),
-);
-import { useIsMobile } from "../utils/useIsMobile";
-import { customFetch } from "./AIAssistant/AiAssitant.utils";
-import { ChatsProvider, localStorageAdapter } from "./AIAssistant/ChatsContext";
 import { FileSystemProvider } from "./FileSystemContext";
 import type { DocTopic } from "./Help";
+import { Layers } from "./Layers";
 import Menu from "./Menu";
 import { Stage } from "./Stage";
 import { Timeline } from "./Timeline";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 import { AudioSetupProvider } from "./inputs/AudioSetupContext";
+import { Inputs } from "./inputs/Inputs";
+const ScriptEditor = lazy(() =>
+  import("./ScriptEditor").then((module) => ({ default: module.ScriptEditor })),
+);
 
 export default function ControlsApp() {
   const [currentScript, _setCurrentScript] = useState<{
@@ -45,7 +44,7 @@ export default function ControlsApp() {
 
   const [docTopic, setDocTopic] = useState<DocTopic | null>(null);
   const toggleHelp = useCallback(
-    () => setDocTopic((prev) => (prev ? null : "noscript")),
+    () => setDocTopic((prev) => (prev ? null : "topics")),
     [],
   );
   const isMobile = useIsMobile();
@@ -74,7 +73,6 @@ export default function ControlsApp() {
         >
           <ChatsProvider
             storageAdapter={localStorageAdapter}
-            // fetch={customFetch}
             id={`${currentScript.type}-${currentScript.id}`}
           >
             <header className={styles.header}>

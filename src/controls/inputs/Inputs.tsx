@@ -10,7 +10,7 @@ export function Inputs() {
   const { mode: audioMode, setMode: setAudioMode } = useAudioSetup();
 
   return (
-    <details open className={sectionStyles.details}>
+    <details open className={["inputs", sectionStyles.details].join(" ")}>
       <summary>
         <span>Inputs</span>
         <Button

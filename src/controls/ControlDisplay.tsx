@@ -37,7 +37,7 @@ export function ControlDisplay() {
       <canvas
         ref={canvasRef}
         id="controls-display"
-        className={styles.controlDisplay}
+        className={[styles.controlDisplay, "controls-display"].join(" ")}
         style={{
           background:
             displayRef.current?.state.stage?.backgroundColor || "#000",

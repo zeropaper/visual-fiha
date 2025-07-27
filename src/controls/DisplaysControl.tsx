@@ -8,7 +8,7 @@ export function DisplaysControl() {
   } = useAppFastContextFields(["displays"]);
 
   return (
-    <details open className={sectionStyles.details}>
+    <details open className={[sectionStyles.details, "displays"].join(" ")}>
       <summary>Displays</summary>
       <Button
         onClick={() => {

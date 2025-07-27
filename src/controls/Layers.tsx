@@ -64,7 +64,11 @@ function Layer({
         />
 
         <Button
-          className={[buttonStyles.button, styles.setupButton].join(" ")}
+          className={[
+            buttonStyles.button,
+            styles.setupButton,
+            "setup-script-button",
+          ].join(" ")}
           onClick={() =>
             setCurrentScript({
               id: layer.id,
@@ -77,6 +81,7 @@ function Layer({
         </Button>
 
         <Button
+          className={[buttonStyles.button, "animation-script-button"].join(" ")}
           onClick={() =>
             setCurrentScript({
               id: layer.id,
@@ -160,7 +165,7 @@ export function Layers({
   };
 
   return (
-    <details open className={sectionStyles.details}>
+    <details open className={[sectionStyles.details, "layers"].join(" ")}>
       <summary>Layers</summary>
       <form
         className={styles.addLayerForm}
