@@ -11,9 +11,9 @@ import {
   useRef,
   useState,
 } from "react";
-import type { TimeInputValue } from "../types";
+import type { TimeInputValue } from "../../../types";
+import { useRuntimeMonitor } from "../../hooks/useRuntimeMonitor";
 import styles from "./Timeline.module.css";
-import { useRuntimeMonitor } from "./hooks/useRuntimeMonitor";
 
 interface TimelineProps {
   className?: string;

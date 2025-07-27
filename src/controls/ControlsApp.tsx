@@ -6,7 +6,6 @@ import styles from "./ControlsApp.module.css";
 import { DisplaysControl } from "./DisplaysControl";
 import Menu from "./Menu";
 import { Stage } from "./Stage";
-import { Timeline } from "./Timeline";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 import { AudioSetupProvider } from "./contexts/AudioSetupContext";
 import { ChatsProvider, localStorageAdapter } from "./contexts/ChatsContext";
@@ -16,6 +15,7 @@ import { FileSystemProvider } from "./contexts/FileSystemContext";
 import type { DocTopic } from "./features/Help/Help";
 import { Inputs } from "./features/Inputs/Inputs";
 import { Layers } from "./features/Layers/Layers";
+import { Timeline } from "./features/Timeline/Timeline";
 const ScriptEditor = lazy(() =>
   import("./features/ScriptEditor/ScriptEditor").then((module) => ({
     default: module.ScriptEditor,
