@@ -25,6 +25,15 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "types": ["vite/client"],
-    "plugins": [{ "name": "typescript-plugin-css-modules" }]
+    "plugins": [{ "name": "typescript-plugin-css-modules" }],
+    "baseUrl": ".",
+    "paths": {
+      "@utils/*": ["./src/utils/*"],
+      "@display/*": ["./src/display/*"],
+      "@layers/*": ["./src/layers/*"],
+      "@controls/*": ["./src/controls/*"],
+      "@inputs/*": ["./src/inputs/*"],
+      "@ui/*": ["./src/controls/base/*"]
+    }
   }
 }

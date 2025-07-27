@@ -1,6 +1,6 @@
+import { Button, buttonStyles } from "@ui/Button";
 import type { Attachment } from "ai";
 import { XIcon } from "lucide-react";
-import { Button, buttonStyles } from "../base/Button";
 import AttachmentTypeIcon from "./AttachmentTypeIcon";
 import styles from "./AttachmentsList.module.css";
 

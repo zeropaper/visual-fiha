@@ -1,5 +1,5 @@
+import Display from "@display/Display";
 import { useEffect, useRef } from "react";
-import Display from "../display/Display";
 import styles from "./ControlsApp.module.css";
 
 export function ControlDisplay() {

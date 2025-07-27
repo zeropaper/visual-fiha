@@ -1,9 +1,9 @@
 import introJs from "intro.js";
 import "intro.js/introjs.css";
+import { buttonStyles } from "@ui/Button";
 import { useEffect, useRef } from "react";
 import type { Prettify } from "../types";
 import styles from "./Tour.module.css";
-import { buttonStyles } from "./base/Button";
 
 type Tour = ReturnType<typeof introJs.tour>;
 type TourOptions = Parameters<Tour["setOptions"]>[0];

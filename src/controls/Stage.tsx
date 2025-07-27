@@ -1,7 +1,7 @@
+import { Input } from "@ui/Input";
 import React, { useCallback } from "react";
 import { useStageConfig } from "./ControlsContext";
 import styles from "./Stage.module.css";
-import { Input } from "./base/Input";
 
 export function Stage() {
   const [stageAspectRatioLock, setStageAspectRatioLock] =

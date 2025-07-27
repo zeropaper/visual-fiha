@@ -1,3 +1,4 @@
+import { AdvancedMarkdown } from "@ui/AdvancedMarkdown";
 import { useEffect, useState } from "react";
 import canvasDocs from "../../docs/canvas-api.md?raw";
 import inputsDocs from "../../docs/inputs.md?raw";
@@ -9,7 +10,6 @@ import threejsDocs from "../../docs/threejs-api.md?raw";
 import topicsDocs from "../../docs/topics.md?raw";
 import type { LayerConfig } from "../types";
 import styles from "./Help.module.css";
-import { AdvancedMarkdown } from "./base/AdvancedMarkdown";
 
 export type DocTopic =
   | `${LayerConfig["type"]}-api`

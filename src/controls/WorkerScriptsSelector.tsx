@@ -1,5 +1,5 @@
+import { Button } from "@ui/Button";
 import styles from "./WorkerScriptsSelector.module.css";
-import { Button } from "./base/Button";
 
 export function WorkerScriptsSelector({
   setCurrentScript,

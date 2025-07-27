@@ -1,5 +1,5 @@
-import { Button } from "../base/Button";
-import { Input } from "../base/Input";
+import { Button } from "@ui/Button";
+import { Input } from "@ui/Input";
 import styles from "./AIAssistant.module.css";
 
 export function AIAssistantCredentialsForm({

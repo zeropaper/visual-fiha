@@ -2,14 +2,14 @@ import type * as _monaco from "monaco-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./ScriptEditor.module.css";
 
+import { Button, buttonStyles } from "@ui/Button";
+import scriptableTypes from "@utils/Scriptable.editor.types.editor-types.txt?raw";
+import mathTypes from "@utils/mathTools.editor-types.txt?raw";
 import { HelpCircleIcon } from "lucide-react";
-import scriptableTypes from "../utils/Scriptable.editor.types.editor-types.txt?raw";
-import mathTypes from "../utils/mathTools.editor-types.txt?raw";
 import { AIAssistant } from "./AIAssistant/AIAssistant";
 import { type DocTopic, Help } from "./Help";
 import { LandingContent } from "./LandingContent";
 import { extraLibs } from "./ScriptEditor.extraLibs";
-import { Button, buttonStyles } from "./base/Button";
 import { useCode } from "./useCode";
 
 function useTranspile() {

@@ -1,13 +1,13 @@
 // Web Worker for transpiling TypeScript to JavaScript in-browser
 /// <reference lib="webworker" />
 
+import { autoBind } from "@utils/com";
 import type {
   AppState,
   DisplayRegistrationPayload,
   LayerConfig,
   RuntimeData,
 } from "../types";
-import { autoBind } from "../utils/com";
 import type { TranspilePayload } from "./types";
 
 const broadcastChannel = new BroadcastChannel("core");

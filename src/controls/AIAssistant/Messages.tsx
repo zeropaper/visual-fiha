@@ -1,6 +1,6 @@
+import { AdvancedMarkdown } from "@ui/AdvancedMarkdown";
 import type { UIMessage } from "ai";
 import { forwardRef } from "react";
-import { AdvancedMarkdown } from "../base/AdvancedMarkdown";
 import styles from "./AIAssistant.module.css";
 
 function UserMessage({

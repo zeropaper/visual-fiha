@@ -1,3 +1,5 @@
+import { Button, buttonStyles } from "@ui/Button";
+import { Input, inputStyles } from "@ui/Input";
 import { ChevronFirstIcon, PauseIcon, PlayIcon } from "lucide-react";
 import type React from "react";
 import {
@@ -10,8 +12,6 @@ import {
 import type { TimeInputValue } from "../types";
 import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Timeline.module.css";
-import { Button, buttonStyles } from "./base/Button";
-import { Input, inputStyles } from "./base/Input";
 import { useAudioSetup } from "./inputs/AudioSetupContext";
 import { useRuntimeMonitor } from "./useRuntimeMonitor";
 

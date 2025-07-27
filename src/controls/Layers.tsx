@@ -1,12 +1,12 @@
+import { Button } from "@ui/Button";
+import buttonStyles from "@ui/Button.module.css";
+import { Input } from "@ui/Input";
+import { Select } from "@ui/Select";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
 import sectionStyles from "./ControlsApp.module.css";
 import { useAppFastContextFields, useLayerConfig } from "./ControlsContext";
 import styles from "./Layers.module.css";
-import { Button } from "./base/Button";
-import buttonStyles from "./base/Button.module.css";
-import { Input } from "./base/Input";
-import { Select } from "./base/Select";
 
 function Layer({
   id,

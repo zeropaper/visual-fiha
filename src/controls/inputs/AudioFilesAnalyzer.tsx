@@ -1,6 +1,6 @@
+import { Button } from "@ui/Button";
 import type React from "react";
 import { useEffect, useRef } from "react";
-import { Button } from "../base/Button";
 import { AudioAnalyzer } from "./AudioAnalyzer";
 import styles from "./AudioFilesAnalyzer.module.css";
 import { useAudioSetup } from "./AudioSetupContext";

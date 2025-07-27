@@ -9,9 +9,9 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import { type ChannelPost, autoBind } from "@utils/com";
 import { useEffect } from "react";
 import type { DisplayRegistrationPayload } from "../types";
-import { type ChannelPost, autoBind } from "../utils/com";
 import ControlsWorker from "./Controls.worker?worker";
 
 declare global {

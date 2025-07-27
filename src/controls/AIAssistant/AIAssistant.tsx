@@ -1,3 +1,6 @@
+import { Button } from "@ui/Button";
+import { Textarea } from "@ui/Textarea";
+import textareaStyles from "@ui/Textarea.module.css";
 import type { Attachment } from "ai";
 import { CameraIcon, FileIcon, KeyIcon, SendIcon } from "lucide-react";
 import type * as _monaco from "monaco-editor";
@@ -9,9 +12,6 @@ import {
   useState,
 } from "react";
 import type { LayerConfig } from "../../types";
-import { Button } from "../base/Button";
-import { Textarea } from "../base/Textarea";
-import textareaStyles from "../base/Textarea.module.css";
 import { useCode } from "../useCode";
 import styles from "./AIAssistant.module.css";
 import {

@@ -3,12 +3,14 @@ import react from '@vitejs/plugin-react';
 import monacoEditorPlugin from 'vite-plugin-monaco-editor';
 import { VitePWA } from 'vite-plugin-pwa';
 import vercel from 'vite-plugin-vercel';
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   server: {
     port: process.env.PORT,
   },
   plugins: [
+    tsconfigPaths(),
     vercel(),
     react(),
     monacoEditorPlugin({

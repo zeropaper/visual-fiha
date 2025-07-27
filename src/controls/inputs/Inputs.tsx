@@ -1,5 +1,5 @@
+import { Button } from "@ui/Button";
 import sectionStyles from "../ControlsApp.module.css";
-import { Button } from "../base/Button";
 import AudioFilesAnalyzer from "./AudioFilesAnalyzer";
 import { useAudioSetup } from "./AudioSetupContext";
 import styles from "./Inputs.module.css";
