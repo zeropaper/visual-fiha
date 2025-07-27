@@ -83,7 +83,7 @@ describe("animation script", () => {
     const code = 'cache.added = true; scriptLog("cache", cache);';
     layer.animation.code = code;
     layer.animation.addEventListener("log", logListener);
-    layer.animation.addEventListener("executionerror", ((err) => {
+    layer.animation.addEventListener("executionerror", ((err: any) => {
       console.info(err);
     }) as any);
     expect(layer).toHaveProperty("animation.code", code);

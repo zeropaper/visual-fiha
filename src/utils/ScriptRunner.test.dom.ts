@@ -111,7 +111,7 @@ describe("object ScriptRunner", () => {
     describe("scope", () => {
       it.each(["global", "parent", "window", "document", "self", "globalThis"])(
         "prevents access to %s",
-        async (name) => {
+        async (_name) => {
           const runner = new ScriptRunner(scope);
           runner.code = "return ${name}";
           console.info("console", runner.code, scope, runner);
