@@ -35,7 +35,7 @@
       "@contexts/*": ["./src/controls/contexts/*"],
       "@hooks/*": ["./src/controls/hooks/*"],
       "@inputs/*": ["./src/inputs/*"],
-      "@ui/*": ["./src/controls/base/*"],
+      "@ui/*": ["./src/ui/*"],
       "@docs/*": ["./docs/*"],
       "@demos/*": ["./demos/*"],
     }
