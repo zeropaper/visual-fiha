@@ -6,6 +6,9 @@
  *
  */
 
+import { useContextWorkerPost } from "@contexts/ControlsContext";
+import { useRuntimeMonitor } from "@hooks/useRuntimeMonitor";
+import { loadTrack } from "@utils/syncAudio";
 import {
   type ReactNode,
   createContext,
@@ -16,10 +19,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { AudioInputMode } from "../../../types";
-import { useContextWorkerPost } from "../../ControlsContext";
-import { useRuntimeMonitor } from "../../hooks/useRuntimeMonitor";
-import { loadTrack } from "./syncAudio";
+import type { AudioInputMode } from "src/types";
 
 const audioConfig = {
   minDecibels: -120,

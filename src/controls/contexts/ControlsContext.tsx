@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import type {
   AppState,
   InputConfig,
   LayerConfig,
   SignalConfig,
-} from "../types";
+} from "../../types";
 import createFastContext from "./createFastContext";
 import { defaultAppState } from "./defaultAppState";
 

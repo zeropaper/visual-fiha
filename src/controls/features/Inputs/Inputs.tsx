@@ -1,7 +1,7 @@
+import { useAudioSetup } from "@contexts/AudioSetupContext";
 import sectionStyles from "@controls/ControlsApp.module.css";
 import { Button } from "@ui/Button";
 import AudioFilesAnalyzer from "./AudioFilesAnalyzer";
-import { useAudioSetup } from "./AudioSetupContext";
 import styles from "./Inputs.module.css";
 import { MIDIBridge } from "./MIDIBridge";
 import MicrophoneAnalyzer from "./MicrophoneAnalyzer";

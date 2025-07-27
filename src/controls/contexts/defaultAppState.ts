@@ -4,12 +4,12 @@ import type {
   InputConfig,
   LayerConfig,
   SignalConfig,
-} from "../types";
+} from "../../types";
 
-import demoDefaultCanvasAnimation from "../../demos/default/canvas-animation?raw";
-import demoStatsAnimation from "../../demos/default/stats-animation?raw";
-import demoDefaultThreeJSAnimation from "../../demos/default/threejs-animation?raw";
-import demoDefaultThreeJSSetup from "../../demos/default/threejs-setup?raw";
+import demoDefaultCanvasAnimation from "@demos/default/canvas-animation?raw";
+import demoStatsAnimation from "@demos/default/stats-animation?raw";
+import demoDefaultThreeJSAnimation from "@demos/default/threejs-animation?raw";
+import demoDefaultThreeJSSetup from "@demos/default/threejs-setup?raw";
 
 const defaultLayers: LayerConfig[] = [
   {

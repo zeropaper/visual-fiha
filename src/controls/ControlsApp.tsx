@@ -1,19 +1,19 @@
 import { useIsMobile } from "@utils/useIsMobile";
 import { useCallback, useState } from "react";
 import { Suspense, lazy } from "react";
-import { ChatsProvider, localStorageAdapter } from "./AIAssistant/ChatsContext";
 import { ControlDisplay } from "./ControlDisplay";
 import styles from "./ControlsApp.module.css";
-import { AppFastContextProvider } from "./ControlsContext";
 import { DisplaysControl } from "./DisplaysControl";
-import { EditorContextProvider } from "./EditorContext";
-import { FileSystemProvider } from "./FileSystemContext";
 import Menu from "./Menu";
 import { Stage } from "./Stage";
 import { Timeline } from "./Timeline";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
+import { AudioSetupProvider } from "./contexts/AudioSetupContext";
+import { ChatsProvider, localStorageAdapter } from "./contexts/ChatsContext";
+import { AppFastContextProvider } from "./contexts/ControlsContext";
+import { EditorContextProvider } from "./contexts/EditorContext";
+import { FileSystemProvider } from "./contexts/FileSystemContext";
 import type { DocTopic } from "./features/Help/Help";
-import { AudioSetupProvider } from "./features/Inputs/AudioSetupContext";
 import { Inputs } from "./features/Inputs/Inputs";
 import { Layers } from "./features/Layers/Layers";
 const ScriptEditor = lazy(() =>

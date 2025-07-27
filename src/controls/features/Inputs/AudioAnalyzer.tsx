@@ -1,7 +1,7 @@
+import { useAudioSetup } from "@contexts/AudioSetupContext";
+import { useWriteInputValues } from "@contexts/ControlsContext";
 import { useCallback } from "react";
-import { useWriteInputValues } from "../../ControlsContext";
 import styles from "./AudioFilesAnalyzer.module.css";
-import { useAudioSetup } from "./AudioSetupContext";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
 
 export function AudioAnalyzer({

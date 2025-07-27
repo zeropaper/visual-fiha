@@ -1,9 +1,9 @@
+import { useAudioSetup } from "@contexts/AudioSetupContext";
 import { Button } from "@ui/Button";
 import type React from "react";
 import { useEffect, useRef } from "react";
 import { AudioAnalyzer } from "./AudioAnalyzer";
 import styles from "./AudioFilesAnalyzer.module.css";
-import { useAudioSetup } from "./AudioSetupContext";
 
 export default function AudioFilesAnalyzer() {
   const { files: audioFiles, setFiles: setAudioFiles } = useAudioSetup();

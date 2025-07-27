@@ -1,6 +1,6 @@
+import { useStageConfig } from "@contexts/ControlsContext";
 import { Input } from "@ui/Input";
 import React, { useCallback } from "react";
-import { useStageConfig } from "./ControlsContext";
 import styles from "./Stage.module.css";
 
 export function Stage() {

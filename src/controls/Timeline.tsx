@@ -1,3 +1,5 @@
+import { useAudioSetup } from "@contexts/AudioSetupContext";
+import { useContextWorkerPost } from "@contexts/ControlsContext";
 import { Button, buttonStyles } from "@ui/Button";
 import { Input, inputStyles } from "@ui/Input";
 import { ChevronFirstIcon, PauseIcon, PlayIcon } from "lucide-react";
@@ -10,9 +12,7 @@ import {
   useState,
 } from "react";
 import type { TimeInputValue } from "../types";
-import { useContextWorkerPost } from "./ControlsContext";
 import styles from "./Timeline.module.css";
-import { useAudioSetup } from "./features/Inputs/AudioSetupContext";
 import { useRuntimeMonitor } from "./hooks/useRuntimeMonitor";
 
 interface TimelineProps {

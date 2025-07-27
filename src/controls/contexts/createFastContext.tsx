@@ -11,8 +11,8 @@ import {
 
 import { type ChannelPost, autoBind } from "@utils/com";
 import { useEffect } from "react";
-import type { DisplayRegistrationPayload } from "../types";
-import ControlsWorker from "./Controls.worker?worker";
+import type { DisplayRegistrationPayload } from "src/types";
+import ControlsWorker from "../Controls.worker?worker";
 
 declare global {
   interface Window {

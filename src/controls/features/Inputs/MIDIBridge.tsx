@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useWriteInputValues } from "../../ControlsContext";
+import { useWriteInputValues } from "@contexts/ControlsContext";
 import * as akaiLPD8 from "./MIDIBridge.akai-lpd8";
 
 declare global {

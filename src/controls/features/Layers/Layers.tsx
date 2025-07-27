@@ -1,11 +1,14 @@
+import {
+  useAppFastContextFields,
+  useLayerConfig,
+} from "@contexts/ControlsContext";
 import { Button } from "@ui/Button";
 import buttonStyles from "@ui/Button.module.css";
 import { Input } from "@ui/Input";
 import { Select } from "@ui/Select";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
-import sectionStyles from "./ControlsApp.module.css";
-import { useAppFastContextFields, useLayerConfig } from "./ControlsContext";
+import sectionStyles from "../../ControlsApp.module.css";
 import styles from "./Layers.module.css";
 
 function Layer({

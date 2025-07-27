@@ -32,9 +32,12 @@
       "@display/*": ["./src/display/*"],
       "@layers/*": ["./src/layers/*"],
       "@controls/*": ["./src/controls/*"],
+      "@contexts/*": ["./src/controls/contexts/*"],
+      "@hooks/*": ["./src/controls/hooks/*"],
       "@inputs/*": ["./src/inputs/*"],
       "@ui/*": ["./src/controls/base/*"],
       "@docs/*": ["./docs/*"],
+      "@demos/*": ["./demos/*"],
     }
   }
 }

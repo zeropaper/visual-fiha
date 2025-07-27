@@ -1,6 +1,6 @@
-import { useWriteInputValues } from "../../ControlsContext";
+import { useAudioSetup } from "@contexts/AudioSetupContext";
+import { useWriteInputValues } from "@contexts/ControlsContext";
 import styles from "./AudioFilesAnalyzer.module.css";
-import { useAudioSetup } from "./AudioSetupContext";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
 
 export default function MicrophoneAnalyzer() {

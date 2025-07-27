@@ -1,6 +1,6 @@
+import { useAppFastContextFields } from "@contexts/ControlsContext";
 import { createContext, useContext, useState } from "react";
-import type { AppState } from "../types";
-import { useAppFastContextFields } from "./ControlsContext";
+import type { AppState } from "../../types";
 
 interface FileSystemContextValue {
   saveFiles: () => Promise<void>;

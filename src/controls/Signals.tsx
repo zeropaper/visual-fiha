@@ -1,5 +1,5 @@
+import { useAppFastContextFields } from "@contexts/ControlsContext";
 import sectionStyles from "./ControlsApp.module.css";
-import { useAppFastContextFields } from "./ControlsContext";
 
 export function Signals() {
   const {
