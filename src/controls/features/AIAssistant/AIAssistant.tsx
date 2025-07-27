@@ -1,3 +1,4 @@
+import { useCode } from "@hooks/useCode";
 import { Button } from "@ui/Button";
 import { Textarea } from "@ui/Textarea";
 import textareaStyles from "@ui/Textarea.module.css";
@@ -11,8 +12,8 @@ import {
   useRef,
   useState,
 } from "react";
-import type { LayerConfig } from "../../types";
-import { useCode } from "../hooks/useCode";
+import type { LayerConfig } from "src/types";
+import { useChat } from "../../contexts/ChatsContext";
 import styles from "./AIAssistant.module.css";
 import {
   type ToolsCall,
@@ -23,7 +24,6 @@ import {
   hasCredentials,
 } from "./AiAssitant.utils";
 import AttachmentsList from "./AttachmentsList";
-import { useChat } from "./ChatsContext";
 import { AIAssistantCredentialsForm } from "./CredentialsForm";
 import { Messages } from "./Messages";
 

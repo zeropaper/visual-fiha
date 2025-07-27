@@ -1,16 +1,16 @@
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenAI } from "@ai-sdk/openai";
+import canvasDocs from "@docs/canvas-api.md?raw";
+import inputsDocs from "@docs/inputs.md?raw";
+import layersDocs from "@docs/layers.md?raw";
+import workerDocs from "@docs/runtime-worker.md?raw";
+import threejsDocs from "@docs/threejs-api.md?raw";
 import type { Attachment } from "ai";
 import { type ToolCall, type ToolSet, streamText } from "ai";
 import type * as _monaco from "monaco-editor";
 import { createOllama } from "ollama-ai-provider";
+import type { LayerConfig } from "src/types";
 import { z } from "zod";
-import canvasDocs from "../../../docs/canvas-api.md?raw";
-import inputsDocs from "../../../docs/inputs.md?raw";
-import layersDocs from "../../../docs/layers.md?raw";
-import workerDocs from "../../../docs/runtime-worker.md?raw";
-import threejsDocs from "../../../docs/threejs-api.md?raw";
-import type { LayerConfig } from "../../types";
 
 interface ProviderKeys {
   openai?: string;
