@@ -7,3 +7,5 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
   return <input ref={ref} className={styles.input} type="text" {...props} />;
 });
 Input.displayName = "Input";
+
+export { styles as inputStyles };

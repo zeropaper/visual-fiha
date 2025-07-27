@@ -186,7 +186,10 @@ export function AIAssistant({
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmitWithAttachments}>
+    <form
+      className={["ai-assistant", styles.form].join(" ")}
+      onSubmit={handleSubmitWithAttachments}
+    >
       <Messages messages={messages} ref={messagesRef} />
       {error && <div className={styles.error}>{error.message}</div>}
       {/* {status && <div className={styles.status}>{status}</div>} */}

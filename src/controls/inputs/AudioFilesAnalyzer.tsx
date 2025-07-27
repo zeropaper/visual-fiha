@@ -48,7 +48,7 @@ export default function AudioFilesAnalyzer() {
   }
 
   return (
-    <div>
+    <div className="audio-files-analyzer">
       <div className={styles.fileInput}>
         <input
           type="file"
