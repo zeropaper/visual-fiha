@@ -1,8 +1,8 @@
-import type { LayerConfig } from "../types";
+import type { LayerConfig } from "src/types";
 
-import canvasTypes from "../layers/Canvas2D/canvasTools.editor-types.txt?raw";
-import rawThreeBundleTypes from "../layers/ThreeJS/three-bundle.editor-types.txt?raw";
-import threeTypes from "../layers/ThreeJS/threeTools.editor-types.txt?raw";
+import canvasTypes from "@layers/Canvas2D/canvasTools.editor-types.txt?raw";
+import rawThreeBundleTypes from "@layers/ThreeJS/three-bundle.editor-types.txt?raw";
+import threeTypes from "@layers/ThreeJS/threeTools.editor-types.txt?raw";
 
 const lines = rawThreeBundleTypes.split("\n");
 // wrap the content the `delcare global { namespace Three { } }` to the types

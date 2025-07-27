@@ -17,7 +17,9 @@ import type { DocTopic } from "./features/Help/Help";
 import { Inputs } from "./features/Inputs/Inputs";
 import { Layers } from "./features/Layers/Layers";
 const ScriptEditor = lazy(() =>
-  import("./ScriptEditor").then((module) => ({ default: module.ScriptEditor })),
+  import("./features/ScriptEditor/ScriptEditor").then((module) => ({
+    default: module.ScriptEditor,
+  })),
 );
 
 export default function ControlsApp() {

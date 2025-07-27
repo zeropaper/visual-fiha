@@ -6,11 +6,11 @@ import { Button, buttonStyles } from "@ui/Button";
 import scriptableTypes from "@utils/Scriptable.editor.types.editor-types.txt?raw";
 import mathTypes from "@utils/mathTools.editor-types.txt?raw";
 import { HelpCircleIcon } from "lucide-react";
+import { useCode } from "../../hooks/useCode";
+import { AIAssistant } from "../AIAssistant/AIAssistant";
+import { type DocTopic, Help } from "../Help/Help";
+import { LandingContent } from "../Intro/LandingContent";
 import { extraLibs } from "./ScriptEditor.extraLibs";
-import { AIAssistant } from "./features/AIAssistant/AIAssistant";
-import { type DocTopic, Help } from "./features/Help/Help";
-import { LandingContent } from "./features/Intro/LandingContent";
-import { useCode } from "./hooks/useCode";
 
 function useTranspile() {
   const transpilationWorkerRef = useRef<Worker | null>(null);
