@@ -14,8 +14,8 @@ import Menu from "./Menu";
 import { Stage } from "./Stage";
 import { Timeline } from "./Timeline";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
-import { AudioSetupProvider } from "./inputs/AudioSetupContext";
-import { Inputs } from "./inputs/Inputs";
+import { AudioSetupProvider } from "./features/Inputs/AudioSetupContext";
+import { Inputs } from "./features/Inputs/Inputs";
 const ScriptEditor = lazy(() =>
   import("./ScriptEditor").then((module) => ({ default: module.ScriptEditor })),
 );

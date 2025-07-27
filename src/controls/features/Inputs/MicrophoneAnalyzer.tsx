@@ -1,4 +1,4 @@
-import { useWriteInputValues } from "../ControlsContext";
+import { useWriteInputValues } from "../../ControlsContext";
 import styles from "./AudioFilesAnalyzer.module.css";
 import { useAudioSetup } from "./AudioSetupContext";
 import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
