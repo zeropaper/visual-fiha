@@ -13,7 +13,14 @@ const handlers: ComActionHandlers = {};
 
 export default class Display {
   static ensureCanvas = (id = "canvas"): HTMLCanvasElement => {
-    let el = document.querySelector(`body>#${id}`) as HTMLCanvasElement;
+    // Ensure document.body exists before trying to query or append to it
+    if (!document.body) {
+      throw new Error(
+        "Document body not available. Display must be created after DOM is loaded.",
+      );
+    }
+
+    let el = document.querySelector(`#${id}`) as HTMLCanvasElement;
     if (!el) {
       el = document.createElement("canvas");
       el.id = id;
@@ -23,9 +30,17 @@ export default class Display {
       document.body.style.overflow = "hidden";
     }
 
-    const { style: parentStyle } = el.parentElement as HTMLElement;
-    parentStyle.position = "relative";
-    parentStyle.background = "black";
+    // Ensure the canvas is in the body
+    if (!document.body.contains(el)) {
+      document.body.appendChild(el);
+    }
+
+    const parentElement = el.parentElement;
+    if (parentElement) {
+      const { style: parentStyle } = parentElement;
+      parentStyle.position = "relative";
+      parentStyle.background = "black";
+    }
     return el;
   };
 
