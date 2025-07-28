@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import type { RuntimeData, TimeInputValue } from "src/types";
 
+/**
+ * Custom hook to monitor the runtime state of the controls worker.
+ * It listens for messages from the worker and updates the state accordingly.
+ * Messages may be recieved at extremly high frequency, so this hook is optimized to handle that.
+ * The result of the messages should be stored in a ref to avoid re-renders.
+ * @returns a function to get the ref to the runtime data, a boolean indicating if the worker is running,
+ * the current BPM, and the time data.
+ */
 export function useRuntimeMonitor() {
   const runtimeDataRef = useRef<RuntimeData | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [bpm, setBpm] = useState(120);
-  const [timeData, setTimeData] = useState<TimeInputValue | null>(null);
+  const timeDataRef = useRef<TimeInputValue | null>(null);
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
@@ -14,7 +22,7 @@ export function useRuntimeMonitor() {
         return;
       }
 
-      setTimeData(event.data.payload.time);
+      timeDataRef.current = event.data.payload.time;
 
       if (
         runtimeDataRef.current?.time.isRunning &&
@@ -57,6 +65,6 @@ export function useRuntimeMonitor() {
   return {
     isRunning,
     bpm,
-    timeData,
+    getTimeData: () => timeDataRef.current,
   };
 }

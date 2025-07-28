@@ -123,7 +123,7 @@ export function AudioSetupProvider({
   defaultAudioFiles?: string[];
 }) {
   const post = useContextWorkerPost();
-  const { isRunning, timeData } = useRuntimeMonitor();
+  const { isRunning, getTimeData } = useRuntimeMonitor();
   const [files, setFiles] = useState<AudioFileInfo[]>(
     defaultAudioFiles.map((url) => ({
       url,
@@ -136,16 +136,12 @@ export function AudioSetupProvider({
   const stablePlaybackState = useMemo(
     () => ({
       isPlaying: isRunning,
-      duration: timeData?.duration || 0,
+      duration: getTimeData()?.duration || 0,
       volume: 1,
       seeking: false,
     }),
-    [isRunning, timeData?.duration],
+    [isRunning, getTimeData],
   );
-
-  // Keep current time in a ref to avoid triggering context re-renders
-  const currentTimeRef = useRef(timeData?.elapsed || 0);
-  currentTimeRef.current = timeData?.elapsed || 0;
 
   // Create playbackState with a getCurrentTime function instead of direct currentTime property
   const playbackState = useMemo<PlaybackState>(
@@ -343,7 +339,7 @@ export function AudioSetupProvider({
 
     post?.("resume");
     // Convert current time from milliseconds to seconds for Web Audio API
-    const currentTimeInSeconds = (currentTimeRef.current || 0) / 1000;
+    const currentTimeInSeconds = (getTimeData()?.elapsed || 0) / 1000;
 
     sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
       const analyser = managedAnalyzersRef.current[index]?.analyser;
@@ -358,7 +354,7 @@ export function AudioSetupProvider({
         currentTimeInSeconds,
       );
     });
-  }, [post, getOrCreateAudioContext, createAndWireSource]);
+  }, [post, getOrCreateAudioContext, createAndWireSource, getTimeData]);
 
   const pauseAll = useCallback(() => {
     console.log("Pausing all audio sources");
@@ -455,8 +451,8 @@ export function AudioSetupProvider({
 
   // Stable function to get current time without causing context re-renders
   const getCurrentTime = useCallback(() => {
-    return currentTimeRef.current;
-  }, []);
+    return getTimeData()?.elapsed || 0;
+  }, [getTimeData]);
 
   // Ensure setupMicrophone and setupAudioFiles are invoked based on mode
   useEffect(() => {

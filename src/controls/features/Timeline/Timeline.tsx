@@ -30,13 +30,14 @@ export function Timeline({ className }: TimelineProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const post = useContextWorkerPost();
-  const { isRunning, bpm, timeData } = useRuntimeMonitor();
+  const { isRunning, bpm, getTimeData } = useRuntimeMonitor();
   const [hoveredTime, setHoveredTime] = useState<number | null>(null);
 
   const { playAll, pauseAll, seekAll, stopAll } = useAudioSetup();
 
   const getTimelineTime = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>): number => {
+      const timeData = getTimeData();
       const canvas = canvasRef.current;
       if (!canvas) return 0;
 
@@ -53,7 +54,7 @@ export function Timeline({ className }: TimelineProps) {
         mousePercent * Math.max(timeData?.elapsed || 0, minTimelineDuration);
       return clickedTime;
     },
-    [timeData?.elapsed, timeData?.duration],
+    [getTimeData],
   );
 
   const handleCanvasClick = useCallback<MouseEventHandler<HTMLCanvasElement>>(
@@ -107,7 +108,7 @@ export function Timeline({ className }: TimelineProps) {
     ctx.strokeStyle = "#ffffff33";
     ctx.lineWidth = 1;
     ctx.strokeRect(0, 0, width, height);
-
+    const timeData = getTimeData();
     if (timeData) {
       // For absolute time (no duration), show elapsed time with reasonable scale
       if (!timeData.duration) {
@@ -148,7 +149,7 @@ export function Timeline({ className }: TimelineProps) {
       ctx.textBaseline = "bottom";
       ctx.fillText(formatTime(hoveredTime), hoverX, height - 5);
     }
-  }, [timeData, hoveredTime, bpm]);
+  }, [getTimeData, hoveredTime, bpm]);
 
   // Animation loop
   useEffect(() => {
@@ -220,7 +221,7 @@ export function Timeline({ className }: TimelineProps) {
           variant="icon"
           name="reset"
           onClick={stopAll}
-          disabled={!isRunning || !timeData?.elapsed}
+          disabled={!isRunning || !getTimeData()?.elapsed}
           className={["reset-button", buttonStyles.button].join(" ")}
         >
           <ChevronFirstIcon />
