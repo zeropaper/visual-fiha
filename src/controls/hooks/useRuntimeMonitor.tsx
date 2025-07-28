@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { RuntimeData, TimeInputValue } from "../types";
+import type { RuntimeData, TimeInputValue } from "src/types";
 
 export function useRuntimeMonitor() {
   const runtimeDataRef = useRef<RuntimeData | null>(null);
