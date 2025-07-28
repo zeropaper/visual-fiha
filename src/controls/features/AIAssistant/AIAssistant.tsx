@@ -15,12 +15,11 @@ import {
 import type { LayerConfig } from "src/types";
 import { useChat } from "../../contexts/ChatsContext";
 import styles from "./AIAssistant.module.css";
+import { type ToolsCall, handleToolCall } from "./AIAssistant.tools";
 import {
-  type ToolsCall,
   customFetch,
   filesToAttachments,
   getSystemMessage,
-  handleToolCall,
   hasCredentials,
 } from "./AiAssitant.utils";
 import AttachmentsList from "./AttachmentsList";

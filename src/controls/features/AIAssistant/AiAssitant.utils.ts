@@ -6,11 +6,10 @@ import layersDocs from "@docs/layers.md?raw";
 import workerDocs from "@docs/runtime-worker.md?raw";
 import threejsDocs from "@docs/threejs-api.md?raw";
 import type { Attachment } from "ai";
-import { type ToolCall, type ToolSet, streamText } from "ai";
-import type * as _monaco from "monaco-editor";
+import { type ToolSet, streamText } from "ai";
 import { createOllama } from "ollama-ai-provider";
 import type { LayerConfig } from "src/types";
-import { z } from "zod";
+import { toolsConfig } from "./AIAssistant.tools";
 
 interface ProviderKeys {
   openai?: string;
@@ -88,53 +87,8 @@ export function makeFetch({
   };
 }
 
-export const scriptArgsSchema = z.object({
-  role: z.enum(["setup", "animation"]),
-  type: z.enum(["worker", "layer"]),
-  id: z.string(),
-});
-
-export const editorChangeArgsSchema = z.object({
-  code: z.string(),
-});
-
-export type ToolsCall = ToolCall<
-  "updateScript",
-  z.infer<typeof editorChangeArgsSchema>
->;
-
-export function handleToolCall(
-  {
-    toolCall,
-  }: {
-    toolCall: ToolsCall;
-  },
-  {
-    editor,
-  }: {
-    editor: _monaco.editor.IStandaloneCodeEditor;
-    onSwitchRole: () => void;
-  },
-) {
-  console.log("Handling tool call:", toolCall);
-  switch (toolCall.toolName) {
-    case "updateScript":
-      const { code } = toolCall.args;
-      console.log("Changing script to:", code);
-      editor.setValue(code);
-      break;
-    default:
-      console.warn("Unknown tool call:", toolCall);
-  }
-}
-
 export const customFetch = makeFetch({
-  tools: {
-    updateScript: {
-      description: "Update the current script",
-      parameters: editorChangeArgsSchema,
-    },
-  },
+  tools: toolsConfig,
 });
 
 export async function fileToAttachment(file: File): Promise<Attachment> {
