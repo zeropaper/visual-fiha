@@ -168,9 +168,9 @@ export function getSystemMessage(
     id: "system",
     content:
       type === "layer"
-        ? `You are helping with the editing of a ${layerType} layer ${role} script for a visual programming environment.
+        ? `You are editing the script of a ${layerType} layer ${role} script for a visual programming environment.
 
-You are using the tools at your disposal when relevant.
+Use the tools at your disposal when relevant.
 
 Here's some documentation about the visual programming environment:
 
@@ -179,7 +179,7 @@ Here's some documentation about the visual programming environment:
 #${layersDocs.replaceAll("\n#", "\n##")}
 
 #${(layerType === "canvas" ? canvasDocs : threejsDocs).replaceAll("\n#", "\n##")}`
-        : `You are helping with the editing of a worker script for a visual programming environment.
+        : `You are editing the script of a worker script for a visual programming environment.
 Here's some documentation:
 
 #${inputsDocs.replaceAll("\n#", "\n##")}

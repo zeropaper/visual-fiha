@@ -42,9 +42,6 @@ export function AIAssistant({
   id?: string | "worker";
   onSwitchRole: () => void;
 }) {
-  // @ts-expect-error
-  window.editor = editor; // For debugging purposes
-
   const [{ code: setupScript }] = useCode(
     "setup",
     type || "worker",
@@ -56,10 +53,15 @@ export function AIAssistant({
     id || "worker",
   );
 
+  const chatId = [type, id].filter(Boolean).join("-");
+  const storedMessages = localStorage.getItem(`chat-${chatId}`);
+  const initialMessages = storedMessages
+    ? JSON.parse(storedMessages)
+    : [getSystemMessage(layerType, type, role)];
   const { messages, input, handleInputChange, append, error, status } = useChat(
     {
-      id: [type, id].filter(Boolean).join("-"),
-      initialMessages: [getSystemMessage(layerType, type, role)],
+      id: chatId,
+      initialMessages,
       maxSteps: 10,
       fetch: customFetch,
       onToolCall: (opts) =>
@@ -70,8 +72,8 @@ export function AIAssistant({
     },
   );
   useEffect(() => {
-    console.log("Current messages:", messages);
-  }, [messages]);
+    localStorage.setItem(`chat-${chatId}`, JSON.stringify(messages));
+  }, [messages, chatId]);
 
   const [showCredentialsForm, setShowCredentialsForm] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
