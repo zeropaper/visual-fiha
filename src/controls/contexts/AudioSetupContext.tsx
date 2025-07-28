@@ -58,6 +58,7 @@ interface AudioSetupContextValue {
   files: Array<AudioFileInfo>;
   setFiles: (files: Array<AudioFileInfo>) => void;
   playbackState: PlaybackState;
+  getCurrentTime: () => number; // Add function to get current time without causing re-renders
   playAll: () => void;
   pauseAll: () => void;
   stopAll: () => void;
@@ -86,6 +87,7 @@ const AudioSetupContext = createContext<AudioSetupContextValue>({
     volume: 1,
     seeking: false,
   },
+  getCurrentTime: () => 0,
   playAll: () => {
     throw new Error("playAll is not implemented");
   },
@@ -130,15 +132,28 @@ export function AudioSetupProvider({
   );
   const [mode, setModeState] = useState<AudioInputMode>("files");
 
-  const playbackState = useMemo<PlaybackState>(
+  // Memoize stable playback properties that don't change frequently
+  const stablePlaybackState = useMemo(
     () => ({
       isPlaying: isRunning,
-      currentTime: timeData?.elapsed || 0,
       duration: timeData?.duration || 0,
       volume: 1,
       seeking: false,
     }),
-    [isRunning, timeData],
+    [isRunning, timeData?.duration],
+  );
+
+  // Keep current time in a ref to avoid triggering context re-renders
+  const currentTimeRef = useRef(timeData?.elapsed || 0);
+  currentTimeRef.current = timeData?.elapsed || 0;
+
+  // Create playbackState with a getCurrentTime function instead of direct currentTime property
+  const playbackState = useMemo<PlaybackState>(
+    () => ({
+      ...stablePlaybackState,
+      currentTime: 0, // Default value, consumers should use getCurrentTime instead
+    }),
+    [stablePlaybackState],
   );
 
   const sourcesRef = useRef<AudioBufferSourceNode[]>([]);
@@ -328,7 +343,7 @@ export function AudioSetupProvider({
 
     post?.("resume");
     // Convert current time from milliseconds to seconds for Web Audio API
-    const currentTimeInSeconds = (playbackState.currentTime || 0) / 1000;
+    const currentTimeInSeconds = (currentTimeRef.current || 0) / 1000;
 
     sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
       const analyser = managedAnalyzersRef.current[index]?.analyser;
@@ -343,12 +358,7 @@ export function AudioSetupProvider({
         currentTimeInSeconds,
       );
     });
-  }, [
-    post,
-    getOrCreateAudioContext,
-    createAndWireSource,
-    playbackState.currentTime,
-  ]);
+  }, [post, getOrCreateAudioContext, createAndWireSource]);
 
   const pauseAll = useCallback(() => {
     console.log("Pausing all audio sources");
@@ -388,7 +398,7 @@ export function AudioSetupProvider({
     (time: number) => {
       console.log("Seeking all audio sources to time:", time);
       const audioCtx = getOrCreateAudioContext();
-      const wasPlaying = playbackState.isPlaying;
+      const wasPlaying = stablePlaybackState.isPlaying;
 
       // Convert time from milliseconds to seconds for Web Audio API
       const timeInSeconds = time / 1000;
@@ -422,7 +432,7 @@ export function AudioSetupProvider({
       post,
       getOrCreateAudioContext,
       createAndWireSource,
-      playbackState.isPlaying,
+      stablePlaybackState.isPlaying,
     ],
   );
 
@@ -442,6 +452,11 @@ export function AudioSetupProvider({
   const getMicrophoneState = useCallback(() => {
     return microphoneState;
   }, [microphoneState]);
+
+  // Stable function to get current time without causing context re-renders
+  const getCurrentTime = useCallback(() => {
+    return currentTimeRef.current;
+  }, []);
 
   // Ensure setupMicrophone and setupAudioFiles are invoked based on mode
   useEffect(() => {
@@ -469,6 +484,7 @@ export function AudioSetupProvider({
       mode,
       setMode,
       playbackState,
+      getCurrentTime,
       playAll,
       pauseAll,
       stopAll,
@@ -484,6 +500,7 @@ export function AudioSetupProvider({
       mode,
       setMode,
       playbackState,
+      getCurrentTime,
       playAll,
       pauseAll,
       stopAll,
