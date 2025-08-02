@@ -16,15 +16,13 @@ import type { LayerConfig } from "src/types";
 import { useChat } from "../../contexts/ChatsContext";
 import styles from "./AIAssistant.module.css";
 import { type ToolsCall, handleToolCall } from "./AIAssistant.tools";
-import {
-  customFetch,
-  filesToAttachments,
-  getSystemMessage,
-  hasCredentials,
-} from "./AiAssitant.utils";
+import { customFetch } from "./AiAssitant.utils";
 import AttachmentsList from "./AttachmentsList";
 import { AIAssistantCredentialsForm } from "./CredentialsForm";
 import { Messages } from "./Messages";
+import { filesToAttachments } from "./utils/attachments";
+import { getSystemMessage } from "./utils/getSystemPrompt";
+import { hasCredentials } from "./utils/providers";
 
 export function AIAssistant({
   editor,

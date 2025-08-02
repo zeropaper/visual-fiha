@@ -1,59 +1,10 @@
-import { createMistral } from "@ai-sdk/mistral";
-import { createOpenAI } from "@ai-sdk/openai";
-import canvasDocs from "@docs/canvas-api.md?raw";
-import inputsDocs from "@docs/inputs.md?raw";
-import layersDocs from "@docs/layers.md?raw";
-import workerDocs from "@docs/runtime-worker.md?raw";
-import threejsDocs from "@docs/threejs-api.md?raw";
-import type { Attachment } from "ai";
 import { type ToolSet, streamText } from "ai";
-import { createOllama } from "ollama-ai-provider";
-import type { LayerConfig } from "src/types";
 import { toolsConfig } from "./AIAssistant.tools";
-
-interface ProviderKeys {
-  openai?: string;
-  mistral?: string;
-  ollama?: string;
-}
-
-export function getCredentials(): ProviderKeys {
-  const stored = JSON.parse(
-    localStorage.getItem("ai-assistant-credentials") || "{}",
-  );
-  return {
-    openai: import.meta.env.VITE_OPENAI_API_KEY || stored.openai,
-    mistral: import.meta.env.VITE_MISTRAL_API_KEY || stored.mistral,
-    ollama: import.meta.env.VITE_OLLAMA_SERVER || stored.ollama,
-  };
-}
-
-export function hasCredentials() {
-  const stored = getCredentials();
-  return stored.openai || stored.mistral || stored.ollama?.startsWith("http");
-}
-
-export async function getProviderApiKey(provider: keyof ProviderKeys) {
-  return getCredentials()[provider] || "";
-}
-
-async function getProviderModel(
-  id: `${string}:${string}`,
-  getKey: (provider: keyof ProviderKeys) => Promise<string> = getProviderApiKey,
-) {
-  const [provider, model] = id.split(":") as [keyof ProviderKeys, string];
-  const apiKey = await getKey(provider);
-  switch (provider) {
-    case "openai":
-      return createOpenAI({ apiKey })(model);
-    case "mistral":
-      return createMistral({ apiKey })(model);
-    case "ollama":
-      return createOllama({ baseURL: apiKey })(model);
-    default:
-      throw new Error(`Unsupported provider: ${provider}`);
-  }
-}
+import {
+  type ProviderKeys,
+  getProviderApiKey,
+  getProviderModel,
+} from "./utils/providers";
 
 export function makeFetch({
   tools,
@@ -90,56 +41,3 @@ export function makeFetch({
 export const customFetch = makeFetch({
   tools: toolsConfig,
 });
-
-export async function fileToAttachment(file: File): Promise<Attachment> {
-  return {
-    name: file.name,
-    url: URL.createObjectURL(file),
-    contentType: file.type,
-  };
-}
-
-export async function filesToAttachments(files: File[]): Promise<Attachment[]> {
-  return Promise.all(files.map(fileToAttachment));
-}
-
-export function getDataURL(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-export function getSystemMessage(
-  layerType?: LayerConfig["type"] | null,
-  type?: "worker" | "layer",
-  role?: "setup" | "animation",
-) {
-  return {
-    role: "system" as const,
-    id: "system",
-    content:
-      type === "layer"
-        ? `You are editing the script of a ${layerType} layer ${role} script for a visual programming environment.
-
-Use the tools at your disposal when relevant.
-
-Unless it is absolutely clear that the user asks a question, you always apply the script changes directly (using the tools at your disposal) and summarize your changes in your answer.
-
-Here's some documentation about the visual programming environment:
-
-#${inputsDocs.replaceAll("\n#", "\n##")}
-
-#${layersDocs.replaceAll("\n#", "\n##")}
-
-#${(layerType === "canvas" ? canvasDocs : threejsDocs).replaceAll("\n#", "\n##")}`
-        : `You are editing the script of a worker script for a visual programming environment.
-Here's some documentation:
-
-#${inputsDocs.replaceAll("\n#", "\n##")}
-
-#${workerDocs.replaceAll("\n#", "\n##")}`,
-  };
-}
