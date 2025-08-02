@@ -22,3 +22,17 @@
 .startPart {
   /* background: purple; */
 }
+
+.toolNamePart {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  svg {
+    width: 1em;
+    height: 1em;
+    color: var(--vscode-editorInfo-foreground);
+  }
+  .error {
+    color: var(--vscode-errorForeground);
+  }
+}

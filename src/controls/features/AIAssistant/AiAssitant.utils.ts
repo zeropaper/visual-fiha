@@ -126,7 +126,7 @@ export function getSystemMessage(
 
 Use the tools at your disposal when relevant.
 
-Unless the user asks a question, you apply the script changes directly and summarize your changes in your answer.
+Unless it is absolutely clear that the user asks a question, you always apply the script changes directly (using the tools at your disposal) and summarize your changes in your answer.
 
 Here's some documentation about the visual programming environment:
 

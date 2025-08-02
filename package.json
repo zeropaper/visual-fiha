@@ -29,6 +29,7 @@
     "prepare": "husky install && pnpm run copy-typescript && pnpm run gen-editor-types"
   },
   "devDependencies": {
+    "@ai-sdk/ui-utils": "^1.2.11",
     "@biomejs/biome": "^1.9.4",
     "@commitlint/cli": "^17.8.1",
     "@commitlint/config-conventional": "^17.8.1",

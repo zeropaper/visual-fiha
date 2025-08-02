@@ -300,7 +300,6 @@ export function ScriptEditor({
                     type={type}
                     layerType={layerType}
                     id={id}
-                    onSwitchRole={onSwitchRole}
                   />
                 ) : null}
               </div>

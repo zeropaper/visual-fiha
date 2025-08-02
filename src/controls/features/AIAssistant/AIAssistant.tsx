@@ -32,21 +32,19 @@ export function AIAssistant({
   type,
   layerType,
   id,
-  onSwitchRole,
 }: {
   editor: _monaco.editor.IStandaloneCodeEditor;
   role?: "setup" | "animation";
   type?: "worker" | "layer";
   layerType?: LayerConfig["type"] | null;
   id?: string | "worker";
-  onSwitchRole: () => void;
 }) {
-  const [{ code: setupScript }] = useCode(
+  const [{ code: setupScript }, setSetupScript] = useCode(
     "setup",
     type || "worker",
     id || "worker",
   );
-  const [{ code: animationScript }] = useCode(
+  const [{ code: animationScript }, setAnimationScript] = useCode(
     "animation",
     type || "worker",
     id || "worker",
@@ -57,19 +55,29 @@ export function AIAssistant({
   const initialMessages = storedMessages
     ? JSON.parse(storedMessages)
     : [getSystemMessage(layerType, type, role)];
-  const { messages, input, handleInputChange, append, error, status } = useChat(
-    {
-      id: chatId,
-      initialMessages,
-      maxSteps: 10,
-      fetch: customFetch,
-      onToolCall: (opts) =>
-        handleToolCall(opts as { toolCall: ToolsCall }, {
-          editor,
-          onSwitchRole,
-        }),
-    },
-  );
+  const {
+    messages,
+    input,
+    handleInputChange,
+    append,
+    error,
+    status,
+    setInput,
+  } = useChat({
+    id: chatId,
+    initialMessages,
+    maxSteps: 10,
+    fetch: customFetch,
+    onToolCall: (opts) =>
+      handleToolCall(opts as { toolCall: ToolsCall }, {
+        editor,
+        role: role || "setup",
+        type: type || "worker",
+        id: id || "worker",
+        setSetupScript,
+        setAnimationScript,
+      }),
+  });
   useEffect(() => {
     localStorage.setItem(`chat-${chatId}`, JSON.stringify(messages));
   }, [messages, chatId]);
@@ -149,22 +157,18 @@ export function AIAssistant({
 
   const getAttachments = useCallback(() => {
     const result = [...attachments];
-    if (setupScript && role === "setup") {
-      result.push({
-        name: "setup-script",
-        url: `data:text/plain;base64,${btoa(setupScript)}`,
-        contentType: "text/plain",
-      });
-    }
-    if (animationScript && role === "animation") {
-      result.push({
-        name: "animation-script",
-        url: `data:text/plain;base64,${btoa(animationScript)}`,
-        contentType: "text/plain",
-      });
-    }
+    result.push({
+      name: "setup-script",
+      url: `data:text/plain;base64,${btoa(setupScript)}`,
+      contentType: "text/plain",
+    });
+    result.push({
+      name: "animation-script",
+      url: `data:text/plain;base64,${btoa(animationScript)}`,
+      contentType: "text/plain",
+    });
     return result;
-  }, [attachments, setupScript, animationScript, role]);
+  }, [attachments, setupScript, animationScript]);
 
   const handleSubmitWithAttachments = useCallback<
     FormEventHandler<HTMLFormElement>

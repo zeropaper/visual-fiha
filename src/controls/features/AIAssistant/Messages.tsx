@@ -1,7 +1,9 @@
+import type { ToolInvocationUIPart } from "@ai-sdk/ui-utils";
 import { AdvancedMarkdown } from "@ui/AdvancedMarkdown";
 import { Markdown } from "@ui/Markdown";
 import type { UIMessage } from "ai";
-import { forwardRef } from "react";
+import { CheckIcon, Icon, XCircleIcon } from "lucide-react";
+import { type ReactNode, forwardRef } from "react";
 import assistantStyles from "./AIAssistant.module.css";
 import styles from "./Messages.module.css";
 
@@ -17,6 +19,89 @@ function UserMessage({
       </AdvancedMarkdown>
     </li>
   );
+}
+
+export function ToolNameWStatus({
+  toolName,
+  status,
+}: {
+  toolName: ReactNode;
+  status?: boolean;
+}) {
+  return (
+    <div className={[styles.toolNamePart, styles.part].join(" ")}>
+      <span>{toolName}</span>
+      {status === true ? (
+        <CheckIcon />
+      ) : status === false ? (
+        <XCircleIcon className="error" />
+      ) : null}
+    </div>
+  );
+}
+
+export function DefaultToolInvocation({
+  toolInvocation,
+}: {
+  toolInvocation: ToolInvocationUIPart["toolInvocation"];
+}) {
+  return (
+    <div className={[styles.toolInvocationPart, styles.part].join(" ")}>
+      <ToolNameWStatus
+        toolName={toolInvocation.toolName}
+        status={
+          toolInvocation.state === "result"
+            ? toolInvocation.result?.success
+            : undefined
+        }
+      />
+      <details>
+        <summary>Arguments</summary>
+        <pre>{JSON.stringify(toolInvocation.args || null, null, 2)}</pre>
+      </details>
+      {toolInvocation.state === "partial-call" && <span>...</span>}
+      {toolInvocation.state === "result" && (
+        <details>
+          <summary>Result</summary>
+          <pre>{JSON.stringify(toolInvocation.result, null, 2)}</pre>
+        </details>
+      )}
+    </div>
+  );
+}
+
+export function ScriptToolInvocation({
+  toolInvocation,
+}: {
+  toolInvocation: ToolInvocationUIPart["toolInvocation"];
+}) {
+  return (
+    <div className={[styles.toolInvocationPart, styles.part].join(" ")}>
+      <ToolNameWStatus
+        toolName={`set ${toolInvocation.args.role} script`}
+        status={
+          toolInvocation.state === "result"
+            ? toolInvocation.result?.success
+            : undefined
+        }
+      />
+      <details>
+        <summary>Code</summary>
+        <pre>{toolInvocation.args.code || ""}</pre>
+      </details>
+      {toolInvocation.state === "partial-call" && <span>...</span>}
+    </div>
+  );
+}
+
+export function ToolPart({ part }: { part: ToolInvocationUIPart }) {
+  console.info("ToolPart", part.toolInvocation.toolName);
+  switch (part.toolInvocation.toolName) {
+    case "setScript":
+      return <ScriptToolInvocation toolInvocation={part.toolInvocation} />;
+    default:
+      return <DefaultToolInvocation toolInvocation={part.toolInvocation} />;
+  }
 }
 
 function MessagePart({
@@ -38,25 +123,7 @@ function MessagePart({
         </span>
       );
     case "tool-invocation":
-      console.info("Tool invocation part:", part);
-      return (
-        <div className={[styles.toolInvocationPart, styles.part].join(" ")}>
-          <span>{part.toolInvocation.toolName}</span>
-          <details>
-            <summary>Arguments</summary>
-            <pre>
-              {JSON.stringify(part.toolInvocation.args || null, null, 2)}
-            </pre>
-          </details>
-          {part.toolInvocation.state === "partial-call" && <span>...</span>}
-          {part.toolInvocation.state === "result" && (
-            <details>
-              <summary>Result</summary>
-              <pre>{JSON.stringify(part.toolInvocation.result, null, 2)}</pre>
-            </details>
-          )}
-        </div>
-      );
+      return <ToolPart part={part} />;
     case "file":
       return (
         <span className={[styles.mimeTypePart, styles.part].join(" ")}>
