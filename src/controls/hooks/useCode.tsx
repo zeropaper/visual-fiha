@@ -15,8 +15,7 @@ export function useCode(
   if (type === "worker") {
     return [
       {
-        code:
-          worker[role] || `// No code available for worker with role ${role}`,
+        code: worker[role] || "",
         layerType: null,
       },
       (code: string) =>
@@ -31,9 +30,7 @@ export function useCode(
   if (layer) {
     return [
       {
-        code:
-          layer[role] ||
-          `// No code available for layer ${id} with role ${role}`,
+        code: layer[role] || "",
         layerType: layer.type,
       },
       (code: string) =>
@@ -45,10 +42,10 @@ export function useCode(
 
   return [
     {
-      code: `// No code available for layer ${id} with role ${role}`,
+      code: "",
       layerType: null,
     },
-    (code: string) => {
+    (_code: string) => {
       console.warn(
         `[ScriptEditor] Cannot set code for layer ${id} with role ${role} because it does not exist.`,
       );
