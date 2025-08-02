@@ -126,6 +126,8 @@ export function getSystemMessage(
 
 Use the tools at your disposal when relevant.
 
+Unless the user asks a question, you apply the script changes directly and summarize your changes in your answer.
+
 Here's some documentation about the visual programming environment:
 
 #${inputsDocs.replaceAll("\n#", "\n##")}
