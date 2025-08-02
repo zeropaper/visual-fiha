@@ -206,7 +206,6 @@ export function Timeline({ className }: TimelineProps) {
     >
       <div className={styles.controls}>
         <Button
-          variant="icon"
           name="play_pause"
           onClick={handlePlayPause}
           className={[
@@ -218,11 +217,14 @@ export function Timeline({ className }: TimelineProps) {
           {isRunning ? <PauseIcon /> : <PlayIcon />}
         </Button>
         <Button
-          variant="icon"
           name="reset"
           onClick={stopAll}
           disabled={!isRunning || !getTimeData()?.elapsed}
-          className={["reset-button", buttonStyles.button].join(" ")}
+          className={[
+            "reset-button",
+            buttonStyles.button,
+            buttonStyles.icon,
+          ].join(" ")}
         >
           <ChevronFirstIcon />
         </Button>
