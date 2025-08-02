@@ -40,9 +40,22 @@ function MessagePart({
     case "tool-invocation":
       console.info("Tool invocation part:", part);
       return (
-        <span className={[styles.toolInvocationPart, styles.part].join(" ")}>
-          {part.toolInvocation.toolName}
-        </span>
+        <div className={[styles.toolInvocationPart, styles.part].join(" ")}>
+          <span>{part.toolInvocation.toolName}</span>
+          <details>
+            <summary>Arguments</summary>
+            <pre>
+              {JSON.stringify(part.toolInvocation.args || null, null, 2)}
+            </pre>
+          </details>
+          {part.toolInvocation.state === "partial-call" && <span>...</span>}
+          {part.toolInvocation.state === "result" && (
+            <details>
+              <summary>Result</summary>
+              <pre>{JSON.stringify(part.toolInvocation.result, null, 2)}</pre>
+            </details>
+          )}
+        </div>
       );
     case "file":
       return (
@@ -74,9 +87,11 @@ function AssistantMessage({
     <li
       className={[assistantStyles.message, assistantStyles.assistant].join(" ")}
     >
-      {message.parts.map((part) => (
-        <MessagePart key={JSON.stringify(part)} part={part} />
-      ))}
+      {message.parts
+        .filter(({ type }) => type !== "step-start")
+        .map((part) => (
+          <MessagePart key={JSON.stringify(part)} part={part} />
+        ))}
     </li>
   ) : null;
 }
