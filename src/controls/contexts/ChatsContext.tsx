@@ -1,8 +1,5 @@
-import {
-  type UIMessage,
-  type UseChatOptions,
-  useChat as useChatOriginal,
-} from "@ai-sdk/react";
+import { type UseChatOptions, useChat as useChatOriginal } from "@ai-sdk/react";
+import type { VFMessage } from "@controls/features/AIAssistant/types";
 import { customTransport } from "@controls/features/AIAssistant/utils/transport";
 import type { ChatTransport } from "ai";
 import { useEffect, useMemo, useState } from "react";
@@ -36,14 +33,14 @@ export const localStorageAdapter: StorageAdapter = {
 };
 
 // Fix the type definitions to be more flexible with UI_MESSAGE constraints
-type ChatData = Omit<UseChatOptions<UIMessage>, "transport"> & {
+type ChatData = Omit<UseChatOptions<VFMessage>, "transport"> & {
   name?: string;
 };
 
 type ChatsContextType = {
   chats: Record<string, ChatData>;
   currentChatId: string;
-  transport?: ChatTransport<UIMessage>;
+  transport?: ChatTransport<VFMessage>;
   setCurrentChatId: (chatId: string) => Promise<void>;
   createChat: () => Promise<string>;
   deleteChat: (chatId: string) => Promise<void>;
@@ -60,7 +57,7 @@ export function ChatsProvider({
 }: {
   children: ReactNode;
   storageAdapter?: StorageAdapter;
-  transport?: ChatTransport<UIMessage>;
+  transport?: ChatTransport<VFMessage>;
   id?: string;
 }) {
   const [currentChatId, setCurrentChatId] = useState<string>(id || "");
@@ -165,7 +162,7 @@ export function ChatsProvider({
 }
 
 export function useChats<
-  UI_MESSAGE extends UIMessage = UIMessage,
+  UI_MESSAGE extends VFMessage = VFMessage,
 >(): ChatsContextType & {
   currentChat: UseChatOptions<UI_MESSAGE>;
 } {
@@ -185,7 +182,7 @@ export function useChats<
   };
 }
 
-export function useChat<UI_MESSAGE extends UIMessage = UIMessage>(
+export function useChat<UI_MESSAGE extends VFMessage = VFMessage>(
   options?: UseChatOptions<UI_MESSAGE>,
 ) {
   const { currentChat, transport } = useChats<UI_MESSAGE>();

@@ -4,8 +4,6 @@ import { Textarea } from "@ui/Textarea";
 import textareaStyles from "@ui/Textarea.module.css";
 import {
   type FileUIPart,
-  type UIDataTypes,
-  type UIMessage,
   lastAssistantMessageIsCompleteWithToolCalls,
 } from "ai";
 import { CameraIcon, FileIcon, KeyIcon, SendIcon } from "lucide-react";
@@ -24,6 +22,7 @@ import FileUIPartsList from "./AttachmentsList";
 import { AIAssistantCredentialsForm } from "./CredentialsForm";
 import { Messages } from "./Messages";
 import type { VFTools } from "./tools/types";
+import type { VFMessage } from "./types";
 import { filesToFileUIParts } from "./utils/attachments";
 import { getSystemMessage } from "./utils/getSystemPrompt";
 import { hasCredentials } from "./utils/providers";
@@ -66,7 +65,7 @@ export function AIAssistant({
       switch (toolCall.toolName) {
         default:
           addToolResult({
-            tool: toolCall.toolName,
+            tool: toolCall.toolName as keyof VFTools,
             toolCallId: toolCall.toolCallId,
             output: {
               type: "text",
@@ -204,7 +203,7 @@ export function AIAssistant({
       onSubmit={handleSubmitWithFileUIParts}
     >
       <Messages
-        messages={messages as UIMessage<unknown, UIDataTypes, VFTools>[]}
+        messages={messages as VFMessage[]}
         addToolResult={addToolResult}
         ref={messagesRef}
       />

@@ -1,17 +1,14 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { Button } from "@ui/Button";
-import type { UIDataTypes, UIMessage } from "ai";
 import { forwardRef } from "react";
 import assistantStyles from "./AIAssistant.module.css";
-import type { VFTools } from "./tools/types";
+import type { VFMessage } from "./types";
 
 const Messages = forwardRef<
   HTMLUListElement,
   {
-    messages: UIMessage<unknown, UIDataTypes, VFTools>[];
-    addToolResult: UseChatHelpers<
-      UIMessage<unknown, UIDataTypes, VFTools>
-    >["addToolResult"];
+    messages: VFMessage[];
+    addToolResult: UseChatHelpers<VFMessage>["addToolResult"];
   }
 >(({ messages, addToolResult }, ref) => (
   <ul className={assistantStyles.messages} ref={ref}>
