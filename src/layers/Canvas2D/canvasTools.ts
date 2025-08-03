@@ -147,97 +147,10 @@ export type centeredGrid = (
   }) => void,
 ) => void;
 
-type CTXMethod = (...args: any[]) => any;
+type CTXMethod<N extends keyof CTX> = CTX[N];
 interface CTXValue<T> {
   (): T;
   (value: T): T;
-}
-
-export interface Canvas2DAPI {
-  width: width;
-  height: height;
-  vw: vw;
-  vh: vh;
-  vmin: vmin;
-  vmax: vmax;
-  textLines: textLines;
-  mirror: mirror;
-  mediaType: mediaType;
-  clear: clear;
-  copy: copy;
-  pasteImage: pasteImage;
-  pasteContain: pasteContain;
-  pasteCover: pasteCover;
-  fontSize: fontSize;
-  fontFamily: fontFamily;
-  fontWeight: fontWeight;
-  plot: plot;
-  circle: circle;
-  polygon: polygon;
-  grid: grid;
-  centeredGrid: centeredGrid;
-
-  // based on OffscreenCanvasRenderingContext2D
-  clip: CTXMethod;
-  createImageData: CTXMethod;
-  createLinearGradient: CTXMethod;
-  createPattern: CTXMethod;
-  createRadialGradient: CTXMethod;
-  drawImage: CTXMethod;
-  fill: CTXMethod;
-  fillText: CTXMethod;
-  getImageData: CTXMethod;
-  getLineDash: CTXMethod;
-  getTransform: CTXMethod;
-  isPointInPath: CTXMethod;
-  isPointInStroke: CTXMethod;
-  measureText: CTXMethod;
-  putImageData: CTXMethod;
-  scale: CTXMethod;
-  setLineDash: CTXMethod;
-  setTransform: CTXMethod;
-  stroke: CTXMethod;
-  strokeText: CTXMethod;
-  transform: CTXMethod;
-  translate: CTXMethod;
-  arc: CTXMethod;
-  arcTo: CTXMethod;
-  beginPath: CTXMethod;
-  bezierCurveTo: CTXMethod;
-  clearRect: CTXMethod;
-  closePath: CTXMethod;
-  ellipse: CTXMethod;
-  fillRect: CTXMethod;
-  lineTo: CTXMethod;
-  moveTo: CTXMethod;
-  quadraticCurveTo: CTXMethod;
-  rect: CTXMethod;
-  resetTransform: CTXMethod;
-  restore: CTXMethod;
-  rotate: CTXMethod;
-  save: CTXMethod;
-  strokeRect: CTXMethod;
-
-  globalAlpha: CTXValue<CTX["globalAlpha"]>;
-  globalCompositeOperation: CTXValue<CTX["globalCompositeOperation"]>;
-  filter: CTXValue<CTX["filter"]>;
-  imageSmoothingEnabled: CTXValue<CTX["imageSmoothingEnabled"]>;
-  imageSmoothingQuality: CTXValue<CTX["imageSmoothingQuality"]>;
-  strokeStyle: CTXValue<CTX["strokeStyle"]>;
-  fillStyle: CTXValue<CTX["fillStyle"]>;
-  shadowOffsetX: CTXValue<CTX["shadowOffsetX"]>;
-  shadowOffsetY: CTXValue<CTX["shadowOffsetY"]>;
-  shadowBlur: CTXValue<CTX["shadowBlur"]>;
-  shadowColor: CTXValue<CTX["shadowColor"]>;
-  lineWidth: CTXValue<CTX["lineWidth"]>;
-  lineCap: CTXValue<CTX["lineCap"]>;
-  lineJoin: CTXValue<CTX["lineJoin"]>;
-  miterLimit: CTXValue<CTX["miterLimit"]>;
-  lineDashOffset: CTXValue<CTX["lineDashOffset"]>;
-  font: CTXValue<CTX["font"]>;
-  textAlign: CTXValue<CTX["textAlign"]>;
-  textBaseline: CTXValue<CTX["textBaseline"]>;
-  direction: CTXValue<CTX["direction"]>;
 }
 
 export default function canvasTools(ctx: CTX) {
@@ -799,4 +712,66 @@ declare global {
   const polygon: polygon;
   const grid: grid;
   const centeredGrid: centeredGrid;
+
+  const clip: CTXMethod<"clip">;
+  const createImageData: CTXMethod<"createImageData">;
+  const createLinearGradient: CTXMethod<"createLinearGradient">;
+  const createPattern: CTXMethod<"createPattern">;
+  const createRadialGradient: CTXMethod<"createRadialGradient">;
+  const drawImage: CTXMethod<"drawImage">;
+  const fill: CTXMethod<"fill">;
+  const fillText: CTXMethod<"fillText">;
+  const getImageData: CTXMethod<"getImageData">;
+  const getLineDash: CTXMethod<"getLineDash">;
+  const getTransform: CTXMethod<"getTransform">;
+  const isPointInPath: CTXMethod<"isPointInPath">;
+  const isPointInStroke: CTXMethod<"isPointInStroke">;
+  const measureText: CTXMethod<"measureText">;
+  const putImageData: CTXMethod<"putImageData">;
+  const scale: CTXMethod<"scale">;
+  const setLineDash: CTXMethod<"setLineDash">;
+  const setTransform: CTXMethod<"setTransform">;
+  const stroke: CTXMethod<"stroke">;
+  const strokeText: CTXMethod<"strokeText">;
+  const transform: CTXMethod<"transform">;
+  const translate: CTXMethod<"translate">;
+  const arc: CTXMethod<"arc">;
+  const arcTo: CTXMethod<"arcTo">;
+  const beginPath: CTXMethod<"beginPath">;
+  const bezierCurveTo: CTXMethod<"bezierCurveTo">;
+  const clearRect: CTXMethod<"clearRect">;
+  const closePath: CTXMethod<"closePath">;
+  const ellipse: CTXMethod<"ellipse">;
+  const fillRect: CTXMethod<"fillRect">;
+  const lineTo: CTXMethod<"lineTo">;
+  // // @ts-ignore
+  // const moveTo: CTXMethod<'moveTo'>;
+  const quadraticCurveTo: CTXMethod<"quadraticCurveTo">;
+  const rect: CTXMethod<"rect">;
+  const resetTransform: CTXMethod<"resetTransform">;
+  const restore: CTXMethod<"restore">;
+  const rotate: CTXMethod<"rotate">;
+  const save: CTXMethod<"save">;
+  const strokeRect: CTXMethod<"strokeRect">;
+
+  const globalAlpha: CTXValue<CTX["globalAlpha"]>;
+  const globalCompositeOperation: CTXValue<CTX["globalCompositeOperation"]>;
+  const filter: CTXValue<CTX["filter"]>;
+  const imageSmoothingEnabled: CTXValue<CTX["imageSmoothingEnabled"]>;
+  const imageSmoothingQuality: CTXValue<CTX["imageSmoothingQuality"]>;
+  const strokeStyle: CTXValue<CTX["strokeStyle"]>;
+  const fillStyle: CTXValue<CTX["fillStyle"]>;
+  const shadowOffsetX: CTXValue<CTX["shadowOffsetX"]>;
+  const shadowOffsetY: CTXValue<CTX["shadowOffsetY"]>;
+  const shadowBlur: CTXValue<CTX["shadowBlur"]>;
+  const shadowColor: CTXValue<CTX["shadowColor"]>;
+  const lineWidth: CTXValue<CTX["lineWidth"]>;
+  const lineCap: CTXValue<CTX["lineCap"]>;
+  const lineJoin: CTXValue<CTX["lineJoin"]>;
+  const miterLimit: CTXValue<CTX["miterLimit"]>;
+  const lineDashOffset: CTXValue<CTX["lineDashOffset"]>;
+  const font: CTXValue<CTX["font"]>;
+  const textAlign: CTXValue<CTX["textAlign"]>;
+  const textBaseline: CTXValue<CTX["textBaseline"]>;
+  const direction: CTXValue<CTX["direction"]>;
 }

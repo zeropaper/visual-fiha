@@ -16,8 +16,6 @@ lines[lines.length - 1] = `${lines[lines.length - 1]}
 }`;
 const threeBundleTypes = lines.join("\n");
 
-console.info("threeBundleTypes", lines.length);
-
 export const extraLibs: Record<
   LayerConfig["type"],
   Record<"setup" | "animation", [string, string][]>

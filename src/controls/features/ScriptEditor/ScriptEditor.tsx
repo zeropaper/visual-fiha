@@ -6,6 +6,7 @@ import { useCode } from "@hooks/useCode";
 import { Button, buttonStyles } from "@ui/Button";
 import scriptableTypes from "@utils/Scriptable.editor.types.editor-types.txt?raw";
 import mathTypes from "@utils/mathTools.editor-types.txt?raw";
+import miscTypes from "@utils/miscTools.editor-types.txt?raw";
 import { HelpCircleIcon } from "lucide-react";
 import { useTranspile } from "../../hooks/useTranspile";
 import { AIAssistant } from "../AIAssistant/AIAssistant";
@@ -200,6 +201,7 @@ export function ScriptEditor({
 
     let extraLibsForTypeRole: [string, string][] = [
       [mathTypes, "ts:math.d.ts"],
+      [miscTypes, "ts:misc.d.ts"],
       [scriptableTypes, "ts:scriptable.d.ts"],
     ];
 

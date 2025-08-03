@@ -67,19 +67,50 @@ export const merge = (...objs: Array<Record<string, any>>) => {
   return result;
 };
 
-const tools = {
+export const miscTools = {
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   rgba,
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   hsla,
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   repeat,
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   noop,
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   assetDataURI,
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   isFunction,
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   toggle,
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   inOut,
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   stepper,
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
   merge,
 };
 
-// export const apiReference = reference;
+export default miscTools;
 
-export default tools;
+declare global {
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const inOut: (typeof miscTools)["inOut"];
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const rgba: (typeof miscTools)["rgba"];
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const hsla: (typeof miscTools)["hsla"];
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const repeat: (typeof miscTools)["repeat"];
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const noop: (typeof miscTools)["noop"];
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const assetDataURI: (typeof miscTools)["assetDataURI"];
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const isFunction: (typeof miscTools)["isFunction"];
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const toggle: (typeof miscTools)["toggle"];
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const stepper: (typeof miscTools)["stepper"];
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  const merge: (typeof miscTools)["merge"];
+}
