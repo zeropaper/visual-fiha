@@ -13,7 +13,7 @@
   background-color: var(--button-bg-hover);
 }
 .button:disabled {
-  background-color: var(--button-bg-disabled);
+  opacity: 0.25;
   cursor: not-allowed;
 }
 

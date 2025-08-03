@@ -21,7 +21,7 @@ textarea[type="checkbox"] {
   outline: none;
 }
 .textarea:disabled {
-  background-color: #f5f5f5;
+  opacity: 0.25;
   cursor: not-allowed;
 }
 .textarea::placeholder {

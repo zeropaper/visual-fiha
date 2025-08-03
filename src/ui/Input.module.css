@@ -21,7 +21,7 @@ input[type="checkbox"] {
   outline: none;
 }
 .input:disabled {
-  background-color: #f5f5f5;
+  opacity: 0.25;
   cursor: not-allowed;
 }
 .input::placeholder {

@@ -49,6 +49,6 @@
   background-color: var(--button-bg-hover);
 }
 .select:disabled {
-  background-color: var(--button-bg-disabled);
+  opacity: 0.25;
   cursor: not-allowed;
 }
