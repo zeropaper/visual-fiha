@@ -1,15 +1,16 @@
-import type { Attachment } from "ai";
+import type { FileUIPart } from "ai";
 
-export async function fileToAttachment(file: File): Promise<Attachment> {
+export async function fileToFileUIPart(file: File): Promise<FileUIPart> {
   return {
-    name: file.name,
+    filename: file.name,
     url: URL.createObjectURL(file),
-    contentType: file.type,
+    mediaType: file.type,
+    type: "file",
   };
 }
 
-export async function filesToAttachments(files: File[]): Promise<Attachment[]> {
-  return Promise.all(files.map(fileToAttachment));
+export async function filesToFileUIParts(files: File[]): Promise<FileUIPart[]> {
+  return Promise.all(files.map(fileToFileUIPart));
 }
 
 export function getDataURL(blob: Blob): Promise<string> {

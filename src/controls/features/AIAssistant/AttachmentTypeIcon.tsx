@@ -8,7 +8,7 @@ import {
   VideoIcon,
 } from "lucide-react";
 
-export default function AttachmentTypeIcon({
+export default function FileUIPartTypeIcon({
   type,
   className,
 }: { type?: string; className?: string }) {

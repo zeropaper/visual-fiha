@@ -2,7 +2,12 @@ import { useCode } from "@hooks/useCode";
 import { Button } from "@ui/Button";
 import { Textarea } from "@ui/Textarea";
 import textareaStyles from "@ui/Textarea.module.css";
-import type { Attachment } from "ai";
+import {
+  type FileUIPart,
+  type UIDataTypes,
+  type UIMessage,
+  lastAssistantMessageIsCompleteWithToolCalls,
+} from "ai";
 import { CameraIcon, FileIcon, KeyIcon, SendIcon } from "lucide-react";
 import type * as _monaco from "monaco-editor";
 import {
@@ -15,12 +20,11 @@ import {
 import type { LayerConfig } from "src/types";
 import { useChat } from "../../contexts/ChatsContext";
 import styles from "./AIAssistant.module.css";
-import { type ToolsCall, handleToolCall } from "./AIAssistant.tools";
-import { customFetch } from "./AiAssitant.utils";
-import AttachmentsList from "./AttachmentsList";
+import FileUIPartsList from "./AttachmentsList";
 import { AIAssistantCredentialsForm } from "./CredentialsForm";
 import { Messages } from "./Messages";
-import { filesToAttachments } from "./utils/attachments";
+import type { VFTools } from "./tools/types";
+import { filesToFileUIParts } from "./utils/attachments";
 import { getSystemMessage } from "./utils/getSystemPrompt";
 import { hasCredentials } from "./utils/providers";
 
@@ -53,29 +57,26 @@ export function AIAssistant({
   const initialMessages = storedMessages
     ? JSON.parse(storedMessages)
     : [getSystemMessage(layerType, type, role)];
-  const {
-    messages,
-    input,
-    handleInputChange,
-    append,
-    error,
-    status,
-    setInput,
-  } = useChat({
+  const { messages, sendMessage, addToolResult, error, status } = useChat({
     id: chatId,
-    initialMessages,
-    maxSteps: 10,
-    fetch: customFetch,
-    onToolCall: (opts) =>
-      handleToolCall(opts as { toolCall: ToolsCall }, {
-        editor,
-        role: role || "setup",
-        type: type || "worker",
-        id: id || "worker",
-        setSetupScript,
-        setAnimationScript,
-      }),
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    // run client-side tools that are automatically executed:
+    async onToolCall({ toolCall }) {
+      // call addToolResult to add the result of the tool call
+      switch (toolCall.toolName) {
+        default:
+          addToolResult({
+            tool: toolCall.toolName,
+            toolCallId: toolCall.toolCallId,
+            output: {
+              type: "text",
+              text: `Tool ${toolCall.toolName} is not implemented.`,
+            },
+          });
+      }
+    },
   });
+  const [input, setInput] = useState("");
   useEffect(() => {
     localStorage.setItem(`chat-${chatId}`, JSON.stringify(messages));
   }, [messages, chatId]);
@@ -84,25 +85,25 @@ export function AIAssistant({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const messagesRef = useRef<HTMLUListElement | null>(null);
   const filesInputRef = useRef<HTMLInputElement | null>(null);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  function addFiles(items: Attachment[]) {
-    setAttachments((prevAttachments) => {
-      if (prevAttachments) {
-        return [...prevAttachments, ...items];
+  const [attachments, setFileUIParts] = useState<FileUIPart[]>([]);
+  function addFiles(items: FileUIPart[]) {
+    setFileUIParts((prevFileUIParts) => {
+      if (prevFileUIParts) {
+        return [...prevFileUIParts, ...items];
       }
       return items;
     });
   }
   function removeFile(url: string) {
-    setAttachments((prevAttachments) => {
-      if (prevAttachments) {
-        return prevAttachments.filter((f) => f.url !== url);
+    setFileUIParts((prevFileUIParts) => {
+      if (prevFileUIParts) {
+        return prevFileUIParts.filter((f) => f.url !== url);
       }
       return [];
     });
   }
 
-  function finishResize() {
+  const finishResize = useCallback(() => {
     const domNode = editor.getDomNode()!;
     const guard = domNode.querySelector<HTMLDivElement>(".overflow-guard")!;
     const parent = domNode.parentNode as HTMLElement;
@@ -113,7 +114,7 @@ export function AIAssistant({
       domNode.style.height = `${scrollHeight}px`;
       guard.style.height = `${scrollHeight}px`;
     });
-  }
+  }, [editor]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -125,7 +126,7 @@ export function AIAssistant({
     });
   }, [messages]);
 
-  const handleInputResize = () => {
+  const handleInputResize = useCallback(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       // Adjust the Textarea height dynamically
@@ -135,7 +136,12 @@ export function AIAssistant({
       // Trigger Monaco editor layout adjustment
       finishResize();
     }
-  };
+  }, [finishResize]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    handleInputResize();
+  }, [input, handleInputResize]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -153,33 +159,37 @@ export function AIAssistant({
     };
   }, []);
 
-  const getAttachments = useCallback(() => {
+  const getFileUIParts = useCallback(() => {
     const result = [...attachments];
-    result.push({
-      name: "setup-script",
-      url: `data:text/plain;base64,${btoa(setupScript)}`,
-      contentType: "text/plain",
-    });
-    result.push({
-      name: "animation-script",
-      url: `data:text/plain;base64,${btoa(animationScript)}`,
-      contentType: "text/plain",
-    });
+    // result.push({
+    //   filename: "setup-script",
+    //   url: `data:text/plain;base64,${btoa(setupScript)}`,
+    //   mediaType: "text/plain",
+    //   type: "file",
+    // });
+    // result.push({
+    //   filename: "animation-script",
+    //   url: `data:text/plain;base64,${btoa(animationScript)}`,
+    //   mediaType: "text/plain",
+    //   type: "file",
+    // });
     return result;
-  }, [attachments, setupScript, animationScript]);
+  }, [attachments]);
 
-  const handleSubmitWithAttachments = useCallback<
+  const handleSubmitWithFileUIParts = useCallback<
     FormEventHandler<HTMLFormElement>
   >(
     (evt) => {
       evt.preventDefault();
-      append({
-        role: "user",
-        content: input,
-        experimental_attachments: getAttachments(),
-      });
+      if (input.trim()) {
+        sendMessage({
+          text: input,
+          files: getFileUIParts(),
+        });
+        setInput("");
+      }
     },
-    [getAttachments, input, append],
+    [getFileUIParts, input, sendMessage],
   );
 
   const disabled = ["streaming", "submitted"].includes(status);
@@ -191,11 +201,15 @@ export function AIAssistant({
   return (
     <form
       className={["ai-assistant", styles.form].join(" ")}
-      onSubmit={handleSubmitWithAttachments}
+      onSubmit={handleSubmitWithFileUIParts}
     >
-      <Messages messages={messages} ref={messagesRef} />
+      <Messages
+        messages={messages as UIMessage<unknown, UIDataTypes, VFTools>[]}
+        addToolResult={addToolResult}
+        ref={messagesRef}
+      />
       {error && <div className={styles.error}>{error.message}</div>}
-      {/* {status && <div className={styles.status}>{status}</div>} */}
+      {status && <div className={styles.status}>{status}</div>}
       <div className={styles.main}>
         <div className={styles.inputs}>
           <div className={styles.context}>
@@ -212,7 +226,7 @@ export function AIAssistant({
               name="files"
               onChange={(event) => {
                 if (event.target.files) {
-                  filesToAttachments(Array.from(event.target.files)).then(
+                  filesToFileUIParts(Array.from(event.target.files)).then(
                     addFiles,
                   );
                 }
@@ -231,22 +245,17 @@ export function AIAssistant({
               <CameraIcon />
             </Button>
 
-            <AttachmentsList
-              attachments={getAttachments()}
+            <FileUIPartsList
+              attachments={getFileUIParts()}
               onRemove={removeFile}
             />
-            {/*
-            <div className={styles.attachments}>
-              {attachments.length > 0
-                ? "Scripts and attachments added"
-                : "Script is attached"}
-            </div>
-            */}
           </div>
           <Textarea
             className={[styles.textarea, textareaStyles.textarea].join(" ")}
-            onInput={handleInputResize}
-            onChange={handleInputChange}
+            onChange={(evt) => {
+              evt.preventDefault();
+              setInput(evt.target.value);
+            }}
             ref={textareaRef}
             value={input}
             name="input"

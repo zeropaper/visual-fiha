@@ -6,7 +6,7 @@ import { DisplaysControl } from "./DisplaysControl";
 import Menu from "./Menu";
 import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 import { AudioSetupProvider } from "./contexts/AudioSetupContext";
-import { ChatsProvider, localStorageAdapter } from "./contexts/ChatsContext";
+import { ChatsProvider } from "./contexts/ChatsContext";
 import { AppFastContextProvider } from "./contexts/ControlsContext";
 import { FileSystemProvider } from "./contexts/FileSystemContext";
 import { ControlDisplay } from "./features/ControlDisplay/ControlDisplay";
@@ -73,10 +73,7 @@ export default function ControlsApp() {
             "/audio/brass_fire_150/syn4_60.mp3",
           ]}
         >
-          <ChatsProvider
-            storageAdapter={localStorageAdapter}
-            id={`${currentScript.type}-${currentScript.id}`}
-          >
+          <ChatsProvider id={`${currentScript.type}-${currentScript.id}`}>
             <header className={styles.header}>
               <div className={styles.branding}>
                 <svg

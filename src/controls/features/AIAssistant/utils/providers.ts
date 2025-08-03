@@ -1,6 +1,5 @@
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenAI } from "@ai-sdk/openai";
-import { createOllama } from "ollama-ai-provider";
 
 export async function getProviderModel(
   id: `${string}:${string}`,
@@ -13,8 +12,6 @@ export async function getProviderModel(
       return createOpenAI({ apiKey })(model);
     case "mistral":
       return createMistral({ apiKey })(model);
-    case "ollama":
-      return createOllama({ baseURL: apiKey })(model);
     default:
       throw new Error(`Unsupported provider: ${provider}`);
   }
@@ -23,7 +20,6 @@ export async function getProviderModel(
 export interface ProviderKeys {
   openai?: string;
   mistral?: string;
-  ollama?: string;
 }
 
 export function getCredentials(): ProviderKeys {
@@ -33,13 +29,12 @@ export function getCredentials(): ProviderKeys {
   return {
     openai: import.meta.env.VITE_OPENAI_API_KEY || stored.openai,
     mistral: import.meta.env.VITE_MISTRAL_API_KEY || stored.mistral,
-    ollama: import.meta.env.VITE_OLLAMA_SERVER || stored.ollama,
   };
 }
 
 export function hasCredentials() {
   const stored = getCredentials();
-  return stored.openai || stored.mistral || stored.ollama?.startsWith("http");
+  return stored.openai || stored.mistral;
 }
 
 export async function getProviderApiKey(provider: keyof ProviderKeys) {

@@ -1,8 +1,10 @@
 import {
-  type UseChatHelpers,
+  type UIMessage,
   type UseChatOptions,
   useChat as useChatOriginal,
 } from "@ai-sdk/react";
+import { customTransport } from "@controls/features/AIAssistant/utils/transport";
+import type { ChatTransport } from "ai";
 import { useEffect, useMemo, useState } from "react";
 import { type ReactNode, createContext, useContext } from "react";
 
@@ -33,33 +35,32 @@ export const localStorageAdapter: StorageAdapter = {
   },
 };
 
-type OriginalContext = ReturnType<typeof useChatOriginal>;
-type ChatData = Omit<
-  UseChatHelpers,
-  "onToolCall" | "fetch" | "onResponse" | "onFinish" | "onError"
-> & { name?: string };
+// Fix the type definitions to be more flexible with UI_MESSAGE constraints
+type ChatData = Omit<UseChatOptions<UIMessage>, "transport"> & {
+  name?: string;
+};
 
-type ChatsContext = {
+type ChatsContextType = {
   chats: Record<string, ChatData>;
   currentChatId: string;
-  fetch?: typeof globalThis.fetch;
+  transport?: ChatTransport<UIMessage>;
   setCurrentChatId: (chatId: string) => Promise<void>;
   createChat: () => Promise<string>;
   deleteChat: (chatId: string) => Promise<void>;
   updateChat: (chatData: ChatData) => Promise<void>;
 };
 
-export const ChatsContext = createContext<ChatsContext>({} as any);
+export const ChatsContext = createContext<ChatsContextType>({} as any);
 
 export function ChatsProvider({
   children,
-  storageAdapter,
-  fetch,
+  storageAdapter = localStorageAdapter,
+  transport = customTransport,
   id,
 }: {
   children: ReactNode;
-  storageAdapter: StorageAdapter;
-  fetch?: typeof globalThis.fetch;
+  storageAdapter?: StorageAdapter;
+  transport?: ChatTransport<UIMessage>;
   id?: string;
 }) {
   const [currentChatId, setCurrentChatId] = useState<string>(id || "");
@@ -99,11 +100,11 @@ export function ChatsProvider({
     };
   }, []);
 
-  const value = useMemo<ChatsContext>(
+  const value = useMemo<ChatsContextType>(
     () => ({
       currentChatId,
       chats,
-      fetch,
+      transport,
       async setCurrentChatId(id: string) {
         console.log("Setting current chat ID to", id);
         const chatId = await storageAdapter.getItem("currentChatId");
@@ -129,7 +130,7 @@ export function ChatsProvider({
         return chatId;
         // return Promise.resolve(currentChatId);
       },
-      async deleteChat(chatId) {
+      async deleteChat(chatId: string) {
         const currentChats = await storageAdapter.getItem("chats");
         const chats = currentChats || {};
         delete chats[chatId];
@@ -139,7 +140,7 @@ export function ChatsProvider({
           await storageAdapter.removeItem("currentChatId");
         }
       },
-      async updateChat(chatData) {
+      async updateChat(chatData: ChatData) {
         const currentChats = await storageAdapter.getItem("chats");
         const chats = currentChats || {};
         if (!currentChatId) {
@@ -156,23 +157,27 @@ export function ChatsProvider({
         await storageAdapter.setItem("chats", chats);
       },
     }),
-    [currentChatId, chats, fetch, storageAdapter],
+    [currentChatId, chats, transport, storageAdapter],
   );
   return (
     <ChatsContext.Provider value={value}>{children}</ChatsContext.Provider>
   );
 }
 
-export function useChats(): ChatsContext & { currentChat: OriginalContext } {
+export function useChats<
+  UI_MESSAGE extends UIMessage = UIMessage,
+>(): ChatsContextType & {
+  currentChat: UseChatOptions<UI_MESSAGE>;
+} {
   const context = useContext(ChatsContext);
   if (!context) {
     throw new Error("useChats must be used within a ChatsProvider");
   }
   return {
     ...context,
-    currentChat: useChatOriginal({
+    currentChat: useChatOriginal<UI_MESSAGE>({
       ...context.chats[context.currentChatId],
-      api: "background://",
+      transport: context.transport as ChatTransport<UI_MESSAGE>,
     }),
     async setCurrentChatId(chatId: string) {
       context.setCurrentChatId(chatId);
@@ -180,44 +185,13 @@ export function useChats(): ChatsContext & { currentChat: OriginalContext } {
   };
 }
 
-export function useChat(
-  options?: Partial<UseChatOptions & { maxSteps: number }>,
-): OriginalContext {
-  const { fetch, currentChat, currentChatId, setCurrentChatId, updateChat } =
-    useChats();
-  const returned = useChatOriginal({
+export function useChat<UI_MESSAGE extends UIMessage = UIMessage>(
+  options?: UseChatOptions<UI_MESSAGE>,
+) {
+  const { currentChat, transport } = useChats<UI_MESSAGE>();
+  return useChatOriginal<UI_MESSAGE>({
     ...options,
     ...(currentChat || {}),
-    api: "background://",
-    fetch: options?.fetch || fetch,
-    id: currentChatId || options?.id,
+    transport: transport as ChatTransport<UI_MESSAGE>,
   });
-
-  // // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  // useEffect(() => {
-  //   console.info("useChat '%s'", currentChatId, options);
-  //   if (currentChatId) {
-  //     return;
-  //   }
-  //   if (options?.id) {
-  //     setCurrentChatId(options.id);
-  //   } else {
-  //     setCurrentChatId(`chat-${Date.now()}`);
-  //   }
-  // }, [currentChatId, options?.id]);
-
-  // // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  // useEffect(() => {
-  //   if (!returned.messages?.length) {
-  //     return;
-  //   }
-  //   updateChat(returned)
-  //     .catch((e) => {
-  //       console.error("Error updating chat", e);
-  //     })
-  //     .then(() => {
-  //       console.info("Chat updated", returned.messages);
-  //     });
-  // }, [returned.messages]);
-  return returned;
 }
