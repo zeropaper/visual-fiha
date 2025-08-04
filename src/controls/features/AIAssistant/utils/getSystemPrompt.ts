@@ -5,11 +5,15 @@ import workerDocs from "@docs/runtime-worker.md?raw";
 import threejsDocs from "@docs/threejs-api.md?raw";
 import type { LayerConfig } from "src/types";
 
-export function getSystemMessage(
-  layerType?: LayerConfig["type"] | null,
-  type?: "worker" | "layer",
-  role?: "setup" | "animation",
-) {
+export function getSystemMessage({
+  layerType = null,
+  type = "worker",
+  role = "setup",
+}: {
+  layerType?: LayerConfig["type"] | null;
+  type?: "worker" | "layer";
+  role?: "setup" | "animation";
+}) {
   return {
     role: "system" as const,
     id: "system",

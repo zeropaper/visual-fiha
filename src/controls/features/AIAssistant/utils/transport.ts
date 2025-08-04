@@ -7,6 +7,7 @@ import {
 } from "ai";
 import { z } from "zod";
 import { scriptBaseSchema, setScriptSchema } from "../tools/scripts";
+import { getSystemMessage } from "./getSystemPrompt";
 import {
   type ProviderKeys,
   getProviderApiKey,
@@ -39,9 +40,16 @@ export function makeFetch({
       ...body
     } = JSON.parse(args[1].body);
 
+    const messages = convertToModelMessages(body.messages);
+    const metadata =
+      body.messages.filter((m: { role: string }) => m.role === "user").at(-1)
+        ?.metadata || {};
+    const system = getSystemMessage(metadata).content;
+
     return streamText({
       ...body,
-      messages: convertToModelMessages(body.messages),
+      system,
+      messages,
       model: await getProviderModel(providerModel, getKey),
       tools,
       // Enable multi-step calls with a step limit

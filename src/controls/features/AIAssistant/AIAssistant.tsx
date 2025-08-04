@@ -24,7 +24,6 @@ import { Messages } from "./Messages";
 import type { VFTools } from "./tools/types";
 import type { VFMessage } from "./types";
 import { filesToFileUIParts } from "./utils/attachments";
-import { getSystemMessage } from "./utils/getSystemPrompt";
 import { hasCredentials } from "./utils/providers";
 
 export function AIAssistant({
@@ -53,9 +52,7 @@ export function AIAssistant({
 
   const chatId = [type, id].filter(Boolean).join("-");
   const storedMessages = localStorage.getItem(`chat-${chatId}`);
-  const initialMessages = storedMessages
-    ? JSON.parse(storedMessages)
-    : [getSystemMessage(layerType, type, role)];
+  const initialMessages = storedMessages ? JSON.parse(storedMessages) : [];
   const { messages, sendMessage, addToolResult, error, status } = useChat({
     id: chatId,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
@@ -184,11 +181,16 @@ export function AIAssistant({
         sendMessage({
           text: input,
           files: getFileUIParts(),
+          metadata: {
+            type,
+            role,
+            layerType,
+          },
         });
         setInput("");
       }
     },
-    [getFileUIParts, input, sendMessage],
+    [getFileUIParts, input, sendMessage, layerType, type, role],
   );
 
   const disabled = ["streaming", "submitted"].includes(status);
