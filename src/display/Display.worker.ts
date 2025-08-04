@@ -6,7 +6,7 @@
  */
 import type { AppState, RuntimeData } from "../types";
 
-import type { TranspilePayload } from "../controls/types";
+import type { TranspilePayload } from "@utils/tsTranspile";
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
 import type { ScriptableEventListener } from "../utils/Scriptable";
@@ -195,7 +195,7 @@ const broadcastChannelHandlers: ComActionHandlers = {
   transpiled: async (payload: TranspilePayload) => {
     const { id, type, role, code } = payload;
     if (type === "worker") {
-      scriptable[role].code = code;
+      scriptable[role as "setup" | "animation"].code = code;
       if (role === "setup") {
         Object.assign(data, (await scriptable.execSetup()) || {});
       }
@@ -207,7 +207,7 @@ const broadcastChannelHandlers: ComActionHandlers = {
       console.warn("[display worker] transpiled layer not found", id);
       return;
     }
-    found[role].code = code;
+    found[role as "setup" | "animation"].code = code;
 
     if (role === "setup") {
       void found.execSetup();
