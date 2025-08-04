@@ -1,7 +1,8 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { AdvancedMarkdown } from "@ui/AdvancedMarkdown";
 import { Button } from "@ui/Button";
 import { forwardRef } from "react";
-import assistantStyles from "./AIAssistant.module.css";
+import styles from "./Messages.module.css";
 import type { VFMessage } from "./types";
 
 const Messages = forwardRef<
@@ -11,28 +12,25 @@ const Messages = forwardRef<
     addToolResult: UseChatHelpers<VFMessage>["addToolResult"];
   }
 >(({ messages, addToolResult }, ref) => (
-  <ul className={assistantStyles.messages} ref={ref}>
+  <ul className={styles.messages} ref={ref}>
     {messages.map((message) => {
       return (
-        <li key={message.id}>
+        <li
+          key={message.id}
+          className={[styles.message, styles[`${message.role}Role`]].join(" ")}
+        >
           {message.parts?.map((part, index) => {
             switch (part.type) {
               case "text":
-                return part.text;
+                return (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                  <AdvancedMarkdown key={index}>{part.text}</AdvancedMarkdown>
+                );
 
               // Handle step boundaries for multi-step tool calls
               case "step-start":
-                return index > 0 ? (
-                  <div
-                    key={`step-${message.id}-${index}`}
-                    className="text-gray-500"
-                  >
-                    <hr className="my-2 border-gray-300" />
-                    <small>Step {index}</small>
-                  </div>
-                ) : null;
+                return null;
 
-              // Client-side tool that requires user interaction
               case "tool-askForConfirmation": {
                 const callId = part.toolCallId;
 
@@ -42,7 +40,7 @@ const Messages = forwardRef<
                       <div key={callId}>Loading confirmation request...</div>
                     );
                   case "input-available":
-                    const confirmationInput = part.input as { message: string };
+                    const confirmationInput = part.input;
                     return (
                       <div key={callId}>
                         <strong>Confirmation Required:</strong>
@@ -85,16 +83,18 @@ const Messages = forwardRef<
                 break;
               }
 
-              // Server-side tools with automatic execution
               case "tool-getScript": {
                 const callId = part.toolCallId;
 
                 switch (part.state) {
                   case "input-streaming":
                     return (
-                      <pre key={callId}>
-                        {JSON.stringify(part.input, null, 2)}
-                      </pre>
+                      <details key={callId}>
+                        <summary>Input Data</summary>
+                        <pre key={callId}>
+                          {JSON.stringify(part.input, null, 2)}
+                        </pre>
+                      </details>
                     );
                   case "input-available":
                     const scriptInput = part.input as { role: string };
@@ -105,15 +105,15 @@ const Messages = forwardRef<
                     );
                   case "output-available":
                     return (
-                      <div key={callId}>
-                        <strong>Script Retrieved:</strong>
+                      <details key={callId}>
+                        <summary>Script Retrieved</summary>
                         <pre>{String(part.output)}</pre>
-                      </div>
+                      </details>
                     );
                   case "output-error":
                     const scriptErrorInput = part.input as { role: string };
                     return (
-                      <div key={callId}>
+                      <div key={callId} className={styles.error}>
                         Error getting script for {scriptErrorInput.role}:{" "}
                         {part.errorText}
                       </div>
@@ -128,9 +128,12 @@ const Messages = forwardRef<
                 switch (part.state) {
                   case "input-streaming":
                     return (
-                      <pre key={callId}>
-                        {JSON.stringify(part.input, null, 2)}
-                      </pre>
+                      <details key={callId}>
+                        <summary>Input Data</summary>
+                        <pre key={callId}>
+                          {JSON.stringify(part.input, null, 2)}
+                        </pre>
+                      </details>
                     );
                   case "input-available":
                     const setScriptInput = part.input as { role: string };
@@ -141,13 +144,14 @@ const Messages = forwardRef<
                     );
                   case "output-available":
                     return (
-                      <div key={callId}>
-                        <strong>Script Set:</strong> {String(part.output)}
-                      </div>
+                      <details key={callId}>
+                        <summary>Script Set</summary>
+                        <pre>{String(part.output)}</pre>
+                      </details>
                     );
                   case "output-error":
                     return (
-                      <div key={callId}>
+                      <div key={callId} className={styles.error}>
                         Error setting script: {part.errorText}
                       </div>
                     );
@@ -175,10 +179,10 @@ const Messages = forwardRef<
                     );
                   case "output-available":
                     return (
-                      <div key={callId}>
-                        <strong>Screenshot Result:</strong>{" "}
-                        {String(part.output)}
-                      </div>
+                      <details key={callId}>
+                        <summary>Screenshot Result</summary>
+                        TODO
+                      </details>
                     );
                   case "output-error":
                     return (
@@ -214,6 +218,11 @@ const Messages = forwardRef<
                 return null;
             }
           })}
+
+          {/* <details>
+            <summary>Message Details</summary>
+            <pre>{JSON.stringify(message, null, 2)}</pre>
+          </details> */}
         </li>
       );
     })}

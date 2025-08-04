@@ -89,47 +89,6 @@
   gap: var(--spacing-md);
 }
 
-.messages {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  overflow-y: auto;
-  padding: var(--spacing-xs) var(--spacing-md);
-  max-height: 400px;
-}
-.messages:empty {
-  display: none;
-}
-.message {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  border-radius: var(--spacing-sm);
-  background-color: var(--vscode-editorWidget-background);
-  border: 1px solid var(--vscode-editorWidget-border);
-}
-
-.user {
-  margin-left: 10%;
-}
-.assistant,
-.system,
-.data {
-  margin-right: 10%;
-}
-
-.messageRole {
-  font-weight: bold;
-  color: var(--vscode-editorWidget-foreground);
-}
-.messageContent {
-  color: var(--vscode-editorWidget-foreground);
-}
-.messageContent p {
-  margin: 0;
-  padding: 0;
-}
 .error {
   color: var(--vscode-errorForeground);
   background-color: var(--vscode-errorBackground);
