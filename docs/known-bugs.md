@@ -6,14 +6,20 @@
 
 ## Controls
 
-### Editor
+### Canvas and misc API types
 
-- The language highlighter in the script editor does not always correctly highlight the code, especially when first opened.
-
-### Canvas Scripting
-
-- The canvas scripting are missing some type declarations, which leads to errors in the editor (but not in the execution).
+- The types are correctly set, but they are missing the documentation for the parameters and return values.
 
 ### Layers Visibility
 
 - In some case, when switching a layer visibility and then, afterwards, making changes in the script editor, the layer visibility switches back to the previous state.
+
+### AI Assistant
+
+- If tools are used in a conversation, subsequent messages attempts will fail.
+- Conversations are lost if switching scripts.
+- While generating a response (and using tools), the AI Assistant triggers a lot of re-renders.
+
+### Timeline
+
+- If no duration is set (like when using the microphone), the first 30 seconds in the timeline are not correctly handled.
