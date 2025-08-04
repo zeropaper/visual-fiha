@@ -1,10 +1,10 @@
 import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
 
-interface OffscreenCanvas extends HTMLCanvasElement {}
+// interface OffscreenCanvas extends HTMLCanvasElement {}
 
 export interface LayerOptions extends Omit<ScriptableOptions, "type, api, id"> {
   id: string;
-  canvas?: HTMLCanvasElement | OffscreenCanvas;
+  canvas?: OffscreenCanvas;
   active?: boolean;
   opacity?: number; // Opacity in percent (0-100)
 }
@@ -23,7 +23,7 @@ export default class Layer extends Scriptable {
   active = true;
   opacity = 100;
 
-  #canvas: HTMLCanvasElement | OffscreenCanvas;
+  #canvas: OffscreenCanvas;
 
   get canvas() {
     return this.#canvas;

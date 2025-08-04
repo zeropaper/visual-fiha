@@ -18,8 +18,6 @@ import * as mathTools from "../utils/mathTools";
 import { isDisplayState } from "./isDisplayState";
 import type { DisplayState } from "./types";
 
-export interface OffscreenCanvas extends HTMLCanvasElement {}
-
 interface WebWorker extends Worker {
   location: Location;
   name: string;
@@ -259,6 +257,53 @@ const broadcastChannelHandlers: ComActionHandlers = {
     }
     processLayers(data.layers || []);
   },
+
+  takeScreenshot: (payload: {
+    layerId: string;
+    displayName: string;
+  }) => {
+    if (!payload.layerId) {
+      console.warn("[display worker] takeScreenshot: layerId is required");
+      return;
+    }
+    if (!payload.displayName) {
+      console.warn("[display worker] takeScreenshot: displayName is required");
+      return;
+    }
+    if (payload.displayName !== workerName) {
+      return;
+    }
+    const layer = findStateLayer(payload.layerId);
+    if (!layer) {
+      console.warn(
+        "[display worker] takeScreenshot: layer not found",
+        payload.layerId,
+      );
+      return;
+    }
+
+    return new Promise<string>((resolve, reject) => {
+      try {
+        layer.canvas
+          .convertToBlob()
+          .then((blob) => {
+            if (!blob) {
+              console.warn("[display worker] takeScreenshot: blob is null");
+              reject(new Error("Screenshot failed: Blob is null"));
+              return;
+            }
+            resolve(URL.createObjectURL(blob));
+          })
+          .catch((error) => {
+            console.error("[display worker] takeScreenshot error:", error);
+            reject(error);
+          });
+      } catch (error) {
+        console.error("[display worker] takeScreenshot error:", error);
+        reject(error);
+      }
+    });
+  },
 };
 
 const messageHandlers: ComActionHandlers = {
@@ -358,7 +403,7 @@ function render() {
 // Initialize communication
 const broadcastChannelCom = autoBind(
   coreChannel,
-  `display-${workerName}-broadcastChannel`,
+  `${workerName}-broadcastChannel`,
   broadcastChannelHandlers,
 );
 coreChannel.onmessage = broadcastChannelCom.listener;
