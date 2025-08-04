@@ -292,7 +292,18 @@ const broadcastChannelHandlers: ComActionHandlers = {
               reject(new Error("Screenshot failed: Blob is null"));
               return;
             }
-            resolve(URL.createObjectURL(blob));
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              resolve(reader.result as string);
+            };
+            reader.onerror = (error) => {
+              console.error(
+                "[display worker] takeScreenshot FileReader error:",
+                error,
+              );
+              reject(error);
+            };
+            reader.readAsDataURL(blob);
           })
           .catch((error) => {
             console.error("[display worker] takeScreenshot error:", error);
