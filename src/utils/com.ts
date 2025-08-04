@@ -177,11 +177,9 @@ export const makeChannelListener: ChannelListenerMaker =
 
     const { [event.data.type]: handler } = handlers;
     if (!handler) {
-      const err = `Unexepected ${type} action type`;
-
       if (!meta.operationId) return;
 
-      replyError(postBack, err, type, meta);
+      // replyError(postBack, `Unexepected ${type} action type for ${source}`, type, meta);
       return;
     }
 
