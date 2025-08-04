@@ -22,7 +22,7 @@ import styles from "./AIAssistant.module.css";
 import FileUIPartsList from "./AttachmentsList";
 import { AIAssistantCredentialsForm } from "./CredentialsForm";
 import { Messages } from "./Messages";
-import type { VFTools } from "./tools/types";
+import { scriptBaseSchema, setScriptSchema } from "./tools/scripts";
 import type { VFMessage } from "./types";
 import { filesToFileUIParts } from "./utils/attachments";
 import { hasCredentials } from "./utils/providers";
@@ -56,26 +56,85 @@ export function AIAssistant({
   const storedMessages = localStorage.getItem(`chat-${chatId}`);
   const initialMessages = storedMessages ? JSON.parse(storedMessages) : [];
   const { messages, sendMessage, addToolResult, error, status } = useChat({
+    // messages: initialMessages,
     id: chatId,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    // run client-side tools that are automatically executed:
     async onToolCall({ toolCall }) {
-      // call addToolResult to add the result of the tool call
       switch (toolCall.toolName) {
-        default:
+        case "getScript":
+          const input = scriptBaseSchema.parse(toolCall.input);
+          if (input.role === "setup") {
+            addToolResult({
+              tool: "getScript",
+              toolCallId: toolCall.toolCallId,
+              output: setupScript,
+            });
+          } else if (input.role === "animation") {
+            addToolResult({
+              tool: "getScript",
+              toolCallId: toolCall.toolCallId,
+              output: animationScript,
+            });
+          } else {
+            addToolResult({
+              tool: "getScript",
+              toolCallId: toolCall.toolCallId,
+              output: `Unknown role ${input.role}`,
+            });
+          }
+          break;
+        case "setScript":
+          const inputs = setScriptSchema.parse(toolCall.input);
+          if (inputs.role === "setup") {
+            setSetupScript(inputs.code);
+          } else if (inputs.role === "animation") {
+            setAnimationScript(inputs.code);
+          } else {
+            addToolResult({
+              tool: "setScript",
+              toolCallId: toolCall.toolCallId,
+              output: `Unknown role ${inputs.role}`,
+            });
+          }
+          break;
+        case "takeScreenshot":
+          if (!id) {
+            addToolResult({
+              tool: "takeScreenshot",
+              toolCallId: toolCall.toolCallId,
+              output: "No layer ID provided for screenshot.",
+            });
+            return;
+          }
+          const screenshot = await takeScreenshot({ layerId: id });
+          console.log("Screenshot taken:", screenshot);
+          if (!screenshot) {
+            addToolResult({
+              tool: "takeScreenshot",
+              toolCallId: toolCall.toolCallId,
+              output: "Failed to take screenshot",
+            });
+            return;
+          }
           addToolResult({
-            tool: toolCall.toolName as keyof VFTools,
+            tool: "takeScreenshot",
             toolCallId: toolCall.toolCallId,
-            output: {
-              type: "text",
-              text: `Tool ${toolCall.toolName} is not implemented.`,
-            },
+            output: screenshot,
           });
+        // default:
+        //   addToolResult({
+        //     tool: toolCall.toolName as keyof VFTools,
+        //     toolCallId: toolCall.toolCallId,
+        //     output: `Tool ${toolCall.toolName} is not implemented.`,
+        //   });
       }
     },
   });
   const [input, setInput] = useState("");
   useEffect(() => {
+    if (!messages.length) {
+      return;
+    }
     localStorage.setItem(`chat-${chatId}`, JSON.stringify(messages));
   }, [messages, chatId]);
 
@@ -157,23 +216,6 @@ export function AIAssistant({
     };
   }, []);
 
-  const getFileUIParts = useCallback(() => {
-    const result = [...attachments];
-    // result.push({
-    //   filename: "setup-script",
-    //   url: `data:text/plain;base64,${btoa(setupScript)}`,
-    //   mediaType: "text/plain",
-    //   type: "file",
-    // });
-    // result.push({
-    //   filename: "animation-script",
-    //   url: `data:text/plain;base64,${btoa(animationScript)}`,
-    //   mediaType: "text/plain",
-    //   type: "file",
-    // });
-    return result;
-  }, [attachments]);
-
   const handleSubmitWithFileUIParts = useCallback<
     FormEventHandler<HTMLFormElement>
   >(
@@ -182,7 +224,7 @@ export function AIAssistant({
       if (input.trim()) {
         sendMessage({
           text: input,
-          files: getFileUIParts(),
+          files: attachments,
           metadata: {
             type,
             role,
@@ -192,7 +234,7 @@ export function AIAssistant({
         setInput("");
       }
     },
-    [getFileUIParts, input, sendMessage, layerType, type, role],
+    [attachments, input, sendMessage, layerType, type, role],
   );
 
   const disabled = ["streaming", "submitted"].includes(status);
@@ -262,10 +304,7 @@ export function AIAssistant({
               <CameraIcon />
             </Button>
 
-            <FileUIPartsList
-              attachments={getFileUIParts()}
-              onRemove={removeFile}
-            />
+            <FileUIPartsList attachments={attachments} onRemove={removeFile} />
           </div>
           <Textarea
             className={[styles.textarea, textareaStyles.textarea].join(" ")}

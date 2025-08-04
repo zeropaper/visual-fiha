@@ -79,14 +79,7 @@ export const customTransport = new DefaultChatTransport({
       },
       takeScreenshot: {
         description: "Take a screenshot of a layer.",
-        inputSchema: z.object({
-          layerId: z
-            .string()
-            .optional()
-            .describe(
-              "The ID of the layer to screenshot. If not provided, screenshots all layers.",
-            ),
-        }),
+        inputSchema: z.object({}),
       },
     },
   }),
