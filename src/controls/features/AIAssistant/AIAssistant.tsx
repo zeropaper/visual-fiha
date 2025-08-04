@@ -1,4 +1,5 @@
 import { useCode } from "@hooks/useCode";
+import { useTakeScreenshot } from "@hooks/useTakeScreenshot";
 import { Button } from "@ui/Button";
 import { Textarea } from "@ui/Textarea";
 import textareaStyles from "@ui/Textarea.module.css";
@@ -49,6 +50,7 @@ export function AIAssistant({
     type || "worker",
     id || "worker",
   );
+  const takeScreenshot = useTakeScreenshot();
 
   const chatId = [type, id].filter(Boolean).join("-");
   const storedMessages = localStorage.getItem(`chat-${chatId}`);
@@ -238,10 +240,24 @@ export function AIAssistant({
             <Button
               type="button"
               onClick={() => {
-                alert("Not implemented yet.");
+                if (!id) {
+                  console.warn("No layer ID provided for screenshot.");
+                  return;
+                }
+                takeScreenshot({ layerId: id }).then((result) => {
+                  addFiles([
+                    {
+                      mediaType: "image/png",
+                      type: "file",
+                      url: result,
+                      filename: `screenshot-${id}.png`,
+                    },
+                  ]);
+                });
               }}
               variant="icon"
               title="Take a screenshot of the layer"
+              disabled={disabled || !id}
             >
               <CameraIcon />
             </Button>
