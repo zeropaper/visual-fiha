@@ -46,9 +46,9 @@ describe("com.messenger", () => {
     expect(args[0]).toHaveProperty("meta.operationId");
 
     const postBack = vi.fn();
-    const listener2 = com.makeChannelListener(postBack, handlers);
+    const listener2 = com.makeChannelListener(postBack, handlers, "side-2");
 
-    const listener1 = com.makeChannelListener(post, {});
+    const listener1 = com.makeChannelListener(post, {}, "side-1");
 
     listener2({
       data: { ...args[0] },
@@ -69,10 +69,10 @@ describe("com.messenger", () => {
     const post = vi.fn();
     const messenger = com.makeChannelPost(post, "side-1");
 
-    const listener1 = com.makeChannelListener(post, {});
+    const listener1 = com.makeChannelListener(post, {}, "side-1");
 
     const postBack = vi.fn();
-    const listener2 = com.makeChannelListener(postBack, handlers);
+    const listener2 = com.makeChannelListener(postBack, handlers, "side-2");
     const promise: Promise<any> = messenger("actionC", {}, true);
 
     const [args] = post.mock.calls;

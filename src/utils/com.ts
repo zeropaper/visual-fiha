@@ -73,11 +73,12 @@ export type ComMessageEventListener = (event: ComMessageEvent) => void;
 export type ChannelListenerMaker = (
   postBack: ComAnswerer,
   handlers: ComActionHandlers,
+  source: string,
 ) => ComMessageEventListener;
 
 export const makeChannelPost: ChannelPostMaker =
   (poster, source) => async (type, payload, originalMeta) => {
-    const addiontions =
+    const additions =
       originalMeta === true
         ? {
             operationId: `${Date.now()}-${source}-${(
@@ -88,7 +89,7 @@ export const makeChannelPost: ChannelPostMaker =
           ? originalMeta
           : {};
     const meta: ComEventDataMeta = {
-      ...addiontions,
+      ...additions,
       sent: Date.now(),
       source,
     };
@@ -96,7 +97,9 @@ export const makeChannelPost: ChannelPostMaker =
     if (meta.operationId) {
       const { operationId } = meta;
       const promise = new Promise((res, rej) => {
-        if (promises[operationId]) throw new Error("Promise already exists");
+        if (promises[operationId]) {
+          throw new Error(`Promise already exists for ${source}`);
+        }
         promises[operationId] = (err, result) => {
           if (err) {
             rej(err);
@@ -114,23 +117,29 @@ export const makeChannelPost: ChannelPostMaker =
       payload,
       meta,
     });
-    await Promise.resolve();
   };
 
-const handleComReply = (payload: any, meta: ComEventDataMeta) => {
+const handleComReply = (
+  payload: any,
+  meta: ComEventDataMeta,
+  source: string,
+) => {
   if (!meta.operationId) {
     return;
   }
 
-  if (typeof promises[meta.operationId] !== "function") {
-    throw new Error("No promise found");
+  const callback = promises[meta.operationId];
+  if (typeof callback !== "function") {
+    console.warn(Object.keys(promises), payload, meta);
+    throw new Error(
+      `No promise found in ${source} for operationId: ${meta.operationId} of ${meta.source}`,
+    );
   }
 
-  const cb = promises[meta.operationId];
   if (meta.error) {
-    cb(new Error(meta.error));
+    callback(new Error(`Response: ${meta.error}`));
   } else {
-    cb(null, payload);
+    callback(null, payload);
   }
 };
 
@@ -154,15 +163,15 @@ const replyError = (
 };
 
 export const makeChannelListener: ChannelListenerMaker =
-  (postBack, handlers) => (event) => {
+  (postBack, handlers, source) => (event) => {
     const { type, payload, meta: originalMeta } = event.data;
     const meta: ComEventDataMeta = {
       ...originalMeta,
       received: Date.now(),
     };
 
-    if (type === "com/reply" && meta.operationId) {
-      handleComReply(payload, meta);
+    if (type === "com/reply" && meta.operationId && meta.source === source) {
+      handleComReply(payload, meta, source);
       return;
     }
 
@@ -182,7 +191,7 @@ export const makeChannelListener: ChannelListenerMaker =
     }
 
     handler(payload, meta)
-      .then((result: any) =>
+      ?.then((result: any) =>
         postBack({
           type: "com/reply",
           payload: result,
@@ -221,6 +230,6 @@ export const autoBind = (
   const originalPost = obj.postMessage.bind(obj);
   return {
     post: makeChannelPost(originalPost, source),
-    listener: makeChannelListener(originalPost, handlers),
+    listener: makeChannelListener(originalPost, handlers, source),
   };
 };
