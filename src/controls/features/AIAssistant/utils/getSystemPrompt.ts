@@ -21,7 +21,7 @@ export function getSystemMessage({
       type === "layer"
         ? `You are editing the script of a ${layerType} layer ${role} script for a visual programming environment.
 
-Use the tools at your disposal when relevant.
+First of all, you use the "getScript" tool to get the current setup and animation scripts.
 
 Unless it is absolutely clear that the user asks a question, you always apply the script changes directly (using the tools at your disposal) and summarize your changes in your answer.
 
