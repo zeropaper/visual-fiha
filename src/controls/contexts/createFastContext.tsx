@@ -20,7 +20,11 @@ declare global {
   }
 }
 
-export default function createFastContext<FastContext>(
+export default function createFastContext<
+  FastContext extends Record<string, any> & {
+    layers?: Array<{ id: string; active: boolean }>;
+  },
+>(
   initialState: FastContext,
   onUpdate: (value: FastContext) => void = () => {},
 ) {
@@ -124,10 +128,18 @@ export default function createFastContext<FastContext>(
   }
 
   function useFastContextFields<K extends keyof FastContext>(fieldNames: K[]) {
+    const fastContext = useContext(FastContext);
+    if (!fastContext) {
+      throw new Error("Store not found");
+    }
+
     const result = {} as {
       [P in K]: {
         get: FastContext[P];
         set: (value: FastContext[P]) => void;
+        // getCurrent provides access to the current store value at execution time,
+        // avoiding stale closure issues with React hooks
+        getCurrent: () => FastContext[P];
       };
     };
 
@@ -138,6 +150,7 @@ export default function createFastContext<FastContext>(
 
       result[fieldName] = {
         get: getValue,
+        getCurrent: () => fastContext.get()[fieldName],
         set: (newValue: FastContext[typeof fieldName]) => {
           const partialUpdate: Partial<FastContext> = {};
           partialUpdate[fieldName] = newValue;

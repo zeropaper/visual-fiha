@@ -135,14 +135,14 @@ const handlers = {
   updateconfig: (payload: Partial<AppState>) => {
     configData = { ...configData, ...payload };
     if ("layers" in payload) {
-      runtimeData.layers = (payload.layers as LayerConfig[]).map(
-        (layer, l) => ({
+      runtimeData.layers = (payload.layers as LayerConfig[]).map((layer, l) => {
+        return {
           ...layer,
           ...(runtimeData.layers[l] || {}),
           opacity: layer.opacity ?? 100,
           active: !!layer.active,
-        }),
-      );
+        };
+      });
     }
     // propagate to displays
     broadcastChannel.postMessage({
@@ -292,6 +292,10 @@ function processRuntimeData() {
   }
 
   // Update other runtime data as needed
+  // Note: Previously this function caused a bug where layer active states would
+  // revert when script changes occurred, because it rebuilt runtime layers from
+  // config data. The bug was fixed by ensuring useCode.tsx uses getCurrent()
+  // to avoid stale closure issues when updating layers.
   runtimeData.layers = configData.layers.map((layer, l) => {
     const existingLayer = runtimeData.layers[l] || {};
     return {

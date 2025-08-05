@@ -10,10 +10,6 @@
 
 - The types are correctly set, but they are missing the documentation for the parameters and return values.
 
-### Layers Visibility
-
-- In some case, when switching a layer visibility and then, afterwards, making changes in the script editor, the layer visibility switches back to the previous state.
-
 ### AI Assistant
 
 - If tools are used in a conversation, subsequent messages attempts will fail.
