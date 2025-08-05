@@ -15,6 +15,7 @@
 - If tools are used in a conversation, subsequent messages attempts will fail.
 - Conversations are lost if switching scripts.
 - While generating a response (and using tools), the AI Assistant triggers a lot of re-renders.
+- The getScript tool does not always return the latest version of the scripts.
 
 ### Timeline
 
