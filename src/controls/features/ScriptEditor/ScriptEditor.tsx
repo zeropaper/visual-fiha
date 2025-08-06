@@ -294,17 +294,19 @@ export function ScriptEditor({
                 ref={editorContainerRef}
                 className={["editor", styles.editor].join(" ")}
               />
-              <div className={styles.editorAIWrapper}>
-                {isEditorReady ? (
-                  <AIAssistant
-                    editor={editorRef.current!}
-                    role={role}
-                    type={type}
-                    layerType={layerType}
-                    id={id}
-                  />
-                ) : null}
-              </div>
+              {import.meta.env.VITE_AI_ASSISTANT ? (
+                <div className={styles.editorAIWrapper}>
+                  {isEditorReady ? (
+                    <AIAssistant
+                      editor={editorRef.current!}
+                      role={role}
+                      type={type}
+                      layerType={layerType}
+                      id={id}
+                    />
+                  ) : null}
+                </div>
+              ) : null}
             </>
           ) : (
             <div className={styles.noScript}>
