@@ -4,7 +4,7 @@ import sectionStyles from "./ControlsApp.module.css";
 
 export function DisplaysControl() {
   const {
-    displays: { get: displays, set: setDisplays },
+    displays: { get: displays },
   } = useAppFastContextFields(["displays"]);
 
   return (
