@@ -35,9 +35,8 @@ export const useAppFastContextFields = useFastContextFields;
  */
 export function useLayerConfig(id: string) {
   const {
-    layers: { get, set },
+    layers: { get: layers, set },
   } = useAppFastContextFields(["layers"]);
-  const layers = get();
   return [
     layers.find((layer) => layer.id === id),
     (value: LayerConfig | null) => {
@@ -59,9 +58,8 @@ export function useLayerConfig(id: string) {
  */
 export function useInputConfig(name: string) {
   const {
-    inputs: { get, set },
+    inputs: { get: inputs, set },
   } = useAppFastContextFields(["inputs"]);
-  const inputs = get();
   return [
     inputs.find((input) => input.name === name),
     (value: InputConfig) => {
@@ -82,9 +80,8 @@ export function useInputConfig(name: string) {
  */
 export function useSignalConfig(name: string) {
   const {
-    signals: { get, set },
+    signals: { get: signals, set },
   } = useAppFastContextFields(["signals"]);
-  const signals = get();
   return [
     signals.find((signal) => signal.name === name),
     (value: SignalConfig) => {
@@ -104,9 +101,8 @@ export function useSignalConfig(name: string) {
  */
 export function useStageConfig() {
   const {
-    stage: { get, set },
+    stage: { get: stage, set },
   } = useAppFastContextFields(["stage"]);
-  const stage = get();
   return [
     stage,
     (value: Partial<typeof stage>) => {

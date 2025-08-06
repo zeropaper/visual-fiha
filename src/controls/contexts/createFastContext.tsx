@@ -135,18 +135,22 @@ export default function createFastContext<
 
     const result = {} as {
       [P in K]: {
+        get: FastContext[P];
         set: (value: FastContext[P]) => void;
-        // get provides access to the current store value at execution time,
+        // getCurrent provides access to the current store value at execution time,
         // avoiding stale closure issues with React hooks
-        get: () => FastContext[P];
+        getCurrent: () => FastContext[P];
       };
     };
 
     fieldNames.forEach((fieldName) => {
-      const [setPartialContext] = useFastContext((store) => store[fieldName]);
+      const [getValue, setPartialContext] = useFastContext(
+        (store) => store[fieldName],
+      );
 
       result[fieldName] = {
-        get: () => fastContext.get()[fieldName],
+        get: getValue,
+        getCurrent: () => fastContext.get()[fieldName],
         set: (newValue: FastContext[typeof fieldName]) => {
           const partialUpdate: Partial<FastContext> = {};
           partialUpdate[fieldName] = newValue;

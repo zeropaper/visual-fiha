@@ -109,14 +109,14 @@ interface CurrentScript {
 export function Layers({
   setCurrentScript,
   id,
+  role,
   type,
 }: CurrentScript & {
   setCurrentScript: (script: CurrentScript) => void;
 }) {
   const {
-    layers: { get, set: setLayers },
+    layers: { get: layers, set: setLayers },
   } = useAppFastContextFields(["layers"]);
-  const layers = get();
 
   // Drag-and-drop state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);

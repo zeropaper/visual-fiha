@@ -4,9 +4,9 @@ import sectionStyles from "./ControlsApp.module.css";
 
 export function DisplaysControl() {
   const {
-    displays: { get },
+    displays: { get: displays, set: setDisplays },
   } = useAppFastContextFields(["displays"]);
-  const displays = get();
+
   return (
     <details open className={[sectionStyles.details, "displays"].join(" ")}>
       <summary>Displays</summary>
