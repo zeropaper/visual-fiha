@@ -56,7 +56,7 @@ export function AIAssistant({
   const storedMessages = localStorage.getItem(`chat-${chatId}`);
   const initialMessages = storedMessages ? JSON.parse(storedMessages) : [];
   const { messages, sendMessage, addToolResult, error, status } = useChat({
-    // messages: initialMessages,
+    messages: initialMessages,
     id: chatId,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     async onToolCall({ toolCall }) {

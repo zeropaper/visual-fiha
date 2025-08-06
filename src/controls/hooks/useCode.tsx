@@ -9,11 +9,12 @@ export function useCode(
   (code: string) => void,
 ] {
   const {
-    layers: { get: layers, set: setLayers, getCurrent: getCurrentLayers },
-    worker: { get: worker, set: setWorker },
+    layers: { set: setLayers, get: getCurrentLayers },
+    worker: { set: setWorker, get: getCurrentWorker },
   } = useAppFastContextFields(["layers", "worker"]);
 
   if (type === "worker") {
+    const worker = getCurrentWorker();
     return [
       {
         code: worker[role] || "",
@@ -27,6 +28,7 @@ export function useCode(
     ];
   }
 
+  const layers = getCurrentLayers();
   const layer = layers.find((l) => l.id === id);
   if (layer) {
     return [
