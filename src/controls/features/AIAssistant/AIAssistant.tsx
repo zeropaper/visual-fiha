@@ -1,3 +1,4 @@
+import { useChat } from "@ai-sdk/react";
 import { useCode } from "@hooks/useCode";
 import { useTakeScreenshot } from "@hooks/useTakeScreenshot";
 import { Button } from "@ui/Button";
@@ -17,7 +18,6 @@ import {
   useState,
 } from "react";
 import type { LayerConfig } from "src/types";
-import { useChat } from "../../contexts/ChatsContext";
 import styles from "./AIAssistant.module.css";
 import FileUIPartsList from "./AttachmentsList";
 import { AIAssistantCredentialsForm } from "./CredentialsForm";
