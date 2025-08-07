@@ -6,6 +6,7 @@ import { Textarea } from "@ui/Textarea";
 import textareaStyles from "@ui/Textarea.module.css";
 import {
   type FileUIPart,
+  createIdGenerator,
   lastAssistantMessageIsCompleteWithToolCalls,
 } from "ai";
 import { CameraIcon, FileIcon, KeyIcon, SendIcon } from "lucide-react";
@@ -26,6 +27,23 @@ import { scriptBaseSchema, setScriptSchema } from "./tools/scripts";
 import type { VFMessage } from "./types";
 import { filesToFileUIParts } from "./utils/attachments";
 import { hasCredentials } from "./utils/providers";
+import { customTransport } from "./utils/transport";
+
+function loadMessages(id: string): VFMessage[] {
+  try {
+    const storedMessages = localStorage.getItem(`chat:${id}`);
+    if (!storedMessages) {
+      console.log("No stored messages found for id:", id);
+      return [];
+    }
+
+    const loaded = JSON.parse(storedMessages);
+    return loaded;
+  } catch (error) {
+    console.warn("Failed to load chat messages from localStorage:", error);
+    return [];
+  }
+}
 
 export function AIAssistant({
   editor,
@@ -40,6 +58,7 @@ export function AIAssistant({
   layerType?: LayerConfig["type"] | null;
   id?: string | "worker";
 }) {
+  const initialMessagesRef = useRef<VFMessage[]>(loadMessages(id || "worker"));
   const [{ code: setupScript }, setSetupScript] = useCode(
     "setup",
     type || "worker",
@@ -52,14 +71,17 @@ export function AIAssistant({
   );
   const takeScreenshot = useTakeScreenshot();
 
-  const chatId = [type, id].filter(Boolean).join("-");
-  const storedMessages = localStorage.getItem(`chat-${chatId}`);
-  const initialMessages = storedMessages ? JSON.parse(storedMessages) : [];
+  // const [initialMessages] = useState<VFMessage[]>(loadMessages(id || "worker"));
   const { messages, sendMessage, addToolResult, error, status } = useChat({
-    // messages: initialMessages,
-    id: chatId,
+    id,
+    generateId: createIdGenerator({
+      prefix: "msgc",
+      size: 16,
+    }),
+    messages: [] as VFMessage[],
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     async onToolCall({ toolCall }) {
+      console.log("Handling tool call:", toolCall.toolName);
       switch (toolCall.toolName) {
         case "getScript":
           const input = scriptBaseSchema.parse(toolCall.input);
@@ -121,22 +143,11 @@ export function AIAssistant({
             toolCallId: toolCall.toolCallId,
             output: screenshot,
           });
-        // default:
-        //   addToolResult({
-        //     tool: toolCall.toolName as keyof VFTools,
-        //     toolCallId: toolCall.toolCallId,
-        //     output: `Tool ${toolCall.toolName} is not implemented.`,
-        //   });
       }
     },
+    transport: customTransport,
   });
   const [input, setInput] = useState("");
-  useEffect(() => {
-    if (!messages.length) {
-      return;
-    }
-    localStorage.setItem(`chat-${chatId}`, JSON.stringify(messages));
-  }, [messages, chatId]);
 
   const [showCredentialsForm, setShowCredentialsForm] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -226,6 +237,7 @@ export function AIAssistant({
           text: input,
           files: attachments,
           metadata: {
+            id,
             type,
             role,
             layerType,
@@ -234,7 +246,7 @@ export function AIAssistant({
         setInput("");
       }
     },
-    [attachments, input, sendMessage, layerType, type, role],
+    [attachments, input, sendMessage, id, layerType, type, role],
   );
 
   const disabled = ["streaming", "submitted"].includes(status);
@@ -248,11 +260,13 @@ export function AIAssistant({
       className={["ai-assistant", styles.form].join(" ")}
       onSubmit={handleSubmitWithFileUIParts}
     >
-      <Messages
-        messages={messages as VFMessage[]}
-        addToolResult={addToolResult}
-        ref={messagesRef}
-      />
+      {messages?.length ? (
+        <Messages
+          messages={messages}
+          addToolResult={addToolResult}
+          ref={messagesRef}
+        />
+      ) : null}
       {error && <div className={styles.error}>{error.message}</div>}
       {status && <div className={styles.status}>{status}</div>}
       <div className={styles.main}>
