@@ -29,9 +29,9 @@
     "prepare": "husky install && pnpm run copy-typescript && pnpm run gen-editor-types"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@commitlint/cli": "^17.8.1",
-    "@commitlint/config-conventional": "^17.8.1",
+    "@biomejs/biome": "^2.1.4",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@types/lodash": "^4.17.20",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
@@ -41,7 +41,7 @@
     "canvas": "^3.1.2",
     "dtsroll": "^1.4.1",
     "happy-dom": "^17.6.3",
-    "husky": "^8.0.3",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "lint-staged": "^13.3.0",
     "typescript": "^5.9.2",
@@ -82,7 +82,7 @@
   },
   "lint-staged": {
     "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --files-ignore-unknown=true --diagnostic-level=error --apply --no-errors-on-unmatched"
+      "biome check --files-ignore-unknown=true --diagnostic-level=error --write --no-errors-on-unmatched"
     ]
   },
   "packageManager": "pnpm@10.12.4",

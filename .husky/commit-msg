@@ -1,5 +1,2 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 # allows `fixup!` subject for commits (not push)
 X_COMMITLINT_DEFAULT_IGNORES=1 npx --no-install commitlint --edit 

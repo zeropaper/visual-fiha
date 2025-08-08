@@ -1,8 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.6.1/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.1.4/schema.json",
   "linter": {
     "enabled": true,
     "rules": {
@@ -30,8 +27,7 @@
     "indentStyle": "space"
   },
   "files": {
-    "ignoreUnknown": true,
-    "include": ["__mocks__/**", "demo-project/**", "script-dts/**", "src/**"]
+    "ignoreUnknown": true
   },
   "vcs": {
     "enabled": true,
