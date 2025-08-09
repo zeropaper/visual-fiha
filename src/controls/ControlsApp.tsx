@@ -115,7 +115,9 @@ export default function ControlsApp() {
               ) : (
                 <>
                   <div className={styles.sidebar}>
-                    <ControlDisplay />
+                    <div className={styles.controlDisplay}>
+                      <ControlDisplay />
+                    </div>
                     <div className={styles.sidebarScrollable}>
                       <div className={styles.sidebarScrollableInner}>
                         <DisplaysControl />

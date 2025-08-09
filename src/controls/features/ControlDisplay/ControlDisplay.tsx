@@ -1,49 +1,44 @@
 import Display from "@display/Display";
 import { useEffect, useRef } from "react";
-import styles from "../../ControlsApp.module.css";
+import styles from "./ControlDisplay.module.css";
 
-export function ControlDisplay() {
+export function ControlDisplay({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const displayRef = useRef<Display | null>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    let _counter1 = 0;
-    function render() {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      _counter1++;
-      if (_counter1 % 60 === 0) {
-        console.log("Rendering ControlDisplay", displayRef.current?.state);
-      }
-      if (!displayRef.current) {
-        displayRef.current = new Display({ canvas, id: "controls-display" });
-      }
+    if (canvasRef.current && !displayRef.current) {
+      displayRef.current = new Display({
+        canvas: canvasRef.current,
+        id: "controls-display",
+      });
     }
-    const animationFrame = requestAnimationFrame(render);
-    return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
+  }, []);
+
+  useEffect(() => {
+    const resizeListener = () => {
       if (displayRef.current) {
-        displayRef.current = null;
+        displayRef.current.resize();
       }
+    };
+    const observer = new ResizeObserver(resizeListener);
+    if (canvasRef.current?.parentElement) {
+      observer.observe(canvasRef.current?.parentElement);
+    }
+    return () => {
+      observer.disconnect();
     };
   }, []);
 
   return (
-    <div>
-      <canvas
-        ref={canvasRef}
-        id="controls-display"
-        className={[styles.controlDisplay, "controls-display"].join(" ")}
-        style={{
-          background:
-            displayRef.current?.state.stage?.backgroundColor || "#000",
-          aspectRatio: `${displayRef.current?.state.stage?.width || "600"}/${displayRef.current?.state.stage?.height || "400"}`,
-        }}
-      />
-    </div>
+    <canvas
+      ref={canvasRef}
+      id="controls-display"
+      className={[styles.canvas, "controls-display", className].join(" ")}
+      // style={{
+      //   background: displayRef.current?.state.stage?.backgroundColor || "#000",
+      //   aspectRatio: `${displayRef.current?.state.stage?.width || "600"}/${displayRef.current?.state.stage?.height || "400"}`,
+      // }}
+    />
   );
 }
