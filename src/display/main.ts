@@ -10,6 +10,11 @@ function initializeDisplay() {
       display.resize();
     });
 
+    const observer = new ResizeObserver(() => {
+      display.resize();
+    });
+    observer.observe(document.body);
+
     window.addEventListener("beforeunload", () => {
       display.post("unregister");
     });
