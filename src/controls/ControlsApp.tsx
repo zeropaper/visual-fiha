@@ -1,19 +1,18 @@
 import { useIsMobile } from "@utils/useIsMobile";
-import { useCallback, useState } from "react";
-import { Suspense, lazy } from "react";
+import { lazy, Suspense, useCallback, useState } from "react";
 import styles from "./ControlsApp.module.css";
-import { DisplaysControl } from "./DisplaysControl";
-import Menu from "./Menu";
-import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 import { AudioSetupProvider } from "./contexts/AudioSetupContext";
 import { AppFastContextProvider } from "./contexts/ControlsContext";
 import { FileSystemProvider } from "./contexts/FileSystemContext";
+import { DisplaysControl } from "./DisplaysControl";
 import { ControlDisplay } from "./features/ControlDisplay/ControlDisplay";
 import type { DocTopic } from "./features/Help/Help";
 import { Inputs } from "./features/Inputs/Inputs";
 import { Layers } from "./features/Layers/Layers";
-import { Stage } from "./features/Stage/Stage";
+import { MobileFallback } from "./features/MobileFallback/MobileFallback";
 import { Timeline } from "./features/Timeline/Timeline";
+import Menu from "./Menu";
+
 const ScriptEditor = lazy(() =>
   import("./features/ScriptEditor/ScriptEditor").then((module) => ({
     default: module.ScriptEditor,
@@ -105,13 +104,7 @@ export default function ControlsApp() {
           <div className={isMobile ? styles.appMobile : styles.app}>
             <Suspense fallback={<div>Loading...</div>}>
               {isMobile ? (
-                <div className={styles.mobileWarning}>
-                  <div>
-                    This app is not intended for mobile devices.
-                    <br />
-                    Please use a desktop browser for the best experience.
-                  </div>
-                </div>
+                <MobileFallback />
               ) : (
                 <>
                   <div className={styles.sidebar}>

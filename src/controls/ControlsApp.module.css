@@ -1,18 +1,3 @@
-.mobileWarning {
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
-  flex-grow: 1;
-  > div {
-    background-color: var(--vscode-errorForeground, #f00);
-    color: var(--vscode-editorWidget-foreground, #fff);
-    padding: 10px;
-  }
-}
-
 .header {
   display: flex;
   align-items: center;
