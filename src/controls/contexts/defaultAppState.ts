@@ -1,3 +1,7 @@
+import demoDefaultCanvasAnimation from "@demos/default/canvas-animation?raw";
+import demoStatsAnimation from "@demos/default/stats-animation?raw";
+import demoDefaultThreeJSAnimation from "@demos/default/threejs-animation?raw";
+import demoDefaultThreeJSSetup from "@demos/default/threejs-setup?raw";
 import type {
   AppState,
   DisplayConfig,
@@ -5,11 +9,6 @@ import type {
   LayerConfig,
   SignalConfig,
 } from "../../types";
-
-import demoDefaultCanvasAnimation from "@demos/default/canvas-animation?raw";
-import demoStatsAnimation from "@demos/default/stats-animation?raw";
-import demoDefaultThreeJSAnimation from "@demos/default/threejs-animation?raw";
-import demoDefaultThreeJSSetup from "@demos/default/threejs-setup?raw";
 
 const defaultLayers: LayerConfig[] = [
   {

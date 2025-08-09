@@ -6,7 +6,9 @@ import styles from "./LandingContent.module.css";
 
 export function LandingContent({
   onSetDocTopic: setDocTopic,
-}: { onSetDocTopic: (topic: DocTopic) => void }) {
+}: {
+  onSetDocTopic: (topic: DocTopic) => void;
+}) {
   return (
     <div className={styles.landingContent}>
       <AdvancedMarkdown

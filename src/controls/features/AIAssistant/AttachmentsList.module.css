@@ -13,7 +13,9 @@
 }
 
 .filesList button {
-  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
+  transition:
+    color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
     border-color 0.2s ease-in-out;
   border-color: rgb(from var(--color-text) r g b / 0.5);
 }

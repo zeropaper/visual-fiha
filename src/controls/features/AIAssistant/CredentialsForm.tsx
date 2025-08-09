@@ -4,7 +4,9 @@ import styles from "./AIAssistant.module.css";
 
 export function AIAssistantCredentialsForm({
   onClose,
-}: { onClose?: () => void }) {
+}: {
+  onClose?: () => void;
+}) {
   return (
     <form
       className={[styles.form, styles.credentials].join(" ")}

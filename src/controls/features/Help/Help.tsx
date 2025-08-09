@@ -36,7 +36,10 @@ export const docTopics = Object.keys(docs) as DocTopic[];
 export function Help({
   docTopic: docTopicProp,
   className = styles.root,
-}: { docTopic: DocTopic | null; className?: string }) {
+}: {
+  docTopic: DocTopic | null;
+  className?: string;
+}) {
   const [docTopic, setDocTopic] = useState<DocTopic | null>(docTopicProp);
   useEffect(() => {
     if (docTopicProp) {

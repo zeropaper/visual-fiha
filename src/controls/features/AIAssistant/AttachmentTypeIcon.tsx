@@ -11,7 +11,10 @@ import {
 export default function FileUIPartTypeIcon({
   type,
   className,
-}: { type?: string; className?: string }) {
+}: {
+  type?: string;
+  className?: string;
+}) {
   switch (type) {
     case "application/pdf":
     case "text/plain":

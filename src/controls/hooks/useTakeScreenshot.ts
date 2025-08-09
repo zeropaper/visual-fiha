@@ -1,7 +1,7 @@
 import {
+  autoBind,
   type ChannelPost,
   type ComMessageEventListener,
-  autoBind,
 } from "@utils/com";
 import { useEffect, useRef } from "react";
 
@@ -30,7 +30,9 @@ export function useTakeScreenshot() {
 
   return async function takeScreenshot({
     layerId,
-  }: { layerId: string }): Promise<string> {
+  }: {
+    layerId: string;
+  }): Promise<string> {
     if (!comRef.current) {
       throw new Error("Screenshot tool is not initialized");
     }

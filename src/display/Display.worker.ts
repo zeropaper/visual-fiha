@@ -4,17 +4,17 @@
  * This worker is responsible for rendering visual content in a web worker environment.
  * It handles communication with the main thread, manages layers, and executes scripts.
  */
-import type { AppState, RuntimeData } from "../types";
 
 import type { TranspilePayload } from "@utils/tsTranspile";
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
-import type { ScriptableEventListener } from "../utils/Scriptable";
-import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
+import type { AppState, RuntimeData } from "../types";
 import type { ComActionHandlers } from "../utils/com";
 import { autoBind } from "../utils/com";
 import { makeRead } from "../utils/make-read";
 import * as mathTools from "../utils/mathTools";
+import type { ScriptableEventListener } from "../utils/Scriptable";
+import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
 import { isDisplayState } from "./isDisplayState";
 import type { DisplayState } from "./types";
 
@@ -249,19 +249,14 @@ const broadcastChannelHandlers: ComActionHandlers = {
     Object.assign(data, payload);
   },
 
-  registerdisplaycallback: (payload: {
-    id: string;
-  }) => {
+  registerdisplaycallback: (payload: { id: string }) => {
     if (payload.id !== workerName) {
       return;
     }
     processLayers(data.layers || []);
   },
 
-  takeScreenshot: (payload: {
-    layerId: string;
-    displayName: string;
-  }) => {
+  takeScreenshot: (payload: { layerId: string; displayName: string }) => {
     if (!payload.layerId) {
       console.warn("[display worker] takeScreenshot: layerId is required");
       return;
