@@ -16,12 +16,14 @@ const broadcastChannel = new BroadcastChannel("core");
 let refreshInterval: NodeJS.Timeout | null = null;
 const defaultBPM = 120;
 
+const defaultStageConfig = {
+  width: 600,
+  height: 400,
+  backgroundColor: "#000000",
+};
+
 const defaultConfigData: AppState = {
-  stage: {
-    width: 600,
-    height: 400,
-    backgroundColor: "#000000",
-  },
+  stage: defaultStageConfig,
   inputs: [],
   signals: [],
   layers: [],
@@ -32,15 +34,10 @@ const defaultConfigData: AppState = {
     animation: "",
   },
 };
-
 let configData: AppState = structuredClone(defaultConfigData);
 
 const defaultRuntimeData: RuntimeData = {
-  stage: {
-    width: 600,
-    height: 400,
-    backgroundColor: "#000000",
-  },
+  stage: defaultStageConfig,
   bpm: {
     bpm: defaultBPM,
     started: 0,
