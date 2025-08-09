@@ -4,6 +4,7 @@ import demoDefaultThreeJSAnimation from "@demos/default/threejs-animation?raw";
 import demoDefaultThreeJSSetup from "@demos/default/threejs-setup?raw";
 import type {
   AppState,
+  AssetConfig,
   DisplayConfig,
   InputConfig,
   LayerConfig,
@@ -65,6 +66,7 @@ const defaultAppState: AppState = {
     { name: "MIDI", type: "midi", config: {} },
   ] as InputConfig[],
   signals: [] as SignalConfig[],
+  assets: [] as AssetConfig[],
   layers: defaultLayers,
   worker: {
     setup: "/* Worker setup code */",

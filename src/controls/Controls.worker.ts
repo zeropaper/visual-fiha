@@ -26,6 +26,7 @@ const defaultConfigData: AppState = {
   signals: [],
   layers: [],
   displays: [],
+  assets: [],
   worker: {
     setup: "",
     animation: "",

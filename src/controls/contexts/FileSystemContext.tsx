@@ -54,6 +54,7 @@ function useWriteConfig(selectedDirectory: FileSystemDirectoryHandle | null) {
           stage: stage.get,
           inputs: inputs.get,
           displays: [],
+          assets: [],
         } satisfies AppState,
         null,
         2,

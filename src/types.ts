@@ -179,12 +179,20 @@ export interface DisplayConfig {
   };
 }
 
+export interface AssetConfig {
+  /**
+   * Unique identifier for the asset, a typically a file path, URL or UUID
+   */
+  id: string;
+}
+
 export type AppState = {
   stage: StageConfig;
   inputs: InputConfig[];
   signals: SignalConfig[];
   layers: LayerConfig[];
   displays: DisplayConfig[];
+  assets: AssetConfig[];
   worker: {
     setup: string;
     animation: string;
