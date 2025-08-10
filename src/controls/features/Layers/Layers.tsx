@@ -8,7 +8,6 @@ import { Input } from "@ui/Input";
 import { Select } from "@ui/Select";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
-import sectionStyles from "../../ControlsApp.module.css";
 import styles from "./Layers.module.css";
 
 function Layer({
@@ -168,8 +167,7 @@ export function Layers({
   };
 
   return (
-    <details open className={[sectionStyles.details, "layers"].join(" ")}>
-      <summary>Layers</summary>
+    <>
       <form
         className={styles.addLayerForm}
         onSubmit={(e) => {
@@ -231,6 +229,6 @@ export function Layers({
           </li>
         ))}
       </ul>
-    </details>
+    </>
   );
 }

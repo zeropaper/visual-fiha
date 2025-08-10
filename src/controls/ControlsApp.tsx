@@ -1,4 +1,12 @@
+import { SidebarTabs } from "@ui/SidebarTabs";
 import { useIsMobile } from "@utils/useIsMobile";
+import {
+  AudioLinesIcon,
+  FileIcon,
+  KeyboardMusicIcon,
+  LayersIcon,
+  MonitorIcon,
+} from "lucide-react";
 import { lazy, Suspense, useCallback, useState } from "react";
 import styles from "./ControlsApp.module.css";
 import { AudioSetupProvider } from "./contexts/AudioSetupContext";
@@ -9,6 +17,7 @@ import { Assets } from "./features/Assets/Assets";
 import { ControlDisplay } from "./features/ControlDisplay/ControlDisplay";
 import type { DocTopic } from "./features/Help/Help";
 import { Inputs } from "./features/Inputs/Inputs";
+import { MIDIBridge } from "./features/Inputs/MIDIBridge";
 import { Layers } from "./features/Layers/Layers";
 import { MobileFallback } from "./features/MobileFallback/MobileFallback";
 import { Timeline } from "./features/Timeline/Timeline";
@@ -49,6 +58,37 @@ export default function ControlsApp() {
     [],
   );
   const isMobile = useIsMobile();
+
+  const tabs = {
+    layers: {
+      title: "Layers",
+      icon: <LayersIcon />,
+      content: (
+        <Layers setCurrentScript={setCurrentScript} {...currentScript} />
+      ),
+    },
+    assets: {
+      title: "Assets",
+      icon: <FileIcon />,
+      content: <Assets />,
+    },
+    audio: {
+      title: "Audio",
+      icon: <AudioLinesIcon />,
+      content: <Inputs />,
+    },
+    midi: {
+      title: "MIDI",
+      icon: <KeyboardMusicIcon />,
+      content: <MIDIBridge />,
+    },
+    displays: {
+      title: "Displays",
+      icon: <MonitorIcon />,
+      content: <DisplaysControl />,
+    },
+  };
+  const [currentTab, setCurrentTab] = useState<keyof typeof tabs>("layers");
 
   return (
     <AppFastContextProvider>
@@ -112,18 +152,11 @@ export default function ControlsApp() {
                     <div className={styles.controlDisplay}>
                       <ControlDisplay />
                     </div>
-                    <div className={styles.sidebarScrollable}>
-                      <div className={styles.sidebarScrollableInner}>
-                        <DisplaysControl />
-
-                        <Layers
-                          setCurrentScript={setCurrentScript}
-                          {...currentScript}
-                        />
-                        <Inputs />
-                        <Assets />
-                      </div>
-                    </div>
+                    <SidebarTabs
+                      tabs={tabs}
+                      currentTab={currentTab}
+                      setCurrentTab={setCurrentTab}
+                    />
                   </div>
 
                   <div className={styles.main}>

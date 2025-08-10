@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-
 import { useWriteInputValues } from "@contexts/ControlsContext";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as akaiLPD8 from "./MIDIBridge.akai-lpd8";
 
 declare global {
@@ -96,7 +95,7 @@ export function MIDIBridge() {
 
   return (
     <>
-      MIDI <span>{midiState}</span>
+      <span>{midiState}</span>
       <ul>
         {Object.entries(midiInputs).map(([id, enabled]) => {
           const input = window._midiAccess?.inputs.get(id);

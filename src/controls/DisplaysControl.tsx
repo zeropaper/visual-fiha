@@ -1,6 +1,5 @@
 import { useAppFastContextFields } from "@contexts/ControlsContext";
 import { Button } from "@ui/Button";
-import sectionStyles from "./ControlsApp.module.css";
 
 export function DisplaysControl() {
   const {
@@ -8,8 +7,7 @@ export function DisplaysControl() {
   } = useAppFastContextFields(["displays"]);
 
   return (
-    <details open className={[sectionStyles.details, "displays"].join(" ")}>
-      <summary>Displays</summary>
+    <>
       <Button
         onClick={() => {
           window.open(`/display#${displays.length}`, "_blank");
@@ -22,6 +20,6 @@ export function DisplaysControl() {
           <li key={display.id}>{display.id}</li>
         ))}
       </ul>
-    </details>
+    </>
   );
 }
