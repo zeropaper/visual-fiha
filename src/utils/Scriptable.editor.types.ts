@@ -4,10 +4,12 @@ type BPMReadPath =
   `bpm.${"bpm" | "started" | "elapsed" | "isRunning" | "percent" | "count"}`;
 
 type MIDIReadPath =
-  `midi.${string}.${"note" | "velocity" | "duration" | "channel"}`;
+  | "midi"
+  | `midi.${string}.${"note" | "velocity" | "duration" | "channel"}`;
 
 type AudioReadPath =
-  `audio.${number}.${number}.${"frequency" | "timeDomain"}.${"min" | "max" | "average" | "median" | "data"}`;
+  | "audio"
+  | `audio.${number}.${number}.${"frequency" | "timeDomain"}.${"min" | "max" | "average" | "median" | "data"}`;
 
 type AssetReadPath =
   `asset.${string}.${"png" | "jpg" | "jpeg" | "gif" | "bmp" | "webp" | "gltf"}`;
