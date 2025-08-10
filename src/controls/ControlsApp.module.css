@@ -100,8 +100,7 @@
 }
 
 .controlDisplay {
-  width: auto;
-  max-height: 350px;
+  width: 100%;
   margin: 0 auto;
 }
 

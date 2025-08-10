@@ -22,6 +22,7 @@ import { Layers } from "./features/Layers/Layers";
 import { MobileFallback } from "./features/MobileFallback/MobileFallback";
 import { Timeline } from "./features/Timeline/Timeline";
 import Menu from "./Menu";
+import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 
 const ScriptEditor = lazy(() =>
   import("./features/ScriptEditor/ScriptEditor").then((module) => ({
@@ -133,11 +134,7 @@ export default function ControlsApp() {
             </div>
             {isMobile ? null : (
               <>
-                {/*
-                  <Stage />
-                  <WorkerScriptsSelector setCurrentScript={setCurrentScript} />
-                  */}
-
+                {/* <WorkerScriptsSelector setCurrentScript={setCurrentScript} /> */}
                 <Menu />
               </>
             )}

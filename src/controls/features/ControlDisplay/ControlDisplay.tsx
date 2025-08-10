@@ -35,10 +35,10 @@ export function ControlDisplay({ className }: { className?: string }) {
       ref={canvasRef}
       id="controls-display"
       className={[styles.canvas, "controls-display", className].join(" ")}
-      // style={{
-      //   background: displayRef.current?.state.stage?.backgroundColor || "#000",
-      //   aspectRatio: `${displayRef.current?.state.stage?.width || "600"}/${displayRef.current?.state.stage?.height || "400"}`,
-      // }}
+      style={{
+        background: displayRef.current?.state.stage?.backgroundColor || "#000",
+        aspectRatio: `${displayRef.current?.state.stage?.width || "600"}/${displayRef.current?.state.stage?.height || "400"}`,
+      }}
     />
   );
 }
