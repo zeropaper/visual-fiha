@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tour } from "./Tour";
+import { TourUI } from "./TourUI";
 
 export function Intro() {
   const [showIntro, setShowIntro] = useState(
@@ -7,7 +7,7 @@ export function Intro() {
   );
   if (!showIntro) return null;
   return (
-    <Tour
+    <TourUI
       onAfterChange={(tour, step) => {
         console.log("Intro step changed", step);
       }}

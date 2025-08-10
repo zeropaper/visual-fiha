@@ -4,19 +4,9 @@ import { buttonStyles } from "@ui/Button";
 import { useEffect, useRef } from "react";
 import type { Prettify } from "../../../types";
 import styles from "./Tour.module.css";
+import type { Tour, TourOnMethods, TourOptions } from "./types";
 
-type Tour = ReturnType<typeof introJs.tour>;
-type TourOptions = Parameters<Tour["setOptions"]>[0];
-
-type TourOnMethods = {
-  [K in keyof Tour as K extends `on${Capitalize<string>}`
-    ? K
-    : never]?: Tour[K] extends (handler: (...args: infer P) => infer R) => any
-    ? (tour: Tour, ...args: P) => R
-    : never;
-};
-
-export function Tour(props: Prettify<TourOptions & TourOnMethods>) {
+export function TourUI(props: Prettify<TourOptions & TourOnMethods>) {
   const tourRef = useRef<Tour | null>(null);
   // biome-ignore lint/correctness/useExhaustiveDependencies: mounting effect
   useEffect(() => {
