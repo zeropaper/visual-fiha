@@ -1,10 +1,14 @@
-import { useAppFastContextFields } from "@contexts/ControlsContext";
-import { createContext, useContext, useState } from "react";
+import {
+  useAppFastContextFields,
+  useContextWorkerPost,
+} from "@contexts/ControlsContext";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { AppState } from "../../types";
 
 interface FileSystemContextValue {
   saveFiles: () => Promise<void>;
   loadFiles: () => Promise<void>;
+  readFile: (name: string) => Promise<string | null>;
   selectedDirectory: FileSystemDirectoryHandle | null;
   selectDirectory: () => Promise<void>;
 }
@@ -25,17 +29,18 @@ declare global {
 }
 
 function useWriteConfig(selectedDirectory: FileSystemDirectoryHandle | null) {
-  const { layers, worker, inputs, signals, stage } = useAppFastContextFields([
-    "layers",
-    "worker",
-    "signals",
-    "stage",
-    "inputs",
-  ]);
+  const { layers, worker, inputs, signals, stage, assets } =
+    useAppFastContextFields([
+      "layers",
+      "worker",
+      "signals",
+      "stage",
+      "inputs",
+      "assets",
+    ]);
   return async () => {
     if (!selectedDirectory) {
-      console.error("No directory selected for saving config.");
-      return;
+      throw new Error("No directory selected for saving config.");
     }
     const fileHandle = await selectedDirectory.getFileHandle(
       `visual-fiha-config.json`,
@@ -53,8 +58,8 @@ function useWriteConfig(selectedDirectory: FileSystemDirectoryHandle | null) {
           signals: signals.get,
           stage: stage.get,
           inputs: inputs.get,
+          assets: assets.get,
           displays: [],
-          assets: [],
         } satisfies AppState,
         null,
         2,
@@ -69,24 +74,28 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [selectedDirectory, setSelectedDirectory] =
     useState<FileSystemDirectoryHandle | null>(null);
+  const post = useContextWorkerPost();
   const writeConfig = useWriteConfig(selectedDirectory);
   const saveFiles = async () => {
     if (!selectedDirectory) {
-      console.error("No directory selected for saving files.");
-      return;
+      throw new Error("No directory selected for saving files.");
     }
     await writeConfig();
   };
 
   const loadFiles = async () => {
     if (!selectedDirectory) {
-      console.error("No directory selected for loading files.");
-      return;
+      throw new Error("No directory selected for loading files.");
     }
 
+    let json: AppState | null = null;
+    const assets = new Map<string, File>();
     for await (const [name, entry] of selectedDirectory.entries()) {
-      console.info(`Processing entry: ${name}`, entry);
       if (name !== "visual-fiha-config.json") {
+        if (entry.kind === "file") {
+          const file = await entry.getFile();
+          assets.set(name, file);
+        }
         continue;
       }
       if (entry.kind !== "file") {
@@ -95,20 +104,49 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       const file = await entry.getFile();
       const content = await file.text();
-      console.info(
-        `Loaded config file: ${name} with content length: ${content.length}`,
-      );
-      localStorage.setItem("config", content);
+      json = JSON.parse(content);
     }
+
+    if (!json) {
+      throw new Error("Failed to load config.");
+    }
+
+    json.assets = [];
+    for (const [name] of assets) {
+      const file = assets.get(name);
+      if (!file) continue;
+      json.assets.push({
+        id: name,
+        source: "local",
+        blobUrl: URL.createObjectURL(file),
+        state: "loaded",
+      });
+    }
+
+    localStorage.setItem("config", JSON.stringify(json));
+
+    post?.("init", json);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: selectedDirectory is intentionally the only dependency
+  useEffect(() => {
+    if (selectedDirectory) loadFiles();
+  }, [selectedDirectory]);
+
   const selectDirectory = async () => {
-    try {
-      const directoryHandle = await window.showDirectoryPicker();
-      setSelectedDirectory(directoryHandle);
-    } catch (error) {
-      console.error("Failed to select directory:", error);
+    const directoryHandle = await window.showDirectoryPicker();
+    setSelectedDirectory(directoryHandle);
+  };
+
+  const readFile = async (name: string) => {
+    if (!selectedDirectory) {
+      throw new Error("No directory selected for reading files.");
     }
+
+    const fileHandle = await selectedDirectory.getFileHandle(name);
+    const file = await fileHandle.getFile();
+    const content = await file.text();
+    return content;
   };
 
   return (
@@ -116,6 +154,7 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         saveFiles,
         loadFiles,
+        readFile,
         selectedDirectory,
         selectDirectory,
       }}

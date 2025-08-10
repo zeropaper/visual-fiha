@@ -179,12 +179,32 @@ export interface DisplayConfig {
   };
 }
 
-export interface AssetConfig {
-  /**
-   * Unique identifier for the asset, a typically a file path, URL or UUID
-   */
-  id: string;
-}
+export type AssetConfig = Prettify<
+  {
+    /**
+     * Unique identifier for the asset, a typically a file path, URL or UUID
+     */
+    id: string;
+    /**
+     * Blob URL for the asset, used for displaying the asset in the UI
+     */
+    blobUrl: string | null;
+    /**
+     * Current loading state of the asset
+     */
+    state: "idle" | "loading" | "loaded" | "error";
+  } & (
+    | {
+        source: "local";
+      }
+    | {
+        source: "remote";
+      }
+    | {
+        source: "layer";
+      }
+  )
+>;
 
 export type AppState = {
   stage: StageConfig;
@@ -216,6 +236,7 @@ export interface RuntimeData {
     setup: string;
     animation: string;
   };
+  assets: AssetConfig[];
 }
 
 export interface ScriptInfo {

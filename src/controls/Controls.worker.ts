@@ -56,6 +56,7 @@ const defaultRuntimeData: RuntimeData = {
   audio: {},
   midi: {},
   layers: [],
+  assets: [],
   worker: {
     setup: "",
     animation: "",
@@ -125,10 +126,22 @@ const handlers = {
     runtimeData.bpm.count = 0;
   },
   inputsdata: (payload: any) => {
+    // Log inputs data only every 5 seconds
+    if (
+      // @ts-expect-error
+      !handlers.inputsdata.lastLogTime ||
+      // @ts-expect-error
+      Date.now() - handlers.inputsdata.lastLogTime > 5000
+    ) {
+      console.info("[controls-worker] Inputs data received:", payload);
+      // @ts-expect-error
+      handlers.inputsdata.lastLogTime = Date.now();
+    }
     runtimeData = {
       ...runtimeData,
       ...payload,
     };
+    runtimeData.assets = configData.assets;
   },
   updateconfig: (payload: Partial<AppState>) => {
     configData = { ...configData, ...payload };
@@ -142,6 +155,7 @@ const handlers = {
         };
       });
     }
+    console.log("[controls-worker] Config updated:", configData);
     // propagate to displays
     broadcastChannel.postMessage({
       type: "updateconfig",
@@ -170,6 +184,7 @@ const handlers = {
         runtimeData.time.duration || defaultRuntimeData.time.duration,
       );
       broadcastRuntimeData();
+      console.log("[controls-worker] init complete:", configData);
     }
 
     Promise.all([
@@ -316,4 +331,4 @@ function broadcastRuntimeData() {
   });
 }
 
-refreshInterval = setInterval(broadcastRuntimeData, 1);
+refreshInterval = setInterval(broadcastRuntimeData, 16);

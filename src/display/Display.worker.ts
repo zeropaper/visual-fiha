@@ -60,6 +60,7 @@ let state: DisplayState = {
   },
   midi: {},
   worker: { setup: "", animation: "" },
+  assets: [] satisfies DisplayState["assets"],
 };
 
 // Canvas and rendering context

@@ -1,8 +1,8 @@
 import {
+  autoBind,
   type ChannelPost,
   type ComActionHandlers,
   type ComMessageEventListener,
-  autoBind,
 } from "../utils/com";
 import DisplayWorker from "./Display.worker.ts?worker";
 import type { DisplayOptions, DisplayState } from "./types";

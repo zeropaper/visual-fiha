@@ -19,7 +19,7 @@ export interface ScriptableEvent {
 
 export interface ScriptableErrorEvent
   extends ScriptRunnerErrorEvent,
-  ScriptableEvent { }
+    ScriptableEvent {}
 
 export interface ScriptableCompilationErrorEvent extends ScriptableErrorEvent {
   readonly type: "compilationerror";
@@ -31,11 +31,11 @@ export interface ScriptableExecutionErrorEvent extends ScriptableErrorEvent {
 
 export interface ScriptableLogEvent
   extends ScriptRunnerLogEvent,
-  ScriptableEvent { }
+    ScriptableEvent {}
 
 export interface ScriptableCompilationSuccessEvent
   extends ScriptRunnerCompilationSuccessEvent,
-  ScriptableEvent { }
+    ScriptableEvent {}
 
 export type ScriptableEventListener = (
   event:
@@ -59,7 +59,9 @@ export interface ScriptableOptions {
 export default class Scriptable {
   constructor(options: ScriptableOptions = { id: `scriptable${Date.now()}` }) {
     this.#read =
-      typeof options.read === "function" ? options.read : makeRead(this.cache);
+      typeof options.read === "function"
+        ? options.read
+        : makeRead(this.cache as any);
     this.#id = options.id;
     this.#runners = {
       setup: new ScriptRunner(options.scope, `${this.#id}_S`),

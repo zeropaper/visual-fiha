@@ -5,6 +5,7 @@ import { AudioSetupProvider } from "./contexts/AudioSetupContext";
 import { AppFastContextProvider } from "./contexts/ControlsContext";
 import { FileSystemProvider } from "./contexts/FileSystemContext";
 import { DisplaysControl } from "./DisplaysControl";
+import { Assets } from "./features/Assets/Assets";
 import { ControlDisplay } from "./features/ControlDisplay/ControlDisplay";
 import type { DocTopic } from "./features/Help/Help";
 import { Inputs } from "./features/Inputs/Inputs";
@@ -120,6 +121,7 @@ export default function ControlsApp() {
                           {...currentScript}
                         />
                         <Inputs />
+                        <Assets />
                       </div>
                     </div>
                   </div>
