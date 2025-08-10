@@ -68,15 +68,15 @@ export default function ControlsApp() {
         <Layers setCurrentScript={setCurrentScript} {...currentScript} />
       ),
     },
-    assets: {
-      title: "Assets",
-      icon: <FileIcon />,
-      content: <Assets />,
-    },
     audio: {
       title: "Audio",
       icon: <AudioLinesIcon />,
       content: <Inputs />,
+    },
+    assets: {
+      title: "Assets",
+      icon: <FileIcon />,
+      content: <Assets />,
     },
     midi: {
       title: "MIDI",
