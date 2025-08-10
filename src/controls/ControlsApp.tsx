@@ -1,3 +1,4 @@
+import { LoadingFallback } from "@ui/LoadingFallback";
 import { SidebarTabs } from "@ui/SidebarTabs";
 import { useIsMobile } from "@utils/useIsMobile";
 import {
@@ -22,7 +23,6 @@ import { Layers } from "./features/Layers/Layers";
 import { MobileFallback } from "./features/MobileFallback/MobileFallback";
 import { Timeline } from "./features/Timeline/Timeline";
 import Menu from "./Menu";
-import { WorkerScriptsSelector } from "./WorkerScriptsSelector";
 
 const ScriptEditor = lazy(() =>
   import("./features/ScriptEditor/ScriptEditor").then((module) => ({
@@ -139,8 +139,8 @@ export default function ControlsApp() {
               </>
             )}
           </header>
-          <div className={isMobile ? styles.appMobile : styles.app}>
-            <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingFallback />}>
+            <div className={isMobile ? styles.appMobile : styles.app}>
               {isMobile ? (
                 <MobileFallback />
               ) : (
@@ -178,8 +178,8 @@ export default function ControlsApp() {
                   <Timeline className={styles.timeline} />
                 </>
               )}
-            </Suspense>
-          </div>
+            </div>
+          </Suspense>
         </AudioSetupProvider>
       </FileSystemProvider>
     </AppFastContextProvider>

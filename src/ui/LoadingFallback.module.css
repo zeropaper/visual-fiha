@@ -1,0 +1,25 @@
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: ;
+}
+
+.logo {
+  width: 30%;
+  max-width: 400px;
+  aspect-ratio: 1;
+  opacity: 0.1;
+  animation: rotateY 5s linear infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes rotateY {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
