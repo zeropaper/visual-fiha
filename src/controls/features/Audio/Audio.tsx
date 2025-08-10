@@ -1,10 +1,10 @@
 import { useAudioSetup } from "@contexts/AudioSetupContext";
 import { Button } from "@ui/Button";
+import styles from "./Audio.module.css";
 import AudioFilesAnalyzer from "./AudioFilesAnalyzer";
-import styles from "./Inputs.module.css";
 import MicrophoneAnalyzer from "./MicrophoneAnalyzer";
 
-export function Inputs() {
+export function Audio() {
   const { mode: audioMode, setMode: setAudioMode } = useAudioSetup();
 
   return (

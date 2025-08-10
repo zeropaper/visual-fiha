@@ -1,7 +1,7 @@
 import { useAudioSetup } from "@contexts/AudioSetupContext";
 import { useWriteInputValues } from "@contexts/ControlsContext";
 import styles from "./AudioFilesAnalyzer.module.css";
-import { Frequency, TimeDomain, drawInfo } from "./CanvasVisualizer";
+import { drawInfo, Frequency, TimeDomain } from "./CanvasVisualizer";
 
 export default function MicrophoneAnalyzer() {
   const { getMicrophoneAnalyser, getMicrophoneState } = useAudioSetup();

@@ -14,10 +14,10 @@ import { AudioSetupProvider } from "./contexts/AudioSetupContext";
 import { AppFastContextProvider } from "./contexts/ControlsContext";
 import { FileSystemProvider } from "./contexts/FileSystemContext";
 import { Assets } from "./features/Assets/Assets";
+import { Audio } from "./features/Audio/Audio";
 import { ControlDisplay } from "./features/ControlDisplay/ControlDisplay";
 import { Displays } from "./features/Displays/Displays";
 import type { DocTopic } from "./features/Help/Help";
-import { Inputs } from "./features/Inputs/Inputs";
 import { Intro } from "./features/Intro/Intro";
 import { Layers } from "./features/Layers/Layers";
 import { MIDIBridge } from "./features/MIDIBridge/MIDIBridge";
@@ -72,7 +72,7 @@ export default function ControlsApp() {
     audio: {
       title: "Audio",
       icon: <AudioLinesIcon />,
-      content: <Inputs />,
+      content: <Audio />,
     },
     assets: {
       title: "Assets",
