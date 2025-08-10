@@ -1,8 +1,12 @@
+import * as assets from "@controls/features/Assets/Assets.intro";
+import * as controlDisplay from "@controls/features/ControlDisplay/ControlDisplay.intro";
+import * as displays from "@controls/features/Displays/Displays.intro";
+import * as layers from "@controls/features/Layers/Layers.intro";
 import { useState } from "react";
 import { TourUI } from "./TourUI";
 
 export function Intro() {
-  const [showIntro, setShowIntro] = useState(
+  const [showIntro, _setShowIntro] = useState(
     localStorage.getItem("introShown") !== "true",
   );
   if (!showIntro) return null;
@@ -11,7 +15,7 @@ export function Intro() {
       onAfterChange={(tour, step) => {
         console.log("Intro step changed", step);
       }}
-      onBeforeChange={(tour, element, index, direction) => {
+      onBeforeChange={(_tour, element, index, direction) => {
         console.log("Intro step about to change", element, index, direction);
         // dispatch a click event on the first layer animation button
         if (index === 6) {
@@ -26,10 +30,10 @@ export function Intro() {
         }
         return true;
       }}
-      onStart={(tour) => {
+      onStart={(_tour) => {
         console.log("Intro started");
       }}
-      onExit={(tour) => {
+      onExit={(_tour) => {
         console.log("Intro exited");
         localStorage.setItem("introShown", "true");
       }}
@@ -40,41 +44,10 @@ export function Intro() {
           intro:
             "This is a visual programming environment for creating animations and interactive experiences.",
         },
-        {
-          element: ".controls-display",
-          title: "Control Display",
-          intro: "This is where you can see the output of your scripts.",
-        },
-        {
-          element: ".displays",
-          title: "Displays",
-          intro:
-            "Here you can manage your displays. Click 'New Display' to create a new one.",
-        },
-        {
-          element: ".layers",
-          title: "Layers",
-          intro: "This is where you can manage the layers of your scene.",
-        },
-        {
-          element: ".inputs",
-          title: "Inputs",
-          intro: "This is where you can control the inputs for your setup.",
-        },
-
-        {
-          element: ".animation-script-button",
-          title: "Animation Script",
-          intro:
-            "This button opens the script editor for the animation role. You can write scripts that control the animation of your layer. Let's click it to open the editor.",
-        },
-
-        {
-          element: "main",
-          title: "Script Editor",
-          intro:
-            "This is where you can write and edit your scripts. You can switch between setup and animation roles.",
-        },
+        ...controlDisplay.steps,
+        ...assets.steps,
+        ...displays.steps,
+        ...layers.steps,
       ]}
     />
   );
