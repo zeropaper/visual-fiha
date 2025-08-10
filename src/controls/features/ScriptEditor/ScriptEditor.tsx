@@ -247,20 +247,18 @@ export function ScriptEditor({
     <div className={styles.root}>
       <div className={styles.info}>
         {id ? (
-          <>
-            <div className={styles.script}>
-              <div>
-                <strong>Type</strong> {type === "layer" ? layerType : "worker"}
-              </div>
-              <div>
-                <Button onClick={onSwitchRole} title="Switch script role">
-                  Role
-                </Button>{" "}
-                {role}
-              </div>
-              {id !== "worker" && <div>{id}</div>}
+          <div className={styles.script}>
+            <div>
+              <strong>Type</strong> {type === "layer" ? layerType : "worker"}
             </div>
-          </>
+            <div>
+              <Button onClick={onSwitchRole} title="Switch script role">
+                Role
+              </Button>{" "}
+              {role}
+            </div>
+            {id !== "worker" && <div>{id}</div>}
+          </div>
         ) : (
           <div />
         )}
