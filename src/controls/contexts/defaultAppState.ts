@@ -1,3 +1,4 @@
+import demoAudioAnimation from "@demos/default/audio-animation?raw";
 import demoDefaultCanvasAnimation from "@demos/default/canvas-animation?raw";
 import demoStatsAnimation from "@demos/default/stats-animation?raw";
 import demoDefaultThreeJSAnimation from "@demos/default/threejs-animation?raw";
@@ -12,6 +13,14 @@ import type {
 } from "../../types";
 
 const defaultLayers: LayerConfig[] = [
+  {
+    id: "audio",
+    active: true,
+    setup: `/* Audio setup code */`,
+    animation: demoAudioAnimation,
+    type: "canvas",
+    opacity: 100,
+  },
   {
     id: "canvas 2D context",
     active: true,
