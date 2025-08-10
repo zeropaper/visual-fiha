@@ -11,7 +11,7 @@ export default class Canvas2DLayer extends Layer {
 
   constructor(options: Canvas2DLayerOptions) {
     super(options);
-    this.#ctx = this.canvas.getContext("2d") as CTX;
+    this.#ctx = this.canvas.getContext("2d") as any;
     this.api = {
       ...mathTools,
       ...miscTools,
