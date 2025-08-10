@@ -1,13 +1,14 @@
+import { makeRead } from "./make-read";
+import type { ReadPath } from "./Scriptable.editor.types";
 import ScriptRunner, {
   type API,
   type ScriptRunnerCompilationSuccessEvent,
   type ScriptRunnerErrorEvent,
   type ScriptRunnerLogEvent,
 } from "./ScriptRunner";
-import { makeRead } from "./make-read";
 
 export type Cache = Record<string, any>;
-export type ReadInterface = (name: string, defaultValue?: any) => any;
+export type ReadInterface = (name: ReadPath, defaultValue?: any) => any;
 
 export type WriteInterface = (data: Record<string, any>) => void;
 
@@ -18,7 +19,7 @@ export interface ScriptableEvent {
 
 export interface ScriptableErrorEvent
   extends ScriptRunnerErrorEvent,
-    ScriptableEvent {}
+  ScriptableEvent { }
 
 export interface ScriptableCompilationErrorEvent extends ScriptableErrorEvent {
   readonly type: "compilationerror";
@@ -30,11 +31,11 @@ export interface ScriptableExecutionErrorEvent extends ScriptableErrorEvent {
 
 export interface ScriptableLogEvent
   extends ScriptRunnerLogEvent,
-    ScriptableEvent {}
+  ScriptableEvent { }
 
 export interface ScriptableCompilationSuccessEvent
   extends ScriptRunnerCompilationSuccessEvent,
-    ScriptableEvent {}
+  ScriptableEvent { }
 
 export type ScriptableEventListener = (
   event:

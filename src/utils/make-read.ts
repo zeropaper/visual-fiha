@@ -1,5 +1,7 @@
-export function makeRead(obj: any): (path: string, defaultValue: any) => any {
-  return (path: string, defaultVal?: any) => {
+import type { ReadPath } from "./Scriptable.editor.types";
+
+export function makeRead(obj: any) {
+  return (path: ReadPath, defaultVal?: any) => {
     const parts = path.split(".");
     let value: any = obj;
     for (const part of parts) {

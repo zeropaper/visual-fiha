@@ -1,5 +1,26 @@
+type TimeReadPath = `time.${"elapsed" | "duration" | "started" | "percent"}`;
+
+type BPMReadPath =
+  `bpm.${"bpm" | "started" | "elapsed" | "isRunning" | "percent" | "count"}`;
+
+type MIDIReadPath =
+  `midi.${string}.${"note" | "velocity" | "duration" | "channel"}`;
+
+type AudioReadPath =
+  `audio.${number}.${number}.${"frequency" | "timeDomain"}.${"min" | "max" | "average" | "median" | "data"}`;
+
+type AssetReadPath =
+  `asset.${string}.${"png" | "jpg" | "jpeg" | "gif" | "bmp" | "webp" | "gltf"}`;
+
+export type ReadPath =
+  | TimeReadPath
+  | BPMReadPath
+  | MIDIReadPath
+  | AudioReadPath
+  | AssetReadPath;
+
 declare global {
-  const read: (key: string, defaultValue?: any) => any;
+  const read: (key: ReadPath, defaultValue?: any) => any;
   interface Cache {
     [key: string]: any;
   }
@@ -48,4 +69,3 @@ declare global {
   const SQRT1_2: typeof Math.SQRT1_2;
   const SQRT2: typeof Math.SQRT2;
 }
-export {};
