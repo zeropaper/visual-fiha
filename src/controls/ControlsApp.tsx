@@ -13,9 +13,9 @@ import styles from "./ControlsApp.module.css";
 import { AudioSetupProvider } from "./contexts/AudioSetupContext";
 import { AppFastContextProvider } from "./contexts/ControlsContext";
 import { FileSystemProvider } from "./contexts/FileSystemContext";
-import { DisplaysControl } from "./DisplaysControl";
 import { Assets } from "./features/Assets/Assets";
 import { ControlDisplay } from "./features/ControlDisplay/ControlDisplay";
+import { Displays } from "./features/Displays/Displays";
 import type { DocTopic } from "./features/Help/Help";
 import { Inputs } from "./features/Inputs/Inputs";
 import { MIDIBridge } from "./features/Inputs/MIDIBridge";
@@ -86,7 +86,7 @@ export default function ControlsApp() {
     displays: {
       title: "Displays",
       icon: <MonitorIcon />,
-      content: <DisplaysControl />,
+      content: <Displays />,
     },
   };
   const [currentTab, setCurrentTab] = useState<keyof typeof tabs>("layers");

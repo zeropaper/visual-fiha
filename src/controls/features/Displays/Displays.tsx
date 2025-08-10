@@ -1,7 +1,7 @@
 import { useAppFastContextFields } from "@contexts/ControlsContext";
 import { Button } from "@ui/Button";
 
-export function DisplaysControl() {
+export function Displays() {
   const {
     displays: { get: displays },
   } = useAppFastContextFields(["displays"]);
