@@ -189,6 +189,25 @@ function processLayers(updateLayers: AppState["layers"]) {
 // Message Handlers
 // =============================================================================
 
+async function getImageFromCanvas(cns: OffscreenCanvas) {
+  const blob = await cns.convertToBlob();
+  if (!blob) {
+    throw new Error("Failed to convert canvas to blob");
+  }
+  const reader = new FileReader();
+
+  return new Promise<string>((resolve, reject) => {
+    reader.onloadend = () => {
+      resolve(reader.result as string);
+    };
+    reader.onerror = (error) => {
+      console.error("[display worker] takeScreenshot FileReader error:", error);
+      reject(error);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
 const broadcastChannelHandlers: ComActionHandlers = {
   transpiled: async (payload: TranspilePayload) => {
     const { id, type, role, code } = payload;
@@ -257,16 +276,11 @@ const broadcastChannelHandlers: ComActionHandlers = {
   },
 
   takeScreenshot: (payload: { layerId: string; displayName: string }) => {
+    if (!payload.displayName || payload.displayName !== workerName) {
+      return;
+    }
     if (!payload.layerId) {
-      console.warn("[display worker] takeScreenshot: layerId is required");
-      return;
-    }
-    if (!payload.displayName) {
-      console.warn("[display worker] takeScreenshot: displayName is required");
-      return;
-    }
-    if (payload.displayName !== workerName) {
-      return;
+      return getImageFromCanvas(canvas);
     }
     const layer = findStateLayer(payload.layerId);
     if (!layer) {
@@ -277,38 +291,7 @@ const broadcastChannelHandlers: ComActionHandlers = {
       return;
     }
 
-    return new Promise<string>((resolve, reject) => {
-      try {
-        layer.canvas
-          .convertToBlob()
-          .then((blob) => {
-            if (!blob) {
-              console.warn("[display worker] takeScreenshot: blob is null");
-              reject(new Error("Screenshot failed: Blob is null"));
-              return;
-            }
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              resolve(reader.result as string);
-            };
-            reader.onerror = (error) => {
-              console.error(
-                "[display worker] takeScreenshot FileReader error:",
-                error,
-              );
-              reject(error);
-            };
-            reader.readAsDataURL(blob);
-          })
-          .catch((error) => {
-            console.error("[display worker] takeScreenshot error:", error);
-            reject(error);
-          });
-      } catch (error) {
-        console.error("[display worker] takeScreenshot error:", error);
-        reject(error);
-      }
-    });
+    return getImageFromCanvas(layer.canvas);
   },
 };
 
