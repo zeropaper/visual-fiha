@@ -146,7 +146,7 @@ export default function ControlsApp() {
               ) : (
                 <>
                   <div className={styles.sidebar}>
-                    <div className={styles.controlDisplay}>
+                    <div className={`${styles.controlDisplay} control-display`}>
                       <ControlDisplay />
                     </div>
                     <SidebarTabs
