@@ -1,15 +1,12 @@
 import content from "@docs/topics.md?raw";
 import { AdvancedMarkdown } from "@ui/AdvancedMarkdown";
 import { type DocTopic, docTopics } from "../Help/Help";
-import { Intro } from "./Intro";
 import styles from "./LandingContent.module.css";
 
 export function LandingContent({
   onSetDocTopic: setDocTopic,
-  setSidebarTab,
 }: {
   onSetDocTopic: (topic: DocTopic) => void;
-  setSidebarTab: (tab: string) => void;
 }) {
   return (
     <div className={styles.landingContent}>
@@ -49,7 +46,6 @@ export function LandingContent({
       >
         {`#${content.replaceAll(/\n#/g, "\n##").trim()}`}
       </AdvancedMarkdown>
-      <Intro setSidebarTab={setSidebarTab} />
     </div>
   );
 }

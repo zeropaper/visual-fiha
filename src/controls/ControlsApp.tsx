@@ -19,6 +19,7 @@ import { Displays } from "./features/Displays/Displays";
 import type { DocTopic } from "./features/Help/Help";
 import { Inputs } from "./features/Inputs/Inputs";
 import { MIDIBridge } from "./features/Inputs/MIDIBridge";
+import { Intro } from "./features/Intro/Intro";
 import { Layers } from "./features/Layers/Layers";
 import { MobileFallback } from "./features/MobileFallback/MobileFallback";
 import { Timeline } from "./features/Timeline/Timeline";
@@ -176,6 +177,9 @@ export default function ControlsApp() {
                   </div>
 
                   <Timeline className={styles.timeline} />
+                  <Intro
+                    setSidebarTab={setCurrentTab as (tab: string) => void}
+                  />
                 </>
               )}
             </div>
