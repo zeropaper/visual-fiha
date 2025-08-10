@@ -1,54 +1,85 @@
-import * as assets from "@controls/features/Assets/Assets.intro";
-import * as controlDisplay from "@controls/features/ControlDisplay/ControlDisplay.intro";
-import * as displays from "@controls/features/Displays/Displays.intro";
-import * as layers from "@controls/features/Layers/Layers.intro";
+import { steps as assetsSteps } from "@controls/features/Assets/Assets.intro";
+import { steps as controlDisplaySteps } from "@controls/features/ControlDisplay/ControlDisplay.intro";
+import { steps as displaysSteps } from "@controls/features/Displays/Displays.intro";
+import { steps as layersSteps } from "@controls/features/Layers/Layers.intro";
 import { useState } from "react";
 import { TourUI } from "./TourUI";
+import type { TourStep } from "./types";
 
-export function Intro() {
+function normalizeSteps(steps: Partial<TourStep>[]): Partial<TourStep>[] {
+  return steps.map(
+    ({
+      disableInteraction,
+      element,
+      highlightClass,
+      intro,
+      position,
+      scrollTo,
+      step,
+      title,
+      tooltipClass,
+    }) => ({
+      disableInteraction,
+      element,
+      highlightClass,
+      intro,
+      position,
+      scrollTo,
+      step,
+      title,
+      tooltipClass,
+    }),
+  );
+}
+
+export function Intro({
+  setSidebarTab,
+}: {
+  setSidebarTab: (tab: string) => void;
+}) {
   const [showIntro, _setShowIntro] = useState(
     localStorage.getItem("introShown") !== "true",
   );
   if (!showIntro) return null;
+  const steps: Partial<TourStep>[] = [
+    {
+      element: "main",
+      title: "Welcome to Visual Fiha",
+      intro:
+        "This is a visual programming environment for creating animations and interactive experiences.",
+    },
+    ...controlDisplaySteps,
+    {
+      element: ".sidebar",
+      title: "Sidebar",
+      position: "right",
+      intro: "This is the sidebar where you can access different features.",
+    },
+    ...layersSteps,
+    // TODO: audio steps
+    ...assetsSteps,
+    // TODO: MIDI steps
+    ...displaysSteps,
+    // TODO: Timeline steps
+    // TODO: Editor steps
+    // TODO: Help steps
+    // TODO: AI steps
+    // TODO: Persistence steps
+  ];
   return (
     <TourUI
-      onAfterChange={(tour, step) => {
-        console.log("Intro step changed", step);
-      }}
-      onBeforeChange={(_tour, element, index, direction) => {
-        console.log("Intro step about to change", element, index, direction);
-        // dispatch a click event on the first layer animation button
-        if (index === 6) {
-          const button = document.querySelector(".animation-script-button");
-          button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-          return new Promise((resolve) => {
-            // Simulate an asynchronous operation
-            setTimeout(() => {
-              resolve(true);
-            }, 1000);
-          });
+      onBeforeChange={(tour, element, index, direction) => {
+        if (steps[index].sidebarTab) {
+          setSidebarTab(steps[index].sidebarTab);
         }
+        steps[index].onBeforeChange?.(tour, element, index, direction);
+
         return true;
       }}
-      onStart={(_tour) => {
-        console.log("Intro started");
-      }}
       onExit={(_tour) => {
-        console.log("Intro exited");
         localStorage.setItem("introShown", "true");
       }}
-      steps={[
-        {
-          element: "main",
-          title: "Welcome to Visual Fiha",
-          intro:
-            "This is a visual programming environment for creating animations and interactive experiences.",
-        },
-        ...controlDisplay.steps,
-        ...assets.steps,
-        ...displays.steps,
-        ...layers.steps,
-      ]}
+      steps={normalizeSteps(steps)}
     />
   );
 }

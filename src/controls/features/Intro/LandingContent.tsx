@@ -6,8 +6,10 @@ import styles from "./LandingContent.module.css";
 
 export function LandingContent({
   onSetDocTopic: setDocTopic,
+  setSidebarTab,
 }: {
   onSetDocTopic: (topic: DocTopic) => void;
+  setSidebarTab: (tab: string) => void;
 }) {
   return (
     <div className={styles.landingContent}>
@@ -47,7 +49,7 @@ export function LandingContent({
       >
         {`#${content.replaceAll(/\n#/g, "\n##").trim()}`}
       </AdvancedMarkdown>
-      <Intro />
+      <Intro setSidebarTab={setSidebarTab} />
     </div>
   );
 }
