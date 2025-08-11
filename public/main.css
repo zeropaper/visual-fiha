@@ -2,7 +2,7 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  
+
   --spacing-xs: 3px;
   --spacing-sm: 5px;
   --spacing-md: 10px;
@@ -16,7 +16,11 @@
   --button-border-radius: 2px;
   --button-padding: 0 5px;
   --button-border-color: #ffffff40;
-  
+  --success-foreground: #ffffff;
+  --success-background: #28a745;
+  --error-foreground: #ffffff;
+  --error-background: #f44336;
+
   --vscode-foreground: #cccccc;
   --vscode-disabledForeground: rgba(204, 204, 204, 0.5);
   --vscode-errorForeground: #f48771;
@@ -96,10 +100,20 @@
   --vscode-merge-commonHeaderBackground: rgba(96, 96, 96, 0.4);
   --vscode-merge-commonContentBackground: rgba(96, 96, 96, 0.16);
   --vscode-editorOverviewRuler-currentContentForeground: rgba(64, 200, 174, 0.5);
-  --vscode-editorOverviewRuler-incomingContentForeground: rgba(64, 166, 255, 0.5);
+  --vscode-editorOverviewRuler-incomingContentForeground: rgba(
+    64,
+    166,
+    255,
+    0.5
+  );
   --vscode-editorOverviewRuler-commonContentForeground: rgba(96, 96, 96, 0.4);
   --vscode-editorOverviewRuler-findMatchForeground: rgba(209, 134, 22, 0.49);
-  --vscode-editorOverviewRuler-selectionHighlightForeground: rgba(160, 160, 160, 0.8);
+  --vscode-editorOverviewRuler-selectionHighlightForeground: rgba(
+    160,
+    160,
+    160,
+    0.8
+  );
   --vscode-problemsErrorIcon-foreground: #f14c4c;
   --vscode-problemsWarningIcon-foreground: #cca700;
   --vscode-problemsInfoIcon-foreground: #3794ff;
@@ -240,7 +254,12 @@
   --vscode-editorBracketHighlight-foreground4: rgba(0, 0, 0, 0);
   --vscode-editorBracketHighlight-foreground5: rgba(0, 0, 0, 0);
   --vscode-editorBracketHighlight-foreground6: rgba(0, 0, 0, 0);
-  --vscode-editorBracketHighlight-unexpectedBracket-foreground: rgba(255, 18, 18, 0.8);
+  --vscode-editorBracketHighlight-unexpectedBracket-foreground: rgba(
+    255,
+    18,
+    18,
+    0.8
+  );
   --vscode-editorBracketPairGuide-background1: rgba(0, 0, 0, 0);
   --vscode-editorBracketPairGuide-background2: rgba(0, 0, 0, 0);
   --vscode-editorBracketPairGuide-background3: rgba(0, 0, 0, 0);
@@ -322,7 +341,12 @@
   --vscode-editorMarkerNavigationError-background: #f14c4c;
   --vscode-editorMarkerNavigationError-headerBackground: rgba(241, 76, 76, 0.1);
   --vscode-editorMarkerNavigationWarning-background: #cca700;
-  --vscode-editorMarkerNavigationWarning-headerBackground: rgba(204, 167, 0, 0.1);
+  --vscode-editorMarkerNavigationWarning-headerBackground: rgba(
+    204,
+    167,
+    0,
+    0.1
+  );
   --vscode-editorMarkerNavigationInfo-background: #3794ff;
   --vscode-editorMarkerNavigationInfo-headerBackground: rgba(55, 148, 255, 0.1);
   --vscode-editorMarkerNavigation-background: #1e1e1e;
@@ -331,8 +355,18 @@
   --vscode-editor-wordHighlightStrongBackground: rgba(0, 73, 114, 0.72);
   --vscode-editor-wordHighlightTextBackground: rgba(87, 87, 87, 0.72);
   --vscode-editorOverviewRuler-wordHighlightForeground: rgba(160, 160, 160, 0.8);
-  --vscode-editorOverviewRuler-wordHighlightStrongForeground: rgba(192, 160, 192, 0.8);
-  --vscode-editorOverviewRuler-wordHighlightTextForeground: rgba(160, 160, 160, 0.8);
+  --vscode-editorOverviewRuler-wordHighlightStrongForeground: rgba(
+    192,
+    160,
+    192,
+    0.8
+  );
+  --vscode-editorOverviewRuler-wordHighlightTextForeground: rgba(
+    160,
+    160,
+    160,
+    0.8
+  );
   --vscode-editorHoverWidget-highlightForeground: #2aaaff;
   --vscode-editor-placeholder-foreground: rgba(255, 255, 255, 0.34);
 
@@ -340,7 +374,8 @@
   background-color: var(--vscode-editor-background);
 }
 
-html, body {
+html,
+body {
   height: 100%;
   max-height: 100%;
   overflow: hidden;

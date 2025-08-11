@@ -23,5 +23,20 @@
   & > svg {
     width: 18px;
     height: 18px;
+    color: inherit;
   }
+}
+
+.success,
+.success:hover,
+.success:focus {
+  color: var(--success-foreground);
+  background-color: var(--success-background);
+}
+
+.error,
+.error:hover,
+.error:focus {
+  color: var(--error-foreground);
+  background-color: var(--error-background);
 }
