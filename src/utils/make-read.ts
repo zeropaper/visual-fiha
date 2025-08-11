@@ -32,18 +32,18 @@ export function makeRead(obj: RuntimeData) {
       parts.shift();
       const id = parts.join(".");
       const found = obj.assets.find((asset) => asset.id === id);
-      if (!found || !found.blobUrl) {
+      if (!found || !found.url) {
         return defaultVal;
       }
-      const cached = cache[found.blobUrl];
+      const cached = cache[found.url];
       if (cached) {
         return cached;
       }
       const ext = found.id.split(".").pop() || "";
       if (["jpg", "png", "jpeg", "gif", "webp"].includes(ext)) {
-        imageBitmapFromBlobUrl(found.blobUrl)
+        imageBitmapFromBlobUrl(found.url)
           .then((bitmap) => {
-            cache[found.blobUrl!] = bitmap;
+            cache[found.url!] = bitmap;
           })
           .catch(() => {});
       }

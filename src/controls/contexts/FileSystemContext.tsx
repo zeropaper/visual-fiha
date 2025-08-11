@@ -118,7 +118,7 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
       json.assets.push({
         id: name,
         source: "local",
-        blobUrl: URL.createObjectURL(file),
+        url: URL.createObjectURL(file),
         state: "loaded",
       });
     }

@@ -186,13 +186,13 @@ export type AssetConfig = Prettify<
      */
     id: string;
     /**
-     * Blob URL for the asset, used for displaying the asset in the UI
+     * URL for the asset, used for displaying the asset in the UI
      */
-    blobUrl: string | null;
+    url: string | null;
     /**
      * Current loading state of the asset
      */
-    state: "idle" | "loading" | "loaded" | "error";
+    state?: "idle" | "loading" | "loaded" | "error";
   } & (
     | {
         source: "local";
