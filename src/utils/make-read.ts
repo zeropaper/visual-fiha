@@ -1,7 +1,16 @@
 import type { RuntimeData } from "../types";
 import type { ReadPath } from "./Scriptable.editor.types";
 
+declare global {
+  interface Window {
+    assetsCache: Record<string, File | ImageBitmap>;
+  }
+}
+
 const cache: Record<string, File | ImageBitmap> = {};
+if (typeof window !== "undefined") {
+  window.assetsCache = cache;
+}
 
 export async function imageBitmapFromBlobUrl(
   blobUrl: string,
@@ -25,29 +34,57 @@ export async function imageBitmapFromBlobUrl(
   return createImageBitmap(blob);
 }
 
+export async function imageBitmapFromUrl(url: string): Promise<ImageBitmap> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch image from URL: ${response.status} ${response.statusText}`,
+    );
+  }
+  const blob = await response.blob();
+  return createImageBitmap(blob);
+}
+
+function handleAsset<O extends RuntimeData, R extends ReadPath, D = any>(
+  obj: O,
+  path: R,
+  defaultVal?: D,
+) {
+  const parts = path.split(".");
+  parts.shift();
+  const id = parts.join(".");
+  const found = obj.assets.find((asset) => asset.id === id);
+  if (!found || !found.url) {
+    return defaultVal;
+  }
+  const cached = cache[found.url];
+  if (cached) {
+    return cached;
+  }
+  const ext = found.id.split(".").pop() || "";
+  if (["jpg", "png", "jpeg", "gif", "webp"].includes(ext)) {
+    if (found.url.startsWith("blob:")) {
+      imageBitmapFromBlobUrl(found.url)
+        .then((bitmap) => {
+          cache[found.url!] = bitmap;
+        })
+        .catch(() => {});
+    } else {
+      imageBitmapFromUrl(found.url)
+        .then((bitmap) => {
+          cache[found.url!] = bitmap;
+        })
+        .catch(() => {});
+    }
+  }
+  return defaultVal;
+}
+
 export function makeRead(obj: RuntimeData) {
-  return (path: ReadPath, defaultVal?: any) => {
+  return <R extends ReadPath, D = any>(path: R, defaultVal?: D) => {
     const parts = path.split(".");
     if (parts[0] === "asset") {
-      parts.shift();
-      const id = parts.join(".");
-      const found = obj.assets.find((asset) => asset.id === id);
-      if (!found || !found.url) {
-        return defaultVal;
-      }
-      const cached = cache[found.url];
-      if (cached) {
-        return cached;
-      }
-      const ext = found.id.split(".").pop() || "";
-      if (["jpg", "png", "jpeg", "gif", "webp"].includes(ext)) {
-        imageBitmapFromBlobUrl(found.url)
-          .then((bitmap) => {
-            cache[found.url!] = bitmap;
-          })
-          .catch(() => {});
-      }
-      return defaultVal;
+      return handleAsset(obj, path, defaultVal);
     }
     let value: any = obj;
     for (const part of parts) {
