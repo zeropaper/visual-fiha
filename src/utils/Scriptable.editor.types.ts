@@ -21,8 +21,28 @@ export type ReadPath =
   | AudioReadPath
   | AssetReadPath;
 
+export type ReadValue<R extends ReadPath> = R extends TimeReadPath
+  ? number
+  : R extends BPMReadPath
+    ? number
+    : R extends MIDIReadPath
+      ? { note: number; velocity: number; duration: number; channel: number }
+      : R extends AudioReadPath
+        ? {
+            frequency: number;
+            timeDomain: number;
+            min: number;
+            max: number;
+            average: number;
+            median: number;
+            data: number[];
+          }
+        : R extends AssetReadPath
+          ? string
+          : never;
+
 declare global {
-  const read: (key: ReadPath, defaultValue?: any) => any;
+  const read: <R extends ReadPath, T = any>(key: R, defaultValue?: T) => T;
   interface Cache {
     [key: string]: any;
   }
