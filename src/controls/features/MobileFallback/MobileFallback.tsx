@@ -1,5 +1,6 @@
 import { XIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
+import AudioFilesAnalyzer from "../Audio/AudioFilesAnalyzer";
 import { ControlDisplay } from "../ControlDisplay/ControlDisplay";
 import { Timeline } from "../Timeline/Timeline";
 import styles from "./MobileFallback.module.css";
@@ -36,6 +37,9 @@ export function MobileFallback() {
         <ControlDisplay />
       </div>
       <Timeline />
+      <div className={styles.hidden}>
+        <AudioFilesAnalyzer />
+      </div>
     </>
   );
 }
