@@ -6,6 +6,29 @@ import { CopyIcon, LinkIcon } from "lucide-react";
 import type { AssetConfig } from "src/types";
 import styles from "./Assets.module.css";
 
+function Asset({ id, state }: AssetConfig & {}) {
+  const [copied, copy] = useCopyToClipboard();
+  return (
+    <li className={styles.asset}>
+      <span className={styles[(state || "idle") as keyof typeof styles]}>
+        {id}
+      </span>
+      <Button
+        variant="icon"
+        title="Copy the read function usage."
+        onClick={() => copy(`read('asset.${id}')`)}
+        className={[
+          buttonStyles.button,
+          buttonStyles.icon,
+          copied ? buttonStyles.success : "",
+        ].join(" ")}
+      >
+        <CopyIcon />
+      </Button>
+    </li>
+  );
+}
+
 function LocalAsset({
   id,
   state,
@@ -16,7 +39,9 @@ function LocalAsset({
   const [copied, copy] = useCopyToClipboard();
   return (
     <li className={styles.asset}>
-      <span className={styles[state]}>{id} </span>
+      <span className={styles[(state || "idle") as keyof typeof styles]}>
+        {id}
+      </span>
       <Button
         variant="icon"
         title="Copy the read function usage."
@@ -61,12 +86,7 @@ export function Assets() {
                 />
               );
             default:
-              return (
-                <li key={asset.id}>
-                  {asset.source}
-                  {asset.id}
-                </li>
-              );
+              return <Asset key={asset.id} {...asset} />;
           }
         })}
       </ul>
