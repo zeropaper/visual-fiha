@@ -110,7 +110,7 @@ export function CanvasVisualizer({
   drawExtras,
 }: {
   analyser: AnalyserNode | null;
-  getData: (analyser: AnalyserNode, array: Uint8Array) => void;
+  getData: (analyser: AnalyserNode, array: Uint8Array<ArrayBuffer>) => void;
   lineColor: string;
   transformValue: (val: number, h: number) => number;
   drawExtras?: (
