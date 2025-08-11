@@ -6,6 +6,7 @@ import demoDefaultThreeJSSetup from "@demos/default/threejs-setup?raw";
 import type {
   AppState,
   AssetConfig,
+  BPMInputConfig,
   DisplayConfig,
   InputConfig,
   LayerConfig,
@@ -53,14 +54,14 @@ const defaultAppState: AppState = {
     width: 600,
     height: 400,
   },
-  displays: [] as DisplayConfig[],
+  displays: [] satisfies DisplayConfig[],
   inputs: [
     { name: "Time", type: "time", config: { type: "absolute" } },
     {
       name: "BPM",
       type: "bpm",
       config: { min: 30, max: 300, startAt: 0 },
-    },
+    } as BPMInputConfig,
     {
       name: "Audio",
       type: "audio",
@@ -73,9 +74,15 @@ const defaultAppState: AppState = {
       },
     },
     { name: "MIDI", type: "midi", config: {} },
-  ] as InputConfig[],
-  signals: [] as SignalConfig[],
-  assets: [] as AssetConfig[],
+  ] satisfies InputConfig[],
+  signals: [] satisfies SignalConfig[],
+  assets: [
+    {
+      source: "remote",
+      url: "/images/uv-checker.png",
+      id: "/images/uv-checker.png",
+    },
+  ] satisfies AssetConfig[],
   layers: defaultLayers,
   worker: {
     setup: "/* Worker setup code */",
