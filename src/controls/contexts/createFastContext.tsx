@@ -1,16 +1,15 @@
 // borrowed from https://raw.githubusercontent.com/jherr/fast-react-context/refs/heads/main/fast-context-generic-extended/src/app/createFastContext.tsx
 
+import { autoBind, type ChannelPost } from "@utils/com";
 import type React from "react";
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useSyncExternalStore,
 } from "react";
-
-import { type ChannelPost, autoBind } from "@utils/com";
-import { useEffect } from "react";
 import type { DisplayRegistrationPayload } from "src/types";
 import ControlsWorker from "../Controls.worker?worker";
 
@@ -133,23 +132,20 @@ export default function createFastContext<
       throw new Error("Store not found");
     }
 
+    // Get the whole state and set function once at the top level
+    const [state, setPartialContext] = useFastContext((store) => store);
+
     const result = {} as {
       [P in K]: {
         get: FastContext[P];
         set: (value: FastContext[P]) => void;
-        // getCurrent provides access to the current store value at execution time,
-        // avoiding stale closure issues with React hooks
         getCurrent: () => FastContext[P];
       };
     };
 
     fieldNames.forEach((fieldName) => {
-      const [getValue, setPartialContext] = useFastContext(
-        (store) => store[fieldName],
-      );
-
       result[fieldName] = {
-        get: getValue,
+        get: state[fieldName],
         getCurrent: () => fastContext.get()[fieldName],
         set: (newValue: FastContext[typeof fieldName]) => {
           const partialUpdate: Partial<FastContext> = {};
