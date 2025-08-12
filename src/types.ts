@@ -33,7 +33,7 @@ export type AudioInputValue = Record<
   >
 >;
 
-export type AudioInputMode = "file" | "files" | "mic";
+export type AudioInputMode = "files" | "mic";
 
 export interface AudioInputBaseConfig {
   minDecibels: number;
