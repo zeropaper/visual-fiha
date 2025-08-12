@@ -1,11 +1,17 @@
-.inputs {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.buttons {
   display: flex;
-  flex-direction: column;
   gap: 10px;
-}
-.input {
-  /*  */
+  align-items: center;
+  align-content: stretch;
+  justify-content: stretch;
+  width: 100%;
+  > button {
+    width: auto;
+    aspect-ratio: unset;
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+  }
 }
