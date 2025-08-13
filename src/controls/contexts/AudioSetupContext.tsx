@@ -10,8 +10,8 @@ import { useContextWorkerPost } from "@contexts/ControlsContext";
 import { useRuntimeMonitor } from "@hooks/useRuntimeMonitor";
 import { loadTrack } from "@utils/syncAudio";
 import {
-  type ReactNode,
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
@@ -130,7 +130,9 @@ export function AudioSetupProvider({
       name: url.split("/").pop() || "unknown",
     })),
   );
-  const [mode, setModeState] = useState<AudioInputMode>("files");
+  const [mode, setModeState] = useState<AudioInputMode>(
+    (localStorage.getItem("audioMode") as AudioInputMode) || "files",
+  );
 
   // Memoize stable playback properties that don't change frequently
   const stablePlaybackState = useMemo(
@@ -456,6 +458,7 @@ export function AudioSetupProvider({
 
   // Ensure setupMicrophone and setupAudioFiles are invoked based on mode
   useEffect(() => {
+    localStorage.setItem("audioMode", mode);
     if (mode === "mic") {
       setupMicrophone();
     } else {
@@ -467,10 +470,11 @@ export function AudioSetupProvider({
     (newMode: AudioInputMode) => {
       console.log("Setting audio input mode to:", newMode);
       post?.("reset");
+      stopAll();
       cleanupAudio();
       setModeState(newMode);
     },
-    [post, cleanupAudio],
+    [post, cleanupAudio, stopAll],
   );
 
   const value = useMemo<AudioSetupContextValue>(
