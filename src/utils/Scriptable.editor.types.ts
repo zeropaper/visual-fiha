@@ -14,32 +14,16 @@ type AudioReadPath =
 type AssetReadPath =
   `asset.${string}.${"png" | "jpg" | "jpeg" | "gif" | "bmp" | "webp" | "gltf"}`;
 
+type StageReadPath =
+  `stage.${"x" | "y" | "width" | "height" | "rotation" | "scale"}`;
+
 export type ReadPath =
   | TimeReadPath
   | BPMReadPath
   | MIDIReadPath
   | AudioReadPath
-  | AssetReadPath;
-
-export type ReadValue<R extends ReadPath> = R extends TimeReadPath
-  ? number
-  : R extends BPMReadPath
-    ? number
-    : R extends MIDIReadPath
-      ? { note: number; velocity: number; duration: number; channel: number }
-      : R extends AudioReadPath
-        ? {
-            frequency: number;
-            timeDomain: number;
-            min: number;
-            max: number;
-            average: number;
-            median: number;
-            data: number[];
-          }
-        : R extends AssetReadPath
-          ? string
-          : never;
+  | AssetReadPath
+  | StageReadPath;
 
 declare global {
   const read: <R extends ReadPath, T = any>(key: R, defaultValue?: T) => T;
