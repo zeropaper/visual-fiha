@@ -1,4 +1,3 @@
-import { makeRead } from "./make-read";
 import type { ReadPath } from "./Scriptable.editor.types";
 import ScriptRunner, {
   type API,
@@ -50,18 +49,18 @@ export interface ScriptableOptions {
   onCompilationSuccess?: (event: ScriptableCompilationSuccessEvent) => void;
   animation?: string;
   setup?: string;
-  read?: ReadInterface;
+  read: ReadInterface;
   api?: API;
   scope?: any;
   id: string;
 }
 
 export default class Scriptable {
-  constructor(options: ScriptableOptions = { id: `scriptable${Date.now()}` }) {
-    this.#read =
-      typeof options.read === "function"
-        ? options.read
-        : makeRead(this.cache as any);
+  constructor(options: ScriptableOptions) {
+    if (typeof options.read !== "function") {
+      throw new Error("Invalid read function");
+    }
+    this.#read = options.read;
     this.#id = options.id;
     this.#runners = {
       setup: new ScriptRunner(options.scope, `${this.#id}_S`),
