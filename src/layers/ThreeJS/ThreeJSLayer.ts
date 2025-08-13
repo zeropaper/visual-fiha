@@ -1,5 +1,37 @@
 import * as THREE from "three";
+import { ColladaLoader } from "three/addons/loaders/ColladaLoader.js";
+import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+import { SVGLoader } from "three/addons/loaders/SVGLoader.js";
+import { AfterimagePass } from "three/addons/postprocessing/AfterimagePass.js";
+import { BloomPass } from "three/addons/postprocessing/BloomPass.js";
+import { BokehPass } from "three/addons/postprocessing/BokehPass.js";
+import { ClearPass } from "three/addons/postprocessing/ClearPass.js";
+import { CubeTexturePass } from "three/addons/postprocessing/CubeTexturePass.js";
+import { DotScreenPass } from "three/addons/postprocessing/DotScreenPass.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { FilmPass } from "three/addons/postprocessing/FilmPass.js";
+import { GlitchPass } from "three/addons/postprocessing/GlitchPass.js";
+import { HalftonePass } from "three/addons/postprocessing/HalftonePass.js";
+import { LUTPass } from "three/addons/postprocessing/LUTPass.js";
+import { ClearMaskPass } from "three/addons/postprocessing/MaskPass.js";
+import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+// @ts-expect-error
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { Pass } from "three/addons/postprocessing/Pass.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { RenderPixelatedPass } from "three/addons/postprocessing/RenderPixelatedPass.js";
+import { SAOPass } from "three/addons/postprocessing/SAOPass.js";
+import { SavePass } from "three/addons/postprocessing/SavePass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+import { SSAARenderPass } from "three/addons/postprocessing/SSAARenderPass.js";
+import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
+import { SSRPass } from "three/addons/postprocessing/SSRPass.js";
+import { TAARenderPass } from "three/addons/postprocessing/TAARenderPass.js";
+import { TexturePass } from "three/addons/postprocessing/TexturePass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 import * as mathTools from "../../utils/mathTools";
 import miscTools from "../../utils/miscTools";
@@ -28,6 +60,7 @@ export default class ThreeJSLayer extends Layer {
     const { renderer, camera, scene } = this;
 
     renderer.setClearColor(0x000000, 0);
+    renderer.setAnimationLoop(() => this.execAnimation());
 
     camera.position.z = 400;
     camera.position.x = 400;
@@ -43,6 +76,37 @@ export default class ThreeJSLayer extends Layer {
       scene,
       renderer,
       GLTFLoader,
+      ColladaLoader,
+      SVGLoader,
+      FontLoader,
+      OBJLoader,
+      AfterimagePass,
+      BloomPass,
+      BokehPass,
+      ClearPass,
+      CubeTexturePass,
+      DotScreenPass,
+      EffectComposer,
+      FilmPass,
+      GlitchPass,
+      HalftonePass,
+      LUTPass,
+      ClearMaskPass,
+      OutlinePass,
+      OutputPass,
+      Pass,
+      RenderPass,
+      RenderPixelatedPass,
+      SAOPass,
+      SavePass,
+      ShaderPass,
+      SMAAPass,
+      SSAARenderPass,
+      SSAOPass,
+      SSRPass,
+      TAARenderPass,
+      TexturePass,
+      UnrealBloomPass,
       clear: this.#clearScene,
     };
   }
