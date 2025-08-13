@@ -3,6 +3,8 @@ import demoDefaultCanvasAnimation from "@demos/default/canvas-animation?raw";
 import demoStatsAnimation from "@demos/default/stats-animation?raw";
 import demoDefaultThreeJSAnimation from "@demos/default/threejs-animation?raw";
 import demoDefaultThreeJSSetup from "@demos/default/threejs-setup?raw";
+import demoWobblyBallAnimation from "@demos/default/wobblyball-animation?raw";
+import demoWobblyBallSetup from "@demos/default/wobblyball-setup?raw";
 import type {
   AppState,
   AssetConfig,
@@ -15,8 +17,16 @@ import type {
 
 const defaultLayers: LayerConfig[] = [
   {
+    id: "ThreeJS",
+    active: false,
+    setup: demoDefaultThreeJSSetup,
+    animation: demoDefaultThreeJSAnimation,
+    type: "threejs",
+    opacity: 100,
+  },
+  {
     id: "audio",
-    active: true,
+    active: false,
     setup: `/* Audio setup code */`,
     animation: demoAudioAnimation,
     type: "canvas",
@@ -24,27 +34,27 @@ const defaultLayers: LayerConfig[] = [
   },
   {
     id: "canvas 2D context",
-    active: true,
+    active: false,
     setup: `/* Canvas setup code */`,
     animation: demoDefaultCanvasAnimation,
     type: "canvas",
     opacity: 100,
   },
   {
-    id: "stats",
+    id: "wobblyball",
     active: true,
+    setup: demoWobblyBallSetup,
+    animation: demoWobblyBallAnimation,
+    type: "threejs",
+    opacity: 100,
+  },
+  {
+    id: "stats",
+    active: false,
     setup: `/* Stats setup code */`,
     animation: demoStatsAnimation,
     type: "canvas",
     opacity: 60,
-  },
-  {
-    id: "ThreeJS",
-    active: true,
-    setup: demoDefaultThreeJSSetup,
-    animation: demoDefaultThreeJSAnimation,
-    type: "threejs",
-    opacity: 100,
   },
 ];
 
