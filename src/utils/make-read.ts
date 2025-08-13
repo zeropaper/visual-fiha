@@ -1,4 +1,4 @@
-import type { RuntimeData } from "../types";
+import type { AssetConfig, RuntimeData } from "../types";
 import type { ReadPath } from "./Scriptable.editor.types";
 
 declare global {
@@ -7,9 +7,9 @@ declare global {
   }
 }
 
-const cache: Record<string, File | ImageBitmap> = {};
+const __cache__: Record<string, any | ImageBitmap> = {};
 if (typeof window !== "undefined") {
-  window.assetsCache = cache;
+  window.assetsCache = __cache__;
 }
 
 export async function imageBitmapFromBlobUrl(
@@ -45,6 +45,18 @@ export async function imageBitmapFromUrl(url: string): Promise<ImageBitmap> {
   return createImageBitmap(blob);
 }
 
+async function handleImageAsset(found: AssetConfig & { url: string }) {
+  let result: ImageBitmap;
+  if (found.url.startsWith("blob:")) {
+    result = await imageBitmapFromBlobUrl(found.url);
+  } else {
+    result = await imageBitmapFromUrl(found.url);
+  }
+  if (result) {
+    __cache__[found.url!] = result;
+  }
+}
+
 function handleAsset<O extends RuntimeData, R extends ReadPath, D = any>(
   obj: O,
   path: R,
@@ -57,25 +69,22 @@ function handleAsset<O extends RuntimeData, R extends ReadPath, D = any>(
   if (!found || !found.url) {
     return defaultVal;
   }
-  const cached = cache[found.url];
+  const cached = __cache__[found.url];
   if (cached) {
     return cached;
   }
   const ext = found.id.split(".").pop() || "";
   if (["jpg", "png", "jpeg", "gif", "webp"].includes(ext)) {
-    if (found.url.startsWith("blob:")) {
-      imageBitmapFromBlobUrl(found.url)
-        .then((bitmap) => {
-          cache[found.url!] = bitmap;
-        })
-        .catch(() => {});
-    } else {
-      imageBitmapFromUrl(found.url)
-        .then((bitmap) => {
-          cache[found.url!] = bitmap;
-        })
-        .catch(() => {});
-    }
+    handleImageAsset(found as any).catch(() => {});
+  } else {
+    fetch(found.url).then((res) => {
+      if (!res.ok) {
+        return;
+      }
+      res.blob().then((blob) => {
+        __cache__[found.url!] = URL.createObjectURL(blob);
+      });
+    });
   }
   return defaultVal;
 }
