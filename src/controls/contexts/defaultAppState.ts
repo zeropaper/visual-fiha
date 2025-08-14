@@ -1,5 +1,6 @@
 import demoAudioAnimation from "@demos/default/audio-animation?raw";
 import demoDefaultCanvasAnimation from "@demos/default/canvas-animation?raw";
+import demoReadAssetsAnimation from "@demos/default/read-assets-animation?raw";
 import demoStatsAnimation from "@demos/default/stats-animation?raw";
 import demoDefaultThreeJSAnimation from "@demos/default/threejs-animation?raw";
 import demoDefaultThreeJSSetup from "@demos/default/threejs-setup?raw";
@@ -37,6 +38,14 @@ const defaultLayers: LayerConfig[] = [
     active: false,
     setup: `/* Canvas setup code */`,
     animation: demoDefaultCanvasAnimation,
+    type: "canvas",
+    opacity: 100,
+  },
+  {
+    id: "read-assets",
+    active: true,
+    setup: "",
+    animation: demoReadAssetsAnimation,
     type: "canvas",
     opacity: 100,
   },
@@ -89,8 +98,8 @@ const defaultAppState: AppState = {
   assets: [
     {
       source: "remote",
-      url: "/images/uv-checker.png",
       id: "/images/uv-checker.png",
+      url: "/images/uv-checker.png",
     },
   ] satisfies AssetConfig[],
   layers: defaultLayers,
