@@ -186,22 +186,24 @@ export type AssetConfig = Prettify<
      */
     id: string;
     /**
-     * URL for the asset, used for displaying the asset in the UI
-     */
-    url: string | null;
-    /**
      * Current loading state of the asset
      */
     state?: "idle" | "loading" | "loaded" | "error";
   } & (
     | {
         source: "local";
+        blobUrl: string;
       }
     | {
         source: "remote";
+        /**
+         * URL for the asset, used for displaying the asset in the UI
+         */
+        url: string | null;
       }
     | {
         source: "layer";
+        canvas: OffscreenCanvas;
       }
   )
 >;

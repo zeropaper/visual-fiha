@@ -267,6 +267,14 @@ const broadcastChannelHandlers: ComActionHandlers = {
 
   runtimedata: (payload: RuntimeData) => {
     Object.assign(data, payload);
+    for (const layer of state.layers) {
+      // get a copy of the layer's canvas and add it to the assets as a layer type
+      data.assets.push({
+        id: layer.id,
+        source: "layer",
+        canvas: layer.canvas,
+      });
+    }
   },
 
   registerdisplaycallback: (payload: { id: string }) => {

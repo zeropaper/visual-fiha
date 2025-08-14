@@ -11,8 +11,7 @@ type AudioReadPath =
   | "audio"
   | `audio.${number}.${number}.${"frequency" | "timeDomain"}.${"min" | "max" | "average" | "median" | "data"}`;
 
-type AssetReadPath =
-  `asset.${string}.${"png" | "jpg" | "jpeg" | "gif" | "bmp" | "webp" | "gltf"}`;
+type AssetReadPath = `asset.${string}`;
 
 type StageReadPath =
   `stage.${"x" | "y" | "width" | "height" | "rotation" | "scale"}`;

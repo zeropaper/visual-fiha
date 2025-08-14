@@ -47,13 +47,13 @@ export async function imageBitmapFromUrl(url: string): Promise<ImageBitmap> {
 
 async function handleImageAsset(found: AssetConfig & { url: string }) {
   let result: ImageBitmap;
-  if (found.url.startsWith("blob:")) {
-    result = await imageBitmapFromBlobUrl(found.url);
+  if (found.id.startsWith("blob:")) {
+    result = await imageBitmapFromBlobUrl(found.id);
   } else {
-    result = await imageBitmapFromUrl(found.url);
+    result = await imageBitmapFromUrl(found.id);
   }
   if (result) {
-    __cache__[found.url!] = result;
+    __cache__[found.id!] = result;
   }
 }
 
@@ -66,23 +66,28 @@ function handleAsset<O extends RuntimeData, R extends ReadPath, D = any>(
   parts.shift();
   const id = parts.join(".");
   const found = obj.assets.find((asset) => asset.id === id);
-  if (!found || !found.url) {
+  if (!found || !found.id) {
     return defaultVal;
   }
-  const cached = __cache__[found.url];
+  const cached = __cache__[found.id];
   if (cached) {
     return cached;
   }
+
+  if (found.source === "layer") {
+    return found.canvas;
+  }
+
   const ext = found.id.split(".").pop() || "";
   if (["jpg", "png", "jpeg", "gif", "webp"].includes(ext)) {
     handleImageAsset(found as any).catch(() => {});
   } else {
-    fetch(found.url).then((res) => {
+    fetch(found.id).then((res) => {
       if (!res.ok) {
         return;
       }
       res.blob().then((blob) => {
-        __cache__[found.url!] = URL.createObjectURL(blob);
+        __cache__[found.id!] = URL.createObjectURL(blob);
       });
     });
   }
