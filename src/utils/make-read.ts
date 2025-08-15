@@ -1,36 +1,18 @@
 import type { AssetConfig, RuntimeData } from "../types";
 import type { ReadPath } from "./Scriptable.editor.types";
 
-declare global {
-  interface Window {
-    assetsCache: Record<string, File | ImageBitmap>;
-  }
-}
-
 const __cache__: Record<string, any | ImageBitmap> = {};
-if (typeof window !== "undefined") {
-  window.assetsCache = __cache__;
-}
 
 export async function imageBitmapFromBlobUrl(
   blobUrl: string,
 ): Promise<ImageBitmap> {
-  // Validate the URL (optional, but helps catch silly bugs)
-  if (!blobUrl.startsWith("blob:")) {
-    throw new Error("Provided URL is not a blob URL");
-  }
-
-  // Fetch the blob data
   const response = await fetch(blobUrl);
   if (!response.ok) {
     throw new Error(
       `Failed to fetch blob from URL: ${response.status} ${response.statusText}`,
     );
   }
-
   const blob = await response.blob();
-
-  // Convert blob into an ImageBitmap
   return createImageBitmap(blob);
 }
 
@@ -45,15 +27,17 @@ export async function imageBitmapFromUrl(url: string): Promise<ImageBitmap> {
   return createImageBitmap(blob);
 }
 
-async function handleImageAsset(found: AssetConfig & { url: string }) {
+async function handleImageAsset(asset: AssetConfig) {
   let result: ImageBitmap;
-  if (found.id.startsWith("blob:")) {
-    result = await imageBitmapFromBlobUrl(found.id);
+  if (asset.id.startsWith("blob:")) {
+    result = await imageBitmapFromBlobUrl(asset.id);
   } else {
-    result = await imageBitmapFromUrl(found.id);
+    result = await imageBitmapFromUrl(
+      asset.source === "remote" ? asset.url : asset.id,
+    );
   }
   if (result) {
-    __cache__[found.id!] = result;
+    __cache__[asset.id!] = result;
   }
 }
 
