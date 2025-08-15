@@ -6,13 +6,20 @@ import { CopyIcon, LinkIcon } from "lucide-react";
 import type { AssetConfig } from "src/types";
 import styles from "./Assets.module.css";
 
-function Asset({ id, state }: AssetConfig & {}) {
+function AssetId({ id, state }: { id: string; state: string }) {
+  return (
+    <span
+      className={[styles[state as keyof typeof styles], styles.id].join(" ")}
+    >
+      {id}
+    </span>
+  );
+}
+
+function Asset({ id, state, source }: AssetConfig) {
   const [copied, copy] = useCopyToClipboard();
   return (
     <li className={styles.asset}>
-      <span className={styles[(state || "idle") as keyof typeof styles]}>
-        {id}
-      </span>
       <Button
         variant="icon"
         title="Copy the read function usage."
@@ -25,6 +32,8 @@ function Asset({ id, state }: AssetConfig & {}) {
       >
         <CopyIcon />
       </Button>
+      <span className={styles.source}>{source}</span>
+      <AssetId id={id} state={state || "idle"} />
     </li>
   );
 }
@@ -39,9 +48,6 @@ function LocalAsset({
   const [copied, copy] = useCopyToClipboard();
   return (
     <li className={styles.asset}>
-      <span className={styles[(state || "idle") as keyof typeof styles]}>
-        {id}
-      </span>
       <Button
         variant="icon"
         title="Copy the read function usage."
@@ -55,6 +61,8 @@ function LocalAsset({
       >
         <CopyIcon />
       </Button>
+      <span className={styles.source}>local</span>
+      <AssetId id={id} state={state || "idle"} />
     </li>
   );
 }
@@ -75,20 +83,26 @@ export function Assets() {
       )}
 
       <ul id="assets" className={styles.assets}>
-        {assets.map((asset, l) => {
-          switch (asset.source) {
-            case "local":
-              return (
-                <LocalAsset
-                  key={asset.id}
-                  {...asset}
-                  selectedDirectory={selectedDirectory}
-                />
-              );
-            default:
-              return <Asset key={asset.id} {...asset} />;
-          }
-        })}
+        {assets
+          .sort((a, b) => {
+            if (a.id > b.id) return 1;
+            if (a.id < b.id) return -1;
+            return 0;
+          })
+          .map((asset, l) => {
+            switch (asset.source) {
+              case "local":
+                return (
+                  <LocalAsset
+                    key={asset.id}
+                    {...asset}
+                    selectedDirectory={selectedDirectory}
+                  />
+                );
+              default:
+                return <Asset key={asset.id} {...asset} />;
+            }
+          })}
       </ul>
     </>
   );

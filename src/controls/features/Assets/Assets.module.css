@@ -13,7 +13,14 @@
   align-items: center;
   gap: 5px;
 }
-
+.source {
+  padding: 0 5px;
+}
+.id {
+  padding: 0 5px;
+  border: currentColor;
+  border-radius: 3px;
+}
 .loaded {
   color: var(--success-foreground);
   background: var(--success-background);
