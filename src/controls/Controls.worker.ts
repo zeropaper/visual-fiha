@@ -66,26 +66,26 @@ let runtimeData: RuntimeData = structuredClone(defaultRuntimeData);
 
 const handlers = {
   start: () => {
-    console.info("[controls-worker] Starting controls worker");
+    // console.log("[controls-worker] Starting controls worker");
     runtimeData.time.started = Date.now();
     runtimeData.time.isRunning = true;
     runtimeData.bpm.started = runtimeData.time.started;
     runtimeData.bpm.isRunning = true;
   },
   pause: () => {
-    console.info("[controls-worker] Pausing controls worker");
+    // console.log("[controls-worker] Pausing controls worker");
     runtimeData.time.isRunning = false;
     runtimeData.bpm.isRunning = false;
   },
   resume: () => {
-    console.info("[controls-worker] Resuming controls worker");
+    // console.log("[controls-worker] Resuming controls worker");
     runtimeData.time.started = Date.now() - runtimeData.time.elapsed;
     runtimeData.time.isRunning = true;
     runtimeData.bpm.started = Date.now() - runtimeData.bpm.elapsed;
     runtimeData.bpm.isRunning = true;
   },
   reset: () => {
-    console.info("[controls-worker] Resetting controls worker");
+    // console.log("[controls-worker] Resetting controls worker");
     runtimeData.time.started = Date.now();
     runtimeData.time.elapsed = 0;
     runtimeData.time.percent = 0;
@@ -97,7 +97,7 @@ const handlers = {
     runtimeData.bpm.isRunning = false;
   },
   setTime: (value: number) => {
-    console.info("[controls-worker] Setting time to %d", value);
+    // console.log("[controls-worker] Setting time to %d", value);
     runtimeData.time.started = Date.now() - value;
     runtimeData.time.elapsed = value;
     runtimeData.time.percent = value / (runtimeData.time.duration || 1);
@@ -108,7 +108,7 @@ const handlers = {
     runtimeData.bpm.count = Math.floor(value / (60000 / runtimeData.bpm.bpm));
   },
   timeDuration: (value: number) => {
-    console.info("[controls-worker] Setting time duration to %d", value);
+    // console.log("[controls-worker] Setting time duration to %d", value);
     runtimeData.time.duration = value;
     runtimeData.time.elapsed = 0;
     runtimeData.time.started = Date.now();
@@ -117,11 +117,18 @@ const handlers = {
     runtimeData.bpm.isRunning = false;
   },
   setBpm: (value: number) => {
-    console.info("[controls-worker] Setting BPM to %d", value);
+    // console.log("[controls-worker] Setting BPM to %d", value);
     runtimeData.bpm.bpm = value;
     runtimeData.bpm.started = Date.now();
     runtimeData.bpm.percent = 0;
     runtimeData.bpm.elapsed = 0;
+    runtimeData.bpm.isRunning = true;
+    runtimeData.bpm.count = 0;
+  },
+  setBpmStart: () => {
+    runtimeData.bpm.started = Date.now();
+    runtimeData.bpm.elapsed = 0;
+    runtimeData.bpm.percent = 0;
     runtimeData.bpm.isRunning = true;
     runtimeData.bpm.count = 0;
   },
@@ -133,7 +140,7 @@ const handlers = {
       // @ts-expect-error
       Date.now() - handlers.inputsdata.lastLogTime > 5000
     ) {
-      console.info("[controls-worker] Inputs data received:", payload);
+      // console.log("[controls-worker] Inputs data received:", payload);
       // @ts-expect-error
       handlers.inputsdata.lastLogTime = Date.now();
     }
@@ -155,7 +162,7 @@ const handlers = {
         };
       });
     }
-    console.log("[controls-worker] Config updated:", configData);
+    // console.log("[controls-worker] Config updated:", configData);
     // propagate to displays
     broadcastChannel.postMessage({
       type: "updateconfig",
@@ -206,23 +213,17 @@ const handlers = {
 
 const broadcastHandlers = {
   registerdisplay: (payload: DisplayRegistrationPayload) => {
-    console.info('[controls-worker] Registering "%s" display', payload.id);
+    // console.log('[controls-worker] Registering "%s" display', payload.id);
 
     configData = structuredClone(configData || defaultConfigData);
     const foundDisplay = configData.displays.find(
       (display) => display.id === payload.id,
     );
-    if (foundDisplay) {
-      console.info(
-        '[controls-worker] Display "%s" already registered, skipping',
-        payload.id,
-      );
-      // return;
-    } else {
-      console.info(
-        '[controls-worker] Display "%s" not found, adding to config',
-        payload.id,
-      );
+    if (!foundDisplay) {
+      // console.log(
+      //   '[controls-worker] Display "%s" not found, adding to config',
+      //   payload.id,
+      // );
       configData.displays.push({
         id: payload.id,
         width: payload.width,
@@ -299,7 +300,7 @@ function processRuntimeData() {
       runtimeData.time.duration &&
       runtimeData.time.elapsed >= runtimeData.time.duration
     ) {
-      console.info("[controls-worker] Time duration reached, resetting");
+      // console.log("[controls-worker] Time duration reached, resetting");
       handlers.reset();
     }
   }

@@ -184,6 +184,8 @@ export function Timeline({ className }: TimelineProps) {
       // Calculate BPM based on time difference
       const bpmValue = Math.round(60000 / (now - lastBpmClick));
       post?.("setBpm", bpmValue);
+    } else {
+      post?.("setBpmStart");
     }
     setLastBpmClick(now);
   }, [lastBpmClick, post]);
