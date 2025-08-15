@@ -179,6 +179,24 @@ export interface DisplayConfig {
   };
 }
 
+export type LocalAssetProps = {
+  source: "local";
+  blobUrl: string;
+};
+
+export type RemoteAssetProps = {
+  source: "remote";
+  /**
+   * URL for the asset, used for displaying the asset in the UI
+   */
+  url: string;
+};
+
+export type LayerAssetProps = {
+  source: "layer";
+  canvas: OffscreenCanvas;
+};
+
 export type AssetConfig = Prettify<
   {
     /**
@@ -189,23 +207,7 @@ export type AssetConfig = Prettify<
      * Current loading state of the asset
      */
     state?: "idle" | "loading" | "loaded" | "error";
-  } & (
-    | {
-        source: "local";
-        blobUrl: string;
-      }
-    | {
-        source: "remote";
-        /**
-         * URL for the asset, used for displaying the asset in the UI
-         */
-        url: string | null;
-      }
-    | {
-        source: "layer";
-        canvas: OffscreenCanvas;
-      }
-  )
+  } & (LocalAssetProps | RemoteAssetProps | LayerAssetProps)
 >;
 
 export type AppState = {
