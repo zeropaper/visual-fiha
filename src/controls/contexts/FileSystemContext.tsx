@@ -58,7 +58,7 @@ function useWriteConfig(selectedDirectory: FileSystemDirectoryHandle | null) {
           signals: signals.get,
           stage: stage.get,
           inputs: inputs.get,
-          assets: assets.get,
+          assets: assets.get.filter((asset) => asset.source !== "local"),
           displays: [],
         } satisfies AppState,
         null,
@@ -111,7 +111,9 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
       throw new Error("Failed to load config.");
     }
 
-    json.assets = [];
+    json.assets = (json.assets || []).filter(
+      ({ source }) => source !== "local",
+    );
     for (const [name] of assets) {
       const file = assets.get(name);
       if (!file) continue;
