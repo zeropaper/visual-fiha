@@ -4,6 +4,8 @@ import demoReadAssetsAnimation from "@demos/default/read-assets-animation?raw";
 import demoStatsAnimation from "@demos/default/stats-animation?raw";
 import demoDefaultThreeJSAnimation from "@demos/default/threejs-animation?raw";
 import demoDefaultThreeJSSetup from "@demos/default/threejs-setup?raw";
+import demoUnfoldingAnimation from "@demos/default/unfolding-animation?raw";
+import demoUnfoldingSetup from "@demos/default/unfolding-setup?raw";
 import demoWobblyBallAnimation from "@demos/default/wobblyball-animation?raw";
 import demoWobblyBallSetup from "@demos/default/wobblyball-setup?raw";
 import type {
@@ -54,6 +56,14 @@ const defaultLayers: LayerConfig[] = [
     active: true,
     setup: demoWobblyBallSetup,
     animation: demoWobblyBallAnimation,
+    type: "threejs",
+    opacity: 100,
+  },
+  {
+    id: "unfolding",
+    active: true,
+    setup: demoUnfoldingSetup,
+    animation: demoUnfoldingAnimation,
     type: "threejs",
     opacity: 100,
   },

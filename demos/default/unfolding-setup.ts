@@ -1,5 +1,36 @@
-const degToRad = (deg: number) => (deg * Math.PI) / 180;
-let fraction = 1;
+console.info("start unfolding setup");
+
+scene.clear();
+
+const ambientLight = new THREE.AmbientLight(0x666666);
+ambientLight.name = "ambientLight";
+scene.add(ambientLight);
+
+const directionalLight = new THREE.SpotLight(0xffffff, 1);
+directionalLight.name = "directionalLight";
+scene.add(directionalLight);
+
+directionalLight.angle = 40;
+cache.directionalLight = directionalLight;
+directionalLight.position.set(5, 12, 7);
+
+directionalLight.target.position.set(0, 0, 0);
+directionalLight.lookAt(0, 0, 0);
+
+const grid = new THREE.GridHelper(20, 20);
+const axes = new THREE.AxesHelper(3);
+const directionalLightHelper = new THREE.SpotLightHelper(directionalLight);
+cache.directionalLightHelper = directionalLightHelper;
+
+/*
+scene.add(directionalLightHelper);
+*/
+scene.add(grid);
+scene.add(axes);
+
+function degToRad(degrees: number): number {
+  return (degrees * Math.PI) / 180;
+}
 
 type MeshMaterial =
   | THREE.MeshStandardMaterial
@@ -83,7 +114,7 @@ class UnfoldingCube extends THREE.Group {
     front.receiveShadow = true;
     back.receiveShadow = true;
 
-    group.translateY(1 - fraction);
+    // group.translateY(1 - fraction);
 
     return {
       front,
@@ -96,7 +127,10 @@ class UnfoldingCube extends THREE.Group {
     };
   }
 
+  private prevAf = 0;
+
   unfold = (f = 1) => {
+    const af = f % 1;
     const { group } = this;
     const distance = degToRad(180);
     const leftStart = degToRad(-90);
@@ -115,17 +149,22 @@ class UnfoldingCube extends THREE.Group {
       backGroup,
     } = this.faces;
 
-    left.rotation.set(leftStart + distance * f, 0, 0);
-    right.rotation.set(rightStart - distance * f, 0, 0);
-    front.rotation.set(degToRad(90), frontStart - distance * f, degToRad(90));
-    backGroup.rotation.set(0, 0, backGroupStart + distance * f);
-    top.rotation.set(0, 0, topStart + distance * f);
+    left.rotation.set(leftStart + distance * af, 0, 0);
+    right.rotation.set(rightStart - distance * af, 0, 0);
+    front.rotation.set(degToRad(90), frontStart - distance * af, degToRad(90));
+    backGroup.rotation.set(0, 0, backGroupStart + distance * af);
+    top.rotation.set(0, 0, topStart + distance * af);
 
     group.position.set(0, 0, 0);
-    group.translateY(1 - f - 0.5);
+    group.translateY(1 - af - 0.5);
+
+    if (this.prevAf > af) {
+      group.rotateY(degToRad(random() < 0.5 ? -90 : 90));
+    }
+    this.prevAf = af;
   };
 
-  setColor = (color: number | string) => {
+  set color(color: string | number) {
     const { left, right, top, bottom, front, back } = this.faces;
 
     const set = (m: THREE.Mesh["material"]) => {
@@ -142,5 +181,45 @@ class UnfoldingCube extends THREE.Group {
     set(bottom.material);
     set(front.material);
     set(back.material);
-  };
+  }
+
+  set wireframe(wireframe: boolean) {
+    const { left, right, top, bottom, front, back } = this.faces;
+
+    const set = (m: THREE.Mesh["material"]) => {
+      if (Array.isArray(m)) {
+        m.forEach(set);
+      } else {
+        (m as MeshMaterial).wireframe = wireframe;
+      }
+    };
+
+    set(left.material);
+    set(right.material);
+    set(top.material);
+    set(bottom.material);
+    set(front.material);
+    set(back.material);
+  }
 }
+
+const unfoldingCubes = [];
+const gridSize = 6;
+const spacing = 4;
+const centeringShift = (gridSize - 1) * spacing * 0.5;
+for (let i = 0; i < gridSize; i++) {
+  for (let j = 0; j < gridSize; j++) {
+    const cube = new UnfoldingCube();
+    cube.position.set(
+      i * spacing - centeringShift,
+      0,
+      j * spacing - centeringShift,
+    );
+    cube.color = 0xf5d8ff;
+    scene.add(cube);
+    unfoldingCubes.push(cube);
+  }
+}
+cache.unfoldingCubes = unfoldingCubes;
+
+console.info("done unfolding setup");
