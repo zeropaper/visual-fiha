@@ -1,22 +1,27 @@
-import type {
-  FileLoader,
-  PerspectiveCamera,
-  Scene,
-  WebGLRenderer,
-} from "three";
+import type { PerspectiveCamera, Scene, WebGLRenderer } from "three";
 // @ts-ignore
 import type { Pass } from "three/addons/postprocessing/Pass";
+
+// import { Loader } from "three/addons/loaders/Loader.js";
+declare class Loader {
+  load(
+    url: string,
+    onLoad: (model: any) => void,
+    onProgress?: (event: ProgressEvent) => void,
+    onError?: (error: Error) => void,
+  ): void;
+}
 
 declare global {
   const scene: Scene;
   const camera: PerspectiveCamera;
   const renderer: WebGLRenderer;
 
-  const GLTFLoader: typeof FileLoader;
-  const ColladaLoader: typeof FileLoader;
-  const SVGLoader: typeof FileLoader;
-  const FontLoader: typeof FileLoader;
-  const OBJLoader: typeof FileLoader;
+  const GLTFLoader: typeof Loader;
+  const ColladaLoader: typeof Loader;
+  const SVGLoader: typeof Loader;
+  const FontLoader: typeof Loader;
+  const OBJLoader: typeof Loader;
 
   const AfterimagePass: typeof Pass;
   const BloomPass: typeof Pass;
