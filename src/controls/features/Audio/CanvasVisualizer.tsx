@@ -95,11 +95,6 @@ export function drawInfo(
 
 type VisualizerProps = {
   analyser: AnalyserNode | null;
-  drawExtras?: (
-    ctx: CanvasRenderingContext2D,
-    data: number[],
-    h: number,
-  ) => void;
 };
 
 export function CanvasVisualizer({
@@ -107,17 +102,11 @@ export function CanvasVisualizer({
   getData,
   lineColor,
   transformValue,
-  drawExtras,
 }: {
   analyser: AnalyserNode | null;
   getData: (analyser: AnalyserNode, array: Uint8Array<ArrayBuffer>) => void;
   lineColor: string;
   transformValue: (val: number, h: number) => number;
-  drawExtras?: (
-    ctx: CanvasRenderingContext2D,
-    data: number[],
-    h: number,
-  ) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRequestRef = useRef<number | null>(null);
@@ -171,7 +160,6 @@ export function CanvasVisualizer({
       transformValueLocal,
     );
     drawLine(canvasCtx, Array.from(dataArray), lineColor, transformValueLocal);
-    if (drawExtras) drawExtras(canvasCtx, Array.from(dataArray), h);
     drawInfo(canvasCtx, info);
     animationFrameRequestRef.current = requestAnimationFrame(render);
   }
@@ -234,7 +222,6 @@ export function Frequency(props: VisualizerProps) {
       getData={(analyser, arr) => analyser.getByteFrequencyData(arr)}
       lineColor="lime"
       transformValue={(val, h) => h - (((val - 128) / 128) * (h / 2) + h / 2)}
-      drawExtras={props.drawExtras}
     />
   );
 }
@@ -246,7 +233,6 @@ export function TimeDomain(props: VisualizerProps) {
       getData={(analyser, arr) => analyser.getByteTimeDomainData(arr)}
       lineColor="lime"
       transformValue={(val, h) => ((val - 128) / 128) * (h / 2) + h / 2}
-      drawExtras={props.drawExtras}
     />
   );
 }

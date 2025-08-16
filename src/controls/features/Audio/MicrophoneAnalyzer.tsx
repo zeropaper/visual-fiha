@@ -1,56 +1,27 @@
 import { useAudioSetup } from "@contexts/AudioSetupContext";
-import { useWriteInputValues } from "@contexts/ControlsContext";
 import styles from "./AudioFilesAnalyzer.module.css";
-import { drawInfo, Frequency, TimeDomain } from "./CanvasVisualizer";
+import { Frequency, TimeDomain } from "./CanvasVisualizer";
 
 export default function MicrophoneAnalyzer() {
-  const { getMicrophoneAnalyser, getMicrophoneState } = useAudioSetup();
-  const writeInputValues = useWriteInputValues();
+  const { getAudioAnalyzers, getMicrophoneState } = useAudioSetup();
 
-  const analyser = getMicrophoneAnalyser();
+  const analyser = getAudioAnalyzers()?.[0]?.analyser;
   const micState = getMicrophoneState();
 
-  function makeDrawExtras(type: "frequency" | "timeDomain") {
-    return function drawExtras(
-      canvasCtx: CanvasRenderingContext2D,
-      dataArray: number[],
-      _height: number,
-    ) {
-      const sorted = [...dataArray].sort((a, b) => a - b);
-      const info = {
-        average: dataArray.reduce((a, b) => a + b, 0) / dataArray.length,
-        median: sorted[Math.floor(sorted.length / 2)],
-        min: Math.min(...dataArray),
-        max: Math.max(...dataArray),
-      };
-
-      drawInfo(canvasCtx, info);
-
-      writeInputValues(`audio.0.0.${type}.average`, info.average);
-      writeInputValues(`audio.0.0.${type}.median`, info.median);
-      writeInputValues(`audio.0.0.${type}.min`, info.min);
-      writeInputValues(`audio.0.0.${type}.max`, info.max);
-      writeInputValues(`audio.0.0.${type}.data`, dataArray);
-    };
+  if (!analyser) {
+    return null;
   }
-
   return (
     <div>
       <div className={styles.visualizers}>
         <div>
           <strong>Frequency</strong>
-          <Frequency
-            analyser={analyser}
-            drawExtras={makeDrawExtras("frequency")}
-          />
+          <Frequency analyser={analyser} />
         </div>
 
         <div>
           <strong>Time Domain</strong>
-          <TimeDomain
-            analyser={analyser}
-            drawExtras={makeDrawExtras("timeDomain")}
-          />
+          <TimeDomain analyser={analyser} />
         </div>
       </div>
       {micState !== "running" && (
