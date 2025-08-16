@@ -1,6 +1,10 @@
 import { useWriteInputValues } from "@contexts/ControlsContext";
+import { useCopyToClipboard } from "@controls/hooks/useCopyToClipboard";
+import { Button, buttonStyles } from "@ui/Button";
+import { CopyIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as akaiLPD8 from "./MIDIBridge.akai-lpd8";
+import styles from "./MIDIBridge.module.css";
 
 declare global {
   interface Window {
@@ -8,50 +12,79 @@ declare global {
   }
 }
 
+function MIDIDevice({ id, input }: { id: string; input: MIDIInput }) {
+  const [copied, copy] = useCopyToClipboard();
+  return (
+    <li key={id} className={styles.device}>
+      <Button
+        variant="icon"
+        title="Copy the read function usage."
+        onClick={() => copy(`read('midi.${id}')`)}
+        className={[
+          buttonStyles.button,
+          buttonStyles.icon,
+          copied ? buttonStyles.success : "",
+        ].join(" ")}
+      >
+        <CopyIcon />
+      </Button>
+      <span className={styles.name}>{input.name}</span>{" "}
+      <span className={styles.manufacturer}>{input.manufacturer}</span>
+    </li>
+  );
+}
+
 export function MIDIBridge() {
   const writeInputValues = useWriteInputValues();
-  const [midiState, setMidiState] = useState<
-    "connecting" | "connected" | "disconnected"
-  >("connecting");
   const [midiInputs, setMidiInputs] = useState<Record<string, boolean>>({});
-
-  // Use a ref to keep a stable handler reference
-  const midiMessageHandlerRef = useRef<(event: MIDIMessageEvent) => void>();
-
-  // Handler for MIDI messages (stable reference)
-  if (!midiMessageHandlerRef.current) {
-    midiMessageHandlerRef.current = (event: MIDIMessageEvent) => {
-      const data = event.data;
-      if (!data || data.length < 3) {
-        console.warn("MIDI message too short:", data);
-        return;
-      }
-      akaiLPD8.adapter(
-        (path, value) => writeInputValues(`midi.${path}`, value),
-        data,
-      );
-    };
-  }
+  const listenersRef =
+    useRef<Record<string, (event: MIDIMessageEvent) => void>>();
 
   // Add/remove listeners when inputs change
   useEffect(() => {
     if (!window._midiAccess) return;
-    const handler = midiMessageHandlerRef.current!;
     const inputIds = Object.keys(midiInputs);
     const inputs = inputIds
       .map((id) => window._midiAccess!.inputs.get(id))
       .filter(Boolean) as MIDIInput[];
-    // Add listeners
+
     inputs.forEach((input) => {
-      input.addEventListener("midimessage", handler);
+      const listener =
+        listenersRef.current?.[input.id] ||
+        ((event: MIDIMessageEvent) => {
+          let deviceName: string | undefined;
+          let mappings: Record<number, Record<number, string>> | undefined;
+          if (
+            input.manufacturer === akaiLPD8.manufacturer &&
+            input.name === akaiLPD8.name
+          ) {
+            deviceName = akaiLPD8.deviceName;
+            mappings = akaiLPD8.mappings;
+          }
+          if (!deviceName || !mappings) {
+            return;
+          }
+          const [type, index, value] =
+            (event.data as unknown as [number, number, number]) || [];
+          const button = mappings?.[type]?.[index];
+          if (!button) {
+            console.warn("Unknown MIDI message:", deviceName, type, index);
+            return;
+          }
+          writeInputValues(`midi.${deviceName}.${button}`, value);
+        });
+      input.addEventListener("midimessage", listener);
     });
     // Cleanup
     return () => {
       inputs.forEach((input) => {
-        input.removeEventListener("midimessage", handler);
+        const listener = listenersRef.current?.[input.id];
+        if (listener) {
+          input.removeEventListener("midimessage", listener);
+        }
       });
     };
-  }, [midiInputs]);
+  }, [midiInputs, writeInputValues]);
 
   // Handle MIDI input connection/disconnection
   const handleInputsChange = useCallback(() => {
@@ -74,7 +107,6 @@ export function MIDIBridge() {
       navigator.requestMIDIAccess().then(
         (ma) => {
           window._midiAccess = ma;
-          setMidiState("connected");
           ma.addEventListener("statechange", handleInputsChange);
           handleInputsChange();
           cleanup = () => {
@@ -84,7 +116,6 @@ export function MIDIBridge() {
         },
         (error) => {
           console.error("Failed to get MIDI access:", error);
-          setMidiState("disconnected");
         },
       );
     }
@@ -94,22 +125,14 @@ export function MIDIBridge() {
   }, [handleInputsChange]);
 
   return (
-    <>
-      <span>{midiState}</span>
-      <ul>
-        {Object.entries(midiInputs).map(([id, enabled]) => {
-          const input = window._midiAccess?.inputs.get(id);
-          if (!input) {
-            return null;
-          }
-          return (
-            <li key={id}>
-              <span>{enabled ? "🟢" : "🔴"}</span> <span>{input.name}</span>{" "}
-              <span>{input.manufacturer}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </>
+    <ul className={styles.devices}>
+      {Object.entries(midiInputs).map(([id]) => {
+        const input = window._midiAccess?.inputs.get(id);
+        if (!input?.manufacturer) {
+          return null;
+        }
+        return <MIDIDevice key={id} id={id} input={input} />;
+      })}
+    </ul>
   );
 }

@@ -1,0 +1,23 @@
+.devices {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 5px;
+  flex-direction: column;
+}
+
+.device {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.status {
+}
+.name {
+  font-weight: 500;
+}
+.manufacturer {
+  font-size: 0.875rem;
+  color: gray;
+}
