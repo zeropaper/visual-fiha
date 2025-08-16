@@ -6,7 +6,11 @@
  *
  */
 
-import { useContextWorkerPost } from "@contexts/ControlsContext";
+import {
+  useContextWorkerPost,
+  useWriteInputValues,
+} from "@contexts/ControlsContext";
+import { useAnimationFrame } from "@controls/hooks/useAnimationFrame";
 import { useRuntimeMonitor } from "@hooks/useRuntimeMonitor";
 import { loadTrack } from "@utils/syncAudio";
 import {
@@ -47,7 +51,6 @@ interface ManagedAudioElement {
 }
 
 interface MicrophoneAudio {
-  analyser: AnalyserNode;
   stream: MediaStream;
   source: MediaStreamAudioSourceNode;
 }
@@ -58,15 +61,13 @@ interface AudioSetupContextValue {
   files: Array<AudioFileInfo>;
   setFiles: (files: Array<AudioFileInfo>) => void;
   playbackState: PlaybackState;
-  getCurrentTime: () => number; // Add function to get current time without causing re-renders
+  getCurrentTime: () => number;
   playAll: () => void;
   pauseAll: () => void;
   stopAll: () => void;
   seekAll: (time: number) => void;
   setAllVolume: (volume: number) => void;
-  // New audio management methods
   getAudioAnalyzers: () => ManagedAudioElement[];
-  getMicrophoneAnalyser: () => AnalyserNode | null;
   getMicrophoneState: () => AudioContextState;
   audioContext: AudioContext | null;
 }
@@ -106,9 +107,6 @@ const AudioSetupContext = createContext<AudioSetupContextValue>({
   getAudioAnalyzers: () => {
     throw new Error("getAudioElements is not implemented");
   },
-  getMicrophoneAnalyser: () => {
-    throw new Error("getMicrophoneAnalyser is not implemented");
-  },
   getMicrophoneState: () => {
     throw new Error("getMicrophoneState is not implemented");
   },
@@ -133,6 +131,7 @@ export function AudioSetupProvider({
   const [mode, setModeState] = useState<AudioInputMode>(
     (localStorage.getItem("audioMode") as AudioInputMode) || "files",
   );
+  const writeInputValues = useWriteInputValues();
 
   // Memoize stable playback properties that don't change frequently
   const stablePlaybackState = useMemo(
@@ -206,7 +205,6 @@ export function AudioSetupProvider({
       if (microphoneAudioRef.current) {
         try {
           microphoneAudioRef.current.source.disconnect();
-          microphoneAudioRef.current.analyser.disconnect();
           microphoneAudioRef.current.stream
             .getTracks()
             .forEach((track) => track.stop());
@@ -241,9 +239,9 @@ export function AudioSetupProvider({
       analyser.fftSize = audioConfig.fftSize;
 
       source.connect(analyser);
+      managedAnalyzersRef.current.push({ analyser, index: 0 });
 
       microphoneAudioRef.current = {
-        analyser,
         stream,
         source,
       };
@@ -443,10 +441,6 @@ export function AudioSetupProvider({
     return [...managedAnalyzersRef.current];
   }, []);
 
-  const getMicrophoneAnalyser = useCallback(() => {
-    return microphoneAudioRef.current?.analyser || null;
-  }, []);
-
   const getMicrophoneState = useCallback(() => {
     return microphoneState;
   }, [microphoneState]);
@@ -477,6 +471,43 @@ export function AudioSetupProvider({
     [post, cleanupAudio, stopAll],
   );
 
+  const counterRef = useRef<number>(0);
+  useAnimationFrame(() => {
+    counterRef.current += 1;
+
+    managedAnalyzersRef.current.forEach(({ analyser }, index) => {
+      ["frequency", "timeDomain"].forEach((type) => {
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        if (type === "frequency") {
+          analyser.getByteFrequencyData(dataArray);
+        } else {
+          analyser.getByteTimeDomainData(dataArray);
+        }
+
+        const sorted = [...dataArray].sort((a, b) => a - b);
+        const info = {
+          average: dataArray.reduce((a, b) => a + b, 0) / dataArray.length,
+          median: sorted[Math.floor(sorted.length / 2)],
+          min: Math.min(...dataArray),
+          max: Math.max(...dataArray),
+        };
+
+        writeInputValues(`audio.${index}.0.${type}.average`, info.average);
+        writeInputValues(`audio.${index}.0.${type}.median`, info.median);
+        writeInputValues(`audio.${index}.0.${type}.min`, info.min);
+        writeInputValues(`audio.${index}.0.${type}.max`, info.max);
+        writeInputValues(`audio.${index}.0.${type}.data`, dataArray);
+      });
+    });
+    if (counterRef.current % 60 === 0) {
+      // Do something every 60 frames (1 second at 60fps)
+      console.log(
+        "1 second passed in animation frame",
+        managedAnalyzersRef.current,
+      );
+    }
+  });
+
   const value = useMemo<AudioSetupContextValue>(
     () => ({
       files,
@@ -491,7 +522,6 @@ export function AudioSetupProvider({
       seekAll,
       setAllVolume,
       getAudioAnalyzers,
-      getMicrophoneAnalyser,
       getMicrophoneState,
       audioContext: audioContextRef.current,
     }),
@@ -507,7 +537,6 @@ export function AudioSetupProvider({
       seekAll,
       setAllVolume,
       getAudioAnalyzers,
-      getMicrophoneAnalyser,
       getMicrophoneState,
     ],
   );
