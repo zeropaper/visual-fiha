@@ -45,9 +45,10 @@ interface PlaybackState {
   seeking: boolean;
 }
 
-interface ManagedAudioElement {
+export interface ManagedAudioElement {
   analyser: AnalyserNode;
   index: number;
+  id: string;
 }
 
 interface MicrophoneAudio {
@@ -67,9 +68,10 @@ interface AudioSetupContextValue {
   stopAll: () => void;
   seekAll: (time: number) => void;
   setAllVolume: (volume: number) => void;
-  getAudioAnalyzers: () => ManagedAudioElement[];
+  getAudioAnalyzers: () => Record<string, ManagedAudioElement>;
   getMicrophoneState: () => AudioContextState;
   audioContext: AudioContext | null;
+  ready: boolean;
 }
 
 const AudioSetupContext = createContext<AudioSetupContextValue>({
@@ -111,6 +113,7 @@ const AudioSetupContext = createContext<AudioSetupContextValue>({
     throw new Error("getMicrophoneState is not implemented");
   },
   audioContext: null,
+  ready: false,
 });
 
 export function AudioSetupProvider({
@@ -132,6 +135,7 @@ export function AudioSetupProvider({
     (localStorage.getItem("audioMode") as AudioInputMode) || "files",
   );
   const writeInputValues = useWriteInputValues();
+  const [ready, setReady] = useState(false);
 
   // Memoize stable playback properties that don't change frequently
   const stablePlaybackState = useMemo(
@@ -157,9 +161,7 @@ export function AudioSetupProvider({
 
   // Central audio management state
   const audioContextRef = useRef<AudioContext | null>(null);
-  const managedAnalyzersRef = useRef<
-    { analyser: AnalyserNode; index: number }[]
-  >([]);
+  const managedAnalyzersRef = useRef<Record<string, ManagedAudioElement>>({});
   const microphoneAudioRef = useRef<MicrophoneAudio | null>(null);
   const [microphoneState, setMicrophoneState] =
     useState<AudioContextState>("closed");
@@ -175,14 +177,21 @@ export function AudioSetupProvider({
   // Cleanup audio context and managed elements
   const cleanupAudio = useCallback(() => {
     // Cleanup managed audio elements
-    managedAnalyzersRef.current.forEach(({ analyser }) => {
+    Object.values(managedAnalyzersRef.current).forEach(({ analyser }) => {
       try {
         analyser.disconnect();
       } catch (err) {
         console.warn("Error cleaning up analyzer:", err);
       }
     });
-    managedAnalyzersRef.current = [];
+    Object.values(managedAnalyzersRef.current).forEach(({ analyser }) => {
+      try {
+        analyser.disconnect();
+      } catch (err) {
+        console.warn("Error cleaning up analyzer:", err);
+      }
+    });
+    managedAnalyzersRef.current = {};
 
     sourcesRef.current.forEach((source) => {
       try {
@@ -227,6 +236,7 @@ export function AudioSetupProvider({
         video: false,
         audio: true,
       });
+      managedAnalyzersRef.current?.mic?.analyser.disconnect();
 
       const audioCtx = getOrCreateAudioContext();
       const analyser = audioCtx.createAnalyser();
@@ -239,7 +249,7 @@ export function AudioSetupProvider({
       analyser.fftSize = audioConfig.fftSize;
 
       source.connect(analyser);
-      managedAnalyzersRef.current.push({ analyser, index: 0 });
+      managedAnalyzersRef.current.mic = { analyser, index: 0, id: "mic" };
 
       microphoneAudioRef.current = {
         stream,
@@ -258,6 +268,7 @@ export function AudioSetupProvider({
 
       // Set duration to 0 for microphone mode (infinite duration)
       post?.("timeDuration", 0);
+      setReady(true);
     } catch (error) {
       console.error("Error setting up microphone:", error);
       setMicrophoneState("closed");
@@ -287,7 +298,11 @@ export function AudioSetupProvider({
           source.connect(analyser);
           analyser.connect(audioCtx.destination);
 
-          managedAnalyzersRef.current.push({ analyser, index });
+          managedAnalyzersRef.current[fileInfo.name] = {
+            analyser,
+            index,
+            id: fileInfo.name,
+          };
 
           return source;
         }),
@@ -300,6 +315,7 @@ export function AudioSetupProvider({
         ...sources.map((source) => source.buffer?.duration ?? 0),
       );
       post?.("timeDuration", maxDuration * 1000); // Convert to milliseconds
+      setReady(true);
     },
     [getOrCreateAudioContext, cleanupAudio, post],
   );
@@ -342,7 +358,9 @@ export function AudioSetupProvider({
     const currentTimeInSeconds = (getTimeData()?.elapsed || 0) / 1000;
 
     sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
-      const analyser = managedAnalyzersRef.current[index]?.analyser;
+      const analyser = Object.values(managedAnalyzersRef.current).find(
+        (a) => a.index === index,
+      )?.analyser;
       if (!analyser) {
         console.warn("No analyser found for source at index", index);
         return oldSource;
@@ -412,7 +430,12 @@ export function AudioSetupProvider({
 
       // Create new sources at the seek position
       sourcesRef.current = sourcesRef.current.map((oldSource, index) => {
-        const analyser = managedAnalyzersRef.current[index].analyser;
+        const analyser = Object.values(managedAnalyzersRef.current).find(
+          (a) => a.index === index,
+        )?.analyser;
+        if (!analyser) {
+          throw new Error(`No analyser found for source at index ${index}`);
+        }
         return createAndWireSource(
           oldSource,
           analyser,
@@ -438,7 +461,7 @@ export function AudioSetupProvider({
 
   // New methods for providing audio resources to components
   const getAudioAnalyzers = useCallback(() => {
-    return [...managedAnalyzersRef.current];
+    return managedAnalyzersRef.current;
   }, []);
 
   const getMicrophoneState = useCallback(() => {
@@ -462,6 +485,7 @@ export function AudioSetupProvider({
 
   const setMode = useCallback(
     (newMode: AudioInputMode) => {
+      setReady(false);
       console.log("Setting audio input mode to:", newMode);
       post?.("reset");
       stopAll();
@@ -471,41 +495,43 @@ export function AudioSetupProvider({
     [post, cleanupAudio, stopAll],
   );
 
-  const counterRef = useRef<number>(0);
+  // const counterRef = useRef<number>(0);
   useAnimationFrame(() => {
-    counterRef.current += 1;
+    // counterRef.current += 1;
 
-    managedAnalyzersRef.current.forEach(({ analyser }, index) => {
-      ["frequency", "timeDomain"].forEach((type) => {
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        if (type === "frequency") {
-          analyser.getByteFrequencyData(dataArray);
-        } else {
-          analyser.getByteTimeDomainData(dataArray);
-        }
+    Object.values(managedAnalyzersRef.current).forEach(
+      ({ analyser }, index) => {
+        ["frequency", "timeDomain"].forEach((type) => {
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+          if (type === "frequency") {
+            analyser.getByteFrequencyData(dataArray);
+          } else {
+            analyser.getByteTimeDomainData(dataArray);
+          }
 
-        const sorted = [...dataArray].sort((a, b) => a - b);
-        const info = {
-          average: dataArray.reduce((a, b) => a + b, 0) / dataArray.length,
-          median: sorted[Math.floor(sorted.length / 2)],
-          min: Math.min(...dataArray),
-          max: Math.max(...dataArray),
-        };
+          const sorted = [...dataArray].sort((a, b) => a - b);
+          const info = {
+            average: dataArray.reduce((a, b) => a + b, 0) / dataArray.length,
+            median: sorted[Math.floor(sorted.length / 2)],
+            min: Math.min(...dataArray),
+            max: Math.max(...dataArray),
+          };
 
-        writeInputValues(`audio.${index}.0.${type}.average`, info.average);
-        writeInputValues(`audio.${index}.0.${type}.median`, info.median);
-        writeInputValues(`audio.${index}.0.${type}.min`, info.min);
-        writeInputValues(`audio.${index}.0.${type}.max`, info.max);
-        writeInputValues(`audio.${index}.0.${type}.data`, dataArray);
-      });
-    });
-    if (counterRef.current % 60 === 0) {
-      // Do something every 60 frames (1 second at 60fps)
-      console.log(
-        "1 second passed in animation frame",
-        managedAnalyzersRef.current,
-      );
-    }
+          writeInputValues(`audio.${index}.0.${type}.average`, info.average);
+          writeInputValues(`audio.${index}.0.${type}.median`, info.median);
+          writeInputValues(`audio.${index}.0.${type}.min`, info.min);
+          writeInputValues(`audio.${index}.0.${type}.max`, info.max);
+          writeInputValues(`audio.${index}.0.${type}.data`, dataArray);
+        });
+      },
+    );
+    // if (counterRef.current % 60 === 0) {
+    //   // Do something every 60 frames (1 second at 60fps)
+    //   console.log(
+    //     "1 second passed in animation frame",
+    //     managedAnalyzersRef.current,
+    //   );
+    // }
   });
 
   const value = useMemo<AudioSetupContextValue>(
@@ -524,6 +550,7 @@ export function AudioSetupProvider({
       getAudioAnalyzers,
       getMicrophoneState,
       audioContext: audioContextRef.current,
+      ready,
     }),
     [
       files,
@@ -538,6 +565,7 @@ export function AudioSetupProvider({
       setAllVolume,
       getAudioAnalyzers,
       getMicrophoneState,
+      ready,
     ],
   );
 
