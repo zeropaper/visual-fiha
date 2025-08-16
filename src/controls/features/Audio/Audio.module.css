@@ -15,3 +15,27 @@
     padding: 5px;
   }
 }
+
+.tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.trackLabels,
+.visualizers {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: stretch;
+  width: 100%;
+  > * {
+    width: 50%;
+  }
+}
+.trackHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+}

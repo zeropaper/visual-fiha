@@ -1,12 +1,28 @@
-import { useAudioSetup } from "@contexts/AudioSetupContext";
+import {
+  type ManagedAudioElement,
+  useAudioSetup,
+} from "@contexts/AudioSetupContext";
 import { Button } from "@ui/Button";
-import { FileAudioIcon, MicIcon } from "lucide-react";
+import { CopyIcon, FileAudioIcon, MicIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import styles from "./Audio.module.css";
-import AudioFilesAnalyzer from "./AudioFilesAnalyzer";
-import MicrophoneAnalyzer from "./MicrophoneAnalyzer";
+import { Frequency, TimeDomain } from "./CanvasVisualizer";
 
 export function Audio() {
-  const { mode: audioMode, setMode: setAudioMode } = useAudioSetup();
+  const {
+    mode: audioMode,
+    setMode: setAudioMode,
+    getAudioAnalyzers,
+    ready,
+  } = useAudioSetup();
+  const [analysers, setAnalysers] = useState<
+    Record<string, ManagedAudioElement>
+  >({});
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    setAnalysers(getAudioAnalyzers());
+  }, [ready, getAudioAnalyzers]);
 
   return (
     <>
@@ -24,7 +40,38 @@ export function Audio() {
           <FileAudioIcon />
         </Button>
       </div>
-      {audioMode === "mic" ? <MicrophoneAnalyzer /> : <AudioFilesAnalyzer />}
+
+      {ready ? (
+        <div className={styles.tracks}>
+          <div className={styles.trackLabels}>
+            <div>frequency</div>
+            <div>timeDomain</div>
+          </div>
+          {Object.values(analysers)
+            .sort((a, b) => a.index - b.index)
+            .map(({ analyser, index, id }, i) => (
+              <div key={id} className={styles.track}>
+                <div className={styles.trackHeader}>
+                  {index} - {id}
+                  {/* <Button
+                    variant="icon"
+                    onClick={() => {
+                      alert("Not implemented");
+                    }}
+                  >
+                    <CopyIcon />
+                  </Button> */}
+                </div>
+                <div className={styles.visualizers}>
+                  <Frequency analyser={analyser} />
+                  <TimeDomain analyser={analyser} />
+                </div>
+              </div>
+            ))}
+        </div>
+      ) : (
+        <div>Loading</div>
+      )}
     </>
   );
 }
