@@ -1,4 +1,5 @@
-type TimeReadPath = `time.${"elapsed" | "duration" | "started" | "percent"}`;
+type TimeReadPath =
+  `time.${"elapsed" | "duration" | "started" | "percent" | "isRunning"}`;
 
 type BPMReadPath =
   `bpm.${"bpm" | "started" | "elapsed" | "isRunning" | "percent" | "count"}`;
