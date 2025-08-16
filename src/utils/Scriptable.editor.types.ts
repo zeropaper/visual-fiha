@@ -4,9 +4,7 @@ type TimeReadPath =
 type BPMReadPath =
   `bpm.${"bpm" | "started" | "elapsed" | "isRunning" | "percent" | "count"}`;
 
-type MIDIReadPath =
-  | "midi"
-  | `midi.${string}.${"note" | "velocity" | "duration" | "channel"}`;
+type MIDIReadPath = "midi" | `midi.${string}`;
 
 type AudioReadPath =
   | "audio"
