@@ -90,7 +90,13 @@ export default function ControlsApp() {
       content: <Displays />,
     },
   };
-  const [currentTab, setCurrentTab] = useState<keyof typeof tabs>("layers");
+  const [currentTab, _setCurrentTab] = useState<keyof typeof tabs>(
+    (localStorage.getItem("currentTab") as keyof typeof tabs) || "layers",
+  );
+  const setCurrentTab = useCallback((tab: keyof typeof tabs) => {
+    _setCurrentTab(tab);
+    localStorage.setItem("currentTab", tab);
+  }, []);
 
   return (
     <AppFastContextProvider>
