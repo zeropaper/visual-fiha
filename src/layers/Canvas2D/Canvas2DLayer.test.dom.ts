@@ -7,7 +7,8 @@ let layer: Canvas2DLayer;
 
 const options: Canvas2DLayerOptions = {
   id: "layerId",
-  canvas: document.createElement("canvas"),
+  canvas: document.createElement("canvas") as any,
+  read: () => {},
 };
 
 const compilationErrorListener = vi.fn((err) => {
@@ -28,7 +29,8 @@ describe("instanciation", () => {
       () =>
         // @ts-expect-error
         new Canvas2DLayer({
-          canvas: document.createElement("canvas"),
+          canvas: document.createElement("canvas") as any,
+          read: () => {},
         }),
     ).toThrowError();
   });
