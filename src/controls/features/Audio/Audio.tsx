@@ -30,12 +30,14 @@ export function Audio() {
         <Button
           onClick={() => setAudioMode("mic")}
           disabled={audioMode === "mic"}
+          title="Use microphone"
         >
           <MicIcon />
         </Button>
         <Button
           onClick={() => setAudioMode("files")}
           disabled={audioMode === "files"}
+          title="Use audio files"
         >
           <FileAudioIcon />
         </Button>
