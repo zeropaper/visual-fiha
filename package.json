@@ -85,7 +85,7 @@
       "biome check --files-ignore-unknown=true --diagnostic-level=error --write --no-errors-on-unmatched"
     ]
   },
-  "packageManager": "pnpm@10.12.4",
+  "packageManager": "pnpm@10.14.0",
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
