@@ -5,8 +5,8 @@ import { Button } from "@ui/Button";
 import { Textarea } from "@ui/Textarea";
 import textareaStyles from "@ui/Textarea.module.css";
 import {
-  type FileUIPart,
   createIdGenerator,
+  type FileUIPart,
   lastAssistantMessageIsCompleteWithToolCalls,
 } from "ai";
 import { CameraIcon, FileIcon, KeyIcon, SendIcon } from "lucide-react";
@@ -18,7 +18,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { LayerConfig } from "src/types";
+import type { LayerConfig, ScriptInfo } from "src/types";
 import styles from "./AIAssistant.module.css";
 import FileUIPartsList from "./AttachmentsList";
 import { AIAssistantCredentialsForm } from "./CredentialsForm";
@@ -51,12 +51,9 @@ export function AIAssistant({
   type,
   layerType,
   id,
-}: {
+}: Partial<ScriptInfo> & {
   editor: _monaco.editor.IStandaloneCodeEditor;
-  role?: "setup" | "animation";
-  type?: "worker" | "layer";
   layerType?: LayerConfig["type"] | null;
-  id?: string | "worker";
 }) {
   const initialMessagesRef = useRef<VFMessage[]>(loadMessages(id || "worker"));
   const [{ code: setupScript }, setSetupScript] = useCode(

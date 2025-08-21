@@ -3,7 +3,7 @@ import inputsDocs from "@docs/inputs.md?raw";
 import layersDocs from "@docs/layers.md?raw";
 import workerDocs from "@docs/runtime-worker.md?raw";
 import threejsDocs from "@docs/threejs-api.md?raw";
-import type { LayerConfig } from "src/types";
+import type { LayerConfig, ScriptRole, ScriptType } from "src/types";
 
 export function getSystemMessage({
   layerType = null,
@@ -11,8 +11,8 @@ export function getSystemMessage({
   role = "setup",
 }: {
   layerType?: LayerConfig["type"] | null;
-  type?: "worker" | "layer";
-  role?: "setup" | "animation";
+  type?: ScriptType;
+  role?: ScriptRole;
 }) {
   return type === "layer"
     ? `You are editing the script of a ${layerType} layer ${role} script for a visual programming environment.

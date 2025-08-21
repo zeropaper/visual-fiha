@@ -1,4 +1,5 @@
 import { tsTranspile } from "@utils/tsTranspile";
+import type { ScriptInfo } from "src/types";
 import { z } from "zod";
 
 export const scriptBaseSchema = z.object({
@@ -14,14 +15,11 @@ export function setScript({
   setSetupScript,
   type,
   id,
-}: {
+}: ScriptInfo & {
   setSetupScript: (code: string) => void;
   setAnimationScript: (code: string) => void;
   getSetupScript: () => string;
   getAnimationScript: () => string;
-  role: "setup" | "animation";
-  type: "worker" | "layer";
-  id: string;
 }) {
   return async ({
     code,

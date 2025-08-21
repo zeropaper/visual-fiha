@@ -243,8 +243,12 @@ export interface RuntimeData {
   assets: AssetConfig[];
 }
 
+export type ScriptType = "worker" | "layer";
+
+export type ScriptRole = "setup" | "animation";
+
 export interface ScriptInfo {
   id: string;
-  type: "worker" | "layer";
-  role: "setup" | "animation";
+  type: ScriptType;
+  role: ScriptRole;
 }

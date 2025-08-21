@@ -1,7 +1,6 @@
-export interface TranspilePayload {
-  id: string;
-  type: "worker" | "layer";
-  role: "setup" | "animation";
+import type { ScriptInfo } from "src/types";
+
+export interface TranspilePayload extends ScriptInfo {
   code: string;
   original: string;
 }

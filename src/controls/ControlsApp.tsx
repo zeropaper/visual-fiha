@@ -9,6 +9,7 @@ import {
   MonitorIcon,
 } from "lucide-react";
 import { lazy, Suspense, useCallback, useState } from "react";
+import type { ScriptInfo } from "src/types";
 import styles from "./ControlsApp.module.css";
 import { AudioSetupProvider } from "./contexts/AudioSetupContext";
 import { AppFastContextProvider } from "./contexts/ControlsContext";
@@ -32,27 +33,16 @@ const ScriptEditor = lazy(() =>
 );
 
 export default function ControlsApp() {
-  const [currentScript, _setCurrentScript] = useState<{
-    id: string;
-    role: "animation" | "setup";
-    type: "worker" | "layer";
-  }>(
+  const [currentScript, _setCurrentScript] = useState<ScriptInfo>(
     JSON.parse(
       localStorage.getItem("currentScript") ||
         '{"id": "", "role": "animation", "type": ""}',
     ),
   );
-  const setCurrentScript = useCallback(
-    (updated: {
-      id: string;
-      role: "animation" | "setup";
-      type: "worker" | "layer";
-    }) => {
-      _setCurrentScript(updated);
-      localStorage.setItem("currentScript", JSON.stringify(updated));
-    },
-    [],
-  );
+  const setCurrentScript = useCallback((updated: ScriptInfo) => {
+    _setCurrentScript(updated);
+    localStorage.setItem("currentScript", JSON.stringify(updated));
+  }, []);
 
   const [docTopic, setDocTopic] = useState<DocTopic | null>(null);
   const toggleHelp = useCallback(

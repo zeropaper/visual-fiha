@@ -1,8 +1,9 @@
 import { useAppFastContextFields } from "@contexts/ControlsContext";
+import type { ScriptRole, ScriptType } from "src/types";
 
 export function useCode(
-  role: "setup" | "animation",
-  type: "worker" | "layer",
+  role: ScriptRole,
+  type: ScriptType,
   id: string,
 ): [
   { code: string; layerType: "canvas" | "threejs" | null },
