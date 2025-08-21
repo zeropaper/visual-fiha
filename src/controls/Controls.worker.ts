@@ -22,7 +22,7 @@ const defaultStageConfig = {
   backgroundColor: "#000000",
 };
 
-const defaultConfigData: AppState = {
+const defaultAppState: AppState = {
   stage: defaultStageConfig,
   inputs: [],
   signals: [],
@@ -34,7 +34,7 @@ const defaultConfigData: AppState = {
     animation: "",
   },
 };
-let configData: AppState = structuredClone(defaultConfigData);
+let appState: AppState = structuredClone(defaultAppState);
 
 const defaultRuntimeData: RuntimeData = {
   stage: defaultStageConfig,
@@ -148,10 +148,10 @@ const handlers = {
       ...runtimeData,
       ...payload,
     };
-    runtimeData.assets = configData.assets;
+    runtimeData.assets = appState.assets;
   },
   updateconfig: (payload: Partial<AppState>) => {
-    configData = { ...configData, ...payload };
+    appState = { ...appState, ...payload };
     if ("layers" in payload) {
       runtimeData.layers = (payload.layers as LayerConfig[]).map((layer, l) => {
         return {
@@ -166,11 +166,11 @@ const handlers = {
     // propagate to displays
     broadcastChannel.postMessage({
       type: "updateconfig",
-      payload: configData,
+      payload: appState,
     });
   },
   init: (payload: AppState) => {
-    configData = payload;
+    appState = payload;
     function finish(transpilation: TranspilePayload[]) {
       runtimeData = structuredClone(defaultRuntimeData);
 
@@ -178,7 +178,7 @@ const handlers = {
         const transpiled = transpilation.find((t) => t.original === original);
         return transpiled ? transpiled.code : "";
       }
-      runtimeData.layers = configData.layers.map((layer, l) => ({
+      runtimeData.layers = appState.layers.map((layer, l) => ({
         ...layer,
         id: layer.id || `layer-${l}`,
         type: layer.type || "canvas",
@@ -191,18 +191,18 @@ const handlers = {
         runtimeData.time.duration || defaultRuntimeData.time.duration,
       );
       broadcastRuntimeData();
-      console.log("[controls-worker] init complete:", configData);
+      console.log("[controls-worker] init complete:", appState);
     }
 
     Promise.all([
-      ...configData.layers.map((layer) =>
+      ...appState.layers.map((layer) =>
         tsTranspile(layer.setup, layer.type, "setup", layer.id),
       ),
-      ...configData.layers.map((layer) =>
+      ...appState.layers.map((layer) =>
         tsTranspile(layer.animation, layer.type, "animation", layer.id),
       ),
-      tsTranspile(configData.worker.setup, "worker", "setup", "worker"),
-      tsTranspile(configData.worker.animation, "worker", "animation", "worker"),
+      tsTranspile(appState.worker.setup, "worker", "setup", "worker"),
+      tsTranspile(appState.worker.animation, "worker", "animation", "worker"),
     ])
       .then(finish)
       .catch((err) =>
@@ -215,8 +215,8 @@ const broadcastHandlers = {
   registerdisplay: (payload: DisplayRegistrationPayload) => {
     // console.log('[controls-worker] Registering "%s" display', payload.id);
 
-    configData = structuredClone(configData || defaultConfigData);
-    const foundDisplay = configData.displays.find(
+    appState = structuredClone(appState || defaultAppState);
+    const foundDisplay = appState.displays.find(
       (display) => display.id === payload.id,
     );
     if (!foundDisplay) {
@@ -224,7 +224,7 @@ const broadcastHandlers = {
       //   '[controls-worker] Display "%s" not found, adding to config',
       //   payload.id,
       // );
-      configData.displays.push({
+      appState.displays.push({
         id: payload.id,
         width: payload.width,
         height: payload.height,
@@ -310,7 +310,7 @@ function processRuntimeData() {
   // revert when script changes occurred, because it rebuilt runtime layers from
   // config data. The bug was fixed by ensuring useCode.tsx uses getCurrent()
   // to avoid stale closure issues when updating layers.
-  runtimeData.layers = configData.layers.map((layer, l) => {
+  runtimeData.layers = appState.layers.map((layer, l) => {
     const existingLayer = runtimeData.layers[l] || {};
     return {
       ...existingLayer,
