@@ -1,8 +1,8 @@
 import {
-  DefaultChatTransport,
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
+  DefaultChatTransport,
   generateId,
   stepCountIs,
   streamText,
@@ -26,6 +26,7 @@ function saveChat({ chatId, messages }: { chatId: string; messages: any[] }) {
   localStorage.setItem(`chat:${chatId}`, JSON.stringify(messages));
 }
 
+const callCounts = 0;
 /**
  * Custom transport for the AI assistant that uses localStorage to persist chat messages.
  * It allows for loading previous messages and appending new messages to the chat.
@@ -37,6 +38,9 @@ function saveChat({ chatId, messages }: { chatId: string; messages: any[] }) {
  */
 export const customTransport = new DefaultChatTransport({
   fetch: async (...args: any[]) => {
+    if (callCounts > 5) {
+      throw new Error("Rate limit exceeded");
+    }
     const body = JSON.parse(args[1].body);
     console.log("Custom transport fetch called with args:", args[0], body);
 
