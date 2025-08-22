@@ -7,3 +7,6 @@ src/**/*.editor-types.txt
 src/**/*.editor-types.ts
 dist
 .vercel
+
+*storybook.log
+storybook-static
