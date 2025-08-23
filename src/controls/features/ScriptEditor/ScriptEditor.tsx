@@ -233,6 +233,20 @@ export function ScriptEditor({
     };
   }, []);
 
+  const onFinishResize = useCallback(() => {
+    const domNode = editorRef.current?.getDomNode();
+    if (!domNode) return;
+    const guard = domNode.querySelector<HTMLDivElement>(".overflow-guard")!;
+    const parent = domNode.parentNode as HTMLElement;
+    domNode.style.height = "";
+    guard.style.height = "";
+    requestAnimationFrame(() => {
+      const scrollHeight = parent.scrollHeight;
+      domNode.style.height = `${scrollHeight}px`;
+      guard.style.height = `${scrollHeight}px`;
+    });
+  }, []);
+
   if (!isMonacoReady) {
     return (
       <div className={styles.root}>
@@ -293,7 +307,7 @@ export function ScriptEditor({
                 <div className={styles.editorAIWrapper}>
                   {isEditorReady ? (
                     <AIAssistant
-                      editor={editorRef.current!}
+                      onFinishResize={onFinishResize}
                       role={role}
                       type={type}
                       layerType={layerType}

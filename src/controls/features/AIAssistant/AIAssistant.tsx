@@ -10,7 +10,6 @@ import {
   lastAssistantMessageIsCompleteWithToolCalls,
 } from "ai";
 import { CameraIcon, FileIcon, KeyIcon, SendIcon } from "lucide-react";
-import type * as _monaco from "monaco-editor";
 import {
   type FormEventHandler,
   useCallback,
@@ -46,14 +45,14 @@ function loadMessages(id: string): VFMessage[] {
 }
 
 export function AIAssistant({
-  editor,
   role,
   type,
   layerType,
   id,
+  onFinishResize,
 }: Partial<ScriptInfo> & {
-  editor: _monaco.editor.IStandaloneCodeEditor;
   layerType?: LayerConfig["type"] | null;
+  onFinishResize?: () => void;
 }) {
   const initialMessagesRef = useRef<VFMessage[]>(loadMessages(id || "worker"));
   const [{ code: setupScript }, setSetupScript] = useCode(
@@ -168,22 +167,9 @@ export function AIAssistant({
     });
   }
 
-  const finishResize = useCallback(() => {
-    const domNode = editor.getDomNode()!;
-    const guard = domNode.querySelector<HTMLDivElement>(".overflow-guard")!;
-    const parent = domNode.parentNode as HTMLElement;
-    domNode.style.height = "";
-    guard.style.height = "";
-    requestAnimationFrame(() => {
-      const scrollHeight = parent.scrollHeight;
-      domNode.style.height = `${scrollHeight}px`;
-      guard.style.height = `${scrollHeight}px`;
-    });
-  }, [editor]);
-
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    finishResize();
+    onFinishResize?.();
 
     messagesRef.current?.scrollTo({
       top: messagesRef.current.scrollHeight,
@@ -199,9 +185,9 @@ export function AIAssistant({
       textarea.style.height = `${textarea.scrollHeight}px`;
 
       // Trigger Monaco editor layout adjustment
-      finishResize();
+      onFinishResize?.();
     }
-  }, [finishResize]);
+  }, [onFinishResize]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -210,7 +196,7 @@ export function AIAssistant({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    finishResize();
+    onFinishResize?.();
     setShowCredentialsForm(!hasCredentials());
 
     const resizeObserver = new ResizeObserver(() => {

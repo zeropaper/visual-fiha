@@ -1,28 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import type * as monaco from "monaco-editor";
 import { withVisualFihaContexts } from "../../../../.storybook/decorators";
 import { AIAssistant } from "./AIAssistant";
-
-// Mock Monaco editor for Storybook
-const mockEditor = {
-  getValue: () => "// Mock editor content",
-  setValue: () => {},
-  getModel: () => ({
-    getLanguageId: () => "typescript",
-  }),
-  onDidChangeModelContent: () => ({ dispose: () => {} }),
-  addCommand: () => {},
-  trigger: () => {},
-  focus: () => {},
-  layout: () => {},
-  getDomNode: () => {
-    const node = document.createElement("div");
-    const guard = document.createElement("div");
-    guard.classList.add("overflow-guard");
-    node.appendChild(guard);
-    return node;
-  },
-} as unknown as monaco.editor.IStandaloneCodeEditor;
 
 const meta: Meta<typeof AIAssistant> = {
   title: "Features/AIAssistant/AIAssistant",
@@ -38,10 +16,6 @@ const meta: Meta<typeof AIAssistant> = {
   },
   tags: ["autodocs"],
   argTypes: {
-    editor: {
-      control: false,
-      description: "Monaco editor instance",
-    },
     role: {
       control: { type: "select" },
       options: ["setup", "animation"],
@@ -70,7 +44,6 @@ type Story = StoryObj<typeof meta>;
 
 export const WorkerSetupScript: Story = {
   args: {
-    editor: mockEditor,
     role: "setup",
     type: "worker",
     id: "worker",
@@ -80,7 +53,6 @@ export const WorkerSetupScript: Story = {
 
 export const WorkerAnimationScript: Story = {
   args: {
-    editor: mockEditor,
     role: "animation",
     type: "worker",
     id: "worker",
@@ -90,7 +62,6 @@ export const WorkerAnimationScript: Story = {
 
 export const CanvasLayerSetup: Story = {
   args: {
-    editor: mockEditor,
     role: "setup",
     type: "layer",
     id: "canvas-layer-1",
@@ -100,7 +71,6 @@ export const CanvasLayerSetup: Story = {
 
 export const CanvasLayerAnimation: Story = {
   args: {
-    editor: mockEditor,
     role: "animation",
     type: "layer",
     id: "canvas-layer-1",
@@ -110,7 +80,6 @@ export const CanvasLayerAnimation: Story = {
 
 export const ThreeJSLayerSetup: Story = {
   args: {
-    editor: mockEditor,
     role: "setup",
     type: "layer",
     id: "threejs-layer-1",
@@ -120,7 +89,6 @@ export const ThreeJSLayerSetup: Story = {
 
 export const ThreeJSLayerAnimation: Story = {
   args: {
-    editor: mockEditor,
     role: "animation",
     type: "layer",
     id: "threejs-layer-1",
