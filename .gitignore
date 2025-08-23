@@ -10,3 +10,5 @@ dist
 
 *storybook.log
 storybook-static
+
+.playwright-mcp
