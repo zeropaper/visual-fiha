@@ -3,18 +3,18 @@ import inputsDocs from "@docs/inputs.md?raw";
 import knownBugsDocs from "@docs/known-bugs.md?raw";
 import layersDocs from "@docs/layers.md?raw";
 import plannedFeaturesDocs from "@docs/planned-features.md?raw";
-import workerDocs from "@docs/runtime-worker.md?raw";
 import threejsDocs from "@docs/threejs-api.md?raw";
 import topicsDocs from "@docs/topics.md?raw";
+import workerDocs from "@docs/worker-api.md?raw";
 import { AdvancedMarkdown } from "@ui/AdvancedMarkdown";
 import { useEffect, useState } from "react";
 import type { LayerConfig } from "../../../types";
 import styles from "./Help.module.css";
 
 export type DocTopic =
-  | `${LayerConfig["type"]}-api`
+  | `${LayerConfig["type"] | "worker"}-api`
   | "layers"
-  | "runtime-worker"
+  | "worker-api"
   | "planned-features"
   | "known-bugs"
   | "topics"
@@ -23,7 +23,7 @@ export type DocTopic =
 const docs: Record<DocTopic, string> = {
   "canvas-api": canvasDocs,
   "threejs-api": threejsDocs,
-  "runtime-worker": workerDocs,
+  "worker-api": workerDocs,
   "planned-features": plannedFeaturesDocs,
   "known-bugs": knownBugsDocs,
   inputs: inputsDocs,
@@ -51,7 +51,7 @@ export function Help({
 
   const [helpContent, setHelpContent] = useState<string>("");
   useEffect(() => {
-    setHelpContent(docs[docTopic || "runtime-worker"] || "");
+    setHelpContent(docs[docTopic || "worker-api"] || "");
   }, [docTopic]);
   const allTopicLinks =
     docTopic !== "topics"
@@ -59,41 +59,48 @@ export function Help({
       : "";
   return (
     <section className={className}>
-      <AdvancedMarkdown
-        a={(props) => {
-          const { href, children, ...rest } = props;
-          if (href?.[0] === "#") {
+      {docTopic && (
+        <AdvancedMarkdown
+          a={(props) => {
+            const { href, children, ...rest } = props;
+            if (href?.[0] === "#") {
+              return (
+                <a
+                  href={href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // If the href is a local link to another doc topic
+                    if (Object.keys(docs).includes(href.slice(1))) {
+                      setDocTopic(href.slice(1) as DocTopic);
+                    } else {
+                      console.warn(
+                        `No documentation found for topic: ${href.slice(1)}`,
+                      );
+                      setDocTopic("topics");
+                    }
+                  }}
+                  {...rest}
+                >
+                  {children}
+                </a>
+              );
+            }
+
             return (
               <a
                 href={href}
-                onClick={(e) => {
-                  e.preventDefault();
-                  // If the href is a local link to another doc topic
-                  if (Object.keys(docs).includes(href.slice(1))) {
-                    setDocTopic(href.slice(1) as DocTopic);
-                  } else {
-                    console.warn(
-                      `No documentation found for topic: ${href.slice(1)}`,
-                    );
-                    setDocTopic("topics");
-                  }
-                }}
+                target="_blank"
+                rel="noopener noreferrer"
                 {...rest}
               >
                 {children}
               </a>
             );
-          }
-
-          return (
-            <a href={href} target="_blank" rel="noopener noreferrer" {...rest}>
-              {children}
-            </a>
-          );
-        }}
-      >
-        {`${allTopicLinks}#${helpContent.replaceAll(/\n#/g, "\n##").trim()}`}
-      </AdvancedMarkdown>
+          }}
+        >
+          {`${allTopicLinks}#${helpContent.replaceAll(/\n#/g, "\n##").trim()}`}
+        </AdvancedMarkdown>
+      )}
     </section>
   );
 }

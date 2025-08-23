@@ -262,7 +262,7 @@ export function ScriptEditor({
         {id ? (
           <div className={styles.script}>
             <div>
-              <strong>Type</strong> {type === "layer" ? layerType : "worker"}
+              <strong>Type</strong> {type === "worker" ? "worker" : layerType}
             </div>
             <div>
               <Button onClick={onSwitchRole} title="Switch script role">

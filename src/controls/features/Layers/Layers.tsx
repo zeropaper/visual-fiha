@@ -8,6 +8,7 @@ import { Input } from "@ui/Input";
 import { Select } from "@ui/Select";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
+import type { ScriptInfo } from "src/types";
 import styles from "./Layers.module.css";
 
 function Layer({
@@ -16,11 +17,7 @@ function Layer({
   onChangeOpacity,
 }: {
   id: string;
-  setCurrentScript: (script: {
-    id: string;
-    role: "animation" | "setup";
-    type: "layer" | "worker";
-  }) => void;
+  setCurrentScript: (script: ScriptInfo) => void;
   onChangeOpacity: ChangeEventHandler<HTMLInputElement>;
   isCurrent?: boolean;
 }) {
@@ -75,7 +72,7 @@ function Layer({
             setCurrentScript({
               id: layer.id,
               role: "setup",
-              type: "layer",
+              type: layer.type,
             })
           }
         >
@@ -88,7 +85,7 @@ function Layer({
             setCurrentScript({
               id: layer.id,
               role: "animation",
-              type: "layer",
+              type: layer.type,
             })
           }
         >
@@ -99,19 +96,11 @@ function Layer({
   );
 }
 
-interface CurrentScript {
-  id: string;
-  role: "animation" | "setup";
-  type: "layer" | "worker";
-}
-
 export function Layers({
   setCurrentScript,
   id,
-  role,
-  type,
-}: CurrentScript & {
-  setCurrentScript: (script: CurrentScript) => void;
+}: ScriptInfo & {
+  setCurrentScript: (script: ScriptInfo) => void;
 }) {
   const {
     layers: { get: layers, set: setLayers },
@@ -200,6 +189,7 @@ export function Layers({
         </Select>
         <Button type="submit">Add Layer</Button>
       </form>
+      {/** biome-ignore lint/correctness/useUniqueElementIds: ignore */}
       <ul id="layers" className={styles.layers}>
         {layers.map((layer, l) => (
           <li
@@ -224,7 +214,7 @@ export function Layers({
               id={layer.id}
               setCurrentScript={setCurrentScript}
               onChangeOpacity={changeOpacity(layer.id)}
-              isCurrent={id === layer.id && type === "layer"}
+              isCurrent={id === layer.id}
             />
           </li>
         ))}

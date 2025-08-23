@@ -1,8 +1,8 @@
 import canvasDocs from "@docs/canvas-api.md?raw";
 import inputsDocs from "@docs/inputs.md?raw";
 import layersDocs from "@docs/layers.md?raw";
-import workerDocs from "@docs/runtime-worker.md?raw";
 import threejsDocs from "@docs/threejs-api.md?raw";
+import workerDocs from "@docs/worker-api.md?raw";
 import type { LayerConfig, ScriptRole, ScriptType } from "src/types";
 
 export function getSystemMessage({
@@ -14,8 +14,8 @@ export function getSystemMessage({
   type?: ScriptType;
   role?: ScriptRole;
 }) {
-  return type === "layer"
-    ? `You are editing the script of a ${layerType} layer ${role} script for a visual programming environment.
+  if (type !== "worker") {
+    return `You are editing the script of a ${layerType} layer ${role} script for a visual programming environment.
 
 First of all, you use the "getScript" tool to get the current setup and animation scripts.
 
@@ -27,8 +27,10 @@ Here's some documentation about the visual programming environment:
 
 #${layersDocs.replaceAll("\n#", "\n##")}
 
-#${(layerType === "canvas" ? canvasDocs : threejsDocs).replaceAll("\n#", "\n##")}`
-    : `You are editing the script of a worker script for a visual programming environment.
+#${(layerType === "canvas" ? canvasDocs : threejsDocs).replaceAll("\n#", "\n##")}`;
+  }
+
+  return `You are editing the script of a worker script for a visual programming environment.
 Here's some documentation:
 
 #${inputsDocs.replaceAll("\n#", "\n##")}

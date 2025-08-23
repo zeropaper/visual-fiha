@@ -1,14 +1,11 @@
 import { Button } from "@ui/Button";
+import type { ScriptInfo } from "src/types";
 import styles from "./WorkerScriptsSelector.module.css";
 
 export function WorkerScriptsSelector({
   setCurrentScript,
 }: {
-  setCurrentScript: (script: {
-    id: string;
-    role: "animation" | "setup";
-    type: "layer" | "worker";
-  }) => void;
+  setCurrentScript: (script: ScriptInfo) => void;
 }) {
   return (
     <div className={styles.buttons}>

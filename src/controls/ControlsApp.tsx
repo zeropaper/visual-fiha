@@ -46,8 +46,11 @@ export default function ControlsApp() {
 
   const [docTopic, setDocTopic] = useState<DocTopic | null>(null);
   const toggleHelp = useCallback(
-    () => setDocTopic((prev) => (prev ? null : "topics")),
-    [],
+    () =>
+      setDocTopic((prev) =>
+        prev || !currentScript.type ? null : `${currentScript.type}-api`,
+      ),
+    [currentScript.type],
   );
   const isMobile = useIsMobile();
 

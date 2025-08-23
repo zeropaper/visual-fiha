@@ -243,7 +243,7 @@ export interface RuntimeData {
   assets: AssetConfig[];
 }
 
-export type ScriptType = "worker" | "layer";
+export type ScriptType = "worker" | LayerConfig["type"];
 
 export type ScriptRole = "setup" | "animation";
 
