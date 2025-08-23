@@ -219,6 +219,8 @@ export function ScriptEditor({
         filePath,
       }),
     );
+
+    console.log("typeRoleLibs", typeRoleLibs);
     monacoInstance.languages.typescript.typescriptDefaults.setExtraLibs(
       typeRoleLibs,
     );

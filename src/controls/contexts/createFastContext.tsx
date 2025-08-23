@@ -45,7 +45,9 @@ export default function createFastContext<
     const set = useCallback((value: Partial<FastContext>) => {
       postRef.current?.("updateconfig", value);
       store.current = { ...store.current, ...value };
-      subscribers.current.forEach((callback) => callback());
+      subscribers.current.forEach((callback) => {
+        callback();
+      });
       onUpdate(store.current);
     }, []);
 

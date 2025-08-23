@@ -1,15 +1,18 @@
-import { useChat } from "@ai-sdk/react";
 import { useCode } from "@hooks/useCode";
 import { useTakeScreenshot } from "@hooks/useTakeScreenshot";
 import { Button } from "@ui/Button";
+import { Markdown } from "@ui/Markdown";
 import { Textarea } from "@ui/Textarea";
 import textareaStyles from "@ui/Textarea.module.css";
 import {
-  createIdGenerator,
-  type FileUIPart,
-  lastAssistantMessageIsCompleteWithToolCalls,
-} from "ai";
-import { CameraIcon, FileIcon, KeyIcon, SendIcon } from "lucide-react";
+  CameraIcon,
+  FileIcon,
+  KeyIcon,
+  SendIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
+import OpenAI from "openai";
 import {
   type FormEventHandler,
   useCallback,
@@ -19,42 +22,23 @@ import {
 } from "react";
 import type { LayerConfig, ScriptInfo } from "src/types";
 import styles from "./AIAssistant.module.css";
-import FileUIPartsList from "./AttachmentsList";
 import { AIAssistantCredentialsForm } from "./CredentialsForm";
-import { Messages } from "./Messages";
-import { scriptBaseSchema, setScriptSchema } from "./tools/scripts";
-import type { VFMessage } from "./types";
+import { getScript, setScript } from "./tools/scripts";
+import type { FileUIPart, VFMessage } from "./types";
 import { filesToFileUIParts } from "./utils/attachments";
-import { hasCredentials } from "./utils/providers";
-import { customTransport } from "./utils/transport";
-
-function loadMessages(id: string): VFMessage[] {
-  try {
-    const storedMessages = localStorage.getItem(`chat:${id}`);
-    if (!storedMessages) {
-      console.log("No stored messages found for id:", id);
-      return [];
-    }
-
-    const loaded = JSON.parse(storedMessages);
-    return loaded;
-  } catch (error) {
-    console.warn("Failed to load chat messages from localStorage:", error);
-    return [];
-  }
-}
+import { getSystemMessage } from "./utils/getSystemPrompt";
+import { getCredentials, hasCredentials } from "./utils/providers";
 
 export function AIAssistant({
   role,
   type,
-  layerType,
   id,
+  layerType,
   onFinishResize,
 }: Partial<ScriptInfo> & {
   layerType?: LayerConfig["type"] | null;
   onFinishResize?: () => void;
 }) {
-  const initialMessagesRef = useRef<VFMessage[]>(loadMessages(id || "worker"));
   const [{ code: setupScript }, setSetupScript] = useCode(
     "setup",
     type || "worker",
@@ -67,115 +51,361 @@ export function AIAssistant({
   );
   const takeScreenshot = useTakeScreenshot();
 
-  // const [initialMessages] = useState<VFMessage[]>(loadMessages(id || "worker"));
-  const { messages, sendMessage, addToolResult, error, status } = useChat({
-    id,
-    generateId: createIdGenerator({
-      prefix: "msgc",
-      size: 16,
-    }),
-    messages: [] as VFMessage[],
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    async onToolCall({ toolCall }) {
-      console.log("Handling tool call:", toolCall.toolName);
-      switch (toolCall.toolName) {
-        case "getScript":
-          const input = scriptBaseSchema.parse(toolCall.input);
-          if (input.role === "setup") {
-            addToolResult({
-              tool: "getScript",
-              toolCallId: toolCall.toolCallId,
-              output: setupScript,
-            });
-          } else if (input.role === "animation") {
-            addToolResult({
-              tool: "getScript",
-              toolCallId: toolCall.toolCallId,
-              output: animationScript,
-            });
-          } else {
-            addToolResult({
-              tool: "getScript",
-              toolCallId: toolCall.toolCallId,
-              output: `Unknown role ${input.role}`,
-            });
-          }
-          break;
-        case "setScript":
-          const inputs = setScriptSchema.parse(toolCall.input);
-          if (inputs.role === "setup") {
-            setSetupScript(inputs.code);
-          } else if (inputs.role === "animation") {
-            setAnimationScript(inputs.code);
-          } else {
-            addToolResult({
-              tool: "setScript",
-              toolCallId: toolCall.toolCallId,
-              output: `Unknown role ${inputs.role}`,
-            });
-          }
-          break;
-        case "takeScreenshot":
-          if (!id) {
-            addToolResult({
-              tool: "takeScreenshot",
-              toolCallId: toolCall.toolCallId,
-              output: "No layer ID provided for screenshot.",
-            });
-            return;
-          }
-          const screenshot = await takeScreenshot({ layerId: id });
-          console.log("Screenshot taken:", screenshot);
-          if (!screenshot) {
-            addToolResult({
-              tool: "takeScreenshot",
-              toolCallId: toolCall.toolCallId,
-              output: "Failed to take screenshot",
-            });
-            return;
-          }
-          addToolResult({
-            tool: "takeScreenshot",
-            toolCallId: toolCall.toolCallId,
-            output: screenshot,
-          });
+  // Get storage key for this layer
+  const layerId = id || "worker";
+  const storageKey = `vf-ai-messages-${layerId}`;
+
+  // Load messages from localStorage
+  const loadMessagesFromStorage = useCallback(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+    } catch (error) {
+      console.warn("Failed to load messages from localStorage:", error);
+    }
+    return [];
+  }, [storageKey]);
+
+  // Save messages to localStorage
+  const saveMessagesToStorage = useCallback(
+    (messages: VFMessage[]) => {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(messages));
+      } catch (error) {
+        console.warn("Failed to save messages to localStorage:", error);
       }
     },
-    transport: customTransport,
-  });
+    [storageKey],
+  );
+
+  // State for messages and UI
   const [input, setInput] = useState("");
-
+  const [messages, setMessages] = useState<VFMessage[]>(() =>
+    loadMessagesFromStorage(),
+  );
+  const [attachments, setAttachments] = useState<FileUIPart[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showCredentialsForm, setShowCredentialsForm] = useState(false);
+
+  // Refs
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const messagesRef = useRef<HTMLUListElement | null>(null);
+  const messagesRef = useRef<HTMLDivElement | null>(null);
   const filesInputRef = useRef<HTMLInputElement | null>(null);
-  const [attachments, setFileUIParts] = useState<FileUIPart[]>([]);
-  function addFiles(items: FileUIPart[]) {
-    setFileUIParts((prevFileUIParts) => {
-      if (prevFileUIParts) {
-        return [...prevFileUIParts, ...items];
-      }
-      return items;
-    });
-  }
-  function removeFile(url: string) {
-    setFileUIParts((prevFileUIParts) => {
-      if (prevFileUIParts) {
-        return prevFileUIParts.filter((f) => f.url !== url);
-      }
-      return [];
-    });
-  }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // Save messages to localStorage whenever they change
   useEffect(() => {
-    onFinishResize?.();
+    saveMessagesToStorage(messages);
+  }, [messages, saveMessagesToStorage]);
 
-    messagesRef.current?.scrollTo({
-      top: messagesRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages]);
+  // Clear conversation
+  const clearConversation = useCallback(() => {
+    if (
+      confirm(
+        "Are you sure you want to clear the conversation history? This action cannot be undone.",
+      )
+    ) {
+      setMessages([]);
+      localStorage.removeItem(storageKey);
+    }
+  }, [storageKey]);
+
+  // Tool functions
+  const getScriptTool = getScript({ setupScript, animationScript });
+  const setScriptTool = setScript({
+    setAnimationScript,
+    setSetupScript,
+    getSetupScript: () => setupScript,
+    getAnimationScript: () => animationScript,
+    type: type || "worker",
+    id: id || "worker",
+    role: role || "setup",
+  });
+
+  const takeScreenshotTool = useCallback(
+    async ({ layerId }: { layerId: string }) => {
+      if (!layerId && id) {
+        return await takeScreenshot({ layerId: id });
+      }
+      return await takeScreenshot({ layerId });
+    },
+    [takeScreenshot, id],
+  );
+
+  // AI submission logic
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!input.trim() && attachments.length === 0) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const credentials = getCredentials();
+        if (!credentials.openai) {
+          throw new Error(
+            "OpenAI API key not found. Please set your credentials.",
+          );
+        }
+
+        const client = new OpenAI({
+          apiKey: credentials.openai,
+          dangerouslyAllowBrowser: true,
+        });
+
+        // Build message content
+        const messageContent: Array<
+          | { type: "text"; text: string }
+          | { type: "image_url"; image_url: { url: string } }
+        > = [];
+
+        if (input.trim()) {
+          messageContent.push({ type: "text", text: input.trim() });
+        }
+
+        // Add image attachments
+        attachments.forEach((attachment) => {
+          if (attachment.mediaType.startsWith("image/")) {
+            messageContent.push({
+              type: "image_url",
+              image_url: { url: attachment.url },
+            });
+          }
+        });
+
+        const userMessage: VFMessage = {
+          role: "user",
+          content: messageContent,
+        };
+
+        const newMessages = [...messages, userMessage];
+        setMessages(newMessages);
+
+        // Define available tools
+        const tools = [
+          {
+            type: "function" as const,
+            function: {
+              name: "getScript",
+              description: "Get the current setup or animation script code",
+              parameters: {
+                type: "object",
+                properties: {
+                  role: {
+                    type: "string",
+                    enum: ["setup", "animation"],
+                    description: "The role of the script to get",
+                  },
+                },
+                required: ["role"],
+              },
+            },
+          },
+          {
+            type: "function" as const,
+            function: {
+              name: "setScript",
+              description: "Set the setup or animation script code",
+              parameters: {
+                type: "object",
+                properties: {
+                  role: {
+                    type: "string",
+                    enum: ["setup", "animation"],
+                    description: "The role of the script to set",
+                  },
+                  code: {
+                    type: "string",
+                    description: "The new script code",
+                  },
+                },
+                required: ["role", "code"],
+              },
+            },
+          },
+          {
+            type: "function" as const,
+            function: {
+              name: "takeScreenshot",
+              description: "Take a screenshot of the current layer",
+              parameters: {
+                type: "object",
+                properties: {
+                  layerId: {
+                    type: "string",
+                    description: "The ID of the layer to screenshot",
+                  },
+                },
+                required: ["layerId"],
+              },
+            },
+          },
+        ];
+
+        // Send to OpenAI
+        const systemMessage = {
+          role: "system" as const,
+          content: getSystemMessage({
+            layerType,
+            type: type || "worker",
+            role: role || "setup",
+          }),
+        };
+
+        const response = await client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [systemMessage, ...newMessages],
+          tools,
+          tool_choice: "auto",
+        });
+
+        const assistantMessage = response.choices[0]?.message;
+        if (!assistantMessage) {
+          throw new Error("No response from OpenAI");
+        }
+
+        // Handle conversation with potential multiple tool call rounds
+        let currentMessages = [...newMessages];
+        let currentResponse = response;
+        const maxRounds = 5; // Prevent infinite loops
+        let roundCount = 0;
+
+        while (roundCount < maxRounds) {
+          const assistantMessage = currentResponse.choices[0]?.message;
+          if (!assistantMessage) {
+            throw new Error("No response from OpenAI");
+          }
+
+          // Check if there are tool calls to process
+          if (
+            assistantMessage.tool_calls &&
+            assistantMessage.tool_calls.length > 0
+          ) {
+            const toolResults: Array<{
+              tool_call_id: string;
+              content: string;
+            }> = [];
+
+            // Process all tool calls in this response
+            for (const toolCall of assistantMessage.tool_calls) {
+              try {
+                let result: any;
+                if (toolCall.type === "function") {
+                  const args = JSON.parse(toolCall.function.arguments);
+
+                  switch (toolCall.function.name) {
+                    case "getScript":
+                      result = await getScriptTool(args);
+                      break;
+                    case "setScript":
+                      result = await setScriptTool(args);
+                      break;
+                    case "takeScreenshot":
+                      result = await takeScreenshotTool(args);
+                      break;
+                    default:
+                      result = `Unknown function: ${toolCall.function.name}`;
+                  }
+                }
+
+                toolResults.push({
+                  tool_call_id: toolCall.id,
+                  content:
+                    typeof result === "string"
+                      ? result
+                      : JSON.stringify(result),
+                });
+              } catch (error) {
+                toolResults.push({
+                  tool_call_id: toolCall.id,
+                  content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                });
+              }
+            }
+
+            // Add assistant message with tool calls
+            const assistantMessageWithTools: VFMessage = {
+              role: "assistant",
+              content: assistantMessage.content || "",
+              tool_calls: assistantMessage.tool_calls,
+            };
+
+            const toolMessages: VFMessage[] = toolResults.map((result) => ({
+              role: "tool",
+              content: result.content,
+              tool_call_id: result.tool_call_id,
+            }));
+
+            // Update current messages and UI
+            currentMessages = [
+              ...currentMessages,
+              assistantMessageWithTools,
+              ...toolMessages,
+            ];
+            setMessages(currentMessages);
+
+            // Get next response with tool results
+            currentResponse = await client.chat.completions.create({
+              model: "gpt-4o",
+              messages: [systemMessage, ...currentMessages],
+              tools,
+              tool_choice: "auto",
+            });
+
+            roundCount++;
+          } else {
+            // No more tool calls, add final response and exit loop
+            const finalAssistantMessage: VFMessage = {
+              role: "assistant",
+              content:
+                assistantMessage.content ||
+                "I've completed the requested changes.",
+            };
+            setMessages([...currentMessages, finalAssistantMessage]);
+            break;
+          }
+        }
+
+        if (roundCount >= maxRounds) {
+          console.warn(
+            "Maximum tool call rounds reached, stopping conversation",
+          );
+        }
+
+        // Clear input and attachments
+        setInput("");
+        setAttachments([]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [
+      input,
+      attachments,
+      messages,
+      getScriptTool,
+      setScriptTool,
+      takeScreenshotTool,
+      type,
+      role,
+      layerType,
+    ],
+  );
+
+  // Helper functions for file handling
+  const addFiles = useCallback((newFiles: FileUIPart[]) => {
+    setAttachments((prev) => [...prev, ...newFiles]);
+  }, []);
+
+  const removeFile = useCallback((index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  }, []);
 
   const handleInputResize = useCallback(() => {
     const textarea = textareaRef.current;
@@ -189,12 +419,12 @@ export function AIAssistant({
     }
   }, [onFinishResize]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: false positive
   useEffect(() => {
     handleInputResize();
-  }, [input, handleInputResize]);
+  }, [input, messages, handleInputResize]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: false positive
   useEffect(() => {
     onFinishResize?.();
     setShowCredentialsForm(!hasCredentials());
@@ -210,48 +440,61 @@ export function AIAssistant({
     };
   }, []);
 
-  const handleSubmitWithFileUIParts = useCallback<
-    FormEventHandler<HTMLFormElement>
-  >(
-    (evt) => {
-      evt.preventDefault();
-      if (input.trim()) {
-        sendMessage({
-          text: input,
-          files: attachments,
-          metadata: {
-            id,
-            type,
-            role,
-            layerType,
-          },
-        });
-        setInput("");
-      }
-    },
-    [attachments, input, sendMessage, id, layerType, type, role],
-  );
-
-  const disabled = ["streaming", "submitted"].includes(status);
-
   if (showCredentialsForm) {
-    return <AIAssistantCredentialsForm />;
+    return (
+      <AIAssistantCredentialsForm
+        onClose={() => setShowCredentialsForm(false)}
+      />
+    );
   }
 
   return (
     <form
       className={["ai-assistant", styles.form].join(" ")}
-      onSubmit={handleSubmitWithFileUIParts}
+      onSubmit={handleSubmit}
     >
       {messages?.length ? (
-        <Messages
-          messages={messages}
-          addToolResult={addToolResult}
-          ref={messagesRef}
-        />
+        <div className={styles.messagesContainer} ref={messagesRef}>
+          {messages.map((message, index) => (
+            <div
+              key={`msg-${
+                // biome-ignore lint/suspicious/noArrayIndexKey: message index for stable order
+                index
+              }`}
+              className={`${styles.message} ${styles[`message--${message.role}`]}`}
+            >
+              <div className={styles.messageContent}>
+                {typeof message.content === "string"
+                  ? message.content
+                  : Array.isArray(message.content)
+                    ? message.content.map((part, i) => (
+                        <span
+                          key={`part-${
+                            // biome-ignore lint/suspicious/noArrayIndexKey: content part index for stable order
+                            i
+                          }`}
+                          className={styles.messagePart}
+                        >
+                          {part.type === "text" && (
+                            <Markdown>{part.text}</Markdown>
+                          )}
+                          {part.type === "image_url" && (
+                            <img
+                              src={part.image_url.url}
+                              alt="Attachment"
+                              className={styles.messageImage}
+                            />
+                          )}
+                        </span>
+                      ))
+                    : JSON.stringify(message.content)}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : null}
-      {error && <div className={styles.error}>{error.message}</div>}
-      {status && <div className={styles.status}>{status}</div>}
+      {error && <div className={styles.error}>{error}</div>}
+      {isLoading && <div className={styles.status}>Processing...</div>}
       <div className={styles.main}>
         <div className={styles.inputs}>
           <div className={styles.context}>
@@ -266,6 +509,8 @@ export function AIAssistant({
               className={styles.filesInput}
               type="file"
               name="files"
+              multiple
+              accept="image/*"
               onChange={(event) => {
                 if (event.target.files) {
                   filesToFileUIParts(Array.from(event.target.files)).then(
@@ -296,12 +541,34 @@ export function AIAssistant({
               }}
               variant="icon"
               title="Take a screenshot of the layer"
-              disabled={disabled || !id}
+              disabled={isLoading || !id}
             >
               <CameraIcon />
             </Button>
 
-            <FileUIPartsList attachments={attachments} onRemove={removeFile} />
+            {attachments.length > 0 && (
+              <div className={styles.attachments}>
+                {attachments.map((attachment, index) => (
+                  <div
+                    key={`attachment-${
+                      // biome-ignore lint/suspicious/noArrayIndexKey: attachment index for stable order
+                      index
+                    }`}
+                    className={styles.context}
+                  >
+                    <span>{attachment.filename}</span>
+                    <Button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      variant="icon"
+                      title="Remove attachment"
+                    >
+                      <XIcon />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <Textarea
             className={[styles.textarea, textareaStyles.textarea].join(" ")}
@@ -313,7 +580,7 @@ export function AIAssistant({
             value={input}
             name="input"
             placeholder="Draw some..."
-            disabled={disabled}
+            // disabled={disabled}
             onKeyDown={(e) => {
               if (e.ctrlKey && e.key === "Enter") {
                 e.preventDefault();
@@ -324,13 +591,13 @@ export function AIAssistant({
         </div>
         <div className={styles.actions}>
           <Button
-            type="submit"
-            onClick={() => {}}
-            title="Send code to AI assistant"
+            type="button"
+            onClick={clearConversation}
+            title="Clear conversation history"
             variant="icon"
-            disabled={disabled || !input.trim()}
+            disabled={messages.length === 0}
           >
-            <SendIcon />
+            <Trash2Icon />
           </Button>
 
           <Button
@@ -342,6 +609,15 @@ export function AIAssistant({
             variant="icon"
           >
             <KeyIcon />
+          </Button>
+
+          <Button
+            type="submit"
+            title="Send code to AI assistant"
+            variant="icon"
+            disabled={isLoading || (!input.trim() && attachments.length === 0)}
+          >
+            <SendIcon />
           </Button>
         </div>
       </div>

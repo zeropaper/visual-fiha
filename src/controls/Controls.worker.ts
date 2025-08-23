@@ -1,4 +1,3 @@
-// Web Worker for transpiling TypeScript to JavaScript in-browser
 /// <reference lib="webworker" />
 
 // NOTE: path aliases like `@utils/tsTranspile.worker.ts` are not supported in workers.

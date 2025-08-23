@@ -1,6 +1,10 @@
 .form {
   border-top: 1px solid var(--vscode-editorWidget-border);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
 }
 
 .resizeHandle {
@@ -60,7 +64,7 @@
 
 .main {
   border-top: 1px solid var(--vscode-editorWidget-border);
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-sm) 0;
   display: flex;
   gap: var(--spacing-md);
   align-items: stretch;
@@ -100,4 +104,162 @@
   background-color: var(--vscode-infoBackground);
   padding: var(--spacing-xs) var(--spacing-md);
   border-radius: var(--spacing-sm);
+}
+
+/* Message Styling */
+.messagesContainer {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--vscode-editor-background);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Empty state styling */
+.messagesContainer:empty::before {
+  content: "No conversation yet. Start by asking a question or making a request.";
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+  text-align: center;
+  padding: var(--spacing-lg);
+  display: block;
+}
+
+/* Custom scrollbar styling */
+.messagesContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messagesContainer::-webkit-scrollbar-track {
+  background: var(--vscode-editor-background);
+}
+
+.messagesContainer::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 4px;
+}
+
+.messagesContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+.messagesContainer::-webkit-scrollbar-thumb:active {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--spacing-sm);
+  border-left: 3px solid transparent;
+  background-color: var(--vscode-editorWidget-background);
+  transition: all 0.2s ease;
+  position: relative;
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message:hover {
+  background-color: var(--vscode-editorHoverWidget-background);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.message + .message {
+  margin-top: var(--spacing-sm);
+}
+
+.message--user {
+  border-left-color: var(--vscode-textLink-foreground);
+  background-color: rgba(55, 148, 255, 0.1);
+}
+
+.message--assistant {
+  border-left-color: var(--success-background);
+  background-color: rgba(40, 167, 69, 0.1);
+}
+
+.message--system {
+  border-left-color: var(--vscode-editorWarning-foreground);
+  background-color: rgba(204, 167, 0, 0.1);
+}
+
+.message--tool {
+  border-left-color: var(--vscode-editorInfo-foreground);
+  background-color: rgba(55, 148, 255, 0.05);
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 0.9em;
+}
+
+.message--function {
+  border-left-color: var(--vscode-editorHint-foreground);
+  background-color: rgba(238, 238, 238, 0.05);
+}
+
+.message--developer {
+  border-left-color: var(--vscode-editorError-foreground);
+  background-color: rgba(241, 76, 76, 0.1);
+}
+
+.messageContent {
+  color: var(--vscode-editor-foreground);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Special styling for tool responses */
+.message--tool .messageContent {
+  background-color: var(--vscode-textCodeBlock-background);
+  padding: var(--spacing-sm);
+  border-radius: var(--spacing-xs);
+  border: 1px solid var(--vscode-editorWidget-border);
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 0.85em;
+  overflow-x: auto;
+}
+
+/* Code-like formatting for long tool responses */
+.message--tool .messageContent::-webkit-scrollbar {
+  height: 6px;
+}
+
+.message--tool .messageContent::-webkit-scrollbar-track {
+  background: var(--vscode-textCodeBlock-background);
+}
+
+.message--tool .messageContent::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 3px;
+}
+
+.messagePart {
+  display: inline;
+}
+
+.messageImage {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: var(--spacing-sm);
+  border: 1px solid var(--vscode-editorWidget-border);
+  margin: var(--spacing-xs) 0;
+  display: block;
+}
+
+.message:has(.messageContent:empty) {
+  display: none;
 }
