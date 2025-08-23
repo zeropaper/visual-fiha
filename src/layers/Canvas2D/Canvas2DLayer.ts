@@ -1,5 +1,5 @@
 import * as assetTools from "../../utils/assetTools";
-import * as mathTools from "../../utils/mathTools";
+import mathTools from "../../utils/mathTools";
 import miscTools from "../../utils/miscTools";
 import Layer, { type LayerOptions } from "../Layer";
 import canvasTools, { type CTX } from "./canvasTools";

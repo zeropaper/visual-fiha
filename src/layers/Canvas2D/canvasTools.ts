@@ -1,4 +1,4 @@
-import { PI2, arrayAvg, arrayMax, arrayMin, sDiv } from "../../utils/mathTools";
+import mathTools from "../../utils/mathTools";
 import { noop, repeat } from "../../utils/miscTools";
 
 interface OffscreenCanvas extends HTMLCanvasElement {}
@@ -17,15 +17,56 @@ interface ImageCopyCoordinates {
 
 export interface CTX extends OffscreenCanvasRenderingContext2D {}
 
-export type width = (divider?: number) => number;
-export type height = (divider?: number) => number;
+/**
+ * Gets the width of the canvas
+ * @param divider - optional divider to scale the width
+ * @returns the width of the canvas
+ */
+type width = (divider?: number) => number;
+/**
+ * Gets the height of the canvas
+ * @param divider - optional divider to scale the height
+ * @returns the height of the canvas
+ */
+type height = (divider?: number) => number;
 
-export type vmin = (multiplier: number) => number;
-export type vmax = (multiplier: number) => number;
-export type vh = (multiplier: number) => number;
-export type vw = (multiplier: number) => number;
+/**
+ * Gets X percents of the minimum viewport height
+ * @param multiplier - multiplier to scale the height
+ * @returns the minimum viewport height
+ */
+type vmin = (multiplier: number) => number;
+/**
+ * Gets X percents of the maximum viewport height
+ * @param multiplier - multiplier to scale the height
+ * @returns the maximum viewport height
+ */
+type vmax = (multiplier: number) => number;
+/**
+ * Gets X percents of the viewport height
+ * @param multiplier - multiplier to scale the height
+ * @returns the viewport height
+ */
+type vh = (multiplier: number) => number;
+/**
+ * Gets X percents of the viewport width
+ * @param multiplier - multiplier to scale the width
+ * @returns the viewport width
+ */
+type vw = (multiplier: number) => number;
 
-export type textLines = (
+/**
+ * Draws text on the canvas
+ * @param lines - array of text lines to draw
+ * @param opts - options
+ * @param opts.x - x position to draw the text
+ * @param opts.y - y position to draw the text
+ * @param opts.lineHeight - line height of the text
+ * @param opts.position - text position (e.g. "left", "center", "right")
+ * @param opts.fill - fill color of the text
+ * @param opts.stroke - stroke color of the text
+ */
+type textLines = (
   lines: string[],
   opts?: {
     x?: number;
@@ -37,17 +78,34 @@ export type textLines = (
   },
 ) => void;
 
-export type mirror = (
+/**
+ * Mirrors the canvas content
+ * @param distance - distance to mirror
+ * @param axis - axis to mirror across
+ * @param img - image to mirror
+ */
+type mirror = (
   distance?: number,
   axis?: "x" | "y",
   img?: OffscreenCanvas,
 ) => void;
 
-export type mediaType = (url: string) => "image" | "video";
+type mediaType = (url: string) => "image" | "video";
 
-export type clear = () => void;
+type clear = () => void;
 
-export type copy = (
+/**
+ * Copies a portion of the canvas
+ * @param sx - source x position
+ * @param sy - source y position
+ * @param sw - source width
+ * @param sh - source height
+ * @param dx - destination x position
+ * @param dy - destination y position
+ * @param dw - destination width
+ * @param dh - destination height
+ */
+type copy = (
   sx?: number,
   sy?: number,
   sw?: number,
@@ -68,17 +126,56 @@ type PasteOperation = (
   opts?: ImageCopyCoordinates,
 ) => void;
 
-export interface pasteImage extends PasteOperation {}
+/**
+ * Pastes an image onto the canvas
+ * @param src - source image
+ * @param opts - options
+ * @param opts.sx - source x position
+ * @param opts.sy - source y position
+ * @param opts.sw - source width
+ * @param opts.sh - source height
+ * @param opts.dx - destination x position
+ * @param opts.dy - destination y position
+ * @param opts.dw - destination width
+ * @param opts.dh - destination height
+ */
+interface pasteImage extends PasteOperation {}
 
-export interface pasteContain extends PasteOperation {}
+/**
+ * Pastes an image onto the canvas while containing it within the specified dimensions
+ * @param src - source image
+ * @param opts - options
+ * @param opts.sx - source x position
+ * @param opts.sy - source y position
+ * @param opts.sw - source width
+ * @param opts.sh - source height
+ * @param opts.dx - destination x position
+ * @param opts.dy - destination y position
+ * @param opts.dw - destination width
+ * @param opts.dh - destination height
+ */
+interface pasteContain extends PasteOperation {}
 
-export interface pasteCover extends PasteOperation {}
+/**
+ * Pastes an image onto the canvas while covering the specified dimensions
+ * @param src - source image
+ * @param opts - options
+ * @param opts.sx - source x position
+ * @param opts.sy - source y position
+ * @param opts.sw - source width
+ * @param opts.sh - source height
+ * @param opts.dx - destination x position
+ * @param opts.dy - destination y position
+ * @param opts.dw - destination width
+ * @param opts.dh - destination height
+ */
+interface pasteCover extends PasteOperation {}
 
-export type fontSize = (size: number, unit?: (v: number) => number) => void;
-export type fontFamily = (familyName: string) => void;
-export type fontWeight = (weight: string | number) => void;
+type fontSize = (size: number, unit?: (v: number) => number) => void;
+type fontFamily = (familyName: string) => void;
+type fontWeight = (weight: string | number) => void;
 
-export type plot = (opts?: {
+type plot = (opts?: {
   data?: any[];
   min?: number;
   max?: number;
@@ -105,8 +202,14 @@ export type plot = (opts?: {
 
 /**
  * Draws a circle
+ * @param opts - options
+ * @param opts.x - x position
+ * @param opts.y - y position
+ * @param opts.radius - radius
+ * @param opts.stroke - stroke color
+ * @param opts.fill - fill color
  */
-export type circle = (opts?: {
+type circle = (opts?: {
   x?: number;
   y?: number;
   radius?: number;
@@ -114,7 +217,15 @@ export type circle = (opts?: {
   fill?: string;
 }) => void;
 
-export type polygon = (opts?: {
+/**
+ * Draws a polygon
+ * @param opts - options
+ * @param opts.x - x position
+ * @param opts.y - y position
+ * @param opts.tilt - tilt angle
+ * @param opts.sides - number of sides
+ */
+type polygon = (opts?: {
   x?: number;
   y?: number;
   tilt?: number;
@@ -124,13 +235,25 @@ export type polygon = (opts?: {
   fill?: string;
 }) => void;
 
-export type grid = (
+/**
+ * Call a function for each cell in a grid
+ * @param rows - number of rows
+ * @param cols - number of columns
+ * @param func - function to call for each cell
+ */
+type grid = (
   rows: number,
   cols: number,
   func: (...args: any[]) => void,
 ) => void;
 
-export type centeredGrid = (
+/**
+ * Call a function for each cell in a centered grid
+ * @param opts - options
+ * @param opts.cols - number of columns
+ * @param opts.rows - number of rows
+ */
+type centeredGrid = (
   opts: {
     cols?: number;
     rows?: number;
@@ -312,7 +435,7 @@ export default function canvasTools(ctx: CTX) {
     dw = canvas.width,
     dh = canvas.height,
   ) => {
-    // @ts-ignore
+    // @ts-expect-error
     const ofc = new OffscreenCanvas(
       canvas.width,
       canvas.height,
@@ -408,8 +531,8 @@ export default function canvasTools(ctx: CTX) {
 
   const plot: plot = ({
     data = [],
-    min = arrayMin(data),
-    max = arrayMax(data),
+    min = mathTools.arrayMin(data),
+    max = mathTools.arrayMax(data),
     samples = data.length,
     floor = 0,
     top = 0,
@@ -424,8 +547,8 @@ export default function canvasTools(ctx: CTX) {
     const pWidth = right - left;
     const pHeight = bottom - top;
     const diff = Math.abs(min - max);
-    const w = sDiv(pWidth, samples - 1);
-    const h = sDiv(pHeight, diff);
+    const w = mathTools.sDiv(pWidth, samples - 1);
+    const h = mathTools.sDiv(pHeight, diff);
 
     if (color) {
       ctx.strokeStyle = color;
@@ -536,7 +659,7 @@ export default function canvasTools(ctx: CTX) {
     if (fill) ctx.fillStyle = fill;
 
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, PI2);
+    ctx.arc(x, y, radius, 0, mathTools.PI2);
     ctx.closePath();
 
     if (stroke) ctx.stroke();
@@ -554,7 +677,7 @@ export default function canvasTools(ctx: CTX) {
   } = {}) => {
     let px: number;
     let py: number;
-    const a = PI2 * (1 / sides);
+    const a = mathTools.PI2 * (1 / sides);
     if (stroke) ctx.strokeStyle = stroke;
     if (fill) ctx.fillStyle = fill;
 
@@ -677,6 +800,7 @@ export default function canvasTools(ctx: CTX) {
         tools[key as keyof typeof tools] = prop.bind(ctx);
       } else if (!tools[key as keyof typeof tools]) {
         tools[key as keyof typeof tools] = (value = prop) => {
+          // biome-ignore lint/suspicious/noTsIgnore: false positive
           // @ts-ignore
           if (prop !== value) ctx[key] = value;
           return prop;
@@ -688,8 +812,6 @@ export default function canvasTools(ctx: CTX) {
 }
 
 declare global {
-  const ctx: OffscreenCanvasRenderingContext2D;
-  const canvas: OffscreenCanvas;
   const width: width;
   const height: height;
   const vw: vw;
@@ -744,7 +866,7 @@ declare global {
   const ellipse: CTXMethod<"ellipse">;
   const fillRect: CTXMethod<"fillRect">;
   const lineTo: CTXMethod<"lineTo">;
-  // // @ts-ignore
+  // // @ts-expect-error
   // const moveTo: CTXMethod<'moveTo'>;
   const quadraticCurveTo: CTXMethod<"quadraticCurveTo">;
   const rect: CTXMethod<"rect">;

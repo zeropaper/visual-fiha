@@ -12,7 +12,7 @@ import type { AppState, RuntimeData } from "../types";
 import type { ComActionHandlers } from "../utils/com";
 import { autoBind } from "../utils/com";
 import { makeRead } from "../utils/make-read";
-import * as mathTools from "../utils/mathTools";
+import mathTools from "../utils/mathTools";
 import type { ScriptableEventListener } from "../utils/Scriptable";
 import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
 import { isDisplayState } from "./isDisplayState";
@@ -64,7 +64,6 @@ let state: DisplayState = {
 };
 
 // Canvas and rendering context
-// @ts-ignore
 const canvas = new OffscreenCanvas(
   state.stage.width || 300,
   state.stage.height || 200,
@@ -322,7 +321,9 @@ const messageHandlers: ComActionHandlers = {
     };
     canvas.width = state.stage.width;
     canvas.height = state.stage.height;
-    state.layers?.forEach((l) => resizeLayer(l));
+    state.layers?.forEach((l) => {
+      resizeLayer(l);
+    });
 
     if (!state.control) {
       coreChannel.postMessage({

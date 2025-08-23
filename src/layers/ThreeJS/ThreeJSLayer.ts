@@ -33,7 +33,7 @@ import { TAARenderPass } from "three/addons/postprocessing/TAARenderPass.js";
 import { TexturePass } from "three/addons/postprocessing/TexturePass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
-import * as mathTools from "../../utils/mathTools";
+import mathTools from "../../utils/mathTools";
 import miscTools from "../../utils/miscTools";
 import Layer, { type LayerOptions } from "../Layer";
 

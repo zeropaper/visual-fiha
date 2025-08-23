@@ -135,49 +135,49 @@ export const merge = (...objs: Array<Record<string, any>>) => {
 };
 
 export const miscTools = {
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   rgba,
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   hsla,
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   repeat,
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   noop,
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   assetDataURI,
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   isFunction,
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   toggle,
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   inOut,
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   stepper,
-  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+  // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: false positive
   merge,
 };
 
 export default miscTools;
 
 declare global {
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const inOut: (typeof miscTools)["inOut"];
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const rgba: (typeof miscTools)["rgba"];
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const hsla: (typeof miscTools)["hsla"];
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const repeat: (typeof miscTools)["repeat"];
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const noop: (typeof miscTools)["noop"];
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const assetDataURI: (typeof miscTools)["assetDataURI"];
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const isFunction: (typeof miscTools)["isFunction"];
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const toggle: (typeof miscTools)["toggle"];
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const stepper: (typeof miscTools)["stepper"];
-  // biome-ignore lint/suspicious/noRedeclare: <explanation>
+  // biome-ignore lint/suspicious/noRedeclare: false positive
   const merge: (typeof miscTools)["merge"];
 }
