@@ -5,7 +5,7 @@ import {
 } from "@utils/com";
 import { useEffect, useRef } from "react";
 
-export function useTakeScreenshot() {
+export function useTakeLayerScreenshot() {
   const comRef = useRef<{
     post: ChannelPost;
     listener: ComMessageEventListener;
@@ -13,9 +13,9 @@ export function useTakeScreenshot() {
 
   useEffect(() => {
     const broadcastChannel = new BroadcastChannel("core");
-    const com = autoBind(broadcastChannel, "takeScreenshotFn", {
-      useTakeScreenshot: async (...args: any[]) => {
-        console.warn("useTakeScreenshot called with args:", args);
+    const com = autoBind(broadcastChannel, "takeLayerScreenshotFn", {
+      useTakeLayerScreenshot: async (...args: any[]) => {
+        console.warn("useTakeLayerScreenshot called with args:", args);
       },
     });
 
@@ -28,7 +28,7 @@ export function useTakeScreenshot() {
     };
   }, []);
 
-  return async function takeScreenshot({
+  return async function takeLayerScreenshot({
     layerId,
   }: {
     layerId: string;
@@ -39,7 +39,7 @@ export function useTakeScreenshot() {
 
     const { post } = comRef.current;
     const response = await post(
-      "takeScreenshot",
+      "takeLayerScreenshot",
       { layerId, displayName: "controls-display" },
       true,
     );

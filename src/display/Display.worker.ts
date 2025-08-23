@@ -201,7 +201,10 @@ async function getImageFromCanvas(cns: OffscreenCanvas) {
       resolve(reader.result as string);
     };
     reader.onerror = (error) => {
-      console.error("[display worker] takeScreenshot FileReader error:", error);
+      console.error(
+        "[display worker] takeLayerScreenshot FileReader error:",
+        error,
+      );
       reject(error);
     };
     reader.readAsDataURL(blob);
@@ -283,7 +286,7 @@ const broadcastChannelHandlers: ComActionHandlers = {
     processLayers(data.layers || []);
   },
 
-  takeScreenshot: (payload: { layerId: string; displayName: string }) => {
+  takeLayerScreenshot: (payload: { layerId: string; displayName: string }) => {
     if (!payload.displayName || payload.displayName !== workerName) {
       return;
     }
@@ -293,7 +296,7 @@ const broadcastChannelHandlers: ComActionHandlers = {
     const layer = findStateLayer(payload.layerId);
     if (!layer) {
       console.warn(
-        "[display worker] takeScreenshot: layer not found",
+        "[display worker] takeLayerScreenshot: layer not found",
         payload.layerId,
       );
       return;
