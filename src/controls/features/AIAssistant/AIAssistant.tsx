@@ -13,13 +13,7 @@ import {
   XIcon,
 } from "lucide-react";
 import OpenAI from "openai";
-import {
-  type FormEventHandler,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { LayerConfig, ScriptInfo } from "src/types";
 import styles from "./AIAssistant.module.css";
 import { AIAssistantCredentialsForm } from "./CredentialsForm";

@@ -220,14 +220,13 @@ export function ScriptEditor({
       }),
     );
 
-    console.log("typeRoleLibs", typeRoleLibs);
     monacoInstance.languages.typescript.typescriptDefaults.setExtraLibs(
       typeRoleLibs,
     );
   }, [role, layerType, isMonacoReady]);
 
   // Handle resize of the editor container
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
   useEffect(() => {
     window.addEventListener("resize", handleResize);
     return () => {
