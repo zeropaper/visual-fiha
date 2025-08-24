@@ -49,7 +49,6 @@ export function useAIConversation({
         const systemMessage = {
           role: "system" as const,
           content: getSystemMessage({
-            layerType: config.layerType,
             type: config.type || "worker",
             role: config.role || "setup",
           }),

@@ -50,6 +50,7 @@ export default class Display {
       const el = document.createElement("canvas");
       el.transferControlToOffscreen();
     } catch (e) {
+      console.error("OffscreenCanvas is not supported:", e);
       return false;
     }
     return true;

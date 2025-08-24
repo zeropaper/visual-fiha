@@ -41,7 +41,7 @@ export default function createFastContext<
 
     const subscribers = useRef(new Set<() => void>());
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+    // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
     const set = useCallback((value: Partial<FastContext>) => {
       postRef.current?.("updateconfig", value);
       store.current = { ...store.current, ...value };
@@ -64,7 +64,7 @@ export default function createFastContext<
       [],
     );
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+    // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
     useEffect(() => {
       workerRef.current = workerRef.current || new ControlsWorker();
       const worker = workerRef.current;

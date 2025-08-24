@@ -1,4 +1,4 @@
-import type { LayerConfig, ScriptInfo } from "src/types";
+import type { ScriptInfo } from "src/types";
 
 /**
  * AI Assistant configuration settings
@@ -28,6 +28,5 @@ export function getStorageKey(layerId: string): string {
  * Configuration for AI Assistant component props
  */
 export interface AIAssistantConfig extends Partial<ScriptInfo> {
-  layerType?: LayerConfig["type"] | null;
   onFinishResize?: () => void;
 }

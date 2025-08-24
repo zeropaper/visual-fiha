@@ -214,9 +214,9 @@ export function AudioSetupProvider({
       if (microphoneAudioRef.current) {
         try {
           microphoneAudioRef.current.source.disconnect();
-          microphoneAudioRef.current.stream
-            .getTracks()
-            .forEach((track) => track.stop());
+          microphoneAudioRef.current.stream.getTracks().forEach((track) => {
+            track.stop();
+          });
         } catch (err) {
           console.warn("Error cleaning up microphone audio:", err);
         }

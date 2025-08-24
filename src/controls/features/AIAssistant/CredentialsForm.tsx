@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/correctness/useUniqueElementIds: ignore */
 import { Button } from "@ui/Button";
 import { Input } from "@ui/Input";
 import styles from "./AIAssistant.module.css";

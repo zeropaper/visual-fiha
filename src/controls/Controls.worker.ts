@@ -12,7 +12,6 @@ import { autoBind } from "../utils/com";
 import { type TranspilePayload, tsTranspile } from "../utils/tsTranspile";
 
 const broadcastChannel = new BroadcastChannel("core");
-let refreshInterval: NodeJS.Timeout | null = null;
 const defaultBPM = 120;
 
 const defaultStageConfig = {
@@ -335,4 +334,4 @@ function broadcastRuntimeData() {
   });
 }
 
-refreshInterval = setInterval(broadcastRuntimeData, 16);
+setInterval(broadcastRuntimeData, 16);

@@ -134,7 +134,7 @@ export function useWriteInputValues() {
     inputValuesRef[path] = value;
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
   useEffect(() => {
     function update() {
       if (!post) {

@@ -26,11 +26,6 @@ const meta: Meta<typeof AIAssistant> = {
       options: ["worker", "layer"],
       description: "Script type",
     },
-    layerType: {
-      control: { type: "select" },
-      options: ["canvas", "threejs", null],
-      description: "Layer type for layer scripts",
-    },
     id: {
       control: { type: "text" },
       description: "Unique identifier for the script",
@@ -47,7 +42,6 @@ export const WorkerSetupScript: Story = {
     role: "setup",
     type: "worker",
     id: "worker",
-    layerType: null,
   },
 };
 
@@ -56,42 +50,37 @@ export const WorkerAnimationScript: Story = {
     role: "animation",
     type: "worker",
     id: "worker",
-    layerType: null,
   },
 };
 
 export const CanvasLayerSetup: Story = {
   args: {
     role: "setup",
-    type: "layer",
+    type: "canvas",
     id: "canvas-layer-1",
-    layerType: "canvas",
   },
 };
 
 export const CanvasLayerAnimation: Story = {
   args: {
     role: "animation",
-    type: "layer",
+    type: "canvas",
     id: "canvas-layer-1",
-    layerType: "canvas",
   },
 };
 
 export const ThreeJSLayerSetup: Story = {
   args: {
     role: "setup",
-    type: "layer",
+    type: "threejs",
     id: "threejs-layer-1",
-    layerType: "threejs",
   },
 };
 
 export const ThreeJSLayerAnimation: Story = {
   args: {
     role: "animation",
-    type: "layer",
+    type: "threejs",
     id: "threejs-layer-1",
-    layerType: "threejs",
   },
 };

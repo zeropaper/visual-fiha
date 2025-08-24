@@ -82,6 +82,7 @@ export function Assets() {
         </Button>
       )}
 
+      {/** biome-ignore lint/correctness/useUniqueElementIds: ignore */}
       <ul id="assets" className={styles.assets}>
         {assets
           .sort((a, b) => {
@@ -89,7 +90,7 @@ export function Assets() {
             if (a.id < b.id) return -1;
             return 0;
           })
-          .map((asset, l) => {
+          .map((asset) => {
             switch (asset.source) {
               case "local":
                 return (
