@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import styles from "./CanvasVisualizer.module.css";
 
 const minColor = "#8ff"; // cyan for min
-const maxColor = "#f8f"; // magenta for max
+const maxColor = "rgba(250, 186, 250, 1)"; // magenta for max
 const averageColor = "#ff8"; // yellow for average
 const medianColor = "#fff"; // white for median
 
@@ -78,17 +78,23 @@ export function drawInfo(
   const canvas = ctx.canvas;
   if (!canvas) return;
   ctx.save();
-  ctx.font = "12px monospace";
+  ctx.font = "16px monospace";
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   const b = canvas.height * 0.5;
   ctx.fillStyle = averageColor;
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 3;
+  ctx.strokeText(`Avg: ${average.toFixed(2)}`, 10, -25 + b);
   ctx.fillText(`Avg: ${average.toFixed(2)}`, 10, -25 + b);
   ctx.fillStyle = medianColor;
+  ctx.strokeText(`Med: ${median.toFixed(2)}`, 10, -10 + b);
   ctx.fillText(`Med: ${median.toFixed(2)}`, 10, -10 + b);
   ctx.fillStyle = minColor;
+  ctx.strokeText(`Min: ${min.toFixed(2)}`, 10, 10 + b);
   ctx.fillText(`Min: ${min.toFixed(2)}`, 10, 10 + b);
   ctx.fillStyle = maxColor;
+  ctx.strokeText(`Max: ${max.toFixed(2)}`, 10, 25 + b);
   ctx.fillText(`Max: ${max.toFixed(2)}`, 10, 25 + b);
   ctx.restore();
 }
