@@ -36,6 +36,14 @@
   margin-left: auto;
 }
 
+.currentScriptButton,
+.currentScriptButton:hover,
+.currentScriptButton:focus {
+  background-color: #ffffffaa;
+  color: #163658;
+  /* border-color: #163658; */
+}
+
 .addLayerForm {
   display: flex;
   gap: 10px;

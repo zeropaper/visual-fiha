@@ -8,18 +8,21 @@ import { Input } from "@ui/Input";
 import { Select } from "@ui/Select";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
-import type { ScriptInfo } from "src/types";
+import type { ScriptInfo, ScriptRole } from "src/types";
 import styles from "./Layers.module.css";
 
 function Layer({
   id,
   setCurrentScript,
   onChangeOpacity,
+  currentRole,
+  isCurrent,
 }: {
   id: string;
   setCurrentScript: (script: ScriptInfo) => void;
   onChangeOpacity: ChangeEventHandler<HTMLInputElement>;
   isCurrent?: boolean;
+  currentRole: ScriptRole | null;
 }) {
   const [layer, setLayer] = useLayerConfig(id);
   if (!layer) {
@@ -66,6 +69,9 @@ function Layer({
           className={[
             buttonStyles.button,
             styles.setupButton,
+            isCurrent && currentRole === "setup"
+              ? styles.currentScriptButton
+              : "",
             "setup-script-button",
           ].join(" ")}
           onClick={() =>
@@ -80,7 +86,13 @@ function Layer({
         </Button>
 
         <Button
-          className={[buttonStyles.button, "animation-script-button"].join(" ")}
+          className={[
+            buttonStyles.button,
+            isCurrent && currentRole === "animation"
+              ? styles.currentScriptButton
+              : "",
+            "animation-script-button",
+          ].join(" ")}
           onClick={() =>
             setCurrentScript({
               id: layer.id,
@@ -99,6 +111,7 @@ function Layer({
 export function Layers({
   setCurrentScript,
   id,
+  role,
 }: ScriptInfo & {
   setCurrentScript: (script: ScriptInfo) => void;
 }) {
@@ -215,6 +228,7 @@ export function Layers({
               setCurrentScript={setCurrentScript}
               onChangeOpacity={changeOpacity(layer.id)}
               isCurrent={id === layer.id}
+              currentRole={role}
             />
           </li>
         ))}
