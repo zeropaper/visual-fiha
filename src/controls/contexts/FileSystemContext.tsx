@@ -116,7 +116,11 @@ function useWriteConfig(selectedDirectory: FileSystemDirectoryHandle | null) {
           signals: signals.get,
           stage: stage.get,
           inputs: inputs.get,
-          assets: assets.get.filter((asset) => asset.source !== "local"),
+          assets: assets.get.map((a) => ({
+            ...a,
+            state: undefined,
+            blobUrl: undefined,
+          })),
           displays: [],
         },
         null,
@@ -147,16 +151,8 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     let json: AppState | null = null;
-    const assets = new Map<string, File>();
     for await (const [name, entry] of selectedDirectory.entries()) {
       if (name !== "visual-fiha-config.json") {
-        if (entry.kind === "file") {
-          const file = await entry.getFile();
-          // Skip TypeScript source files for scripts – they are handled via config references
-          if (!name.endsWith(".ts")) {
-            assets.set(name, file);
-          }
-        }
         continue;
       }
       if (entry.kind !== "file") {
@@ -185,6 +181,20 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
       const fileHandle = await dirHandle.getFileHandle(fileName);
       const file = await fileHandle.getFile();
       return await file.text();
+    };
+
+    const resolveAsset = async (path: string) => {
+      const parts = path.split("/").filter(Boolean);
+      parts.unshift("assets");
+      const fileName = parts.pop();
+      if (!fileName) return "";
+      let dirHandle: FileSystemDirectoryHandle = selectedDirectory;
+      for (const part of parts) {
+        dirHandle = await dirHandle.getDirectoryHandle(part);
+      }
+      const fileHandle = await dirHandle.getFileHandle(fileName);
+      const file = await fileHandle.getFile();
+      return URL.createObjectURL(file);
     };
 
     // Resolve worker scripts
@@ -218,21 +228,25 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
       })),
     );
 
-    json.assets = (json.assets || []).filter(
-      ({ source }) => source !== "local",
-    );
-    for (const [name] of assets) {
-      const file = assets.get(name);
-      if (!file) continue;
-      json.assets.push({
-        id: name,
-        source: "local",
-        blobUrl: URL.createObjectURL(file),
-        state: "loaded",
-      });
-    }
-
     localStorage.setItem("config", JSON.stringify(json));
+
+    json.assets = json.assets || [];
+    for (const asset of json.assets) {
+      if (asset.source === "local") {
+        asset.blobUrl = undefined;
+        asset.state = undefined;
+        const file = await resolveAsset(asset.id).catch(() => {
+          console.warn("Failed to resolve asset:", asset.id);
+          return null;
+        });
+        if (file) {
+          asset.blobUrl = file;
+          asset.state = "loaded";
+        } else {
+          asset.state = "error";
+        }
+      }
+    }
 
     post?.("init", json);
   };

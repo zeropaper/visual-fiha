@@ -3,6 +3,12 @@ import type { ReadPath } from "./Scriptable.editor.types";
 
 const __cache__: Record<string, any | ImageBitmap> = {};
 
+export function clearAssetsCache() {
+  for (const key in __cache__) {
+    delete __cache__[key];
+  }
+}
+
 export async function imageBitmapFromBlobUrl(
   blobUrl: string,
 ): Promise<ImageBitmap> {
@@ -29,8 +35,8 @@ export async function imageBitmapFromUrl(url: string): Promise<ImageBitmap> {
 
 async function handleImageAsset(asset: AssetConfig) {
   let result: ImageBitmap;
-  if (asset.id.startsWith("blob:")) {
-    result = await imageBitmapFromBlobUrl(asset.id);
+  if (asset.source === "local" && asset.blobUrl) {
+    result = await imageBitmapFromBlobUrl(asset.blobUrl);
   } else {
     result = await imageBitmapFromUrl(
       asset.source === "remote" ? asset.url : asset.id,
@@ -51,6 +57,8 @@ function handleAsset<O extends RuntimeData, R extends ReadPath, D = any>(
   const id = parts.join(".");
   const found = obj.assets.find((asset) => asset.id === id);
   if (!found || !found.id) {
+    console.warn("[make-read] asset not found:", id);
+    __cache__[id] = defaultVal;
     return defaultVal;
   }
   const cached = __cache__[found.id];
@@ -62,6 +70,7 @@ function handleAsset<O extends RuntimeData, R extends ReadPath, D = any>(
     return found.canvas;
   }
 
+  __cache__[found.id] = true;
   const ext = found.id.split(".").pop() || "";
   if (["jpg", "png", "jpeg", "gif", "webp"].includes(ext)) {
     handleImageAsset(found as any).catch(() => {});
@@ -71,7 +80,7 @@ function handleAsset<O extends RuntimeData, R extends ReadPath, D = any>(
         return;
       }
       res.blob().then((blob) => {
-        __cache__[found.id!] = URL.createObjectURL(blob);
+        __cache__[found.id] = URL.createObjectURL(blob);
       });
     });
   }

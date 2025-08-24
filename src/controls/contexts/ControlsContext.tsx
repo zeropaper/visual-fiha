@@ -14,7 +14,17 @@ const { FastContextProvider, useFastContextFields, useContextWorkerPost } =
       ? JSON.parse(localStorage.getItem("config") || "null") || defaultAppState
       : defaultAppState,
     (value: AppState) => {
-      localStorage.setItem("config", JSON.stringify(value));
+      localStorage.setItem(
+        "config",
+        JSON.stringify({
+          ...value,
+          assets: value.assets.map((a) => ({
+            ...a,
+            state: undefined,
+            blobUrl: undefined,
+          })),
+        }),
+      );
     },
   );
 

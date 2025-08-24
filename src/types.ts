@@ -181,7 +181,7 @@ export interface DisplayConfig {
 
 export type LocalAssetProps = {
   source: "local";
-  blobUrl: string;
+  blobUrl?: string;
 };
 
 export type RemoteAssetProps = {

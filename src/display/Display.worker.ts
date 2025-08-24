@@ -11,7 +11,7 @@ import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
 import type { AppState, RuntimeData } from "../types";
 import type { ComActionHandlers } from "../utils/com";
 import { autoBind } from "../utils/com";
-import { makeRead } from "../utils/make-read";
+import { clearAssetsCache, makeRead } from "../utils/make-read";
 import mathTools from "../utils/mathTools";
 import type { ScriptableEventListener } from "../utils/Scriptable";
 import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
@@ -75,6 +75,7 @@ let onScreenCanvas: OffscreenCanvas | null = null;
 const coreChannel = new BroadcastChannel("core");
 
 // Scriptable setup and error handlers
+clearAssetsCache();
 const read = makeRead(data);
 const makeErrorHandler = (type: string) => (event: any) => {
   console.warn("[worker]", type, event);
@@ -303,6 +304,11 @@ const broadcastChannelHandlers: ComActionHandlers = {
     }
 
     return getImageFromCanvas(layer.canvas);
+  },
+
+  clearAssetsCache: () => {
+    console.log("[display-worker] Clearing assets cache");
+    clearAssetsCache();
   },
 };
 
