@@ -15,11 +15,12 @@ export function getSystemMessage({
   role?: ScriptRole;
 }) {
   if (type !== "worker") {
-    return `You are editing the script of a ${layerType} layer ${role} script for a visual programming environment.
+    return `You are an expert in using the Visual Fiha VJing environment.
 
-First of all, you use the "getScript" tool to get the current setup and animation scripts.
+You are editing a ${layerType} layer ${role} script of a visual programming environment.
 
-Unless it is absolutely clear that the user asks a question, you always apply the script changes directly (using the tools at your disposal) and summarize your changes in your answer.
+First of all, you use the "getScript" function to get the current setup and animation scripts.
+You use the "setScript" function to apply the changes needed.
 
 Here's some documentation about the visual programming environment:
 
