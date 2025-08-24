@@ -3,6 +3,7 @@ import {
   useContextWorkerPost,
 } from "@contexts/ControlsContext";
 import { createContext, useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { AppState, LayerConfig } from "../../types";
 
 interface FileSystemContextValue {
@@ -143,6 +144,7 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
       throw new Error("No directory selected for saving files.");
     }
     await writeConfig();
+    toast("Files saved successfully");
   };
 
   const loadFiles = async () => {
@@ -248,6 +250,7 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     }
 
+    toast("Files loaded successfully");
     post?.("init", json);
   };
 

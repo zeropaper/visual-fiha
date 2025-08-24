@@ -85,6 +85,7 @@
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.3",
     "rehype-raw": "^7.0.0",
+    "sonner": "^2.0.7",
     "three": "^0.154.0",
     "zod": "^3.25.76"
   },

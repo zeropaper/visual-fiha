@@ -9,6 +9,7 @@ import {
   MonitorIcon,
 } from "lucide-react";
 import { lazy, Suspense, useCallback, useState } from "react";
+import { Toaster } from "sonner";
 import type { ScriptInfo } from "src/types";
 import styles from "./ControlsApp.module.css";
 import { AudioSetupProvider } from "./contexts/AudioSetupContext";
@@ -183,6 +184,7 @@ export default function ControlsApp() {
               )}
             </div>
           </Suspense>
+          <Toaster />
         </AudioSetupProvider>
       </FileSystemProvider>
     </AppFastContextProvider>
