@@ -203,7 +203,8 @@ export function AudioSetupProvider({
       }
     });
     sourcesRef.current = [];
-  }, []);
+    writeInputValues(`audio`, null);
+  }, [writeInputValues]);
 
   // Setup microphone audio
   const setupMicrophone = useCallback(async () => {
