@@ -125,13 +125,20 @@ export function useStageConfig() {
  * Custom hook to manage and write input values.
  * It provides a function to write input values and updates the worker with the data.
  */
-const inputValuesRef: Record<string, any> = {};
+const store: Record<string, any> = {};
 let request: number;
 export function useWriteInputValues() {
   const post = useContextWorkerPost();
 
   const writeInputValues = useCallback((path: string, value: any) => {
-    inputValuesRef[path] = value;
+    if (value === null) {
+      Object.keys(store).forEach((key) => {
+        if (key.startsWith(path)) {
+          delete store[key];
+        }
+      });
+    }
+    store[path] = value;
   }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
@@ -142,7 +149,7 @@ export function useWriteInputValues() {
         return;
       }
       cancelAnimationFrame(request);
-      const obj = Object.entries(inputValuesRef).reduce(
+      const obj = Object.entries(store).reduce(
         (acc: Record<string, any>, [key, value]) => {
           const parts = key.split(".");
           let current = acc;
@@ -157,7 +164,7 @@ export function useWriteInputValues() {
         },
         {},
       );
-      post?.("inputsdata", obj);
+      post("inputsdata", obj);
       request = requestAnimationFrame(update);
     }
     request = requestAnimationFrame(update);
