@@ -87,6 +87,7 @@
     "rehype-raw": "^7.0.0",
     "sonner": "^2.0.7",
     "three": "^0.154.0",
+    "use-stick-to-bottom": "^1.1.1",
     "zod": "^3.25.76"
   },
   "lint-staged": {

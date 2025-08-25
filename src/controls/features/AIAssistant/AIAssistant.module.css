@@ -116,6 +116,7 @@
   overflow-y: auto;
   background-color: var(--vscode-editor-background);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 /* Empty state styling */
@@ -129,25 +130,42 @@
 }
 
 /* Custom scrollbar styling */
-.messagesContainer::-webkit-scrollbar {
+.messagesContainer > div::-webkit-scrollbar {
   width: 8px;
 }
 
-.messagesContainer::-webkit-scrollbar-track {
+.messagesContainer > div::-webkit-scrollbar-track {
   background: var(--vscode-editor-background);
 }
 
-.messagesContainer::-webkit-scrollbar-thumb {
+.messagesContainer > div::-webkit-scrollbar-thumb {
   background: var(--vscode-scrollbarSlider-background);
   border-radius: 4px;
 }
 
-.messagesContainer::-webkit-scrollbar-thumb:hover {
+.messagesContainer > div::-webkit-scrollbar-thumb:hover {
   background: var(--vscode-scrollbarSlider-hoverBackground);
 }
 
-.messagesContainer::-webkit-scrollbar-thumb:active {
+.messagesContainer > div::-webkit-scrollbar-thumb:active {
   background: var(--vscode-scrollbarSlider-activeBackground);
+}
+
+.scrollToBottom {
+  position: absolute;
+  bottom: 16px;
+  right: 50%;
+  background-color: var(--button-bg);
+  color: var(--button-color);
+  border: none;
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease;
+  z-index: 10;
+  translate: -50% 0;
+  aspect-ratio: 1;
+  border-radius: 50px;
 }
 
 .message {

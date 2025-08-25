@@ -1,9 +1,27 @@
 import { Markdown } from "@ui/Markdown";
+import { ArrowDownIcon } from "lucide-react";
+import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import styles from "../AIAssistant.module.css";
 import type { VFMessage } from "../types";
 
 interface MessageListProps {
   messages: VFMessage[];
+}
+
+function ScrollToBottom() {
+  const { isAtBottom, scrollToBottom } = useStickToBottomContext();
+
+  return (
+    !isAtBottom && (
+      <button
+        onClick={() => scrollToBottom()}
+        type="button"
+        className={styles.scrollToBottom}
+      >
+        <ArrowDownIcon />
+      </button>
+    )
+  );
 }
 
 /**
@@ -15,43 +33,47 @@ export function MessageList({ messages }: MessageListProps) {
   }
 
   return (
-    <div className={styles.messagesContainer}>
-      {messages.map((message, index) => (
-        <div
-          key={`msg-${
-            // biome-ignore lint/suspicious/noArrayIndexKey: message index for stable order
-            index
-          }`}
-          className={`${styles.message} ${styles[`message--${message.role}`]}`}
-        >
-          <div className={styles.messageContent}>
-            {typeof message.content === "string" ? (
-              <Markdown>{message.content}</Markdown>
-            ) : Array.isArray(message.content) ? (
-              message.content.map((part, i) => (
-                <span
-                  key={`part-${
-                    // biome-ignore lint/suspicious/noArrayIndexKey: content part index for stable order
-                    i
-                  }`}
-                  className={styles.messagePart}
-                >
-                  {part.type === "text" && <Markdown>{part.text}</Markdown>}
-                  {part.type === "image_url" && (
-                    <img
-                      src={part.image_url.url}
-                      alt="Attachment"
-                      className={styles.messageImage}
-                    />
-                  )}
-                </span>
-              ))
-            ) : (
-              JSON.stringify(message.content)
-            )}
+    <StickToBottom className={styles.messagesContainer}>
+      <StickToBottom.Content>
+        {messages.map((message, index) => (
+          <div
+            key={`msg-${
+              // biome-ignore lint/suspicious/noArrayIndexKey: message index for stable order
+              index
+            }`}
+            className={`${styles.message} ${styles[`message--${message.role}`]}`}
+          >
+            <div className={styles.messageContent}>
+              {typeof message.content === "string" ? (
+                <Markdown>{message.content}</Markdown>
+              ) : Array.isArray(message.content) ? (
+                message.content.map((part, i) => (
+                  <span
+                    key={`part-${
+                      // biome-ignore lint/suspicious/noArrayIndexKey: content part index for stable order
+                      i
+                    }`}
+                    className={styles.messagePart}
+                  >
+                    {part.type === "text" && <Markdown>{part.text}</Markdown>}
+                    {part.type === "image_url" && (
+                      <img
+                        src={part.image_url.url}
+                        alt="Attachment"
+                        className={styles.messageImage}
+                      />
+                    )}
+                  </span>
+                ))
+              ) : (
+                JSON.stringify(message.content)
+              )}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </StickToBottom.Content>
+
+      <ScrollToBottom />
+    </StickToBottom>
   );
 }
