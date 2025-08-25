@@ -24,10 +24,13 @@ function Layer({
   isCurrent?: boolean;
   currentRole: ScriptRole | null;
 }) {
-  const [layer, setLayer] = useLayerConfig(id);
+  const [layer, setLayer, errors] = useLayerConfig(id);
   if (!layer) {
     return null;
   }
+
+  if (errors?.length) console.info("layer errors", layer.id, errors);
+
   return (
     <>
       <div>
@@ -72,6 +75,7 @@ function Layer({
             isCurrent && currentRole === "setup"
               ? styles.currentScriptButton
               : "",
+            errors.find(({ role }) => role === "setup") ? styles.hasError : "",
             "setup-script-button",
           ].join(" ")}
           onClick={() =>
@@ -90,6 +94,9 @@ function Layer({
             buttonStyles.button,
             isCurrent && currentRole === "animation"
               ? styles.currentScriptButton
+              : "",
+            errors.find(({ role }) => role === "animation")
+              ? styles.hasError
               : "",
             "animation-script-button",
           ].join(" ")}

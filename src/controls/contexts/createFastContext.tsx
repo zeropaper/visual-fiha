@@ -10,7 +10,7 @@ import {
   useRef,
   useSyncExternalStore,
 } from "react";
-import type { DisplayRegistrationPayload } from "src/types";
+import type { AppState, DisplayRegistrationPayload } from "src/types";
 import ControlsWorker from "../Controls.worker?worker";
 
 declare global {
@@ -19,11 +19,7 @@ declare global {
   }
 }
 
-export default function createFastContext<
-  FastContext extends Record<string, any> & {
-    layers?: Array<{ id: string; active: boolean }>;
-  },
->(
+export default function createFastContext<FastContext extends AppState>(
   initialState: FastContext,
   onUpdate: (value: FastContext) => void = () => {},
 ) {
@@ -70,6 +66,14 @@ export default function createFastContext<
       const worker = workerRef.current;
 
       const { listener, post: _post } = autoBind(worker, "controls-app", {
+        updateerrors: (payload: any) => {
+          if (payload?.length) console.info("[controls] updateerrors", payload);
+          store.current.errors = payload;
+          subscribers.current.forEach((callback) => {
+            callback();
+          });
+          onUpdate(store.current);
+        },
         registerdisplay: (payload: DisplayRegistrationPayload) => {
           console.info("[controls] registerdisplay", payload);
         },

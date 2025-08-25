@@ -36,12 +36,12 @@ export interface ScriptableCompilationSuccessEvent
   extends ScriptRunnerCompilationSuccessEvent,
     ScriptableEvent {}
 
-export type ScriptableEventListener = (
-  event:
+export type ScriptableEventListener<
+  E extends
     | ScriptableErrorEvent
     | ScriptableLogEvent
     | ScriptableCompilationSuccessEvent,
-) => void;
+> = (event: E) => void;
 
 export interface ScriptableOptions {
   onCompilationError?: (event: ScriptableCompilationErrorEvent) => void;

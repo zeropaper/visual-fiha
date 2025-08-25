@@ -13,7 +13,11 @@ import type { ComActionHandlers } from "../utils/com";
 import { autoBind } from "../utils/com";
 import { clearAssetsCache, makeRead } from "../utils/make-read";
 import mathTools from "../utils/mathTools";
-import type { ScriptableEventListener } from "../utils/Scriptable";
+import type {
+  ScriptableCompilationSuccessEvent,
+  ScriptableErrorEvent,
+  ScriptableEventListener,
+} from "../utils/Scriptable";
 import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
 import { isDisplayState } from "./isDisplayState";
 import type { DisplayState } from "./types";
@@ -81,14 +85,26 @@ const makeErrorHandler = (type: string) => (event: any) => {
   console.warn("[worker]", type, event);
 };
 
-const onExecutionError: ScriptableEventListener = (_event) => {
+const onExecutionError: ScriptableEventListener<ScriptableErrorEvent> = (
+  original,
+) => {
+  const event = { ...original, workerName };
   // console.warn("onExecutionError", event);
+  broadcastChannelCom.post("executionerror", event);
 };
-const onCompilationError: ScriptableEventListener = (_event) => {
+const onCompilationError: ScriptableEventListener<ScriptableErrorEvent> = (
+  original,
+) => {
+  const event = { ...original, workerName };
   // console.warn("onCompilationError", event);
+  broadcastChannelCom.post("compilationerror", event);
 };
-const onCompilationSuccess: ScriptableEventListener = (_event) => {
+const onCompilationSuccess: ScriptableEventListener<
+  ScriptableCompilationSuccessEvent
+> = (original) => {
+  const event = { ...original, workerName };
   // console.info("onCompilationSuccess", event);
+  broadcastChannelCom.post("compilationsuccess", event);
 };
 
 const scriptableOptions: ScriptableOptions = {

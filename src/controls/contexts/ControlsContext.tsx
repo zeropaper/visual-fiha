@@ -46,7 +46,8 @@ export const useAppFastContextFields = useFastContextFields;
 export function useLayerConfig(id: string) {
   const {
     layers: { get: layers, set },
-  } = useAppFastContextFields(["layers"]);
+    errors: { get: errors },
+  } = useAppFastContextFields(["layers", "errors"]);
   return [
     layers.find((layer) => layer.id === id),
     (value: LayerConfig | null) => {
@@ -57,6 +58,7 @@ export function useLayerConfig(id: string) {
         .filter(Boolean) as LayerConfig[];
       set(updated);
     },
+    errors?.filter((error) => error.id === id) || [],
   ] as const;
 }
 

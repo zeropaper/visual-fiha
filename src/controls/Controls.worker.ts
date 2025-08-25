@@ -10,6 +10,7 @@ import type {
 } from "../types";
 import { autoBind } from "../utils/com";
 import { type TranspilePayload, tsTranspile } from "../utils/tsTranspile";
+import { defaultAppState } from "./contexts/defaultAppState";
 
 const broadcastChannel = new BroadcastChannel("core");
 const defaultBPM = 120;
@@ -19,20 +20,6 @@ const defaultStageConfig = {
   height: 400,
   backgroundColor: "#000000",
 };
-
-const defaultAppState: AppState = {
-  stage: defaultStageConfig,
-  inputs: [],
-  signals: [],
-  layers: [],
-  displays: [],
-  assets: [],
-  worker: {
-    setup: "",
-    animation: "",
-  },
-};
-let appState: AppState = structuredClone(defaultAppState);
 
 const defaultRuntimeData: RuntimeData = {
   stage: defaultStageConfig,
@@ -60,6 +47,8 @@ const defaultRuntimeData: RuntimeData = {
     animation: "",
   },
 };
+
+let appState: AppState = structuredClone(defaultAppState);
 let runtimeData: RuntimeData = structuredClone(defaultRuntimeData);
 
 const handlers = {
@@ -149,7 +138,12 @@ const handlers = {
     runtimeData.assets = appState.assets;
   },
   updateconfig: (payload: Partial<AppState>) => {
-    appState = { ...appState, ...payload };
+    appState = {
+      // @ts-expect-error
+      errors: [],
+      ...appState,
+      ...payload,
+    };
     if ("layers" in payload) {
       runtimeData.layers = (payload.layers as LayerConfig[]).map((layer, l) => {
         return {
@@ -261,9 +255,35 @@ const broadcastHandlers = {
       return layer;
     });
   },
+  executionerror: (payload: any) => {
+    console.warn("[controls-worker] Execution error:", payload);
+    appState.errors.push(payload);
+    mainPost("updateerrors", appState.errors);
+  },
+  compilationerror: (payload: any) => {
+    console.warn("[controls-worker] Compilation error:", payload);
+    appState.errors.push(payload);
+    mainPost("updateerrors", appState.errors);
+  },
+  compilationsuccess: (payload: any) => {
+    const { id, role } = payload;
+    const filtered =
+      appState.errors?.filter(
+        (error) => error.id !== id && error.role !== role,
+      ) || [];
+    console.info(
+      "[controls-worker] Compilation success:",
+      payload.id,
+      payload.role,
+      appState.errors?.length,
+      filtered.length,
+    );
+    appState.errors = filtered;
+    mainPost("updateerrors", appState.errors);
+  },
 };
 
-const { listener: mainListener } = autoBind(
+const { listener: mainListener, post: mainPost } = autoBind(
   {
     postMessage: (msg) => self.postMessage(msg),
   },

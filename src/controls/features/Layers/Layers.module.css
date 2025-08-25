@@ -28,6 +28,12 @@
   }
 }
 
+.hasError {
+  border: 1px solid red;
+  color: red;
+  background-color: #ffffff22;
+}
+
 .currentLayer {
   background-color: #ffffff22;
 }

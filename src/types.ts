@@ -221,6 +221,10 @@ export type AppState = {
     setup: string;
     animation: string;
   };
+  errors: (ScriptInfo & {
+    message: string;
+    stack?: string;
+  })[];
 };
 
 export interface RuntimeData {

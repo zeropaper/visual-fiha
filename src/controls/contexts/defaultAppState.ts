@@ -117,6 +117,7 @@ const defaultAppState: AppState = {
     setup: "/* Worker setup code */",
     animation: "/* Worker animation code */",
   },
+  errors: [],
 };
 
 export { defaultAppState };
