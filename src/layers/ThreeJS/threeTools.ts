@@ -1,5 +1,16 @@
-import type { PerspectiveCamera, Scene, WebGLRenderer } from "three";
-// @ts-ignore
+import type {
+  BufferAttribute,
+  BufferGeometry,
+  InterleavedBufferAttribute,
+  Line,
+  Mesh,
+  PerspectiveCamera,
+  Points,
+  Scene,
+  TrianglesDrawModes,
+  WebGLRenderer,
+} from "three";
+// @ts-expect-error
 import type { Pass } from "three/addons/postprocessing/Pass";
 
 // import { Loader } from "three/addons/loaders/Loader.js";
@@ -49,4 +60,43 @@ declare global {
   const TAARenderPass: typeof Pass;
   const TexturePass: typeof Pass;
   const UnrealBloomPass: typeof Pass;
+
+  function deepCloneAttribute(attribute: BufferAttribute): BufferAttribute;
+  function mergeGeometries(
+    geometries: BufferGeometry[],
+    useGroups?: boolean,
+  ): BufferGeometry;
+  function mergeAttributes(attributes: BufferAttribute[]): BufferAttribute;
+  function interleaveAttributes(
+    attributes: BufferAttribute[],
+  ): InterleavedBufferAttribute;
+  function estimateBytesUsed(geometry: BufferGeometry): number;
+  function mergeVertices(
+    geometry: BufferGeometry,
+    tolerance?: number,
+  ): BufferGeometry;
+  function toTrianglesDrawMode(
+    geometry: BufferGeometry,
+    drawMode: TrianglesDrawModes,
+  ): BufferGeometry;
+  function computeMorphedAttributes(object: Mesh | Line | Points): object;
+  function computeMikkTSpaceTangents(
+    geometry: BufferGeometry,
+    MikkTSpace: unknown,
+    negateSign?: boolean,
+  ): BufferGeometry;
+  function mergeGroups(geometry: BufferGeometry): BufferGeometry;
+  function deinterleaveAttribute(geometry: BufferGeometry): void;
+  function deinterleaveGeometry(geometry: BufferGeometry): void;
+
+  /**
+   * Creates a new, non-indexed geometry with smooth normals everywhere except faces that meet at an angle greater than the crease angle.
+   *
+   * @param geometry The input geometry.
+   * @param creaseAngle The crease angle.
+   */
+  function toCreasedNormals(
+    geometry: BufferGeometry,
+    creaseAngle?: number,
+  ): BufferGeometry;
 }

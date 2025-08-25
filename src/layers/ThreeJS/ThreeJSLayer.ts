@@ -32,6 +32,7 @@ import { SSRPass } from "three/addons/postprocessing/SSRPass.js";
 import { TAARenderPass } from "three/addons/postprocessing/TAARenderPass.js";
 import { TexturePass } from "three/addons/postprocessing/TexturePass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import * as BufferGeometryUtils from "three/addons/utils/BufferGeometryUtils.js";
 
 import mathTools from "../../utils/mathTools";
 import miscTools from "../../utils/miscTools";
@@ -107,6 +108,7 @@ export default class ThreeJSLayer extends Layer {
       TAARenderPass,
       TexturePass,
       UnrealBloomPass,
+      ...BufferGeometryUtils,
       clear: this.#clearScene,
     };
   }
