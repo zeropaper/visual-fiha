@@ -188,6 +188,11 @@ export function Layers({
                 animation: "",
               },
             ]);
+            setCurrentScript({
+              id,
+              role: "setup",
+              type,
+            });
             e.currentTarget.reset();
           }
         }}
