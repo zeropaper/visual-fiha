@@ -170,7 +170,7 @@ export function CanvasVisualizer({
     animationFrameRequestRef.current = requestAnimationFrame(render);
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
   useEffect(() => {
     render();
     return () => {
@@ -201,7 +201,7 @@ export function CanvasVisualizer({
     }
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
   useEffect(() => {
     const resizeObserver = new ResizeObserver(handleResize);
     if (canvasRef.current) {
