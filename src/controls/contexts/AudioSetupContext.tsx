@@ -501,7 +501,7 @@ export function AudioSetupProvider({
     // counterRef.current += 1;
 
     Object.values(managedAnalyzersRef.current).forEach(
-      ({ analyser }, index) => {
+      ({ analyser, index }) => {
         ["frequency", "timeDomain"].forEach((type) => {
           const dataArray = new Uint8Array(analyser.frequencyBinCount);
           if (type === "frequency") {
