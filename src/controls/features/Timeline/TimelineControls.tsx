@@ -77,7 +77,7 @@ export function TimelineControls({
         onClick={onBpmTap}
         className={["bpm-button", buttonStyles.button].join(" ")}
       >
-        {`${bpm} bpm`}
+        {`${String(bpm).padStart(3, "0")} bpm`}
       </Button>
     </div>
   );

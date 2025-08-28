@@ -74,20 +74,49 @@ export function Timeline({ className }: TimelineProps) {
     }
   }, [isRunning, playAll, pauseAll]);
 
-  const [lastBpmClick, setLastBpmClick] = useState<number | null>(null);
-  // measures the interval between clicks to set Bpm
+  // Track click times for BPM tap tempo calculation
+  const [, setBpmClickTimes] = useState<number[]>([]);
+
+  // measures the intervals between clicks to set BPM with averaging for better precision
   const handleBpmClick = useCallback(() => {
     const now = Date.now();
-    // If last click was within 1 second, calculate BPM
-    if (lastBpmClick && now - lastBpmClick < 1000) {
-      // Calculate BPM based on time difference
-      const bpmValue = Math.round(60000 / (now - lastBpmClick));
-      post?.("setBpm", bpmValue);
-    } else {
-      post?.("setBpmStart");
-    }
-    setLastBpmClick(now);
-  }, [lastBpmClick, post]);
+
+    setBpmClickTimes((prevTimes) => {
+      // Filter out clicks older than 2 seconds to keep only recent taps
+      const recentTimes = prevTimes.filter((time) => now - time <= 2000);
+
+      // Add the current click time
+      const newTimes = [...recentTimes, now];
+
+      // If we have at least 2 clicks (current + at least 1 previous), calculate BPM
+      if (newTimes.length >= 2) {
+        // Calculate intervals between consecutive clicks
+        const intervals: number[] = [];
+        for (let i = 1; i < newTimes.length; i++) {
+          intervals.push(newTimes[i] - newTimes[i - 1]);
+        }
+
+        // Calculate average interval
+        const averageInterval =
+          intervals.reduce((sum, interval) => sum + interval, 0) /
+          intervals.length;
+
+        // Convert average interval to BPM (60000ms = 1 minute)
+        const bpmValue = Math.round(60000 / averageInterval);
+
+        // Only set BPM if it's within reasonable range (30-300 BPM)
+        if (bpmValue >= 30 && bpmValue <= 300) {
+          post?.("setBpm", bpmValue);
+        }
+      } else {
+        // First click or clicks too far apart - signal start of BPM tapping
+        post?.("setBpmStart");
+      }
+
+      // Keep a maximum of 8 recent clicks to prevent memory issues and maintain responsiveness
+      return newTimes.slice(-8);
+    });
+  }, [post]);
 
   const handleBpmChange = useCallback(
     (newBpm: number) => {
