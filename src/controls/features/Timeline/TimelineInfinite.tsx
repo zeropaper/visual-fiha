@@ -168,7 +168,7 @@ function drawBpmTicks(
   timeWindow: number,
   startTime: number,
 ) {
-  if (!bpm || !timeData || !timeWindow || !startTime) return;
+  if (!bpm || !timeData || !timeWindow || startTime < 0) return;
   ctx.fillStyle = "#00ff00";
   ctx.textBaseline = "top";
   ctx.fillText(`${bpm} bpm`, 8, 8);
