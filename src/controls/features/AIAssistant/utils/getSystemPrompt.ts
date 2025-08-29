@@ -6,7 +6,6 @@ import workerDocs from "@docs/worker-api.md?raw";
 import type { LayerConfig, ScriptRole, ScriptType } from "src/types";
 
 export function getSystemMessage({
-  layerType = null,
   type = "worker",
   role = "setup",
 }: {
@@ -14,7 +13,8 @@ export function getSystemMessage({
   type?: ScriptType;
   role?: ScriptRole;
 }) {
-  if (type !== "worker") {
+  const layerType = ["canvas", "threejs"].includes(type) ? type : null;
+  if (layerType) {
     return `You are an expert in using the Visual Fiha VJing environment.
 
 You are editing a ${layerType} layer ${role} script of a visual programming environment.
