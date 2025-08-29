@@ -117,11 +117,13 @@ function useWriteConfig(selectedDirectory: FileSystemDirectoryHandle | null) {
           signals: signals.get,
           stage: stage.get,
           inputs: inputs.get,
-          assets: assets.get.map((a) => ({
-            ...a,
-            state: undefined,
-            blobUrl: undefined,
-          })),
+          assets: assets.get
+            .filter((a) => a.source !== "local")
+            .map((a) => ({
+              ...a,
+              state: undefined,
+              blobUrl: undefined,
+            })),
           displays: [],
         },
         null,
@@ -185,20 +187,6 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
       return await file.text();
     };
 
-    const resolveAsset = async (path: string) => {
-      const parts = path.split("/").filter(Boolean);
-      parts.unshift("assets");
-      const fileName = parts.pop();
-      if (!fileName) return "";
-      let dirHandle: FileSystemDirectoryHandle = selectedDirectory;
-      for (const part of parts) {
-        dirHandle = await dirHandle.getDirectoryHandle(part);
-      }
-      const fileHandle = await dirHandle.getFileHandle(fileName);
-      const file = await fileHandle.getFile();
-      return URL.createObjectURL(file);
-    };
-
     // Resolve worker scripts
     json.worker = {
       setup: await resolveScript("worker/setup.ts").catch((err) => {
@@ -233,21 +221,65 @@ export const FileSystemProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("config", JSON.stringify(json));
 
     json.assets = json.assets || [];
-    for (const asset of json.assets) {
-      if (asset.source === "local") {
-        asset.blobUrl = undefined;
-        asset.state = undefined;
-        const file = await resolveAsset(asset.id).catch(() => {
-          console.warn("Failed to resolve asset:", asset.id);
-          return null;
-        });
-        if (file) {
-          asset.blobUrl = file;
-          asset.state = "loaded";
-        } else {
-          asset.state = "error";
+
+    // Recursively scan the assets directory
+    const scanAssetsDirectory = async (
+      dirHandle: FileSystemDirectoryHandle,
+      basePath: string = "",
+    ): Promise<
+      { id: string; blobUrl: string; state: "loaded"; source: "local" }[]
+    > => {
+      const assets: {
+        id: string;
+        blobUrl: string;
+        state: "loaded";
+        source: "local";
+      }[] = [];
+
+      try {
+        for await (const [name, entry] of dirHandle.entries()) {
+          const fullPath = basePath ? `${basePath}/${name}` : name;
+
+          if (entry.kind === "file") {
+            try {
+              const file = await entry.getFile();
+              const blobUrl = URL.createObjectURL(file);
+              assets.push({
+                id: fullPath,
+                blobUrl,
+                state: "loaded",
+                source: "local",
+              });
+            } catch (err) {
+              console.warn(`Failed to process asset file: ${fullPath}`, err);
+            }
+          } else if (entry.kind === "directory") {
+            // Recursively scan subdirectories
+            const subAssets = await scanAssetsDirectory(entry, fullPath);
+            assets.push(...subAssets);
+          }
         }
+      } catch (err) {
+        console.warn(`Failed to scan directory: ${basePath}`, err);
       }
+
+      return assets;
+    };
+
+    // Try to scan the assets directory
+    try {
+      const assetsDir = await selectedDirectory.getDirectoryHandle("assets");
+      const scannedAssets = await scanAssetsDirectory(assetsDir);
+
+      // Merge with existing assets from config, prioritizing scanned assets
+      const existingAssets = json.assets.filter(
+        (asset) => asset.source !== "local",
+      );
+      json.assets = [...existingAssets, ...scannedAssets];
+    } catch (err) {
+      console.warn("Assets directory not found or inaccessible:", err);
+      // Keep only non-local assets if assets directory doesn't exist
+      json.assets = json.assets.filter((asset) => asset.source !== "local");
     }
 
     toast("Files loaded successfully");
