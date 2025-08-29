@@ -185,9 +185,9 @@ const handlers = {
       broadcastRuntimeData();
       console.log("[controls-worker] init complete:", appState);
 
-      broadcastChannel.postMessage({
-        type: "clearAssetsCache",
-      });
+      broadcastChannel.postMessage({ type: "clearAssetsCache" });
+      // broadcastChannel.postMessage({ type: "initialized", payload: appState });
+      mainPost("initialized", appState);
     }
 
     Promise.all([

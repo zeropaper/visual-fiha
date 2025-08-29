@@ -77,6 +77,14 @@ export default function createFastContext<FastContext extends AppState>(
         registerdisplay: (payload: DisplayRegistrationPayload) => {
           console.info("[controls] registerdisplay", payload);
         },
+        initialized: (payload: FastContext) => {
+          console.log("[controls] initialized");
+          store.current = payload;
+          subscribers.current.forEach((callback) => {
+            callback();
+          });
+          onUpdate(store.current);
+        },
       });
       postRef.current = _post;
       worker.addEventListener("message", listener);
