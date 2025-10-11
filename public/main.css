@@ -16,10 +16,10 @@
   --button-border-radius: 2px;
   --button-padding: 0 5px;
   --button-border-color: #ffffff40;
-  --success-foreground: #ffffff;
-  --success-background: #28a745;
-  --error-foreground: #ffffff;
-  --error-background: #f44336;
+  --success-foreground: #bfdac4;
+  --success-background: #28a7469f;
+  --error-foreground: #fdc5c5;
+  --error-background: #f443368f;
 
   --vscode-foreground: #cccccc;
   --vscode-disabledForeground: rgba(204, 204, 204, 0.5);
