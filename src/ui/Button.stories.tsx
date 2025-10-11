@@ -36,6 +36,20 @@ export const Icon: Story = {
   },
 };
 
+export const ErrorOutcome: Story = {
+  args: {
+    outcome: "error",
+    children: "Something is wrong",
+  },
+};
+
+export const SuccessOutcome: Story = {
+  args: {
+    outcome: "success",
+    children: "Operation was successful",
+  },
+};
+
 export const Disabled: Story = {
   args: {
     children: "Disabled Button",

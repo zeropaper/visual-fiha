@@ -9,20 +9,31 @@
   cursor: pointer;
   text-align: center;
 }
+
+.error {
+  --button-bg: var(--error-background);
+  --button-bg-hover: var(--error-background);
+  --button-border-color: var(--error-foreground);
+  --button-color: var(--error-foreground);
+}
+
 .button:hover {
   background-color: var(--button-bg-hover);
 }
 .button:disabled {
-  opacity: 0.25;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .icon {
   padding: 3px;
   aspect-ratio: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   & > svg {
-    width: 18px;
-    height: 18px;
+    width: 1em;
+    height: 1em;
     color: inherit;
   }
 }
@@ -32,11 +43,4 @@
 .success:focus {
   color: var(--success-foreground);
   background-color: var(--success-background);
-}
-
-.error,
-.error:hover,
-.error:focus {
-  color: var(--error-foreground);
-  background-color: var(--error-background);
 }
