@@ -76,7 +76,7 @@
   "homepage": "https://github.com/zeropaper/visual-fiha",
   "dependencies": {
     "intro.js": "^8.3.2",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "lucide-react": "^0.515.0",
     "monaco-editor": "^0.52.2",
     "openai": "^5.23.2",
