@@ -12,7 +12,6 @@ export function LandingContent({
     <div className={styles.landingContent}>
       <AdvancedMarkdown
         a={(props) => {
-          // console.log("Anchor component props:", props);
           const { href, children, ...rest } = props;
           if (href?.[0] === "#") {
             // If the href is a local link to another doc topic

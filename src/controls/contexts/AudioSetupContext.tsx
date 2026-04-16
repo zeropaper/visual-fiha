@@ -351,7 +351,6 @@ export function AudioSetupProvider({
 
   // Update playAll to recreate AudioBufferSourceNode for playback while re-wiring analyzers
   const playAll = useCallback(() => {
-    console.log("Playing all audio sources");
     const audioCtx = getOrCreateAudioContext();
 
     post?.("resume");
@@ -376,7 +375,6 @@ export function AudioSetupProvider({
   }, [post, getOrCreateAudioContext, createAndWireSource, getTimeData]);
 
   const pauseAll = useCallback(() => {
-    console.log("Pausing all audio sources");
     post?.("pause");
     sourcesRef.current.forEach((source) => {
       if (source.buffer) {
@@ -392,7 +390,6 @@ export function AudioSetupProvider({
   }, [post]);
 
   const stopAll = useCallback(() => {
-    console.log("Stopping all audio sources", sourcesRef.current.length);
     post?.("pause");
     post?.("reset");
     sourcesRef.current.forEach((source) => {
@@ -411,7 +408,6 @@ export function AudioSetupProvider({
   // Re-wire analyzers when seekAll is called
   const seekAll = useCallback(
     (time: number) => {
-      console.log("Seeking all audio sources to time:", time);
       const audioCtx = getOrCreateAudioContext();
       const wasPlaying = stablePlaybackState.isPlaying;
 
@@ -487,7 +483,6 @@ export function AudioSetupProvider({
   const setMode = useCallback(
     (newMode: AudioInputMode) => {
       setReady(false);
-      console.log("Setting audio input mode to:", newMode);
       post?.("reset");
       stopAll();
       cleanupAudio();
@@ -528,7 +523,6 @@ export function AudioSetupProvider({
     );
     // if (counterRef.current % 60 === 0) {
     //   // Do something every 60 frames (1 second at 60fps)
-    //   console.log(
     //     "1 second passed in animation frame",
     //     managedAnalyzersRef.current,
     //   );

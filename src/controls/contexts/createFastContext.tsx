@@ -60,7 +60,6 @@ export default function createFastContext<FastContext extends AppState>(
       [],
     );
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
     useEffect(() => {
       workerRef.current = workerRef.current || new ControlsWorker();
       const worker = workerRef.current;
@@ -78,7 +77,6 @@ export default function createFastContext<FastContext extends AppState>(
           console.info("[controls] registerdisplay", payload);
         },
         initialized: (payload: FastContext) => {
-          console.log("[controls] initialized");
           store.current = payload;
           subscribers.current.forEach((callback) => {
             callback();

@@ -49,9 +49,6 @@ export function TourUI(props: Prettify<TourOptions & TourOnMethods>) {
         } as TourOptions,
       );
       tour.setOptions(options);
-      tour.onStart(() => {
-        console.log("Tour started");
-      });
       tour.start();
     });
     return () => {

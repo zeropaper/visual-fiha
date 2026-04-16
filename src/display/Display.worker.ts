@@ -5,8 +5,6 @@
  * It handles communication with the main thread, manages layers, and executes scripts.
  */
 
-console.log("[Display.worker] Worker starting up");
-
 import type { TranspilePayload } from "@utils/tsTranspile";
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
@@ -79,7 +77,6 @@ let onScreenCanvas: OffscreenCanvas | null = null;
 
 // Broadcast channel for communication
 const coreChannel = new BroadcastChannel("core");
-console.log("[Display.worker] BroadcastChannel 'core' created");
 
 // Scriptable setup and error handlers
 clearAssetsCache();
@@ -255,14 +252,12 @@ const broadcastChannelHandlers: ComActionHandlers = {
   },
 
   updateconfig: (update: Partial<AppState>) => {
-    console.log("[display-worker] updateconfig received", update);
     const updated = {
       ...state,
       ...update,
       layers: state.layers || update.layers || [],
     };
     if (Array.isArray(update.layers)) {
-      console.log("[display-worker] Processing layers:", update.layers.length);
       processLayers(update.layers);
     }
     if (!isDisplayState(updated)) {
@@ -302,11 +297,9 @@ const broadcastChannelHandlers: ComActionHandlers = {
   },
 
   registerdisplaycallback: (payload: { id: string }) => {
-    console.log("[display-worker] registerdisplaycallback received", payload);
     if (payload.id !== workerName) {
       return;
     }
-    console.log("[display-worker] Processing layers for this display");
     processLayers(data.layers || []);
   },
 
@@ -330,16 +323,13 @@ const broadcastChannelHandlers: ComActionHandlers = {
   },
 
   clearAssetsCache: () => {
-    console.log("[display-worker] Clearing assets cache");
     clearAssetsCache();
   },
 };
 
 const messageHandlers: ComActionHandlers = {
   offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
-    console.log("[display-worker] Received offscreencanvas");
     onScreenCanvas = onscreen;
-    console.log("[display-worker] Starting render loop (canvas received)");
     // Start the render loop now that we have the canvas
     if (!renderStarted) {
       renderStarted = true;
@@ -350,7 +340,6 @@ const messageHandlers: ComActionHandlers = {
     registerDisplay();
   },
   resize: ({ width, height }: { width: number; height: number }) => {
-    console.log("[display-worker] resize", { width, height });
     state = {
       ...state,
       stage: {
@@ -397,9 +386,6 @@ function renderLayers() {
   // Log once when layers become available
   if (!layersInitialized && state.layers.length > 0) {
     layersInitialized = true;
-    console.log(
-      `[display-worker] Layers initialized: ${state.layers.length} layers available`,
-    );
   }
 
   state.layers.forEach((layer) => {
@@ -453,7 +439,6 @@ function render() {
 // Communication Setup & Initialization
 // =============================================================================
 
-console.log("[Display.worker] Setting up communication");
 // Initialize communication
 const broadcastChannelCom = autoBind(
   coreChannel,
@@ -461,7 +446,6 @@ const broadcastChannelCom = autoBind(
   broadcastChannelHandlers,
 );
 coreChannel.onmessage = broadcastChannelCom.listener;
-console.log("[Display.worker] BroadcastChannel listener attached");
 
 const workerCom = autoBind(
   workerSelf,
@@ -469,25 +453,16 @@ const workerCom = autoBind(
   messageHandlers,
 );
 workerSelf.addEventListener("message", workerCom.listener);
-console.log("[Display.worker] Worker message listener attached");
 
 // =============================================================================
 // Worker Initialization
 // =============================================================================
 
-console.log("[Display.worker] Starting scriptable setup");
-
 scriptable
   .execSetup()
   .then(() => {
-    console.log(
-      "[Display.worker] Scriptable setup complete, waiting for offscreencanvas...",
-    );
     // Don't start render loop yet - wait for offscreencanvas message
     if (onScreenCanvas !== null) {
-      console.log(
-        "[Display.worker] onScreenCanvas already available, starting render",
-      );
       if (!renderStarted) {
         renderStarted = true;
         render();

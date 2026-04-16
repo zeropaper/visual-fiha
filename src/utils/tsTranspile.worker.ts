@@ -33,6 +33,5 @@ self.onmessage = (e) => {
 };
 
 self.addEventListener("close", () => {
-  console.log("[tsTranspile.worker] Closed");
   broadcastChannel.close();
 });

@@ -39,10 +39,6 @@ export function getCredentials(): ProviderKeys {
       openai: import.meta.env.VITE_OPENAI_API_KEY,
       mistral: import.meta.env.VITE_MISTRAL_API_KEY,
     };
-    console.log("getCredentials fallback result:", {
-      hasEnvOpenAI: !!import.meta.env.VITE_OPENAI_API_KEY,
-      hasEnvMistral: !!import.meta.env.VITE_MISTRAL_API_KEY,
-    });
     return result;
   }
 }

@@ -12,10 +12,7 @@ import { autoBind } from "../utils/com";
 import { type TranspilePayload, tsTranspile } from "../utils/tsTranspile";
 import { defaultAppState } from "./contexts/defaultAppState";
 
-console.log("[Controls.worker] Worker starting up");
-
 const broadcastChannel = new BroadcastChannel("core");
-console.log("[Controls.worker] BroadcastChannel 'core' created");
 const defaultBPM = 120;
 
 const defaultStageConfig = {
@@ -56,26 +53,22 @@ let runtimeData: RuntimeData = structuredClone(defaultRuntimeData);
 
 const handlers = {
   start: () => {
-    console.log("[controls-worker] Starting animation/playback");
     runtimeData.time.started = Date.now();
     runtimeData.time.isRunning = true;
     runtimeData.bpm.started = runtimeData.time.started;
     runtimeData.bpm.isRunning = true;
   },
   pause: () => {
-    console.log("[controls-worker] Pausing animation/playback");
     runtimeData.time.isRunning = false;
     runtimeData.bpm.isRunning = false;
   },
   resume: () => {
-    // console.log("[controls-worker] Resuming controls worker");
     runtimeData.time.started = Date.now() - runtimeData.time.elapsed;
     runtimeData.time.isRunning = true;
     runtimeData.bpm.started = Date.now() - runtimeData.bpm.elapsed;
     runtimeData.bpm.isRunning = true;
   },
   reset: () => {
-    // console.log("[controls-worker] Resetting controls worker");
     runtimeData.time.started = Date.now();
     runtimeData.time.elapsed = 0;
     runtimeData.time.percent = 0;
@@ -87,7 +80,6 @@ const handlers = {
     runtimeData.bpm.isRunning = false;
   },
   setTime: (value: number) => {
-    // console.log("[controls-worker] Setting time to %d", value);
     runtimeData.time.started = Date.now() - value;
     runtimeData.time.elapsed = value;
     runtimeData.time.percent = value / (runtimeData.time.duration || 1);
@@ -98,7 +90,6 @@ const handlers = {
     runtimeData.bpm.count = Math.floor(value / (60000 / runtimeData.bpm.bpm));
   },
   timeDuration: (value: number) => {
-    // console.log("[controls-worker] Setting time duration to %d", value);
     runtimeData.time.duration = value;
     runtimeData.time.elapsed = 0;
     runtimeData.time.started = Date.now();
@@ -107,7 +98,6 @@ const handlers = {
     runtimeData.bpm.isRunning = false;
   },
   setBpm: (value: number) => {
-    // console.log("[controls-worker] Setting BPM to %d", value);
     runtimeData.bpm.bpm = value;
     runtimeData.bpm.started = Date.now();
     runtimeData.bpm.percent = 0;
@@ -130,7 +120,6 @@ const handlers = {
       // @ts-expect-error
       Date.now() - handlers.inputsdata.lastLogTime > 5000
     ) {
-      console.log("[controls-worker] Inputs data received:", payload);
       // @ts-expect-error
       handlers.inputsdata.lastLogTime = Date.now();
     }
@@ -141,7 +130,6 @@ const handlers = {
     runtimeData.assets = appState.assets;
   },
   updateconfig: (payload: Partial<AppState>) => {
-    console.log("[controls-worker] Config updated:", payload);
     appState = {
       // @ts-expect-error
       errors: [],
@@ -158,7 +146,6 @@ const handlers = {
         };
       });
     }
-    console.log("[controls-worker] Broadcasting updateconfig to displays");
     // propagate to displays
     broadcastChannel.postMessage({
       type: "updateconfig",
@@ -187,7 +174,6 @@ const handlers = {
         runtimeData.time.duration || defaultRuntimeData.time.duration,
       );
       broadcastRuntimeData();
-      console.log("[controls-worker] init complete:", appState);
 
       broadcastChannel.postMessage({ type: "clearAssetsCache" });
       // broadcastChannel.postMessage({ type: "initialized", payload: appState });
@@ -213,14 +199,11 @@ const handlers = {
 
 const broadcastHandlers = {
   registerdisplay: (payload: DisplayRegistrationPayload) => {
-    // console.log('[controls-worker] Registering "%s" display', payload.id);
-
     appState = structuredClone(appState || defaultAppState);
     const foundDisplay = appState.displays.find(
       (display) => display.id === payload.id,
     );
     if (!foundDisplay) {
-      // console.log(
       //   '[controls-worker] Display "%s" not found, adding to config',
       //   payload.id,
       // );
@@ -326,7 +309,6 @@ function processRuntimeData() {
       runtimeData.time.duration &&
       runtimeData.time.elapsed >= runtimeData.time.duration
     ) {
-      // console.log("[controls-worker] Time duration reached, resetting");
       handlers.reset();
     }
   }
