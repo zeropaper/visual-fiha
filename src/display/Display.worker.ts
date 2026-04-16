@@ -339,6 +339,12 @@ const messageHandlers: ComActionHandlers = {
   offscreencanvas: ({ canvas: onscreen }: { canvas: OffscreenCanvas }) => {
     console.log("[display-worker] Received offscreencanvas");
     onScreenCanvas = onscreen;
+    console.log("[display-worker] Starting render loop (canvas received)");
+    // Start the render loop now that we have the canvas
+    if (!renderStarted) {
+      renderStarted = true;
+      render();
+    }
 
     // TODO: use autoBind
     registerDisplay();
@@ -376,12 +382,26 @@ const messageHandlers: ComActionHandlers = {
 // Rendering Functions
 // =============================================================================
 
+// Flag to track if render loop has started and layers are available
+let renderStarted = false;
+let layersInitialized = false;
+const renderLogCounter = 0;
+
 function renderLayers() {
   if (!context) return;
   context.clearRect(0, 0, canvas.width, canvas.height);
   if (!Array.isArray(state.layers)) {
     return;
   }
+
+  // Log once when layers become available
+  if (!layersInitialized && state.layers.length > 0) {
+    layersInitialized = true;
+    console.log(
+      `[display-worker] Layers initialized: ${state.layers.length} layers available`,
+    );
+  }
+
   state.layers.forEach((layer) => {
     if (!layer.active) return;
     layer.execAnimation();
@@ -456,18 +476,24 @@ console.log("[Display.worker] Worker message listener attached");
 // =============================================================================
 
 console.log("[Display.worker] Starting scriptable setup");
-try {
-  scriptable
-    .execSetup()
-    .then(() => {
+
+scriptable
+  .execSetup()
+  .then(() => {
+    console.log(
+      "[Display.worker] Scriptable setup complete, waiting for offscreencanvas...",
+    );
+    // Don't start render loop yet - wait for offscreencanvas message
+    if (onScreenCanvas !== null) {
       console.log(
-        "[Display.worker] Scriptable setup complete, starting render loop",
+        "[Display.worker] onScreenCanvas already available, starting render",
       );
-      render();
-    })
-    .catch(() => {
-      console.error("[Display.worker] Cannot run worker initial setup");
-    });
-} catch (e) {
-  console.error("[Display.worker] Error during initialization:", e);
-}
+      if (!renderStarted) {
+        renderStarted = true;
+        render();
+      }
+    }
+  })
+  .catch(() => {
+    console.error("[Display.worker] Cannot run worker initial setup");
+  });
