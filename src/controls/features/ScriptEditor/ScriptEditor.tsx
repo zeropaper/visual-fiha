@@ -311,7 +311,6 @@ export function ScriptEditor({
                       onFinishResize={onFinishResize}
                       role={role}
                       type={type}
-                      layerType={layerType}
                       id={id}
                     />
                   ) : null}
