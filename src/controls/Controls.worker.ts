@@ -12,7 +12,10 @@ import { autoBind } from "../utils/com";
 import { type TranspilePayload, tsTranspile } from "../utils/tsTranspile";
 import { defaultAppState } from "./contexts/defaultAppState";
 
+console.log("[Controls.worker] Worker starting up");
+
 const broadcastChannel = new BroadcastChannel("core");
+console.log("[Controls.worker] BroadcastChannel 'core' created");
 const defaultBPM = 120;
 
 const defaultStageConfig = {
@@ -53,14 +56,14 @@ let runtimeData: RuntimeData = structuredClone(defaultRuntimeData);
 
 const handlers = {
   start: () => {
-    // console.log("[controls-worker] Starting controls worker");
+    console.log("[controls-worker] Starting animation/playback");
     runtimeData.time.started = Date.now();
     runtimeData.time.isRunning = true;
     runtimeData.bpm.started = runtimeData.time.started;
     runtimeData.bpm.isRunning = true;
   },
   pause: () => {
-    // console.log("[controls-worker] Pausing controls worker");
+    console.log("[controls-worker] Pausing animation/playback");
     runtimeData.time.isRunning = false;
     runtimeData.bpm.isRunning = false;
   },
@@ -127,7 +130,7 @@ const handlers = {
       // @ts-expect-error
       Date.now() - handlers.inputsdata.lastLogTime > 5000
     ) {
-      // console.log("[controls-worker] Inputs data received:", payload);
+      console.log("[controls-worker] Inputs data received:", payload);
       // @ts-expect-error
       handlers.inputsdata.lastLogTime = Date.now();
     }
@@ -138,6 +141,7 @@ const handlers = {
     runtimeData.assets = appState.assets;
   },
   updateconfig: (payload: Partial<AppState>) => {
+    console.log("[controls-worker] Config updated:", payload);
     appState = {
       // @ts-expect-error
       errors: [],
@@ -154,7 +158,7 @@ const handlers = {
         };
       });
     }
-    // console.log("[controls-worker] Config updated:", configData);
+    console.log("[controls-worker] Broadcasting updateconfig to displays");
     // propagate to displays
     broadcastChannel.postMessage({
       type: "updateconfig",

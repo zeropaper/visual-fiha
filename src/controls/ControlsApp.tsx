@@ -35,12 +35,14 @@ const ScriptEditor = lazy(() =>
 );
 
 export default function ControlsApp() {
+  console.log("[ControlsApp] Initializing controls application");
   const [currentScript, _setCurrentScript] = useState<ScriptInfo>(
     JSON.parse(
       localStorage.getItem("currentScript") ||
         '{"id": "", "role": "animation", "type": ""}',
     ),
   );
+  console.log("[ControlsApp] Current script loaded:", currentScript);
   const setCurrentScript = useCallback((updated: ScriptInfo) => {
     _setCurrentScript(updated);
     localStorage.setItem("currentScript", JSON.stringify(updated));
