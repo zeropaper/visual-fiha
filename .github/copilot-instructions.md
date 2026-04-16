@@ -1,46 +1,94 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
-This project is a browser-based creative coding platform for interactive visuals, using JavaScript/TypeScript, WebGL, CSS, MIDI, and a modular worker/message architecture. See README.md and architecture.md for details.
+This project is a browser-based creative coding platform for interactive visuals, using JavaScript/TypeScript, WebGL, CSS, MIDI, and a modular worker/message architecture.
 
-## Project Context
-- Main languages: TypeScript, JavaScript
-- Key technologies: Web Workers, BroadcastChannel, React, Three.js, Monaco Editor
-- Messaging and state management are central; see `src/utils/com.ts` for utilities.
+## Quick Start for AI Agents
+**Before making changes, read:** [README.md](../README.md), [project structure](../docs/architecture/project-structure.md), [messaging architecture](../docs/architecture/messaging.md), and [known bugs](../docs/known-bugs.md).
+
+## Build & Test Commands
+```bash
+pnpm dev           # Start development server (http://localhost:5173)
+pnpm build         # Production build
+pnpm test          # Run all tests (*.test.ts and *.test.dom.ts)
+pnpm test:watch    # Watch mode for development
+pnpm test:coverage # Coverage report
+pnpm storybook     # Component development & documentation
+```
+
+## Stack & Key Technologies
+- **Languages:** TypeScript, JavaScript
+- **Build:** Vite, pnpm
+- **UI Framework:** React (with feature-based architecture in `src/controls/features/`)
+- **Rendering:** Three.js (3D), Canvas 2D API (2D)
+- **Editors:** Monaco Editor (code), Storybook (components)
+- **Concurrency:** Web Workers (Controls, Display, Transpiler), BroadcastChannel API
+- **Code Quality:** Biome (linter/formatter), Vitest (tests)
+
+## Architecture Overview
+See detailed docs at [`docs/architecture/`](../docs/architecture/):
+- **Architecture Diagram:** [architecture-diagram.md](../docs/architecture/architecture-diagram.md) - Visual mermaid diagrams showing system components, message flows, data flows, and worker architecture
+- **Initialization & Message Flows:** [initialization-and-message-flows.md](../docs/architecture/initialization-and-message-flows.md) - Traces app startup and runtime message flows
+- **Worker-based:** Controls.worker.ts manages state; Display.worker.ts renders; tsTranspile.worker.ts compiles TypeScript
+- **Message-driven:** All inter-thread/window communication via `src/utils/com.ts` utilities
+- **Layers:** Canvas2D and ThreeJS implementations in `src/layers/` (see [layer docs](../docs/layers.md))
+- **Inputs:** MIDI, audio, time, keyboard, mouse (see [inputs docs](../docs/inputs.md))
 
 ## Coding Guidelines
-- **Read** [README.md](../README.md), [architecture.md](../architecture.md) and [known bugs](../known-bugs.md) before making changes.
-- **Always use** the messaging utilities in `src/utils/com.ts` for cross-thread or cross-context communication.
-- **Follow existing messaging patterns**—search for similar message types before introducing new ones.
-- **Update or add TypeScript types** in `src/types.ts` or relevant files for any new message or payload.
-- **Document** any new message types, handlers, or architectural changes in `architecture.md`.
-- **Debounce/throttle** high-frequency messages (e.g., `runtimedata`) as needed for performance.
-- **Use transferable objects** (e.g., OffscreenCanvas, ArrayBuffers) where possible for efficiency.
-- **Propagate errors** using the `meta`/error pattern in `com.ts`.
-- **Write or update tests** for messaging/worker logic when making changes (see `src/utils/com.dom.test.ts`, etc.).
-- **Maintain consistent naming** for messages, handlers, and types.
+**Messaging (Critical):**
+- **Always use** `src/utils/com.ts` utilities for any inter-thread or cross-window communication
+- **Search first** for similar message types before creating new ones (prevents duplication)
+- **Type all messages** in `src/types.ts` or relevant module types file
+- **Document** new message types and handlers in [messaging.md](../docs/architecture/messaging.md)
+- **Optimize** high-frequency messages (e.g., `runtimedata`) with debounce/throttle or batching
+- **Error handling:** Use `meta`/error pattern from `com.ts`
+- **Transferable objects:** Use OffscreenCanvas, ArrayBuffers for efficiency
 
-## Stack
-- pnpm for package management
-- TypeScript for type safety
-- Vite for development server and build
-- React for UI components
-- Three.js for 3D rendering
-- Monaco Editor for code editing
-- Web Workers for background processing
-- BroadcastChannel for inter-thread communication
+**Code Organization:**
+- **Features:** Place UI components in `src/controls/features/{FeatureName}/`
+- **Contexts:** Add new state contexts to `src/controls/contexts/`
+- **Types:** Define types in module-level `types.ts` or central `src/types.ts`
+- **Utils:** Shared helpers in `src/utils/`, worker-specific logic in their own files
 
-## Key Files
-- `src/utils/com.ts` — Messaging utilities (makeChannelPost, makeChannelListener, autoBind)
-- `src/controls/Controls.worker.ts`, `src/display/Display.worker.ts`, `src/controls/tsTranspile.worker.ts` — Worker entry points
-- `src/types.ts`, `src/controls/types.ts`, `src/display/types.ts` — Type definitions
+**Testing:**
+- **Unit tests:** `*.test.ts` (node environment)
+- **DOM/Browser tests:** `*.test.dom.ts` (jsdom environment)
+- **Examples:** See `src/utils/com.dom.test.ts`, `src/display/DisplayWorker.test.ts`
+- **Storybook:** Use for component development and documentation
 
-## Troubleshooting & FAQ
-- If unsure about message flow, consult `architecture.md` and search for the message type in the codebase.
-- If you encounter performance issues, profile BroadcastChannel usage and consider batching or filtering messages.
-- For new features, always consider their impact on the messaging system and document accordingly.
+**Type Generation:**
+- **Run** `pnpm gen-editor-types` after modifying scriptable APIs (`canvasTools.ts`, `threeTools.ts`, etc.)
+- **Output:** Editor type definitions in `*.editor-types.txt` for Monaco autocomplete in user scripts
+
+## Key Files by Domain
+| Domain | File | Purpose |
+|--------|------|---------|
+| **Messaging** | `src/utils/com.ts` | makeChannelPost, makeChannelListener, autoBind for worker/window communication |
+| **State** | `src/controls/Controls.worker.ts` | Application state management and coordination |
+| **Display** | `src/display/Display.worker.ts` | Rendering pipeline for separate display windows |
+| **Types** | `src/types.ts` | Central type definitions (AppState, LayerConfig, RuntimeData, etc.) |
+| **Transpiler** | `src/controls/tsTranspile.worker.ts` | TypeScript compilation for user scripts |
+| **Layers** | `src/layers/Canvas2D/`, `src/layers/ThreeJS/` | Layer implementations and user API (tools) |
+| **UI** | `src/ui/` | Reusable components; `src/controls/` for feature-specific UI |
+| **Contexts** | `src/controls/contexts/` | React contexts for state management (fast context pattern) |
+
+## Common Tasks
+- **Adding a message type:** Define in `src/types.ts`, implement handler in relevant worker, document in [messaging.md](../docs/architecture/messaging.md)
+- **Adding a UI feature:** Create `src/controls/features/{FeatureName}/`, add context if needed, use messaging for state
+- **Extending Canvas API:** Modify `src/layers/Canvas2D/canvasTools.ts`, run `pnpm gen-editor-types:canvas`
+- **Extending ThreeJS API:** Modify `src/layers/ThreeJS/threeTools.ts`, run `pnpm gen-editor-types:threejs`
+- **Adding a new input type:** Extend `src/types.ts` InputConfig, implement in `src/controls/features/Inputs/`
+
+## Troubleshooting
+- **Message flow unclear?** Consult [messaging.md](../docs/architecture/messaging.md) and search codebase for the message type
+- **Performance issues?** Profile BroadcastChannel usage; consider batching, filtering, or debouncing messages
+- **Type errors in user scripts?** Run `pnpm gen-editor-types` to regenerate Monaco type definitions
+- **Test failures?** Check if test is `*.test.ts` (node) or `*.test.dom.ts` (jsdom); use appropriate environment
+- **Known bugs?** See [known-bugs.md](../docs/known-bugs.md) before starting work
 
 ## Checklist Before Submitting Changes
-- [ ] Messaging follows project patterns and uses `src/utils/com.ts`
-- [ ] Types and documentation are updated
-- [ ] Tests are added/updated if needed
-- [ ] Performance and error handling are considered
+- [ ] Messaging follows patterns in `src/utils/com.ts`; new message types documented in [messaging.md](../docs/architecture/messaging.md)
+- [ ] Types updated in appropriate `types.ts` file
+- [ ] Tests added for worker/messaging logic (`.test.ts` or `.test.dom.ts` as appropriate)
+- [ ] Biome linter and formatter satisfied (`pnpm build` should pass)
+- [ ] Performance and error handling considered; high-frequency messages optimized
+- [ ] Type generation run if scriptable APIs modified (`pnpm gen-editor-types`)
