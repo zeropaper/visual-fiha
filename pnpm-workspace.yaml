@@ -31,7 +31,7 @@ catalog:
   lint-staged: ^16.4.0
   lodash: ^4.18.1
   lucide-react: ^0.515.0
-  monaco-editor: ^0.52.2
+  monaco-editor: ^0.55.1
   openai: ^5.23.2
   playwright: ^1.59.1
   react: ^18.3.1
