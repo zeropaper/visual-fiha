@@ -26,7 +26,6 @@
     "noUncheckedSideEffectImports": true,
     "types": ["vite/client"],
     "plugins": [{ "name": "typescript-plugin-css-modules" }],
-    "baseUrl": ".",
     "paths": {
       "@utils/*": ["./src/utils/*"],
       "@display/*": ["./src/display/*"],
@@ -37,7 +36,7 @@
       "@inputs/*": ["./src/inputs/*"],
       "@ui/*": ["./src/ui/*"],
       "@docs/*": ["./docs/*"],
-      "@demos/*": ["./demos/*"],
+      "@demos/*": ["./demos/*"]
     }
   }
 }
