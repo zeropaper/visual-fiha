@@ -16,7 +16,6 @@
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest --reporter=verbose --watch",
     "test:coverage": "vitest run --reporter=verbose --coverage",
-    "copy-typescript": "cp node_modules/typescript/lib/typescript.js public/typescript.js",
     "gen-editor-types:scriptable": "tsc ./src/utils/Scriptable.editor.types.ts --lib dom,esnext -d --emitDeclarationOnly --ignoreConfig",
     "gen-editor-types:canvas": "tsc ./src/layers/Canvas2D/canvasTools.ts --lib dom,esnext -d --emitDeclarationOnly --ignoreConfig",
     "gen-editor-types:threejs": "pnpm run gen-editor-types:threejs:module && pnpm run gen-editor-types:threejs:utils",
@@ -26,7 +25,7 @@
     "gen-editor-types:math": "tsc ./src/utils/mathTools.ts --lib dom,esnext -d --emitDeclarationOnly --ignoreConfig",
     "gen-editor-types": "pnpm gen-editor-types:scriptable && pnpm gen-editor-types:canvas && pnpm gen-editor-types:threejs && pnpm gen-editor-types:misc && pnpm gen-editor-types:math",
     "postgen-editor-types": "find ./src -name '*.d.ts' -exec bash -c 'mv \"$0\" \"${0%.d.ts}.editor-types.txt\"' {} \\;",
-    "prepare": "husky && pnpm run copy-typescript && pnpm run gen-editor-types",
+    "prepare": "husky && pnpm run gen-editor-types",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

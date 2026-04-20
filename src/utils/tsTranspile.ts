@@ -1,14 +1,11 @@
 import type { ScriptInfo } from "src/types";
 
+import TranspileWorker from "./tsTranspile.worker?worker";
+
 export interface TranspilePayload extends ScriptInfo {
   code: string;
   original: string;
 }
-
-const tsTranspileWorker = new Worker(
-  new URL("./tsTranspile.worker.ts", import.meta.url),
-  { type: "classic" },
-);
 
 export async function tsTranspile(
   code: string,
@@ -17,6 +14,7 @@ export async function tsTranspile(
   id: string,
 ) {
   return new Promise<TranspilePayload>((resolve, reject) => {
+    const tsTranspileWorker = new TranspileWorker();
     const timeout = setTimeout(() => {
       tsTranspileWorker.removeEventListener("message", listener);
       reject(new Error("Transpile timeout"));
