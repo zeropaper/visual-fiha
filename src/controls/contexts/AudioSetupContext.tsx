@@ -23,7 +23,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { AudioInputMode } from "src/types";
+import type { AudioInputMode, TimeInputValue } from "src/types";
 
 const audioConfig = {
   minDecibels: -120,
@@ -72,6 +72,9 @@ interface AudioSetupContextValue {
   getMicrophoneState: () => AudioContextState;
   audioContext: AudioContext | null;
   ready: boolean;
+  isRunning: boolean;
+  bpm: number;
+  getTimeData: () => TimeInputValue | null;
 }
 
 const AudioSetupContext = createContext<AudioSetupContextValue>({
@@ -114,6 +117,9 @@ const AudioSetupContext = createContext<AudioSetupContextValue>({
   },
   audioContext: null,
   ready: false,
+  isRunning: false,
+  bpm: 120,
+  getTimeData: () => null,
 });
 
 export function AudioSetupProvider({
@@ -124,7 +130,7 @@ export function AudioSetupProvider({
   defaultAudioFiles?: string[];
 }) {
   const post = useContextWorkerPost();
-  const { isRunning, getTimeData } = useRuntimeMonitor();
+  const { isRunning, bpm: monitorBpm, getTimeData } = useRuntimeMonitor();
   const [files, setFiles] = useState<AudioFileInfo[]>(
     defaultAudioFiles.map((url) => ({
       url,
@@ -546,6 +552,9 @@ export function AudioSetupProvider({
       getMicrophoneState,
       audioContext: audioContextRef.current,
       ready,
+      isRunning,
+      bpm: monitorBpm,
+      getTimeData,
     }),
     [
       files,
@@ -561,6 +570,9 @@ export function AudioSetupProvider({
       getAudioAnalyzers,
       getMicrophoneState,
       ready,
+      isRunning,
+      monitorBpm,
+      getTimeData,
     ],
   );
 

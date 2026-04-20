@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { RuntimeData, TimeInputValue } from "src/types";
 
 /**
@@ -14,6 +14,8 @@ export function useRuntimeMonitor() {
   const [isRunning, setIsRunning] = useState(false);
   const [bpm, setBpm] = useState(120);
   const timeDataRef = useRef<TimeInputValue | null>(null);
+
+  const getTimeData = useCallback(() => timeDataRef.current, []);
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
@@ -65,6 +67,6 @@ export function useRuntimeMonitor() {
   return {
     isRunning,
     bpm,
-    getTimeData: () => timeDataRef.current,
+    getTimeData,
   };
 }

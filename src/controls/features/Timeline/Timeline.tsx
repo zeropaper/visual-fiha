@@ -2,7 +2,6 @@ import { useAudioSetup } from "@contexts/AudioSetupContext";
 import { useContextWorkerPost } from "@contexts/ControlsContext";
 import type React from "react";
 import { type MouseEventHandler, useCallback, useState } from "react";
-import { useRuntimeMonitor } from "../../hooks/useRuntimeMonitor";
 import { PureTimeline } from "./PureTimeline";
 
 interface TimelineProps {
@@ -18,10 +17,9 @@ const minTimelineDuration = 30000; // Minimum duration for absolute time display
  */
 export function Timeline({ className }: TimelineProps) {
   const post = useContextWorkerPost();
-  const { isRunning, bpm, getTimeData } = useRuntimeMonitor();
+  const { isRunning, bpm, getTimeData, playAll, pauseAll, seekAll, stopAll } =
+    useAudioSetup();
   const [hoveredTime, setHoveredTime] = useState<number | null>(null);
-
-  const { playAll, pauseAll, seekAll, stopAll } = useAudioSetup();
 
   const getTimelineTime = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>): number => {
