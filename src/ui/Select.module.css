@@ -1,8 +1,7 @@
 .select {
   appearance: base-select;
-}
-.select {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: var(--button-padding);
   font-size: 1rem;
   color: var(--button-color);
@@ -10,11 +9,35 @@
   border: 1px solid var(--button-border-color);
   border-radius: var(--button-border-radius);
   cursor: pointer;
-  text-align: center;
 
   flex: 1;
   transition: 0.4s;
 }
+
+.select::picker-icon {
+  margin-inline-start: auto;
+  padding-inline-start: 0.5em;
+}
+
+.select::picker(select) {
+  background-color: #252526;
+  border: 1px solid var(--button-border-color);
+  border-radius: var(--button-border-radius);
+  padding: 2px;
+}
+
+.select option {
+  color: #cccccc;
+  background-color: #252526;
+  padding: 4px 8px;
+}
+
+.select option:hover,
+.select option:checked {
+  background-color: #007bff;
+  color: #ffffff;
+}
+
 .select:hover {
   background-color: var(--button-bg-hover);
 }
