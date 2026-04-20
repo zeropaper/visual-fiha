@@ -1,13 +1,11 @@
 import { useEffect, useRef } from "react";
+import TranspileWorker from "../../utils/tsTranspile.worker?worker";
 
 export function useTranspile() {
   const transpilationWorkerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
-    const worker = new Worker(
-      new URL("../../utils/tsTranspile.worker.ts", import.meta.url),
-      { type: "classic" },
-    );
+    const worker = new TranspileWorker();
     if (transpilationWorkerRef.current) {
       transpilationWorkerRef.current.terminate();
     }
