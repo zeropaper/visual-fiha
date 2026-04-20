@@ -1,0 +1,18 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  margin: var(--spacing-sm) 0 0 0;
+}
+
+.item {
+  display: block;
+  border: 1px solid var(--button-border-color);
+  padding: var(--spacing-xs);
+}
+
+.info {
+  display: flex;
+  gap: var(--spacing-sm);
+}
