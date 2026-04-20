@@ -57,7 +57,7 @@ export function TimelineFinite({
       drawPlaceholder(ctx, width, height, "No finite time data available");
     }
 
-    if (hoveredTime && timeData && timeData.duration) {
+    if (hoveredTime && timeData?.duration) {
       const hoverX = (hoveredTime / timeData.duration) * width;
       drawHoverIndicator(ctx, height, hoverX, hoveredTime);
     }
