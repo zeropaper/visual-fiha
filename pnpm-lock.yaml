@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@revealjs/react':
+        specifier: ^0.2.1
+        version: 0.2.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(reveal.js@6.0.1)
       intro.js:
         specifier: ^8.3.2
         version: 8.3.2
@@ -38,6 +41,9 @@ importers:
       rehype-raw:
         specifier: ^7.0.0
         version: 7.0.0
+      reveal.js:
+        specifier: ^6.0.1
+        version: 6.0.1
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1185,6 +1191,13 @@ packages:
   '@renovatebot/pep440@4.2.1':
     resolution: {integrity: sha512-2FK1hF93Fuf1laSdfiEmJvSJPVIDHEUTz68D3Fi9s0IZrrpaEcj6pTFBTbYvsgC5du4ogrtf5re7yMMvrKNgkw==}
     engines: {node: ^20.9.0 || ^22.11.0 || ^24, pnpm: ^10.0.0}
+
+  '@revealjs/react@0.2.1':
+    resolution: {integrity: sha512-bEivSQ1W0WpiSUPd4KNLkFGSkdywuno2jjzBHQCO+SN3ChFWP6Y3Z2OLRih3Qeel5k1bwKsSsmr5AMUMA5ZdyQ==}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+      reveal.js: '>=5'
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
@@ -3635,6 +3648,9 @@ packages:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
 
+  reveal.js@6.0.1:
+    resolution: {integrity: sha512-9eacArNIgqO2HGWOK+93gJNn+gvdGDVbSq+i2u3Ja9kjiHps0XNLpgYTZTYjKRH91uXy3clGimeGiw4umHG/tg==}
+
   rfdc@1.4.1:
     resolution: {integrity: sha512-q1b3N5QkRUWUl7iyylaaj3kOpIT0N2i9MqIEQXP73GVsN9cw3fdx8X63cEmWhJGi2PPCF23Ijp7ktmd39rawIA==}
 
@@ -5650,6 +5666,12 @@ snapshots:
   '@polka/url@1.0.0-next.29': {}
 
   '@renovatebot/pep440@4.2.1': {}
+
+  '@revealjs/react@0.2.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(reveal.js@6.0.1)':
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      reveal.js: 6.0.1
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
@@ -8361,6 +8383,8 @@ snapshots:
       signal-exit: 3.0.7
 
   reusify@1.1.0: {}
+
+  reveal.js@6.0.1: {}
 
   rfdc@1.4.1: {}
 
