@@ -30,14 +30,12 @@ export function useRuntimeMonitor() {
         runtimeDataRef.current?.time.isRunning &&
         !event.data.payload.time.isRunning
       ) {
-        console.info("[controls-worker] Worker stopped running");
         // If the worker stopped running, reset the elapsed time
         setIsRunning(false);
       } else if (
         !runtimeDataRef.current?.time.isRunning &&
         event.data.payload.time.isRunning
       ) {
-        console.info("[controls-worker] Worker started running");
         // If the worker started running, update the state
         setIsRunning(true);
       }
