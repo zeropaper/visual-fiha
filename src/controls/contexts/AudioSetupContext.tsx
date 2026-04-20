@@ -284,7 +284,7 @@ export function AudioSetupProvider({
 
   // Setup audio files
   const setupAudioFiles = useCallback(
-    async (audioFiles: AudioFileInfo[]) => {
+    async (audioFiles: AudioFileInfo[], isCancelled: () => boolean) => {
       cleanupAudio();
 
       if (!audioFiles.length) return;
@@ -314,6 +314,9 @@ export function AudioSetupProvider({
           return source;
         }),
       );
+
+      // Bail out if the effect that launched this async call has been superseded
+      if (isCancelled()) return;
 
       sourcesRef.current = sources;
 
@@ -478,12 +481,17 @@ export function AudioSetupProvider({
 
   // Ensure setupMicrophone and setupAudioFiles are invoked based on mode
   useEffect(() => {
+    let cancelled = false;
+    const isCancelled = () => cancelled;
     localStorage.setItem("audioMode", mode);
     if (mode === "mic") {
       setupMicrophone();
     } else {
-      setupAudioFiles(files);
+      setupAudioFiles(files, isCancelled);
     }
+    return () => {
+      cancelled = true;
+    };
   }, [mode, files, setupMicrophone, setupAudioFiles]);
 
   const setMode = useCallback(

@@ -90,12 +90,13 @@ const handlers = {
     runtimeData.bpm.count = Math.floor(value / (60000 / runtimeData.bpm.bpm));
   },
   timeDuration: (value: number) => {
+    const wasRunning = runtimeData.time.isRunning;
     runtimeData.time.duration = value;
     runtimeData.time.elapsed = 0;
     runtimeData.time.started = Date.now();
     runtimeData.time.percent = 0;
-    runtimeData.time.isRunning = false;
-    runtimeData.bpm.isRunning = false;
+    runtimeData.time.isRunning = wasRunning;
+    runtimeData.bpm.isRunning = wasRunning;
   },
   setBpm: (value: number) => {
     runtimeData.bpm.bpm = value;
