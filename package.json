@@ -7,7 +7,7 @@
   "author": "Valentin Vago <zeropaper@irata.ch> (https://zeropaper.style/)",
   "license": "MIT",
   "engines": {
-    "node": "v22.16.0"
+    "node": "v24.15.0"
   },
   "scripts": {
     "dev": "vite",
