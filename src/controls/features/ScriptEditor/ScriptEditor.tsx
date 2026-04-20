@@ -81,22 +81,16 @@ export function ScriptEditor({
           };
 
           // Configure TypeScript and JavaScript language defaults (optional)
-          monacoInstance.languages.typescript.typescriptDefaults.setEagerModelSync(
-            true,
-          );
-          monacoInstance.languages.typescript.typescriptDefaults.setCompilerOptions(
-            {
-              esModuleInterop: true,
-              target: monacoInstance.languages.typescript.ScriptTarget.ES2020,
-              moduleResolution:
-                monacoInstance.languages.typescript.ModuleResolutionKind.NodeJs,
-              allowNonTsExtensions: true, // Important for JS in TS worker
-            },
-          );
+          monacoInstance.typescript.typescriptDefaults.setEagerModelSync(true);
+          monacoInstance.typescript.typescriptDefaults.setCompilerOptions({
+            esModuleInterop: true,
+            target: monacoInstance.typescript.ScriptTarget.ES2020,
+            moduleResolution:
+              monacoInstance.typescript.ModuleResolutionKind.NodeJs,
+            allowNonTsExtensions: true, // Important for JS in TS worker
+          });
 
-          monacoInstance.languages.typescript.javascriptDefaults.setEagerModelSync(
-            true,
-          );
+          monacoInstance.typescript.javascriptDefaults.setEagerModelSync(true);
 
           setIsMonacoReady(true);
         } catch (error) {
