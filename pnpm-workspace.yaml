@@ -51,6 +51,5 @@ catalog:
   vite-plugin-monaco-editor: ^1.1.0
   vite-plugin-pwa: ^1.2.0
   vite-plugin-vercel: ^11.0.3
-  vite-tsconfig-paths: ^6.1.1
   vitest: ^4.1.4
   zod: ^3.25.76

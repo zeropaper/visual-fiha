@@ -63,7 +63,6 @@
     "vite-plugin-monaco-editor": "catalog:",
     "vite-plugin-pwa": "catalog:",
     "vite-plugin-vercel": "catalog:",
-    "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:"
   },
   "repository": {
