@@ -10,7 +10,7 @@ import {
   useRef,
   useSyncExternalStore,
 } from "react";
-import type { AppState, DisplayRegistrationPayload } from "src/types";
+import type { AppState, DisplayRegistrationPayload } from "../../types";
 import ControlsWorker from "../Controls.worker?worker";
 
 declare global {

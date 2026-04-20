@@ -6,7 +6,7 @@ import scriptableTypes from "@utils/Scriptable.editor.types.editor-types.txt?raw
 import { HelpCircleIcon } from "lucide-react";
 import type * as _monaco from "monaco-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ScriptInfo } from "src/types";
+import type { ScriptInfo } from "../../../types";
 import { useTranspile } from "../../hooks/useTranspile";
 import { AIAssistant } from "../AIAssistant/AIAssistant";
 import { type DocTopic, Help } from "../Help/Help";

@@ -23,7 +23,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { AudioInputMode, TimeInputValue } from "src/types";
+import type { AudioInputMode, TimeInputValue } from "../../types";
 
 const audioConfig = {
   minDecibels: -120,

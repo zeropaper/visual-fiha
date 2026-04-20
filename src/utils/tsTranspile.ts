@@ -1,4 +1,4 @@
-import type { ScriptInfo } from "src/types";
+import type { ScriptInfo } from "../types";
 
 import TranspileWorker from "./tsTranspile.worker?worker";
 

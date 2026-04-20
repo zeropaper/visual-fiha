@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { lazy, Suspense, useCallback, useState } from "react";
 import { Toaster } from "sonner";
-import type { ScriptInfo } from "src/types";
+import type { ScriptInfo } from "../types";
 import styles from "./ControlsApp.module.css";
 import { AudioSetupProvider } from "./contexts/AudioSetupContext";
 import { AppFastContextProvider } from "./contexts/ControlsContext";
