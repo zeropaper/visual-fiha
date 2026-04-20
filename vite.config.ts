@@ -1,3 +1,4 @@
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import monacoEditorPlugin from "vite-plugin-monaco-editor";
@@ -13,6 +14,7 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+    tailwindcss({}),
     // vercel(),
     react(),
     monacoEditorPlugin({
