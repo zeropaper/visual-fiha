@@ -37,6 +37,13 @@ export default function createFastContext<FastContext extends AppState>(
 
     const subscribers = useRef(new Set<() => void>());
 
+    function commit() {
+      subscribers.current.forEach((callback) => {
+        callback();
+      });
+      onUpdate(store.current);
+    }
+
     // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
     const set = useCallback((value: Partial<FastContext>) => {
       postRef.current?.("updateconfig", value);
@@ -68,20 +75,14 @@ export default function createFastContext<FastContext extends AppState>(
         updateerrors: (payload: any) => {
           if (payload?.length) console.info("[controls] updateerrors", payload);
           store.current.errors = payload;
-          subscribers.current.forEach((callback) => {
-            callback();
-          });
-          onUpdate(store.current);
+          commit();
         },
         registerdisplay: (payload: DisplayRegistrationPayload) => {
           console.info("[controls] registerdisplay", payload);
         },
         initialized: (payload: FastContext) => {
           store.current = payload;
-          subscribers.current.forEach((callback) => {
-            callback();
-          });
-          onUpdate(store.current);
+          commit();
         },
       });
       postRef.current = _post;
