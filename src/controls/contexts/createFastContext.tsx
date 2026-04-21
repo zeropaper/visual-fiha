@@ -78,7 +78,24 @@ export default function createFastContext<FastContext extends AppState>(
           commit();
         },
         registerdisplay: (payload: DisplayRegistrationPayload) => {
-          console.info("[controls] registerdisplay", payload);
+          const display = {
+            id: payload.id,
+            width: payload.width,
+            height: payload.height,
+            stagePosition: {
+              x: 0,
+              y: 0,
+            },
+            stageSize: {
+              width: payload.width,
+              height: payload.height,
+            },
+          };
+          console.info("[controls] registerdisplay", display);
+          if (!store.current.displays.find((d) => d.id === display.id)) {
+            store.current.displays.push(display);
+            commit();
+          }
         },
         initialized: (payload: FastContext) => {
           store.current = payload;

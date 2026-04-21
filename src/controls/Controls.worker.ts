@@ -205,9 +205,6 @@ const broadcastHandlers = {
       (display) => display.id === payload.id,
     );
     if (!foundDisplay) {
-      //   '[controls-worker] Display "%s" not found, adding to config',
-      //   payload.id,
-      // );
       appState.displays.push({
         id: payload.id,
         width: payload.width,
@@ -220,6 +217,12 @@ const broadcastHandlers = {
           width: payload.width,
           height: payload.height,
         },
+      });
+
+      mainPost("registerdisplay", {
+        id: payload.id,
+        width: payload.width,
+        height: payload.height,
       });
     }
 
