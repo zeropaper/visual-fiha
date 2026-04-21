@@ -8,7 +8,7 @@ import { Input } from "@ui/Input";
 import { Select } from "@ui/Select";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
-import type { ScriptInfo, ScriptRole } from "src/types";
+import type { ScriptInfo, ScriptRole } from "../../../types";
 import styles from "./Layers.module.css";
 
 function Layer({

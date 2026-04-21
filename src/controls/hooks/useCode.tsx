@@ -1,5 +1,5 @@
 import { useAppFastContextFields } from "@contexts/ControlsContext";
-import type { ScriptRole, ScriptType } from "src/types";
+import type { ScriptRole, ScriptType } from "../../types";
 
 export function useCode(
   role: ScriptRole,

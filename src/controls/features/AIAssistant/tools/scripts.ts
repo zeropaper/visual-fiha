@@ -1,6 +1,6 @@
 import { tsTranspile } from "@utils/tsTranspile";
-import type { ScriptInfo } from "src/types";
 import { z } from "zod";
+import type { ScriptInfo } from "../../../../types";
 
 /**
  * Base schema for script operations.

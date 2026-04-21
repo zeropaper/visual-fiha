@@ -1,5 +1,5 @@
 import { Button } from "@ui/Button";
-import type { ScriptInfo } from "src/types";
+import type { ScriptInfo } from "../types";
 import styles from "./WorkerScriptsSelector.module.css";
 
 export function WorkerScriptsSelector({

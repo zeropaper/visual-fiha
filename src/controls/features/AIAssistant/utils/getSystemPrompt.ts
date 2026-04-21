@@ -3,7 +3,7 @@ import inputsDocs from "@docs/inputs.md?raw";
 import layersDocs from "@docs/layers.md?raw";
 import threejsDocs from "@docs/threejs-api.md?raw";
 import workerDocs from "@docs/worker-api.md?raw";
-import type { LayerConfig, ScriptRole, ScriptType } from "src/types";
+import type { LayerConfig, ScriptRole, ScriptType } from "../../../../types";
 
 export function getSystemMessage({
   type = "worker",

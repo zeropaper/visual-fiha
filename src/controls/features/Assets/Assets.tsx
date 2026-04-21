@@ -3,7 +3,7 @@ import { useFileSystem } from "@controls/contexts/FileSystemContext";
 import { useCopyToClipboard } from "@controls/hooks/useCopyToClipboard";
 import { Button, buttonStyles } from "@ui/Button";
 import { CopyIcon, LinkIcon } from "lucide-react";
-import type { AssetConfig } from "src/types";
+import type { AssetConfig } from "../../../types";
 import styles from "./Assets.module.css";
 
 function AssetId({ id, state }: { id: string; state: string }) {
