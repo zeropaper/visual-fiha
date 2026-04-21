@@ -60,8 +60,6 @@
     "typescript-plugin-css-modules": "catalog:",
     "vite": "catalog:",
     "vite-plugin-monaco-editor": "catalog:",
-    "vite-plugin-pwa": "catalog:",
-    "vite-plugin-vercel": "catalog:",
     "vitest": "catalog:"
   },
   "repository": {
