@@ -51,4 +51,4 @@ catalog:
   vite-plugin-monaco-editor: ^1.1.0
   vite-plugin-vercel: ^11.0.3
   vitest: ^4.1.4
-  zod: ^3.25.76
+  zod: ^4.3.6
