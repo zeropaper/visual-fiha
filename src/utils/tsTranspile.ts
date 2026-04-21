@@ -18,7 +18,7 @@ export async function tsTranspile(
     const timeout = setTimeout(() => {
       tsTranspileWorker.removeEventListener("message", listener);
       reject(new Error("Transpile timeout"));
-    }, 1500);
+    }, 2500);
 
     function listener(event: MessageEvent<TranspilePayload>) {
       if (
