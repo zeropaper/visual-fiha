@@ -18,8 +18,10 @@
   --button-border-color: #ffffff40;
   --success-foreground: #bfdac4;
   --success-background: #28a7469f;
+  --success-background-hover: #2186399f;
   --error-foreground: #fdc5c5;
   --error-background: #f443368f;
+  --error-background-hover: #aa332a8f;
 
   --vscode-foreground: #cccccc;
   --vscode-disabledForeground: rgba(204, 204, 204, 0.5);
