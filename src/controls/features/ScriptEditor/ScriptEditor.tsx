@@ -214,9 +214,7 @@ export function ScriptEditor({
       }),
     );
 
-    monacoInstance.languages.typescript.typescriptDefaults.setExtraLibs(
-      typeRoleLibs,
-    );
+    monacoInstance.typescript.typescriptDefaults.setExtraLibs(typeRoleLibs);
   }, [role, layerType, isMonacoReady]);
 
   // Handle resize of the editor container
