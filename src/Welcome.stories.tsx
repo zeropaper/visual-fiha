@@ -11,7 +11,7 @@ const WelcomeComponent = () => (
     }}
   >
     <h1 style={{ color: "#ff6b6b", marginBottom: "20px" }}>
-      🎨 Visual Fiha Component Library
+      Visual Fiha Component Library
     </h1>
 
     <p style={{ fontSize: "18px", marginBottom: "30px" }}>
@@ -20,7 +20,7 @@ const WelcomeComponent = () => (
       JavaScript, WebGL, CSS, and MIDI controllers.
     </p>
 
-    <h2 style={{ color: "#4ecdc4", marginBottom: "15px" }}>🧩 Components</h2>
+    <h2 style={{ color: "#4ecdc4", marginBottom: "15px" }}>Components</h2>
     <p style={{ marginBottom: "20px" }}>
       Explore our reusable UI components that power the Visual Fiha interface:
     </p>
@@ -38,7 +38,7 @@ const WelcomeComponent = () => (
       </li>
     </ul>
 
-    <h2 style={{ color: "#45b7d1", marginBottom: "15px" }}>🎛️ Architecture</h2>
+    <h2 style={{ color: "#45b7d1", marginBottom: "15px" }}>Architecture</h2>
     <p style={{ marginBottom: "20px" }}>
       Visual Fiha uses a modular worker/message architecture with:
     </p>
@@ -58,9 +58,7 @@ const WelcomeComponent = () => (
       </li>
     </ul>
 
-    <h2 style={{ color: "#96ceb4", marginBottom: "15px" }}>
-      🚀 Getting Started
-    </h2>
+    <h2 style={{ color: "#96ceb4", marginBottom: "15px" }}>Getting Started</h2>
     <p style={{ marginBottom: "10px" }}>
       Navigate through the sidebar to explore different components and their
       variants. Each component includes:

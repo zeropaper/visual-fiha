@@ -11,10 +11,10 @@ const DesignSystemComponent = () => (
     }}
   >
     <h1 style={{ color: "#ff6b6b", marginBottom: "20px" }}>
-      🎨 Visual Fiha Design System
+      Visual Fiha Design System
     </h1>
 
-    <h2 style={{ color: "#4ecdc4", marginBottom: "15px" }}>🎨 Color Palette</h2>
+    <h2 style={{ color: "#4ecdc4", marginBottom: "15px" }}>Color Palette</h2>
     <div
       style={{
         display: "grid",
@@ -82,7 +82,7 @@ const DesignSystemComponent = () => (
       </div>
     </div>
 
-    <h2 style={{ color: "#45b7d1", marginBottom: "15px" }}>📝 Typography</h2>
+    <h2 style={{ color: "#45b7d1", marginBottom: "15px" }}>Typography</h2>
     <div style={{ marginBottom: "30px" }}>
       <h1 style={{ margin: "0 0 10px 0", fontSize: "32px" }}>
         Heading 1 - Main titles
@@ -115,7 +115,7 @@ const DesignSystemComponent = () => (
     </div>
 
     <h2 style={{ color: "#96ceb4", marginBottom: "15px" }}>
-      🔲 Component Spacing
+      Component Spacing
     </h2>
     <div
       style={{
@@ -142,7 +142,7 @@ const DesignSystemComponent = () => (
     </div>
 
     <h2 style={{ color: "#6c5ce7", marginBottom: "15px" }}>
-      🎛️ Component Guidelines
+      Component Guidelines
     </h2>
 
     <h3 style={{ color: "#96ceb4", marginBottom: "10px" }}>Buttons</h3>
@@ -169,7 +169,7 @@ const DesignSystemComponent = () => (
       <li>Sidebar navigation pattern</li>
     </ul>
 
-    <h2 style={{ color: "#ff6b6b", marginBottom: "15px" }}>♿ Accessibility</h2>
+    <h2 style={{ color: "#ff6b6b", marginBottom: "15px" }}>Accessibility</h2>
     <div
       style={{
         backgroundColor: "#d4edda",

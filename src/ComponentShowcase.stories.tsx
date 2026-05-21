@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "@ui/Button";
 import { Input } from "@ui/Input";
 import { Select } from "@ui/Select";
+import { EyeIcon, PlusIcon, TrashIcon } from "lucide-react";
 
 const ComponentShowcaseComponent = () => (
   <div
@@ -35,7 +36,9 @@ const ComponentShowcaseComponent = () => (
           }}
         >
           <Button>Default Button</Button>
-          <Button variant="icon">🎮</Button>
+          <Button variant="icon">
+            <EyeIcon />
+          </Button>
           <Button disabled>Disabled</Button>
         </div>
       </section>
@@ -89,13 +92,19 @@ const ComponentShowcaseComponent = () => (
               <option value="canvas2d">Canvas 2D</option>
               <option value="threejs">Three.js</option>
             </Select>
-            <Button variant="icon">➕</Button>
+            <Button variant="icon">
+              <PlusIcon />
+            </Button>
 
             <Input placeholder="Layer name..." />
-            <Button variant="icon">👁️</Button>
+            <Button variant="icon">
+              <EyeIcon />
+            </Button>
 
             <Input type="range" min="0" max="100" defaultValue="100" />
-            <Button variant="icon">🗑️</Button>
+            <Button variant="icon">
+              <TrashIcon />
+            </Button>
           </div>
         </div>
       </section>

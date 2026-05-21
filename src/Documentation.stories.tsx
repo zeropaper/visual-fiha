@@ -11,11 +11,11 @@ const ArchitectureComponent = () => (
     }}
   >
     <h1 style={{ color: "#ff6b6b", marginBottom: "20px" }}>
-      🏗️ Visual Fiha Architecture
+      Visual Fiha Architecture
     </h1>
 
     <h2 style={{ color: "#4ecdc4", marginBottom: "15px" }}>
-      📡 Messaging Architecture
+      Messaging Architecture
     </h2>
     <p style={{ marginBottom: "20px" }}>
       Visual Fiha uses a sophisticated messaging system based on Web Workers and
@@ -55,9 +55,7 @@ const ArchitectureComponent = () => (
       `}</pre>
     </div>
 
-    <h2 style={{ color: "#45b7d1", marginBottom: "15px" }}>
-      🎛️ Core Components
-    </h2>
+    <h2 style={{ color: "#45b7d1", marginBottom: "15px" }}>Core Components</h2>
 
     <h3 style={{ color: "#96ceb4", marginBottom: "10px" }}>Controls</h3>
     <p style={{ marginBottom: "15px" }}>
@@ -132,7 +130,7 @@ const ArchitectureComponent = () => (
       </li>
     </ul>
 
-    <h2 style={{ color: "#ff6b6b", marginBottom: "15px" }}>🔄 Data Flow</h2>
+    <h2 style={{ color: "#ff6b6b", marginBottom: "15px" }}>Data Flow</h2>
 
     <div
       style={{
