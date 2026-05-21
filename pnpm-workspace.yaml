@@ -1,6 +1,8 @@
 packages:
   - .
 
+minimumReleaseAge: 2880
+
 catalog:
   '@biomejs/biome': ^2.4.12
   '@chromatic-com/storybook': ^5.1.2
@@ -52,3 +54,8 @@ catalog:
   vite-plugin-vercel: ^11.0.3
   vitest: ^4.1.4
   zod: ^4.3.6
+
+allowBuilds:
+  '@parcel/watcher': true
+  canvas: true
+  esbuild: true

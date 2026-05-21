@@ -95,13 +95,5 @@
       "biome check --files-ignore-unknown=true --diagnostic-level=error --write --no-errors-on-unmatched"
     ]
   },
-  "packageManager": "pnpm@10.17.1",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "@biomejs/biome",
-      "@parcel/watcher",
-      "canvas"
-    ]
-  }
+  "packageManager": "pnpm@11.1.3"
 }
