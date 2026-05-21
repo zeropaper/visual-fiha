@@ -44,3 +44,8 @@
   align-items: center;
   justify-content: center;
 }
+
+.ghost {
+  border: 0;
+  --button-bg: transparent;
+}
