@@ -61,10 +61,10 @@ catalogs:
       specifier: ^6.0.1
       version: 6.0.2
     '@vitest/browser':
-      specifier: 4.1.4
-      version: 4.1.4
+      specifier: ^4.1.4
+      version: 4.1.6
     '@vitest/coverage-v8':
-      specifier: 4.1.4
+      specifier: ^4.1.4
       version: 4.1.4
     canvas:
       specifier: ^3.2.3
@@ -236,7 +236,7 @@ importers:
         version: 10.4.0(storybook@10.4.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))
       '@storybook/addon-vitest':
         specifier: 'catalog:'
-        version: 10.4.0(@vitest/browser@4.1.4)(@vitest/runner@4.1.6)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(storybook@10.4.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(vitest@4.1.6)
+        version: 10.4.0(@vitest/browser@4.1.6)(@vitest/runner@4.1.6)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(storybook@10.4.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(vitest@4.1.6)
       '@storybook/react':
         specifier: 'catalog:'
         version: 10.4.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(storybook@10.4.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@6.0.3)
@@ -263,10 +263,10 @@ importers:
         version: 6.0.2(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))
       '@vitest/browser':
         specifier: 'catalog:'
-        version: 4.1.4(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))(vitest@4.1.6)
+        version: 4.1.6(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))(vitest@4.1.6)
       '@vitest/coverage-v8':
         specifier: 'catalog:'
-        version: 4.1.4(@vitest/browser@4.1.4)(vitest@4.1.6)
+        version: 4.1.4(@vitest/browser@4.1.6)(vitest@4.1.6)
       canvas:
         specifier: 'catalog:'
         version: 3.2.3
@@ -1762,10 +1762,10 @@ packages:
       babel-plugin-react-compiler:
         optional: true
 
-  '@vitest/browser@4.1.4':
-    resolution: {integrity: sha512-TrNaY/yVOwxtrxNsDUC/wQ56xSwplpytTeRAqF/197xV/ZddxxulBsxR6TrhVMyniJmp9in8d5u0AcDaNRY30w==}
+  '@vitest/browser@4.1.6':
+    resolution: {integrity: sha512-ynsspTubXGSpa58JFJ24xIQt4z4A25epSbugEyaTmmrV1//Wec9EgE/LtoaC6yxUrXi5P7erGHRrkdZIHaVQuA==}
     peerDependencies:
-      vitest: 4.1.4
+      vitest: 4.1.6
 
   '@vitest/coverage-v8@4.1.4':
     resolution: {integrity: sha512-x7FptB5oDruxNPDNY2+S8tCh0pcq7ymCe1gTHcsp733jYjrJl8V1gMUlVysuCD9Kz46Xz9t1akkv08dPcYDs1w==}
@@ -1781,17 +1781,6 @@ packages:
 
   '@vitest/expect@4.1.6':
     resolution: {integrity: sha512-7EHDquPthALSV0jhhjgEW8FXaviMx7rSqu8W6oqCoAuOhKov814P99QDV1pxMA3QPv21YudvJngIhjrNI4opLg==}
-
-  '@vitest/mocker@4.1.4':
-    resolution: {integrity: sha512-R9HTZBhW6yCSGbGQnDnH3QHfJxokKN4KB+Yvk9Q1le7eQNYwiCyKxmLmurSpFy6BzJanSLuEUDrD+j97Q+ZLPg==}
-    peerDependencies:
-      msw: ^2.4.9
-      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
-    peerDependenciesMeta:
-      msw:
-        optional: true
-      vite:
-        optional: true
 
   '@vitest/mocker@4.1.6':
     resolution: {integrity: sha512-MCFc63czMjEInOlcY2cpQCvCN+KgbAn+60xu9cMgP4sKaLC5JNAKw7JH8QdAnoAC88hW1IiSNZ+GgVXlN1UcMQ==}
@@ -1821,9 +1810,6 @@ packages:
 
   '@vitest/spy@3.2.4':
     resolution: {integrity: sha512-vAfasCOe6AIK70iP5UD11Ac4siNUNJ9i/9PZ3NKx07sG6sUxeag1LWdNrMWeKKYBLlzuK+Gn65Yd5nyL6ds+nw==}
-
-  '@vitest/spy@4.1.4':
-    resolution: {integrity: sha512-XxNdAsKW7C+FLydqFJLb5KhJtl3PGCMmYwFRfhvIgxJvLSXhhVI1zM8f1qD3Zg7RCjTSzDVyct6sghs9UEgBEQ==}
 
   '@vitest/spy@4.1.6':
     resolution: {integrity: sha512-JFKxMx6udhwKh/Ldo270e17QX710vgunMkuPAvXjHSvC6oqLWAHhVhjg/I71q0u0CBSErIODV1Kjv0FQNSWjdg==}
@@ -4591,13 +4577,13 @@ snapshots:
     dependencies:
       storybook: 10.4.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
 
-  '@storybook/addon-vitest@10.4.0(@vitest/browser@4.1.4)(@vitest/runner@4.1.6)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(storybook@10.4.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(vitest@4.1.6)':
+  '@storybook/addon-vitest@10.4.0(@vitest/browser@4.1.6)(@vitest/runner@4.1.6)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(storybook@10.4.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(vitest@4.1.6)':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/icons': 2.0.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       storybook: 10.4.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
     optionalDependencies:
-      '@vitest/browser': 4.1.4(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))(vitest@4.1.6)
+      '@vitest/browser': 4.1.6(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))(vitest@4.1.6)
       '@vitest/runner': 4.1.6
       vitest: 4.1.6(@types/node@25.9.0)(@vitest/coverage-v8@4.1.4)(happy-dom@20.9.0)(jsdom@29.1.1(canvas@3.2.3))(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))
     transitivePeerDependencies:
@@ -4900,11 +4886,11 @@ snapshots:
       '@rolldown/pluginutils': 1.0.1
       vite: 8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0)
 
-  '@vitest/browser@4.1.4(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))(vitest@4.1.6)':
+  '@vitest/browser@4.1.6(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))(vitest@4.1.6)':
     dependencies:
       '@blazediff/core': 1.9.1
-      '@vitest/mocker': 4.1.4(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))
-      '@vitest/utils': 4.1.4
+      '@vitest/mocker': 4.1.6(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))
+      '@vitest/utils': 4.1.6
       magic-string: 0.30.21
       pngjs: 7.0.0
       sirv: 3.0.2
@@ -4917,7 +4903,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@4.1.4(@vitest/browser@4.1.4)(vitest@4.1.6)':
+  '@vitest/coverage-v8@4.1.4(@vitest/browser@4.1.6)(vitest@4.1.6)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.1.4
@@ -4931,7 +4917,7 @@ snapshots:
       tinyrainbow: 3.1.0
       vitest: 4.1.6(@types/node@25.9.0)(@vitest/coverage-v8@4.1.4)(happy-dom@20.9.0)(jsdom@29.1.1(canvas@3.2.3))(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))
     optionalDependencies:
-      '@vitest/browser': 4.1.4(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))(vitest@4.1.6)
+      '@vitest/browser': 4.1.6(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))(vitest@4.1.6)
 
   '@vitest/expect@3.2.4':
     dependencies:
@@ -4949,14 +4935,6 @@ snapshots:
       '@vitest/utils': 4.1.6
       chai: 6.2.2
       tinyrainbow: 3.1.0
-
-  '@vitest/mocker@4.1.4(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))':
-    dependencies:
-      '@vitest/spy': 4.1.4
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-    optionalDependencies:
-      vite: 8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0)
 
   '@vitest/mocker@4.1.6(vite@8.0.13(@types/node@25.9.0)(esbuild@0.27.7)(jiti@2.7.0)(less@4.6.4)(sass@1.99.0)(stylus@0.62.0)(yaml@2.9.0))':
     dependencies:
@@ -4993,8 +4971,6 @@ snapshots:
   '@vitest/spy@3.2.4':
     dependencies:
       tinyspy: 4.0.4
-
-  '@vitest/spy@4.1.4': {}
 
   '@vitest/spy@4.1.6': {}
 
@@ -6978,7 +6954,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.9.0
-      '@vitest/coverage-v8': 4.1.4(@vitest/browser@4.1.4)(vitest@4.1.6)
+      '@vitest/coverage-v8': 4.1.4(@vitest/browser@4.1.6)(vitest@4.1.6)
       happy-dom: 20.9.0
       jsdom: 29.1.1(canvas@3.2.3)
     transitivePeerDependencies:

@@ -22,8 +22,8 @@ catalog:
   '@types/react-syntax-highlighter': ^15.5.13
   '@types/three': ^0.184.0
   '@vitejs/plugin-react': ^6.0.1
-  '@vitest/browser': 4.1.4
-  '@vitest/coverage-v8': 4.1.4
+  '@vitest/browser': ^4.1.4
+  '@vitest/coverage-v8': ^4.1.4
   canvas: ^3.2.3
   dtsroll: ^1.8.1
   happy-dom: ^20.9.0
