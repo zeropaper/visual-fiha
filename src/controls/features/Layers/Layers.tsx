@@ -8,29 +8,26 @@ import { Input } from "@ui/Input";
 import { Select } from "@ui/Select";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
-import type { ScriptInfo, ScriptRole } from "../../../types";
+import type { LayerConfig, ScriptInfo, ScriptRole } from "../../../types";
 import styles from "./Layers.module.css";
 
-function Layer({
-  id,
+export function LayerRenderer({
   setCurrentScript,
   onChangeOpacity,
   currentRole,
   isCurrent,
+  setLayer,
+  errors,
+  layer,
 }: {
-  id: string;
   setCurrentScript: (script: ScriptInfo) => void;
   onChangeOpacity: ChangeEventHandler<HTMLInputElement>;
   isCurrent?: boolean;
   currentRole: ScriptRole | null;
+  setLayer: (value: LayerConfig | null) => void;
+  errors: { role: ScriptRole }[];
+  layer: LayerConfig;
 }) {
-  const [layer, setLayer, errors] = useLayerConfig(id);
-  if (!layer) {
-    return null;
-  }
-
-  if (errors?.length) console.info("layer errors", layer.id, errors);
-
   return (
     <>
       <div>
@@ -115,17 +112,49 @@ function Layer({
   );
 }
 
-export function Layers({
-  setCurrentScript,
+function Layer({
   id,
-  role,
-}: ScriptInfo & {
+  setCurrentScript,
+  onChangeOpacity,
+  currentRole,
+  isCurrent,
+}: {
+  id: string;
   setCurrentScript: (script: ScriptInfo) => void;
+  onChangeOpacity: ChangeEventHandler<HTMLInputElement>;
+  isCurrent?: boolean;
+  currentRole: ScriptRole | null;
 }) {
+  const [layer, setLayer, errors] = useLayerConfig(id);
+  if (!layer) {
+    return null;
+  }
+
+  return (
+    <LayerRenderer
+      setCurrentScript={setCurrentScript}
+      onChangeOpacity={onChangeOpacity}
+      isCurrent={isCurrent}
+      currentRole={currentRole}
+      errors={errors}
+      layer={layer}
+      setLayer={setLayer}
+    />
+  );
+}
+
+type LayersProps = ScriptInfo & {
+  setCurrentScript: (script: ScriptInfo) => void;
+};
+
+export function Layers({
+  id: activeLayerId,
+  role,
+  setCurrentScript,
+}: LayersProps) {
   const {
     layers: { get: layers, set: setLayers },
   } = useAppFastContextFields(["layers"]);
-
   // Drag-and-drop state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const dragOverIndex = useRef<number | null>(null);
@@ -230,7 +259,7 @@ export function Layers({
             }}
             className={[
               styles.layer,
-              layer.id === id ? styles.currentLayer : "",
+              layer.id === activeLayerId ? styles.currentLayer : "",
             ]
               .filter(Boolean)
               .join(" ")}
@@ -239,7 +268,7 @@ export function Layers({
               id={layer.id}
               setCurrentScript={setCurrentScript}
               onChangeOpacity={changeOpacity(layer.id)}
-              isCurrent={id === layer.id}
+              isCurrent={activeLayerId === layer.id}
               currentRole={role}
             />
           </li>
