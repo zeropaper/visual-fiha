@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { UserIcon } from "lucide-react";
 import { Button } from "./Button";
 
 const meta: Meta<typeof Button> = {
@@ -32,7 +33,7 @@ export const Default: Story = {
 export const Icon: Story = {
   args: {
     variant: "icon",
-    children: "🎮",
+    children: <UserIcon />,
   },
 };
 
