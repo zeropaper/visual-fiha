@@ -38,6 +38,7 @@ export function LayerRenderer({
       <div>
         {/* TODO: add confirmation dialog */}
         <Button
+          mode="ghost"
           variant="icon"
           title="Remove layer"
           onClick={() => setDeleteConfirm(true)}
@@ -50,6 +51,7 @@ export function LayerRenderer({
 
       <div>
         <Button
+          mode="ghost"
           variant="icon"
           title="Toggle layer visibility"
           onClick={() =>
@@ -72,16 +74,12 @@ export function LayerRenderer({
         />
 
         <Button
-          className={[
-            buttonStyles.button,
-            buttonStyles.icon,
-            styles.setupButton,
-            isCurrent && currentRole === "setup"
-              ? styles.currentScriptButton
-              : "",
-            errors.find(({ role }) => role === "setup") ? styles.hasError : "",
-            "setup-script-button",
-          ].join(" ")}
+          variant="icon"
+          mode="ghost"
+          title="Edit setup script"
+          outcome={
+            errors.find(({ role }) => role === "setup") ? "error" : undefined
+          }
           onClick={() =>
             setCurrentScript({
               id: layer.id,
@@ -94,16 +92,13 @@ export function LayerRenderer({
         </Button>
 
         <Button
-          className={[
-            buttonStyles.button,
-            isCurrent && currentRole === "animation"
-              ? styles.currentScriptButton
-              : "",
+          mode="ghost"
+          title="Edit animation script"
+          outcome={
             errors.find(({ role }) => role === "animation")
-              ? styles.hasError
-              : "",
-            "animation-script-button",
-          ].join(" ")}
+              ? "error"
+              : undefined
+          }
           onClick={() =>
             setCurrentScript({
               id: layer.id,
