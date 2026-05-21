@@ -1,0 +1,19 @@
+.# node_modules
+.# (keep node_modules out of context)
+.# dist intentionally omitted here so CI/local builds can include it
+.git
+.github
+.DS_Store
+coverage
+storybook-static
+*.log
+
+.git
+.github
+vite.config.ts
+.env
+.env.*
+.DS_Store
+coverage
+storybook-static
+*.log
