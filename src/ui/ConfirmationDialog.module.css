@@ -1,0 +1,23 @@
+.dialog {
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-editor-background);
+  margin: auto;
+}
+
+.content {
+  text-align: center;
+  max-height: 65vh;
+  overflow: auto;
+}
+
+.buttons {
+  margin-top: var(--spacing-md);
+  display: flex;
+  justify-content: space-around;
+  button:last-of-type {
+    --button-bg: var(--error-background);
+    --button-bg-hover: var(--error-background);
+    --button-border-color: var(--error-foreground);
+    --button-color: var(--error-foreground);
+  }
+}
