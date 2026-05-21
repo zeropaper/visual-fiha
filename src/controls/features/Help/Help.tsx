@@ -55,7 +55,7 @@ export function Help({
   }, [docTopic]);
   const allTopicLinks =
     docTopic !== "topics"
-      ? `<details><summary>All topics</summary>\n\n${topicsDocs.split("\n").slice(2).join("\n")}\n\n</details>\n\n`
+      ? `<details className="${styles.allTopics}"><summary>All topics</summary>\n\n${topicsDocs.split("\n").slice(2).join("\n")}\n\n</details>\n\n`
       : "";
   return (
     <section className={className}>
