@@ -4,9 +4,10 @@ import {
 } from "@contexts/ControlsContext";
 import { Button } from "@ui/Button";
 import buttonStyles from "@ui/Button.module.css";
+import { ConfirmationDialog } from "@ui/ConfirmationDialog";
 import { Input } from "@ui/Input";
 import { Select } from "@ui/Select";
-import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
+import { CogIcon, EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useRef, useState } from "react";
 import type { LayerConfig, ScriptInfo, ScriptRole } from "../../../types";
 import styles from "./Layers.module.css";
@@ -28,13 +29,18 @@ export function LayerRenderer({
   errors: { role: ScriptRole }[];
   layer: LayerConfig;
 }) {
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   return (
     <>
+      <ConfirmationDialog open={deleteConfirm} onOpenChange={setDeleteConfirm}>
+        Are you sure you want to delete this layer?
+      </ConfirmationDialog>
       <div>
+        {/* TODO: add confirmation dialog */}
         <Button
           variant="icon"
           title="Remove layer"
-          onClick={() => setLayer(null)}
+          onClick={() => setDeleteConfirm(true)}
         >
           <XIcon />
         </Button>
@@ -68,6 +74,7 @@ export function LayerRenderer({
         <Button
           className={[
             buttonStyles.button,
+            buttonStyles.icon,
             styles.setupButton,
             isCurrent && currentRole === "setup"
               ? styles.currentScriptButton
@@ -83,7 +90,7 @@ export function LayerRenderer({
             })
           }
         >
-          Setup
+          <CogIcon />
         </Button>
 
         <Button
