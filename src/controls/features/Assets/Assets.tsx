@@ -24,11 +24,7 @@ function Asset({ id, state, source }: AssetConfig) {
         variant="icon"
         title="Copy the read function usage."
         onClick={() => copy(`read('asset.${id}')`)}
-        className={[
-          buttonStyles.button,
-          buttonStyles.icon,
-          copied ? buttonStyles.success : "",
-        ].join(" ")}
+        outcome={copied ? "success" : undefined}
       >
         <CopyIcon />
       </Button>
