@@ -231,3 +231,5 @@ export const autoBind = (
     listener: makeChannelListener(originalPost, handlers, source),
   };
 };
+
+export type ComBinding = ReturnType<typeof autoBind>;
