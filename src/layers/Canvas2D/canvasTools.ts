@@ -634,7 +634,7 @@ export default function canvasTools(ctx: CTX) {
     textLines(
       [
         `max: ${max.toFixed(3).padStart(7, " ")}`,
-        `avg: ${arrayAvg(data).toFixed(3).padStart(7, " ")}`,
+        `avg: ${mathTools.arrayAvg(data).toFixed(3).padStart(7, " ")}`,
         `min: ${min.toFixed(3).padStart(7, " ")}`,
       ],
       {
