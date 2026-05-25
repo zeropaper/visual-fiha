@@ -5,5 +5,6 @@
   - [ThreeJS API](#threejs-api)
 - [Runtime Worker](#worker-api)
 - [Inputs](#inputs)
+- [Playback](#playback)
 - [Planned Features](#planned-features)
 - [Known Bugs](#known-bugs)
