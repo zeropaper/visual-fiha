@@ -3,7 +3,6 @@ import {
   useLayerConfig,
 } from "@contexts/ControlsContext";
 import { Button } from "@ui/Button";
-import buttonStyles from "@ui/Button.module.css";
 import { ConfirmationDialog } from "@ui/ConfirmationDialog";
 import { Input } from "@ui/Input";
 import { Select } from "@ui/Select";
@@ -15,16 +14,12 @@ import styles from "./Layers.module.css";
 export function LayerRenderer({
   setCurrentScript,
   onChangeOpacity,
-  currentRole,
-  isCurrent,
   setLayer,
   errors,
   layer,
 }: {
   setCurrentScript: (script: ScriptInfo) => void;
   onChangeOpacity: ChangeEventHandler<HTMLInputElement>;
-  isCurrent?: boolean;
-  currentRole: ScriptRole | null;
   setLayer: (value: LayerConfig | null) => void;
   errors: { role: ScriptRole }[];
   layer: LayerConfig;
@@ -32,7 +27,11 @@ export function LayerRenderer({
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   return (
     <>
-      <ConfirmationDialog open={deleteConfirm} onOpenChange={setDeleteConfirm}>
+      <ConfirmationDialog
+        open={deleteConfirm}
+        onOpenChange={setDeleteConfirm}
+        onConfirm={() => setLayer(null)}
+      >
         Are you sure you want to delete this layer?
       </ConfirmationDialog>
       <div>
@@ -118,14 +117,10 @@ function Layer({
   id,
   setCurrentScript,
   onChangeOpacity,
-  currentRole,
-  isCurrent,
 }: {
   id: string;
   setCurrentScript: (script: ScriptInfo) => void;
   onChangeOpacity: ChangeEventHandler<HTMLInputElement>;
-  isCurrent?: boolean;
-  currentRole: ScriptRole | null;
 }) {
   const [layer, setLayer, errors] = useLayerConfig(id);
   if (!layer) {
@@ -136,8 +131,6 @@ function Layer({
     <LayerRenderer
       setCurrentScript={setCurrentScript}
       onChangeOpacity={onChangeOpacity}
-      isCurrent={isCurrent}
-      currentRole={currentRole}
       errors={errors}
       layer={layer}
       setLayer={setLayer}
@@ -149,11 +142,7 @@ type LayersProps = ScriptInfo & {
   setCurrentScript: (script: ScriptInfo) => void;
 };
 
-export function Layers({
-  id: activeLayerId,
-  role,
-  setCurrentScript,
-}: LayersProps) {
+export function Layers({ id: activeLayerId, setCurrentScript }: LayersProps) {
   const {
     layers: { get: layers, set: setLayers },
   } = useAppFastContextFields(["layers"]);
@@ -245,7 +234,6 @@ export function Layers({
         </Select>
         <Button type="submit">Add Layer</Button>
       </form>
-      {/** biome-ignore lint/correctness/useUniqueElementIds: ignore */}
       <ul id="layers" className={styles.layers}>
         {layers.map((layer, l) => (
           <li
@@ -270,8 +258,6 @@ export function Layers({
               id={layer.id}
               setCurrentScript={setCurrentScript}
               onChangeOpacity={changeOpacity(layer.id)}
-              isCurrent={activeLayerId === layer.id}
-              currentRole={role}
             />
           </li>
         ))}
