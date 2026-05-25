@@ -25,6 +25,8 @@ export default class Layer extends Scriptable {
 
   #canvas: OffscreenCanvas;
 
+  type: string = "layer";
+
   get canvas() {
     return this.#canvas;
   }
