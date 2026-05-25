@@ -4,10 +4,12 @@ import demoReadAssetsAnimation from "../../../demos/default/read-assets-animatio
 import demoStatsAnimation from "../../../demos/default/stats-animation?raw";
 import demoDefaultThreeJSAnimation from "../../../demos/default/threejs-animation?raw";
 import demoDefaultThreeJSSetup from "../../../demos/default/threejs-setup?raw";
+import demoTimingAnimation from "../../../demos/default/timing-animation?raw";
 import demoUnfoldingAnimation from "../../../demos/default/unfolding-animation?raw";
 import demoUnfoldingSetup from "../../../demos/default/unfolding-setup?raw";
 import demoWobblyBallAnimation from "../../../demos/default/wobblyball-animation?raw";
 import demoWobblyBallSetup from "../../../demos/default/wobblyball-setup?raw";
+
 import type {
   AppState,
   AssetConfig,
@@ -74,6 +76,14 @@ const defaultLayers: LayerConfig[] = [
     animation: demoStatsAnimation,
     type: "canvas",
     opacity: 60,
+  },
+  {
+    id: "timing",
+    active: false,
+    setup: `/* Timing animation setup code */`,
+    animation: demoTimingAnimation,
+    type: "canvas",
+    opacity: 100,
   },
 ];
 
