@@ -139,9 +139,10 @@ const handlers = {
     };
     if ("layers" in payload) {
       runtimeData.layers = (payload.layers as LayerConfig[]).map((layer, l) => {
+        const existing = runtimeData.layers.find((rl) => rl.id === layer.id);
         return {
           ...layer,
-          ...(runtimeData.layers[l] || {}),
+          ...(existing || {}),
           opacity: layer.opacity ?? 100,
           active: !!layer.active,
         };
