@@ -5,6 +5,7 @@
  * It handles communication with the main thread, manages layers, and executes scripts.
  */
 
+import type Layer from "@layers/Layer";
 import type { TranspilePayload } from "@utils/tsTranspile";
 import Canvas2DLayer from "../layers/Canvas2D/Canvas2DLayer";
 import ThreeJSLayer from "../layers/ThreeJS/ThreeJSLayer";
@@ -19,7 +20,6 @@ import type {
   ScriptableEventListener,
 } from "../utils/Scriptable";
 import Scriptable, { type ScriptableOptions } from "../utils/Scriptable";
-import { isDisplayState } from "./isDisplayState";
 import type { DisplayState } from "./types";
 
 interface WebWorker extends Worker {
@@ -121,11 +121,7 @@ const scriptable = new Scriptable(scriptableOptions);
 // Helper Functions
 // =============================================================================
 
-function findStateLayer(id: string) {
-  return state.layers?.find((layer) => id === layer.id);
-}
-
-function resizeLayer(layer: Canvas2DLayer | ThreeJSLayer) {
+function resizeLayer(layer: Layer) {
   layer.width = canvas.width;
   layer.height = canvas.height;
   layer.execSetup().catch((err) => {
@@ -151,10 +147,11 @@ function registerDisplay() {
 // =============================================================================
 
 function processLayers(updateLayers: AppState["layers"]) {
-  // console.info("[display worker] processing layers", updateLayers);
+  const updateLayerIds = new Set(updateLayers.map((l) => l.id));
+
   for (const options of updateLayers) {
-    const found = findStateLayer(options.id);
-    let layer: Canvas2DLayer | ThreeJSLayer | null = null;
+    const found = state.layers.find((layer) => layer.id === options.id);
+    let layer: Layer | null = null;
     if (!found) {
       const completeOptions = {
         ...options,
@@ -175,12 +172,13 @@ function processLayers(updateLayers: AppState["layers"]) {
           break;
       }
       if (layer) {
-        state.layers.push(layer);
         resizeLayer(layer);
+        state.layers.push(layer);
       }
     } else {
       layer = found;
     }
+
     if (!layer) {
       continue;
     }
@@ -188,11 +186,28 @@ function processLayers(updateLayers: AppState["layers"]) {
       console.warn(
         `[display worker] Layer type mismatch for ${layer.id}: expected "${layer.type}", got "${options.type}"`,
       );
-      return null;
+      continue;
     }
+
     layer.active = !!options.active;
     layer.opacity = options.opacity ?? 100;
   }
+
+  // Remove layers that are no longer present in the update
+  state.layers = state.layers.filter((layer) => {
+    if (!updateLayerIds.has(layer.id)) {
+      // Layer was removed - clean up if necessary
+      if ("dispose" in layer && typeof layer.dispose === "function") {
+        try {
+          layer.dispose();
+        } catch (err) {
+          console.error(`Error disposing layer ${layer.id}:`, err);
+        }
+      }
+      return false;
+    }
+    return true;
+  });
 
   // sort the state.layers based on the order in updateLayers
   state.layers.sort((a, b) => {
@@ -239,7 +254,7 @@ const broadcastChannelHandlers: ComActionHandlers = {
       return;
     }
 
-    const found = findStateLayer(id);
+    const found = state.layers?.find((layer) => layer.id === id);
     if (!found) {
       console.warn("[display worker] transpiled layer not found", id);
       return;
@@ -252,18 +267,16 @@ const broadcastChannelHandlers: ComActionHandlers = {
   },
 
   updateconfig: (update: Partial<AppState>) => {
-    const updated = {
+    state = {
       ...state,
       ...update,
-      layers: state.layers || update.layers || [],
-    };
+      layers: state.layers || [],
+    } satisfies DisplayState;
+
     if (Array.isArray(update.layers)) {
       processLayers(update.layers);
     }
-    if (!isDisplayState(updated)) {
-      throw new Error("updateconfig: invalid state");
-    }
-    state = updated;
+
     state.worker = state.worker || {};
     if (
       typeof update.worker?.setup !== "undefined" &&
@@ -310,7 +323,7 @@ const broadcastChannelHandlers: ComActionHandlers = {
     if (!payload.layerId) {
       return getImageFromCanvas(canvas);
     }
-    const layer = findStateLayer(payload.layerId);
+    const layer = state.layers?.find((layer) => layer.id === payload.layerId);
     if (!layer) {
       console.warn(
         "[display worker] takeLayerScreenshot: layer not found",
