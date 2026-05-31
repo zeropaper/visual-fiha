@@ -17,7 +17,6 @@ import { HalftonePass } from "three/addons/postprocessing/HalftonePass.js";
 import { LUTPass } from "three/addons/postprocessing/LUTPass.js";
 import { ClearMaskPass } from "three/addons/postprocessing/MaskPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
-// @ts-expect-error
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { Pass } from "three/addons/postprocessing/Pass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -34,23 +33,33 @@ import { TexturePass } from "three/addons/postprocessing/TexturePass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import * as BufferGeometryUtils from "three/addons/utils/BufferGeometryUtils.js";
 
+import type { WebGPURenderer } from "three/webgpu";
+
 import mathTools from "../../utils/mathTools";
 import miscTools from "../../utils/miscTools";
 import Layer, { type LayerOptions } from "../Layer";
 
-export interface ThreeJSLayerOptions extends LayerOptions {}
+export interface ThreeJSLayerOptions extends LayerOptions {
+  forceWebGL?: boolean;
+}
 
 export default class ThreeJSLayer extends Layer {
   readonly type = "threejs";
 
+  #rendererReady = false;
+  #forceWebGL: boolean;
+
   constructor(options: ThreeJSLayerOptions) {
     super(options);
+
+    this.#forceWebGL = options.forceWebGL ?? false;
 
     const {
       canvas,
       canvas: { width, height },
     } = this;
 
+    // Start with WebGL renderer; will be upgraded to WebGPU if available
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
       canvas,
@@ -61,13 +70,19 @@ export default class ThreeJSLayer extends Layer {
     const { renderer, camera, scene } = this;
 
     renderer.setClearColor(0x000000, 0);
-    renderer.setAnimationLoop(() => this.execAnimation());
+    renderer.setAnimationLoop(() => {
+      // Only execute animation if renderer is initialized
+      if (this.#rendererReady) {
+        this.execAnimation();
+      }
+    });
 
     camera.position.z = 400;
     camera.position.x = 400;
     camera.position.y = 100;
     camera.lookAt(0, 0, 0);
 
+    // Initialize the API with tools and renderer references
     this.api = {
       ...mathTools,
       ...miscTools,
@@ -111,9 +126,74 @@ export default class ThreeJSLayer extends Layer {
       ...BufferGeometryUtils,
       clear: this.#clearScene,
     };
+
+    // Initialize renderer asynchronously
+    this.#initializeRenderer().catch((error) => {
+      console.warn(
+        "[ThreeJS] Failed to initialize WebGPU renderer, continuing with WebGL:",
+        error,
+      );
+      this.#rendererReady = true;
+    });
   }
 
-  renderer: THREE.WebGLRenderer;
+  /**
+   * Tries to upgrade to WebGPURenderer if available, otherwise keeps WebGL fallback
+   */
+  async #initializeRenderer(): Promise<void> {
+    if (this.#forceWebGL) {
+      this.#rendererReady = true;
+      return;
+    }
+
+    try {
+      // Attempt to load WebGPURenderer
+      const { WebGPURenderer: WGPURenderer } = await import("three/webgpu");
+
+      const {
+        canvas,
+        canvas: { width, height },
+      } = this;
+
+      // Create new WebGPU renderer with same canvas
+      const newRenderer = new WGPURenderer({
+        alpha: true,
+        canvas,
+      });
+
+      // Initialize WebGPU asynchronously
+      await newRenderer.init();
+
+      // Replace the WebGL renderer with WebGPU renderer
+      this.renderer = newRenderer;
+      this.renderer.setClearColor(0x000000, 0);
+      this.renderer.setAnimationLoop(() => {
+        if (this.#rendererReady) {
+          this.execAnimation();
+        }
+      });
+      this.renderer.setSize(width, height, false);
+
+      console.info("[ThreeJS] WebGPU renderer initialized successfully");
+    } catch (error) {
+      console.info(
+        "[ThreeJS] WebGPU not available, using WebGL 2 fallback:",
+        error,
+      );
+    }
+
+    this.#rendererReady = true;
+  }
+
+  /**
+   * Renderer instance - can be either WebGPURenderer or WebGLRenderer
+   * WebGPURenderer is used if available, otherwise falls back to WebGLRenderer
+   */
+  renderer:
+    | (THREE.WebGLRenderer & {
+        init?: () => Promise<void>;
+      })
+    | WebGPURenderer;
 
   camera: THREE.PerspectiveCamera;
 

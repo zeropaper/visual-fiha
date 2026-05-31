@@ -218,7 +218,6 @@ export function ScriptEditor({
   }, [role, layerType, isMonacoReady]);
 
   // Handle resize of the editor container
-  // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
   useEffect(() => {
     window.addEventListener("resize", handleResize);
     return () => {
