@@ -1,101 +1,68 @@
-/* 
-declare global {
-  interface Cache {
-    lastValues: number[];
-  }
-}
-// fix issue with global type declaration above in the script editor
-export { };
-*/
-
-
 clear();
 
-const now = read('time.elapsed', 0);
-if (now - cache.lastFrameCountStart > 1000) {
+const now = Date.now();
+const elapsed = read("time.elapsed", 0);
+cache.lastFrameCountStart = cache.lastFrameCountStart || 0;
+cache.fps = cache.fps || [];
+cache.framesCount = cache.framesCount || 0;
+if (now - cache.lastFrameCountStart > 200) {
   cache.lastFrameCountStart = now;
-  cache.fps.push(cache.framesCount);
-  cache.fps = cache.fps.slice(width(-2));
+  cache.fps.push(cache.framesCount * 5);
+  cache.fps = cache.fps.slice(width(-6));
   cache.framesCount = 0;
 }
 cache.framesCount += 1;
-
-/*
-// terrible performances... 
-
-const samples = 80;
-cache.lastValues = cache.lastValues || [];
-cache.lastValues.push(read('audio.0.0.frequency'));
-cache.lastValues = (cache.lastValues as any[]).slice(0 - samples);
-
-const segLength = height(cache.lastValues.at(0));
-const space = width(samples);
-lineWidth(vh(0.5));
-
-cache.lastValues.forEach((frequency, x) => {
-  frequency.data.forEach((val, h) => {
-    beginPath();
-    strokeStyle('blue');
-    moveTo(space * x, 0);
-
-    lineTo(space * x, segLength * h);
-
-    stroke();
-    // closePath();
-  });
-});
-*/
 
 const fs = 6;
 // Plotting some data
 plot({
   data: cache.fps,
-  color: '#f0f',
-  // min: 0,
-  // max: 180,
+  color: "#f0f",
   left: width(2),
   right: width(),
   top: 0,
   bottom: height(2),
-  legend: 'center',
-  fontSize: vmin(fs)
+  legend: "center",
+  fontSize: vmin(fs),
 });
 plot({
-  data: read('audio.0.0.timeDomain.data', []).map(v => (v - 127)),
-  color: '#0ff',
+  data: read("audio.0.0.timeDomain.data", []).map((v) => v - 127),
+  color: "#0ff",
   // min: -10,
   // max: 10,
   left: width(2),
   right: width(),
   top: height(),
   bottom: height(2),
-  legend: 'center',
-  fontSize: vmin(fs)
+  legend: "center",
+  fontSize: vmin(fs),
 });
 plot({
-  data: read('audio.0.0.frequency.data', []),
-  color: '#ff0',
+  data: read("audio.0.0.frequency.data", []),
+  color: "#ff0",
   left: 0,
   right: width(2),
   top: height(2),
   bottom: height(),
-  legend: 'center',
-  fontSize: vmin(fs)
+  legend: "center",
+  fontSize: vmin(fs),
 });
-
 
 // Writing some text lines
 fontSize(fs);
-fontFamily('monospace');
-textLines([
-  'time:  ' + now + 'ms',
-  'bpm:   ' + read('bpm.bpm') + 'bpm',
-  'beat:  ' + read('bpm.elapsed') + 'ms',
-], {
-  fill: 'lime',
-  stroke: 'black',
-  position: 'center',
-  lineHeight: 1.218,
-  x: width(4),
-  y: height(4)
-});
+fontFamily("monospace");
+textLines(
+  [
+    `time:  ${elapsed}ms`,
+    `bpm:   ${read("bpm.bpm")}bpm`,
+    `beat:  ${read("bpm.elapsed").toString().padStart(3, "0")}ms`,
+  ],
+  {
+    fill: "lime",
+    stroke: "black",
+    position: "center",
+    lineHeight: 1.218,
+    x: width(4),
+    y: height(4),
+  },
+);
