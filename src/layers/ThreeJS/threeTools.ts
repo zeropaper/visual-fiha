@@ -12,6 +12,7 @@ import type {
 } from "three";
 // @ts-expect-error
 import type { Pass } from "three/addons/postprocessing/Pass";
+import type { PostProcessingBridge } from "./PostProcessingBridge";
 
 // import { Loader } from "three/addons/loaders/Loader.js";
 declare class Loader {
@@ -60,6 +61,8 @@ declare global {
   const TAARenderPass: typeof Pass;
   const TexturePass: typeof Pass;
   const UnrealBloomPass: typeof Pass;
+
+  const postProcessing: PostProcessingBridge;
 
   function deepCloneAttribute(attribute: BufferAttribute): BufferAttribute;
   function mergeGeometries(

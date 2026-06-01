@@ -32,12 +32,11 @@ import { TAARenderPass } from "three/addons/postprocessing/TAARenderPass.js";
 import { TexturePass } from "three/addons/postprocessing/TexturePass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import * as BufferGeometryUtils from "three/addons/utils/BufferGeometryUtils.js";
-
 import type { WebGPURenderer } from "three/webgpu";
-
 import mathTools from "../../utils/mathTools";
 import miscTools from "../../utils/miscTools";
 import Layer, { type LayerOptions } from "../Layer";
+import { PostProcessingBridge } from "./PostProcessingBridge";
 
 export interface ThreeJSLayerOptions extends LayerOptions {
   forceWebGL?: boolean;
@@ -48,6 +47,7 @@ export default class ThreeJSLayer extends Layer {
 
   #rendererReady = false;
   #forceWebGL: boolean;
+  #postProcessing: PostProcessingBridge | null = null;
 
   constructor(options: ThreeJSLayerOptions) {
     super(options);
@@ -125,16 +125,20 @@ export default class ThreeJSLayer extends Layer {
       UnrealBloomPass,
       ...BufferGeometryUtils,
       clear: this.#clearScene,
+      postProcessing: null as any, // Will be set after renderer initialization
     };
 
     // Initialize renderer asynchronously
-    this.#initializeRenderer().catch((error) => {
-      console.warn(
-        "[ThreeJS] Failed to initialize WebGPU renderer, continuing with WebGL:",
-        error,
-      );
-      this.#rendererReady = true;
-    });
+    this.#initializeRenderer()
+      .then(() => this.#setupPostProcessing())
+      .catch((error) => {
+        console.warn(
+          "[ThreeJS] Failed to initialize WebGPU renderer, continuing with WebGL:",
+          error,
+        );
+        this.#rendererReady = true;
+        this.#setupPostProcessing();
+      });
   }
 
   /**
@@ -183,6 +187,26 @@ export default class ThreeJSLayer extends Layer {
     }
 
     this.#rendererReady = true;
+  }
+
+  /**
+   * Setup post-processing bridge after renderer is ready
+   */
+  #setupPostProcessing(): void {
+    this.#postProcessing = new PostProcessingBridge(
+      this.renderer,
+      this.scene,
+      this.camera,
+    );
+
+    // Update the API with post-processing instance
+    if (this.api) {
+      this.api.postProcessing = this.#postProcessing;
+    }
+
+    console.info(
+      `[ThreeJS] Post-processing bridge initialized (${this.#postProcessing.getRendererType()})`,
+    );
   }
 
   /**
