@@ -22,7 +22,7 @@ catalog:
   '@types/react-syntax-highlighter': ^15.5.13
   '@types/three': ^0.184.1
   '@vitejs/plugin-react': ^6.0.2
-  '@vitest/browser': ^4.1.8
+  '@vitest/browser': ^4.1.10
   '@vitest/coverage-v8': ^4.1.8
   canvas: ^3.2.3
   dtsroll: ^1.8.2
