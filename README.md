@@ -1,3 +1,5 @@
+
+
 # Visual Fiha - Browser Version
 
 The system is a browser-based creative coding platform designed to facilitate the creation of interactive visual experiences.
@@ -6,7 +8,7 @@ It allows users to create and manage projects using JavaScript, WebGL, CSS, and 
 The first version of Visual Fiha was created by [zeropaper](https://github.com/zeropaper) in 2014 as the W3C announced the MIDI API support in browsers.
 It was a browser-based creative coding platform that allowed users to create interactive visual experiences using JavaScript, WebGL, CSS, and MIDI controllers.
 In a later version, the project was rewritten to be a VS Code extension, which provided a more integrated development environment for users to create and manage their projects.
-The extension version had some adavntages (like deeper integration with the editor) but some of the key features like latency of real time audio processing became unacceptably high, the MIDI support (not even implemented, would have suffered the same latency issue).
+The extension version had some advantages (like deeper integration with the editor) but some of the key features like latency of real time audio processing became unacceptably high, the MIDI support (not even implemented, would have suffered the same latency issue).
 
 This third version of Visual Fiha is, again, a browser-based version of the system with some radical changes in the architecture.
 
@@ -48,7 +50,7 @@ The controls provide the user interface for interacting with and observing the d
 
 Inputs are the primary data sources for the Visual Fiha system.
 They can be anything from MIDI controllers, microphone, audio line-in, key presses, absolute or relative time, mouse movements to web socket streams.
-(#scriptables) charged of processing the data from inputs.
+Scriptables are responsible for processing the data from inputs.
 
 #### Layers
 
