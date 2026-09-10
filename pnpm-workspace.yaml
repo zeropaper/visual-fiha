@@ -52,7 +52,7 @@ catalog:
   vite: ^8.0.16
   vite-plugin-monaco-editor: ^1.1.0
   vite-plugin-vercel: ^11.0.3
-  vitest: ^4.1.8
+  vitest: ^4.1.11
   zod: ^4.4.3
 
 allowBuilds:
